@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace Pango.Desktop.Uwp.ViewModels
+namespace Pango.Desktop.Uwp.ViewModels;
+
+public class SignInViewModel : ObservableObject
 {
-    internal class SignInViewModel
-    {
-    }
+    private 
 }
