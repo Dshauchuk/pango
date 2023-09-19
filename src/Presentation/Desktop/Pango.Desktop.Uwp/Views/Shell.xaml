@@ -1,0 +1,130 @@
+﻿<UserControl
+    x:Class="Pango.Desktop.Uwp.Views.Shell"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    Loaded="Shell_OnLoaded"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ShellViewModel}"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <Pivot SelectedIndex="{Binding ContentIndex}">
+            <!--User Selection-->
+            <PivotItem>
+                <Grid HorizontalAlignment="Center"
+                      VerticalAlignment="Center">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="{loc:StringResource Key=SelectUser}"
+                               Style="{StaticResource TitleTextBlockStyle}"/>
+
+                    <ListView>
+                        
+                    </ListView>
+                    
+                </Grid>
+            </PivotItem>
+
+            <!--New User-->
+            <PivotItem>
+                <Grid>
+
+                </Grid>
+            </PivotItem>
+
+            <!--Main view-->
+            <PivotItem>
+                <!--  Navigation view  -->
+                <muxc:NavigationView
+                    x:Name="NavigationView"
+                    BackRequested="NavigationView_BackRequested"
+                    IsBackButtonVisible="Collapsed"
+                    IsBackEnabled="False"
+                    IsSettingsVisible="False"
+                    IsTitleBarAutoPaddingEnabled="False"
+                    ItemInvoked="NavigationView_ItemInvoked">
+                    <muxc:NavigationView.Resources>
+                        <Thickness x:Key="NavigationViewContentMargin">0,0,0,12</Thickness>
+                    </muxc:NavigationView.Resources>
+
+                    <!--<muxc:NavigationView.AutoSuggestBox>
+                        <AutoSuggestBox
+                            AutomationProperties.Name="Search"
+                            PlaceholderText="Search"
+                            QueryIcon="Find"
+                            SuggestionChosen="AutoSuggestBox_OnSuggestionChosen"
+                            TextChanged="SearchBox_OnTextChanged">
+                            <AutoSuggestBox.ItemTemplate>
+                                <DataTemplate x:DataType="navigation:NavigationEntry">
+                                    <TextBlock Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
+                                </DataTemplate>
+                            </AutoSuggestBox.ItemTemplate>
+                        </AutoSuggestBox>
+                    </muxc:NavigationView.AutoSuggestBox>-->
+
+                    <muxc:NavigationView.MenuItems>
+                        <muxc:NavigationViewItem
+                            x:Name="HomeItem"
+                            Content="Home"
+                            Icon="Home"
+                            ToolTipService.ToolTip="Introduction to the MVVM Toolkit package, how to install it and the types it contains." />
+                        <muxc:NavigationViewItemSeparator />
+                        <muxc:NavigationViewItem
+                            x:Name="PasswordsItem"
+                            Content="Passwords/Secrets"
+                            Icon="People" />
+                        <muxc:NavigationViewItem
+                            x:Name="SettingsItem"
+                            Content="Settings"
+                            Icon="Setting" />
+                        <muxc:NavigationViewItem />
+                    </muxc:NavigationView.MenuItems>
+
+                    <muxc:NavigationView.Content>
+                        <!--  Navigation frame  -->
+                        <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" />
+                    </muxc:NavigationView.Content>
+
+                </muxc:NavigationView>
+            </PivotItem>
+        </Pivot>
+
+        <!--  Custom title bar  -->
+        <Border
+            x:Name="TitleBarBorder"
+            Height="40"
+            Margin="15,0,0,0"
+            Padding="8,0,0,0"
+            VerticalAlignment="Top"
+            Background="Transparent">
+            <StackPanel 
+                Orientation="Horizontal" 
+                Spacing="16">
+                <!--<Image
+                    Width="30"
+                    Height="30"
+                    VerticalAlignment="Center"
+                    Source="ms-appx:///assets/app-logo30.png" />-->
+                <!--<TextBlock 
+                    VerticalAlignment="Center" 
+                    Text="Pango'" />-->
+                <TextBlock 
+                    Style="{StaticResource SmallTextBlockStyle}"/>
+                <TextBlock VerticalAlignment="Center"
+                           Style="{StaticResource ExtraSmallTextBlockStyle}">
+                    <Run Text="Pango"/>
+                    <Run x:Name="AppVersionTextBlock" />
+                </TextBlock>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
