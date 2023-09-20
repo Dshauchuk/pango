@@ -4,5 +4,5 @@ namespace Pango.Desktop.Uwp.ViewModels;
 
 public class SignInViewModel : ObservableObject
 {
-    private 
+
 }
