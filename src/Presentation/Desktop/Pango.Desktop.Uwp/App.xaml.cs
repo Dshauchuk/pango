@@ -1,11 +1,13 @@
-﻿using Pango.Desktop.Uwp.Core.Utility;
+﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views;
-using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Navigation;
 using ApplicationBase = Windows.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
@@ -15,6 +17,8 @@ namespace Pango.Desktop.Uwp;
 /// </summary>
 sealed partial class App : ApplicationBase
 {
+    private ILogger _logger;
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
@@ -23,6 +27,17 @@ sealed partial class App : ApplicationBase
     {
         this.InitializeComponent();
         this.Suspending += OnSuspending;
+
+        this.UnhandledException += App_UnhandledException;
+    }
+
+    private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+
+        _logger?.LogError(e.Exception, e?.Message ?? "Unhandled error");
+
+        //WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(e?.Message ?? "Unhandled error", AppNotificationType.Error));
     }
 
     /// <summary>
@@ -32,43 +47,11 @@ sealed partial class App : ApplicationBase
     /// <param name="e">Details about the launch request and process.</param>
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        //Frame rootFrame = Window.Current.Content as Frame;
-
-        //// Do not repeat app initialization when the Window already has content,
-        //// just ensure that the window is active
-        //if (rootFrame == null)
-        //{
-        //    // Create a Frame to act as the navigation context and navigate to the first page
-        //    rootFrame = new Frame();
-
-        //    rootFrame.NavigationFailed += OnNavigationFailed;
-
-        //    if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
-        //    {
-        //        //TODO: Load state from previously suspended application
-        //    }
-
-        //    // Place the frame in the current Window
-        //    Window.Current.Content = rootFrame;
-        //}
-
-        //if (e.PrelaunchActivated == false)
-        //{
-        //    if (rootFrame.Content == null)
-        //    {
-        //        // When the navigation stack isn't restored navigate to the first page,
-        //        // configuring the new page by passing required information as a navigation
-        //        // parameter
-        //        rootFrame.Navigate(typeof(Shell), e.Arguments);
-        //    }
-        //    // Ensure the current window is active
-        //    Window.Current.Activate();
-        //}
-
-
         // Ensure the UI is initialized
         if (Window.Current.Content is null)
         {
+            AddDependencyInjection();
+
             Window.Current.Content = new Shell();
 
             TitleBarHelper.StyleTitleBar();
@@ -76,7 +59,7 @@ sealed partial class App : ApplicationBase
         }
 
         // Enable the prelaunch if needed, and activate the window
-        if (e.PrelaunchActivated == false)
+        if (!e.PrelaunchActivated)
         {
             CoreApplication.EnablePrelaunch(true);
 
@@ -84,14 +67,18 @@ sealed partial class App : ApplicationBase
         }
     }
 
-    /// <summary>
-    /// Invoked when Navigation to a certain page fails
-    /// </summary>
-    /// <param name="sender">The Frame which failed navigation</param>
-    /// <param name="e">Details about the navigation failure</param>
-    void OnNavigationFailed(object sender, NavigationFailedEventArgs e)
+    private void AddDependencyInjection()
     {
-        throw new Exception("Failed to load Page " + e.SourcePageType.FullName);
+        var serviceCollection = new ServiceCollection()
+            .AddTransient<ShellViewModel>()
+            .AddTransient<HomeViewModel>()
+            .AddTransient<MainAppViewModel>()
+            .AddTransient<NewUserViewModel>()
+            .AddTransient<SettingsViewModel>()
+            .AddTransient<SignInViewModel>();
+
+        // Register services
+        Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
     }
 
     /// <summary>
@@ -104,6 +91,7 @@ sealed partial class App : ApplicationBase
     private void OnSuspending(object sender, SuspendingEventArgs e)
     {
         var deferral = e.SuspendingOperation.GetDeferral();
+
         //TODO: Save application state and stop any background activity
         deferral.Complete();
     }

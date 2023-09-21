@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="EnterMasterCode" xml:space="preserve">
+    <value>Enter mastercode</value>
+  </data>
   <data name="Greeting.Text" xml:space="preserve">
     <value>Hello</value>
     <comment>A welcome greeting</comment>
@@ -125,7 +128,13 @@
     <value>200</value>
     <comment>Width of the welcome greeting</comment>
   </data>
+  <data name="MasterCode" xml:space="preserve">
+    <value>Mastercode</value>
+  </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Select a User</value>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Sign In</value>
   </data>
 </root>
