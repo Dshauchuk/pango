@@ -120,6 +120,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Core\Converters\NullToCollapsedConverter.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />

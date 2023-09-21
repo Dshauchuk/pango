@@ -10,6 +10,7 @@ public class SignInViewModel : ObservableObject
 {
     #region Fields
 
+    private string _selectedUser;
 
     #endregion
 
@@ -35,6 +36,12 @@ public class SignInViewModel : ObservableObject
     #region Properties
 
     public List<string> Users { get; }
+
+    public string SelectedUser
+    {
+        get => _selectedUser;
+        set => SetProperty(ref _selectedUser, value);
+    }
 
     #endregion
 

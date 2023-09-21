@@ -29,7 +29,8 @@
             
             <ListView Margin="0,40"
                       Grid.Row="1"
-                      ItemsSource="{Binding Path=Users}">
+                      ItemsSource="{Binding Path=Users}"
+                      SelectedValue="{Binding Path=SelectedUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                 <ListView.ItemsPanel>
                     <ItemsPanelTemplate>
                         <StackPanel Background="Transparent" 
@@ -48,7 +49,8 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="2"
+                  Visibility="{Binding Path=SelectedUser, Converter={StaticResource NullToCollapsedConverter}, UpdateSourceTrigger=PropertyChanged}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
