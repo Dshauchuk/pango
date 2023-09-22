@@ -1,9 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pango.Application;
 using Pango.Desktop.Uwp.Core.Utility;
-using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views;
+using Pango.Infrastructure;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -70,12 +71,9 @@ sealed partial class App : ApplicationBase
     private void AddDependencyInjection()
     {
         var serviceCollection = new ServiceCollection()
-            .AddTransient<ShellViewModel>()
-            .AddTransient<HomeViewModel>()
-            .AddTransient<MainAppViewModel>()
-            .AddTransient<NewUserViewModel>()
-            .AddTransient<SettingsViewModel>()
-            .AddTransient<SignInViewModel>();
+            .RegisterViewModels()
+            .AddApplicationServices()
+            .AddInfrastructureServices();
 
         // Register services
         Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());

@@ -128,13 +128,31 @@
     <value>200</value>
     <comment>Width of the welcome greeting</comment>
   </data>
+  <data name="Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
   <data name="MasterCode" xml:space="preserve">
     <value>Mastercode</value>
+  </data>
+  <data name="Passwords" xml:space="preserve">
+    <value>Passwords</value>
+  </data>
+  <data name="Secrets" xml:space="preserve">
+    <value>Secrets</value>
   </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Select a User</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
   <data name="SignIn" xml:space="preserve">
     <value>Sign In</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>User</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>User Info</value>
   </data>
 </root>

@@ -7,7 +7,6 @@ using System.Threading;
 using Windows.Globalization;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -43,7 +42,7 @@ public sealed partial class Shell : ViewBase
         NavigateInitialPage();
     }
 
-    private void NavigateInitialPage()
+    private async void NavigateInitialPage()
     {
         SignInView signInView = new();
         SignInViewModel signInViewModel = signInView.DataContext as SignInViewModel;
@@ -54,6 +53,7 @@ public sealed partial class Shell : ViewBase
         }
 
         AppContent.Content = signInView;
+        await signInViewModel.OnNavigatedToAsync(null);
     }
 
     private void SetTitleBar()

@@ -1,7 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ErrorOr;
+using MediatR;
+using Pango.Application.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -11,13 +15,15 @@ public class SignInViewModel : ObservableObject, IViewModel
     #region Fields
 
     private string _selectedUser;
+    private ISender _sender;
 
     #endregion
 
-    public SignInViewModel()
+    public SignInViewModel(ISender sender)
     {
-        Users = new() { "John Doe", "Jane Doe" };
+        _sender = sender;
 
+        Users = new();
         SignInCommand = new AsyncRelayCommand(OnSignIn);
     }
 
@@ -35,7 +41,7 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     #region Properties
 
-    public List<string> Users { get; }
+    public ObservableCollection<UserDto> Users { get; private set; }
 
     public string SelectedUser
     {
@@ -54,12 +60,23 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     public async Task OnNavigatedToAsync(object parameter)
     {
-        await Task.CompletedTask;
+        await LoadUsersAsync();
     }
 
     #endregion
 
     #region Private Methods
+
+    private async Task LoadUsersAsync()
+    {
+        var queryResult = await _sender.Send<ErrorOr<IEnumerable<UserDto>>>(new ListQuery());
+
+        Users.Clear();
+        foreach (var user in queryResult.Value)
+        {
+            Users.Add(user);
+        }
+    }
 
     private async Task OnSignIn()
     {

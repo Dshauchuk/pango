@@ -1,7 +1,6 @@
 ﻿namespace Pango.Application.Models;
 
-public class UserDto
+public class UserDto : DtoBase
 {
-    public Guid Id { get; set; }
     public string? Username { get; set; }
 }

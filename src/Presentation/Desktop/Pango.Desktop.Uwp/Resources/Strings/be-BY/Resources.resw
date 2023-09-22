@@ -126,13 +126,31 @@
   <data name="Greeting.Width" xml:space="preserve">
     <value>200</value>
   </data>
+  <data name="Home" xml:space="preserve">
+    <value>Галоўная</value>
+  </data>
   <data name="MasterCode" xml:space="preserve">
     <value>Код</value>
+  </data>
+  <data name="Passwords" xml:space="preserve">
+    <value>Паролі</value>
+  </data>
+  <data name="Secrets" xml:space="preserve">
+    <value>Сакрэты</value>
   </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Абярыце Карыстальника</value>
   </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Налады</value>
+  </data>
   <data name="SignIn" xml:space="preserve">
     <value>Увайсці</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>Карыстальнік</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>Інфармацыя пра карыстальніка</value>
   </data>
 </root>

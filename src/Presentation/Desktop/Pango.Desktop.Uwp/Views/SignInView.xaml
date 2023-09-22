@@ -44,7 +44,7 @@
                         <StackPanel Orientation="Horizontal">
                             <SymbolIcon Symbol="Contact2" Margin="2"/>
                             <TextBlock Margin="2"
-                                       Text="{Binding}" />
+                                       Text="{Binding Username}" />
                         </StackPanel>
                     </DataTemplate>
                 </ListView.ItemTemplate>
