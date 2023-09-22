@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Pango.Desktop.Uwp.ViewModels;
+using Pango.Desktop.Uwp.Views.Abstract;
 using System.Globalization;
 using System.Reflection;
 using System.Threading;
@@ -15,15 +16,13 @@ namespace Pango.Desktop.Uwp.Views;
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class Shell : UserControl
+public sealed partial class Shell : ViewBase
 {
     #region Fields
 
     private bool _isWindowActive;
 
     #endregion
-
-    internal ShellViewModel ViewModel => (ShellViewModel)DataContext;
 
     public Shell()
     {

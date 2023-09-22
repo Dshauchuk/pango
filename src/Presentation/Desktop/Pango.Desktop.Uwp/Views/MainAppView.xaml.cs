@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Pango.Desktop.Uwp.Core.Navigation;
 using Pango.Desktop.Uwp.ViewModels;
+using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using Windows.UI.Xaml.Navigation;
 
 namespace Pango.Desktop.Uwp.Views;
 
-public sealed partial class MainAppView : UserControl
+public sealed partial class MainAppView : ViewBase
 {
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
 
@@ -30,14 +31,14 @@ public sealed partial class MainAppView : UserControl
         };
     }
 
-    private void MainAppView_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private async void MainAppView_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
     {
-        //if (ViewModel != null)
-        //    await ViewModel.OnNavigatedToAsync(null);
+        if (ViewModel != null)
+            await ViewModel.OnNavigatedToAsync(null);
 
-        //NavigationView.SelectedItem = HomeItem;
+        NavigationView.SelectedItem = HomeItem;
 
-        //NavigationFrame.Navigate(typeof(HomePage));
+        NavigationFrame.Navigate(typeof(HomeView));
     }
 
     private void NavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)

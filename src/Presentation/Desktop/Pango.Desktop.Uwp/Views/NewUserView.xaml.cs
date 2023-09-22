@@ -1,27 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
+﻿using Pango.Desktop.Uwp.Views.Abstract;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
-namespace Pango.Desktop.Uwp.Views
+namespace Pango.Desktop.Uwp.Views;
+
+public sealed partial class NewUserView : ViewBase
 {
-    public sealed partial class NewUserView : UserControl
+    public NewUserView()
     {
-        public NewUserView()
-        {
-            this.InitializeComponent();
-        }
+        this.InitializeComponent();
     }
 }

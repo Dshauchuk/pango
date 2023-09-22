@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public class SignInViewModel : ObservableObject
+public class SignInViewModel : ObservableObject, IViewModel
 {
     #region Fields
 
@@ -41,6 +41,20 @@ public class SignInViewModel : ObservableObject
     {
         get => _selectedUser;
         set => SetProperty(ref _selectedUser, value);
+    }
+
+    #endregion
+
+    #region Overrides
+
+    public async Task OnNavigatedFromAsync(object parameter)
+    {
+        await Task.CompletedTask;
+    }
+
+    public async Task OnNavigatedToAsync(object parameter)
+    {
+        await Task.CompletedTask;
     }
 
     #endregion

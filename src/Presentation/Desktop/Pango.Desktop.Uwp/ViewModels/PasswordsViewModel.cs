@@ -1,12 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace Pango.Desktop.Uwp.ViewModels
+namespace Pango.Desktop.Uwp.ViewModels;
+
+public sealed class PasswordsViewModel : IViewModel
 {
-    internal class PasswordsViewModel
+    public async Task OnNavigatedFromAsync(object parameter)
     {
+        await Task.CompletedTask;
+    }
+
+    public async Task OnNavigatedToAsync(object parameter)
+    {
+        await Task.CompletedTask;
     }
 }
