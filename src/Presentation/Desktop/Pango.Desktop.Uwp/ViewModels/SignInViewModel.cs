@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
+using Pango.Desktop.Uwp.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,8 +15,9 @@ public class SignInViewModel : ObservableObject, IViewModel
 {
     #region Fields
 
-    private string _selectedUser;
+    private UserDto _selectedUser;
     private ISender _sender;
+    private int _signInStepIndex;
 
     #endregion
 
@@ -24,16 +26,22 @@ public class SignInViewModel : ObservableObject, IViewModel
         _sender = sender;
 
         Users = new();
+        UserSelected += SignInViewModel_UserSelected;
+
         SignInCommand = new AsyncRelayCommand(OnSignIn);
+        NavigateToStep = new RelayCommand<int>(OnNavigateToStep);
     }
 
     #region Events
 
     public event Action SignInSuceeded;
+    public event Action<UserDto> UserSelected;
 
     #endregion
 
     #region Commands
+
+    public RelayCommand<int> NavigateToStep { get; }
 
     public AsyncRelayCommand SignInCommand { get; }
 
@@ -43,10 +51,20 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     public ObservableCollection<UserDto> Users { get; private set; }
 
-    public string SelectedUser
+    public UserDto SelectedUser
     {
         get => _selectedUser;
-        set => SetProperty(ref _selectedUser, value);
+        set
+        {
+            SetProperty(ref _selectedUser, value);
+            UserSelected?.Invoke(value);
+        }
+    }
+
+    public int SignInStepIndex
+    {
+        get => _signInStepIndex;
+        set => SetProperty(ref _signInStepIndex, value);
     }
 
     #endregion
@@ -60,12 +78,52 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     public async Task OnNavigatedToAsync(object parameter)
     {
+        GoToUserSelection();
         await LoadUsersAsync();
     }
 
     #endregion
 
     #region Private Methods
+
+    private void OnNavigateToStep(int stepIndex)
+    {
+        SignInStep step = (SignInStep)stepIndex;
+
+        switch (step)
+        {
+            case SignInStep.SelectUser:
+                GoToUserSelection();
+                break;
+            case SignInStep.CreateUser:
+                GoToUserCreation();
+                break;
+            case SignInStep.EnterMastercode:
+                GoToCodeEnteringForm();
+                break;
+            default: throw new InvalidCastException("Unkown step");
+        };
+    }
+
+    private void SignInViewModel_UserSelected(UserDto obj)
+    {
+        GoToCodeEnteringForm();
+    }
+
+    private void GoToUserSelection()
+    {
+        SignInStepIndex = (int)SignInStep.SelectUser;
+    }
+
+    private void GoToUserCreation()
+    {
+        SignInStepIndex = (int)SignInStep.CreateUser;
+    }
+
+    private void GoToCodeEnteringForm()
+    {
+        SignInStepIndex = (int)SignInStep.EnterMastercode;
+    }
 
     private async Task LoadUsersAsync()
     {

@@ -32,7 +32,7 @@
                 Orientation="Horizontal" 
                 Spacing="5">
                 <TextBlock VerticalAlignment="Center"
-                           Style="{StaticResource ExtraSmallTextBlockStyle}">
+                           Style="{StaticResource CaptionTextBlockStyle}">
                     <Run Text="Pango"/>
                     <Run x:Name="AppVersionTextBlock" />
                 </TextBlock>
