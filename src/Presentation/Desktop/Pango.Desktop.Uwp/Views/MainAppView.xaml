@@ -19,7 +19,7 @@
                     BackRequested="NavigationView_BackRequested"
                     IsBackButtonVisible="Collapsed"
                     IsBackEnabled="False"
-                    IsSettingsVisible="False"
+                    IsSettingsVisible="True"
                     IsTitleBarAutoPaddingEnabled="False"
                     ItemInvoked="NavigationView_ItemInvoked">
             <muxc:NavigationView.Resources>
@@ -42,14 +42,8 @@
                             Content="{loc:StringResource Key=User}"
                             Icon="Contact" 
                             ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
-                <muxc:NavigationViewItem
-                            x:Name="SettingsItem"
-                            Content="{loc:StringResource Key=Settings}"
-                            Icon="Setting" 
-                            ToolTipService.ToolTip="{loc:StringResource Key=Settings}"/>
-                <muxc:NavigationViewItem />
             </muxc:NavigationView.MenuItems>
-
+            
             <muxc:NavigationView.Content>
                 <!--  Navigation frame  -->
                 <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" />
