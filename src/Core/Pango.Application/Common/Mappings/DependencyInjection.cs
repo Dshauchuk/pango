@@ -3,7 +3,7 @@ using MapsterMapper;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 
-namespace Pango.Desktop.Uwp.Common.Mappings;
+namespace Pango.Application.Common.Mappings;
 
 public static class DependencyInjection
 {

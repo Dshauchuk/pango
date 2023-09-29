@@ -2,7 +2,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Application;
-using Pango.Desktop.Uwp.Common.Mappings;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
@@ -73,7 +72,6 @@ sealed partial class App : ApplicationBase
     {
         var serviceCollection = new ServiceCollection()
             .RegisterViewModels()
-            .RegisterMappings()
             .AddApplicationServices()
             .AddInfrastructureServices();
 

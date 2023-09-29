@@ -1,6 +1,6 @@
-using Mapster;
+﻿using Mapster;
 
-namespace Pango.Desktop.Uwp.Common.Mappings;
+namespace Pango.Application.Common.Mappings;
 
 public class ExampleClassNameMappingProfile : IRegister
 {
