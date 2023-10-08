@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using Mapster;
 using MediatR;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
@@ -17,7 +18,7 @@ public class ListQueryHandler
 
     public async Task<ErrorOr<IEnumerable<Models.UserDto>>> Handle(ListQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<Models.UserDto> users = (await _userRepository.ListAsync()).Select(u => new UserDto() { UserName = u.UserName, MasterPasswordHash = u.MasterPasswordHash });
+        IEnumerable<UserDto> users = (await _userRepository.ListAsync()).Select(u => u.Adapt<UserDto>());
         return users.ToList();
     }
 }
