@@ -9,8 +9,8 @@ public class User : BaseEntity
 {
 	public User()
 	{
-		Username = string.Empty;
-		MasterKeyHash = string.Empty;
+		UserName = string.Empty;
+		MasterPasswordHash = string.Empty;
 	}
 
 	/// <summary>
@@ -21,11 +21,11 @@ public class User : BaseEntity
 	public User(Guid id, string username)
 		: base(id)
 	{
-		Username = username;
-		MasterKeyHash = string.Empty;
+		UserName = username;
+		MasterPasswordHash = string.Empty;
 	}
 
-	public string Username { get; set; }
+	public string UserName { get; set; }
 
-	public string MasterKeyHash { get; set; }
+	public string MasterPasswordHash { get; set; }
 }

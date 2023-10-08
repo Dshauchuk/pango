@@ -1,11 +1,11 @@
-﻿using Pango.Application.Models;
+﻿using Pango.Domain.Entities;
 
 namespace Pango.Application.Common.Interfaces.Persistence;
 
 public interface IUserRepository : IRepository
 {
-    Task CreateAsync(UserDto userDto);
-    Task<UserDto> FindAsync(Func<UserDto, bool> predicate);
-    Task<IEnumerable<UserDto>> ListAsync();
-    Task DeleteAsync(UserDto userDto);
+    Task CreateAsync(User user);
+    Task<User> FindAsync(Func<User, bool> predicate);
+    Task<IEnumerable<User>> ListAsync();
+    Task DeleteAsync(User user);
 }

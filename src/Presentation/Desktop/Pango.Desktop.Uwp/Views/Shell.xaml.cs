@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
+using System;
 using System.Globalization;
 using System.Reflection;
+using System.Security.Principal;
 using System.Threading;
 using Windows.Globalization;
 using Windows.UI.Core;
@@ -66,6 +68,12 @@ public sealed partial class Shell : ViewBase
     private void SignInViewModel_SignInSuceeded()
     {
         AppContent.Content = new MainAppView();
+    }
+
+    private void SetThreadPrincipal()
+    {
+        IPrincipal principal = new GenericPrincipal(new GenericIdentity("Bob", "Passport"), new string[] { "managers", "executives" });
+        AppDomain.CurrentDomain.SetThreadPrincipal(principal);
     }
 
     private void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)

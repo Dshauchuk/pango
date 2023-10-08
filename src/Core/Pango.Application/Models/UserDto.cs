@@ -1,6 +1,7 @@
 ﻿namespace Pango.Application.Models;
 
-public class UserDto : DtoBase
+public class UserDto
 {
-    public string? Username { get; set; }
+    public string? UserName { get; set; }
+    public string? MasterPasswordHash { get; set; }
 }
