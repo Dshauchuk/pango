@@ -5,6 +5,7 @@ using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
 
@@ -15,6 +16,7 @@ namespace Pango.Desktop.Uwp.Views;
 public sealed partial class MainAppView : ViewBase
 {
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
+    private ResourceLoader _viewResourceLoader;
 
     public MainAppView()
     {
@@ -26,9 +28,10 @@ public sealed partial class MainAppView : ViewBase
         NavigationItems = new[]
         {
             new NavigationEntry(HomeItem, typeof(HomeView)),
-            new NavigationEntry(PasswordsItem, typeof(PasswordsView)),
-            new NavigationEntry(SettingsItem, typeof(SettingsView))
+            new NavigationEntry(PasswordsItem, typeof(PasswordsView))
         };
+
+        _viewResourceLoader = ResourceLoader.GetForCurrentView();
     }
 
     private async void MainAppView_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
@@ -37,8 +40,9 @@ public sealed partial class MainAppView : ViewBase
             await ViewModel.OnNavigatedToAsync(null);
 
         NavigationView.SelectedItem = HomeItem;
-
         NavigationFrame.Navigate(typeof(HomeView));
+
+        ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).Content = _viewResourceLoader.GetString("Settings");
     }
 
     private void NavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
@@ -46,6 +50,10 @@ public sealed partial class MainAppView : ViewBase
         if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
             NavigationFrame.Navigate(pageType);
+        }
+        else if (args.IsSettingsInvoked)
+        {
+            NavigationFrame.Navigate(typeof(SettingsView));
         }
     }
 
