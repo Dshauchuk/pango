@@ -2,7 +2,7 @@
 using Pango.Domain.Entities;
 using Windows.Security.Credentials;
 
-namespace Pango.Infrastructure.Data;
+namespace Pango.Persistence;
 
 public class UserRepository : IUserRepository
 {

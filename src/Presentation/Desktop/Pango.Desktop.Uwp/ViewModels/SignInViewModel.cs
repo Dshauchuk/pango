@@ -34,7 +34,7 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     #region Events
 
-    public event Action SignInSuceeded;
+    public event Action<string> SignInSuceeded;
     public event Action<UserDto> UserSelected;
 
     #endregion
@@ -140,7 +140,7 @@ public class SignInViewModel : ObservableObject, IViewModel
     {
         await Task.CompletedTask;
 
-        SignInSuceeded?.Invoke();
+        SignInSuceeded?.Invoke(SelectedUser.UserName);
     }
 
     #endregion

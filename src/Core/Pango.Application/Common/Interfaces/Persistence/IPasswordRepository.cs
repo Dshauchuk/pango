@@ -5,32 +5,33 @@ namespace Pango.Application.Common.Interfaces.Persistence;
 /// <summary>
 /// 
 /// </summary>
-public interface IUserRepository : IRepository
+public interface IPasswordRepository
 {
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="user"></param>
+    /// <param name="password"></param>
     /// <returns></returns>
-    Task CreateAsync(User user);
-    
+    Task CreateAsync(Password password);
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<User> FindAsync(Func<User, bool> predicate);
-    
+    Task<Password> FindAsync(Func<Password, bool> predicate);
+
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<IEnumerable<User>> ListAsync();
-    
+    Task<IEnumerable<Password>> QueryAsync(Func<Password, bool> predicate);
+
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="user"></param>
+    /// <param name="password"></param>
     /// <returns></returns>
-    Task DeleteAsync(User user);
+    Task DeleteAsync(Password password);
 }

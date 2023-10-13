@@ -65,14 +65,17 @@ public sealed partial class Shell : ViewBase
         AppVersionTextBlock.Text = $"v{Assembly.GetAssembly(typeof(Shell)).GetName().Version.ToString()}";
     }
 
-    private void SignInViewModel_SignInSuceeded()
+    private void SignInViewModel_SignInSuceeded(string userId)
     {
+        SetThreadPrincipal(userId);
         AppContent.Content = new MainAppView();
     }
 
-    private void SetThreadPrincipal()
+    private void SetThreadPrincipal(string userId)
     {
-        IPrincipal principal = new GenericPrincipal(new GenericIdentity("Bob", "Passport"), new string[] { "managers", "executives" });
+        IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId.ToLower(), "Passport"), new string[] { });
+
+        Thread.CurrentPrincipal = principal;
         AppDomain.CurrentDomain.SetThreadPrincipal(principal);
     }
 
@@ -84,6 +87,6 @@ public sealed partial class Shell : ViewBase
     // Select the introduction item when the shell is loaded
     private void Shell_OnLoaded(object sender, RoutedEventArgs e)
     {
-        
+
     }
 }
