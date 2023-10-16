@@ -117,11 +117,23 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Autolock" xml:space="preserve">
+    <value>Аўтаблакіроўка</value>
+  </data>
+  <data name="Autolock_Description" xml:space="preserve">
+    <value>Аўтаматычна блакіруе праграму пасля выбранага перыяду бяздзейнасці прылады</value>
+  </data>
   <data name="Back" xml:space="preserve">
     <value>Назад</value>
   </data>
   <data name="ChangeUser" xml:space="preserve">
     <value>Змяніць Карыстальніка</value>
+  </data>
+  <data name="Clear copied item data" xml:space="preserve">
+    <value>Ачысціць скапіраваныя даныя элемента</value>
+  </data>
+  <data name="Clear copied item data_Description" xml:space="preserve">
+    <value>Аўтаматычна ачышчае скапіраваныя дэталі з буфера абмену</value>
   </data>
   <data name="EnterMasterCode" xml:space="preserve">
     <value>Увядзіце код</value>
@@ -144,6 +156,9 @@
   <data name="Secrets" xml:space="preserve">
     <value>Сакрэты</value>
   </data>
+  <data name="Security" xml:space="preserve">
+    <value>Бяспекі</value>
+  </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Абярыце Карыстальника</value>
   </data>
@@ -152,6 +167,12 @@
   </data>
   <data name="SignIn" xml:space="preserve">
     <value>Увайсці</value>
+  </data>
+  <data name="Switcher_Off" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
+  <data name="Switcher_On" xml:space="preserve">
+    <value>Укл.</value>
   </data>
   <data name="User" xml:space="preserve">
     <value>Карыстальнік</value>
