@@ -13,14 +13,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Core\Pango.Application\Pango.Application.csproj" />
 	  <ProjectReference Include="..\Pango.Persistence\Pango.Persistence.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Reference Include="Windows.Foundation.UniversalApiContract">
-	    <HintPath>C:\Program Files (x86)\Windows Kits\10\References\10.0.22000.0\Windows.Foundation.UniversalApiContract\14.0.0.0\Windows.Foundation.UniversalApiContract.winmd</HintPath>
-	  </Reference>
 	</ItemGroup>
 
 </Project>
