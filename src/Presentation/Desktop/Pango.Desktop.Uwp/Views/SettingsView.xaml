@@ -11,6 +11,7 @@
     d:DesignHeight="300"
     d:DesignWidth="800">
 
+    <!--TODO move OnContent/OffContent to the style-->
     <StackPanel
         Orientation="Vertical">
         <!--Security Section-->
@@ -79,7 +80,61 @@
                     <TextBlock
                         Text="{loc:StringResource Key='Choose application language_Description'}"/>
                 </StackPanel>
-                <Дропдаун
+                <ComboBox>
+                    <x:String>English</x:String>
+                    <x:String>Belarusian</x:String>
+                </ComboBox>
+            </Grid>
+        </StackPanel>
+
+        <!--Appearance Section-->
+        <StackPanel
+            Orientation="Vertical">
+            <TextBlock 
+                Text="{loc:StringResource Key=Appearance}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel
+                    Orientation="Vertical">
+                    <TextBlock
+                        Text="{loc:StringResource Key='Theme'}"/>
+                </StackPanel>
+                <ComboBox>
+                    <x:String>Light</x:String>
+                    <x:String>Dark</x:String>
+                    <x:String>Use system setting</x:String>
+                </ComboBox>
+            </Grid>
+        </StackPanel>
+        
+        <!--Other Section-->
+        <StackPanel
+            Orientation="Vertical">
+            <TextBlock 
+                Text="{loc:StringResource Key=Other}"/>
+
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel
+                    Orientation="Vertical">
+                    <TextBlock
+                        Text="{loc:StringResource Key='Launch at startup'}"/>
+                </StackPanel>
+                <ToggleSwitch
+                    Grid.Column="1"
+                    FlowDirection="RightToLeft"
+                    OnContent="{loc:StringResource Key=Switcher_On}"
+                    OffContent="{loc:StringResource Key=Switcher_Off}"
+                    IsOn="{Binding AllowLaunchAtStartup}"/>
             </Grid>
         </StackPanel>
     </StackPanel>
