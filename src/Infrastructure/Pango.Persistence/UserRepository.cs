@@ -36,8 +36,11 @@ public class UserRepository : IUserRepository
 
     public async Task<IEnumerable<User>> ListAsync()
     {
-        List<User> users = new();
-        PasswordVault vault = new ();
+        PasswordVault vault = new();
+        List<User> users = new()
+        {
+            new User(){UserName = "Alice"}
+        };
 
         IReadOnlyList<PasswordCredential>? credentialList = null;
 

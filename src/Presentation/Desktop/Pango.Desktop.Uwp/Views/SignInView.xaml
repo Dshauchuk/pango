@@ -32,6 +32,7 @@
                     <ListView Margin="0,40"
                               Grid.Row="1"
                               ItemsSource="{Binding Path=Users}"
+                              HorizontalAlignment="Center"
                               SelectedValue="{Binding Path=SelectedUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                         <ListView.ItemsPanel>
                             <ItemsPanelTemplate>
