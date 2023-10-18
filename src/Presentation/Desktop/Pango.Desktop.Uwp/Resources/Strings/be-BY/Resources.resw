@@ -126,6 +126,9 @@
   <data name="Autolock_Description" xml:space="preserve">
     <value>Аўтаматычна блакіруе праграму пасля выбранага перыяду бяздзейнасці прылады</value>
   </data>
+  <data name="AddNewPassword" xml:space="preserve">
+    <value>Дадайце новы пароль</value>
+  </data>
   <data name="Back" xml:space="preserve">
     <value>Назад</value>
   </data>
@@ -137,6 +140,15 @@
   </data>
   <data name="Clear copied item data_Description" xml:space="preserve">
     <value>Аўтаматычна ачышчае скапіраваныя дэталі з буфера абмену</value>
+  </data>
+  <data name="CopyPassword" xml:space="preserve">
+    <value>Скапіраваць пароль</value>
+  </data>
+  <data name="DeletePassword" xml:space="preserve">
+    <value>Выдаліць пароль</value>
+  </data>
+  <data name="EditPassword" xml:space="preserve">
+    <value>Рэдагаваць пароль</value>
   </data>
   <data name="EnterMasterCode" xml:space="preserve">
     <value>Увядзіце код</value>
@@ -158,6 +170,12 @@
   </data>
   <data name="Other" xml:space="preserve">
     <value>Іншае</value>
+  </data>
+  <data name="MyPasswords" xml:space="preserve">
+    <value>Мае Паролі</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>Новы</value>
   </data>
   <data name="Passwords" xml:space="preserve">
     <value>Паролі</value>

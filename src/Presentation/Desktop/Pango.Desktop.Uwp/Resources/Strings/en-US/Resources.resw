@@ -126,6 +126,9 @@
   <data name="Autolock_Description" xml:space="preserve">
     <value>Automatically locks the app after chosen period of device inactivity</value>
   </data>
+  <data name="AddNewPassword" xml:space="preserve">
+    <value>Add new password</value>
+  </data>
   <data name="Back" xml:space="preserve">
     <value>Back</value>
   </data>
@@ -137,6 +140,15 @@
   </data>
   <data name="Clear copied item data_Description" xml:space="preserve">
     <value>Automatically clears copied details from clipboard</value>
+  </data>
+  <data name="CopyPassword" xml:space="preserve">
+    <value>Copy password</value>
+  </data>
+  <data name="DeletePassword" xml:space="preserve">
+    <value>Delete password</value>
+  </data>
+  <data name="EditPassword" xml:space="preserve">
+    <value>Edit password</value>
   </data>
   <data name="EnterMasterCode" xml:space="preserve">
     <value>Enter mastercode</value>
@@ -160,6 +172,12 @@
   </data>
   <data name="Other" xml:space="preserve">
     <value>Other</value>
+  </data>
+  <data name="MyPasswords" xml:space="preserve">
+    <value>My Passwords</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>New</value>
   </data>
   <data name="Passwords" xml:space="preserve">
     <value>Passwords</value>
