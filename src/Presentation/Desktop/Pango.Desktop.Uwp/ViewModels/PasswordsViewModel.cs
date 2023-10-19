@@ -35,22 +35,6 @@ public sealed class PasswordsViewModel : ObservableObject, IViewModel
 
     public async Task OnNavigatedToAsync(object parameter)
     {
-
-        //var password = new Pango.Domain.Entities.Password()
-        //{
-        //    Id = Guid.NewGuid(),
-        //    Login = "VK",
-        //    Name = "VK Password",
-        //    Value = "qwerty",
-        //    Properties = new Dictionary<string, string>(),
-        //    Target = "vk.com",
-        //    UserName = "Alice",
-        //    CreatedAt = DateTimeOffset.Now,
-        //    LastModifiedAt = DateTimeOffset.Now
-        //};
-
-        //await passwordRepository.CreateAsync(password);
-
         await LoadPasswords();
     }
 
