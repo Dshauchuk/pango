@@ -161,6 +161,9 @@
   <data name="Passwords" xml:space="preserve">
     <value>Passwords</value>
   </data>
+  <data name="SearchPasswords" xml:space="preserve">
+    <value>Search passwords</value>
+  </data>
   <data name="Secrets" xml:space="preserve">
     <value>Secrets</value>
   </data>

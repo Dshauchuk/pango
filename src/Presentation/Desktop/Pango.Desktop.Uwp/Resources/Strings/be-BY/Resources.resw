@@ -159,6 +159,9 @@
   <data name="Passwords" xml:space="preserve">
     <value>Паролі</value>
   </data>
+  <data name="SearchPasswords" xml:space="preserve">
+    <value>Пошук пароляў</value>
+  </data>
   <data name="Secrets" xml:space="preserve">
     <value>Сакрэты</value>
   </data>
