@@ -10,7 +10,6 @@
     d:DesignHeight="300"
     d:DesignWidth="800">
 
-    <!--TODO: styles!!!!-->
     <StackPanel
         Margin="{StaticResource PageContentContainerMargin}"
         Orientation="Vertical">
