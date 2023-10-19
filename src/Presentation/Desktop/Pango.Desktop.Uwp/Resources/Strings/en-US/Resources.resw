@@ -212,4 +212,10 @@
   <data name="UserInfo" xml:space="preserve">
     <value>User Info</value>
   </data>
+  <data name="Choose application language" xml:space="preserve">
+    <value>Choose application language</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
 </root>

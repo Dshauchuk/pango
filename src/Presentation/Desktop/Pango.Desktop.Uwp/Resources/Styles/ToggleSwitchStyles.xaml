@@ -1,0 +1,11 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization">
+
+    <Style TargetType="ToggleSwitch">
+        <Setter Property="OnContent" Value="{loc:StringResource Key=Switcher_On}" />
+        <Setter Property="OffContent" Value="{loc:StringResource Key=Switcher_Off}" />
+    </Style>
+
+</ResourceDictionary>

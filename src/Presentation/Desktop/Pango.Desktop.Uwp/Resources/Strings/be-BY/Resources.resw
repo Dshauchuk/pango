@@ -184,7 +184,7 @@
     <value>Сакрэты</value>
   </data>
   <data name="Security" xml:space="preserve">
-    <value>Бяспекі</value>
+    <value>Бяспека</value>
   </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Абярыце Карыстальника</value>
@@ -209,5 +209,11 @@
   </data>
   <data name="UserInfo" xml:space="preserve">
     <value>Інфармацыя пра карыстальніка</value>
+  </data>
+  <data name="Choose application language" xml:space="preserve">
+    <value>Выберыце мову праграмы</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Мова</value>
   </data>
 </root>

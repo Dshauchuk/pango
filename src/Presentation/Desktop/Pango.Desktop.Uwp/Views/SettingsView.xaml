@@ -3,7 +3,6 @@
     x:Class="Pango.Desktop.Uwp.Views.SettingsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,131 +10,87 @@
     d:DesignHeight="300"
     d:DesignWidth="800">
 
-    <!--TODO move OnContent/OffContent to the style-->
+    <!--TODO: styles!!!!-->
     <StackPanel
+        Margin="{StaticResource PageContentContainerMargin}"
         Orientation="Vertical">
+        <TextBlock
+            Style="{StaticResource TitleTextBlockStyle}"
+            Text="{loc:StringResource Key='Settings'}"/>
         <!--Security Section-->
         <StackPanel
             Orientation="Vertical">
             <TextBlock 
-                Text="{loc:StringResource Key=Security}"/>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel
-                    Orientation="Vertical">
-                    <TextBlock
-                        Text="{loc:StringResource Key=Autolock}"/>
-                    <TextBlock
-                        Text="{loc:StringResource Key=Autolock_Description}"/>
-                </StackPanel>
+                Style="{StaticResource SectionSubtitleTextBlockStyle}"
+                Text="{loc:StringResource Key='Security'}"/>
+            <StackPanel
+                Margin="{StaticResource ControlSectionMargin}"
+                Orientation="Vertical">
                 <ToggleSwitch
                     Grid.Column="1"
-                    FlowDirection="RightToLeft"
-                    OnContent="{loc:StringResource Key=Switcher_On}"
-                    OffContent="{loc:StringResource Key=Switcher_Off}"
+                    Header="{loc:StringResource Key='Autolock'}"
                     IsOn="{Binding AllowAutolock}"/>
-            </Grid>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel
-                    Orientation="Vertical">
-                    <TextBlock
-                        Text="{loc:StringResource Key='Clear copied item data'}"/>
-                    <TextBlock
-                        Text="{loc:StringResource Key='Clear copied item data_Description'}"/>
-                </StackPanel>
+                <TextBlock
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{loc:StringResource Key='Autolock_Description'}"/>
+            </StackPanel>
+            <StackPanel
+                Margin="{StaticResource ControlSectionMargin}"
+                Orientation="Vertical">
                 <ToggleSwitch
+                    Header="{loc:StringResource Key='Clear copied item data'}"
                     Grid.Column="1"
-                    FlowDirection="RightToLeft"
-                    OnContent="{loc:StringResource Key=Switcher_On}"
-                    OffContent="{loc:StringResource Key=Switcher_Off}"
                     IsOn="{Binding AllowClearCopiedData}"/>
-            </Grid>
+                <TextBlock
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    Text="{loc:StringResource Key='Clear copied item data_Description'}"/>
+            </StackPanel>
         </StackPanel>
         
         <!--Language Section-->
         <StackPanel
             Orientation="Vertical">
             <TextBlock 
-                Text="{loc:StringResource Key=Security}"/>
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel
-                    Orientation="Vertical">
-                    <TextBlock
-                        Text="{loc:StringResource Key='Choose application language'}"/>
-                    <TextBlock
-                        Text="{loc:StringResource Key='Choose application language_Description'}"/>
-                </StackPanel>
-                <ComboBox>
-                    <x:String>English</x:String>
-                    <x:String>Belarusian</x:String>
-                </ComboBox>
-            </Grid>
+                Style="{StaticResource SectionSubtitleTextBlockStyle}"
+                Text="{loc:StringResource Key='Language'}"/>
+            <ComboBox
+                MinWidth="280"
+                Margin="{StaticResource ControlSectionMargin}"
+                Header="{loc:StringResource Key='Choose application language'}"
+                Grid.Column="1">
+                <x:String>English</x:String>
+                <x:String>Беларуская</x:String>
+            </ComboBox>
         </StackPanel>
 
         <!--Appearance Section-->
         <StackPanel
             Orientation="Vertical">
             <TextBlock 
-                Text="{loc:StringResource Key=Appearance}"/>
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel
-                    Orientation="Vertical">
-                    <TextBlock
-                        Text="{loc:StringResource Key='Theme'}"/>
-                </StackPanel>
-                <ComboBox>
-                    <x:String>Light</x:String>
-                    <x:String>Dark</x:String>
-                    <x:String>Use system setting</x:String>
-                </ComboBox>
-            </Grid>
+                Style="{StaticResource SectionSubtitleTextBlockStyle}"
+                Text="{loc:StringResource Key='Appearance'}"/>
+            <ComboBox
+                MinWidth="280"
+                Margin="{StaticResource ControlSectionMargin}"
+                Header="{loc:StringResource Key='Theme'}"
+                Grid.Column="1">
+                <x:String>Light</x:String>
+                <x:String>Dark</x:String>
+                <x:String>Use system setting</x:String>
+            </ComboBox>
         </StackPanel>
         
         <!--Other Section-->
         <StackPanel
             Orientation="Vertical">
             <TextBlock 
-                Text="{loc:StringResource Key=Other}"/>
-
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <StackPanel
-                    Orientation="Vertical">
-                    <TextBlock
-                        Text="{loc:StringResource Key='Launch at startup'}"/>
-                </StackPanel>
-                <ToggleSwitch
-                    Grid.Column="1"
-                    FlowDirection="RightToLeft"
-                    OnContent="{loc:StringResource Key=Switcher_On}"
-                    OffContent="{loc:StringResource Key=Switcher_Off}"
-                    IsOn="{Binding AllowLaunchAtStartup}"/>
-            </Grid>
+                Style="{StaticResource SectionSubtitleTextBlockStyle}"
+                Text="{loc:StringResource Key='Other'}"/>
+            <ToggleSwitch
+                Margin="{StaticResource ControlSectionMargin}"
+                Header="{loc:StringResource Key='Launch at startup'}"
+                Grid.Column="1"
+                IsOn="{Binding AllowLaunchAtStartup}"/>
         </StackPanel>
     </StackPanel>
 </abstract:PageBase>
