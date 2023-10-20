@@ -15,6 +15,8 @@
                     </ResourceDictionary.MergedDictionaries>
 
                     <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+                    <converters:BoolToVisibilityConvereter x:Key="BoolToVisibilityConvereter"/>
+                    
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>
                 </ResourceDictionary>

@@ -1,11 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
-using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -13,18 +16,31 @@ namespace Pango.Desktop.Uwp.ViewModels;
 public sealed class PasswordsViewModel : ObservableObject, IViewModel
 {
     private ISender _sender;
-    private readonly IPasswordRepository passwordRepository;
+    private bool _hasPasswords;
 
-    public PasswordsViewModel(ISender sender, IPasswordRepository passwordRepository)
+    public PasswordsViewModel(ISender sender)
     {
         _sender = sender;
-        this.passwordRepository = passwordRepository;
         Passwords = new();
+
+        CreatePasswordCommand = new RelayCommand(OnCreatePassword);
     }
+
+    #region Commands
+
+    public RelayCommand CreatePasswordCommand { get; }
+
+    #endregion
 
     #region Properties
 
     public ObservableCollection<PasswordDto> Passwords { get; private set; }
+
+    public bool HasPasswords
+    {
+        get => _hasPasswords;
+        set => SetProperty(ref _hasPasswords, value);
+    }
 
     #endregion
 
@@ -47,5 +63,12 @@ public sealed class PasswordsViewModel : ObservableObject, IViewModel
         {
             Passwords.Add(pwd);
         }
+
+        HasPasswords = Passwords.Any();
+    }
+
+    private void OnCreatePassword()
+    {
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(Core.Enums.AppView.NewPassword));
     }
 }

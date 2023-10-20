@@ -6,6 +6,11 @@ namespace Pango.Desktop.Uwp.Views.Abstract;
 
 public abstract class PageBase : Page
 {
+    public PageBase()
+    {
+        RegisterMessages();
+    }
+
     public IViewModel ViewModel => (IViewModel)DataContext;
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
@@ -22,5 +27,10 @@ public abstract class PageBase : Page
 
         if (ViewModel != null)
             await ViewModel.OnNavigatedFromAsync(e.Parameter);
+    }
+
+    protected virtual void RegisterMessages()
+    {
+
     }
 }

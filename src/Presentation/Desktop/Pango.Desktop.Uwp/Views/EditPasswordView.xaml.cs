@@ -6,11 +6,11 @@ using Pango.Desktop.Uwp.Views.Abstract;
 
 namespace Pango.Desktop.Uwp.Views;
 
-public sealed partial class NewUserView : ViewBase
+public sealed partial class EditPasswordView : ViewBase
 {
-    public NewUserView()
+    public EditPasswordView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<NewUserViewModel>();
+        DataContext = Ioc.Default.GetRequiredService<EditPasswordViewModel>();
     }
 }

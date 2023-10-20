@@ -23,15 +23,15 @@ public class UserPasswordsQueryHandler
         // TODO: the hardcode is for testing purpose - remove when the password creation flow is implemented
         List<PasswordDto> passwords = new()
         {
-            new PasswordDto()
-            {
-                Login = "VK",
-                Name = "VK Password",
-                Value = "qwerty",
-                Properties = new Dictionary<string, string>(),
-                Target = "vk.com",
-                UserName = "Alice"
-            }
+            //new PasswordDto()
+            //{
+            //    Login = "VK",
+            //    Name = "VK Password",
+            //    Value = "qwerty",
+            //    Properties = new Dictionary<string, string>(),
+            //    Target = "vk.com",
+            //    UserName = "Alice"
+            //}
         };
 
         return passwords.ToList();
