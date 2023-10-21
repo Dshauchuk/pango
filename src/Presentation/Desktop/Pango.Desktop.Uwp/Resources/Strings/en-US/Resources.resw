@@ -123,7 +123,7 @@
   <data name="Autolock" xml:space="preserve">
     <value>Autolock</value>
   </data>
-  <data name="Autolock_Description" xml:space="preserve">
+  <data name="AutolockDescription" xml:space="preserve">
     <value>Automatically locks the app after chosen period of device inactivity</value>
   </data>
   <data name="AddNewPassword" xml:space="preserve">
@@ -135,11 +135,11 @@
   <data name="ChangeUser" xml:space="preserve">
     <value>Change User</value>
   </data>
-  <data name="Clear copied item data" xml:space="preserve">
+  <data name="ClearCopiedData" xml:space="preserve">
     <value>Clear copied item data</value>
   </data>
-  <data name="Clear copied item data_Description" xml:space="preserve">
-    <value>Automatically clears copied details from clipboard</value>
+  <data name="ClearCopiedDataDescription" xml:space="preserve">
+    <value>Automatically clears copied details from clipboard after insertion</value>
   </data>
   <data name="CopyPassword" xml:space="preserve">
     <value>Copy password</value>
@@ -164,7 +164,7 @@
   <data name="Home" xml:space="preserve">
     <value>Home</value>
   </data>
-  <data name="Launch at startup" xml:space="preserve">
+  <data name="LaunchAtStartup" xml:space="preserve">
     <value>Launch at startup</value>
   </data>
   <data name="MasterCode" xml:space="preserve">
@@ -215,7 +215,7 @@
   <data name="UserInfo" xml:space="preserve">
     <value>User Info</value>
   </data>
-  <data name="Choose application language" xml:space="preserve">
+  <data name="ChooseApplicationLanguage" xml:space="preserve">
     <value>Choose application language</value>
   </data>
   <data name="Language" xml:space="preserve">
