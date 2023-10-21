@@ -127,19 +127,26 @@
     <Compile Include="Controls\FiltrationTextBox.xaml.cs">
       <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
     <Compile Include="Core\Converters\NullToCollapsedConverter.cs" />
     <Compile Include="Core\Enums\SignInStep.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
+    <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="ViewModels\IViewModel.cs" />
     <Compile Include="ViewModels\MainAppViewModel.cs" />
+    <Compile Include="ViewModels\EditPasswordViewModel.cs" />
     <Compile Include="Views\Abstract\ViewBase.cs" />
+    <Compile Include="Core\Enums\AppViews.cs" />
     <Compile Include="Views\MainAppView.xaml.cs">
       <DependentUpon>MainAppView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\Abstract\PageBase.cs" />
+    <Compile Include="Views\EditPasswordView.xaml.cs">
+      <DependentUpon>EditPasswordView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\Shell.xaml.cs">
       <DependentUpon>Shell.xaml</DependentUpon>
     </Compile>
@@ -208,6 +215,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Views\MainAppView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\EditPasswordView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

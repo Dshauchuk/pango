@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -12,5 +14,25 @@ public sealed partial class PasswordsView : PageBase
     {
         this.InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<PasswordsViewModel>();
+    }
+
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+
+        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+    }
+
+    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    {
+        switch(message.Value)
+        {
+            case Core.Enums.AppView.NewPassword:
+                PasswordsIndex_Pivot.SelectedIndex = 1;
+                break;
+            case Core.Enums.AppView.PasswordsIndex:
+                PasswordsIndex_Pivot.SelectedIndex = 0;
+                break;
+        }
     }
 }
