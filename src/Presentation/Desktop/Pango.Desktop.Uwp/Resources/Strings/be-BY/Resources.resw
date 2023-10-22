@@ -117,6 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Appearance" xml:space="preserve">
+    <value>Выгляд</value>
+  </data>
+  <data name="Autolock" xml:space="preserve">
+    <value>Аўтаблакіроўка</value>
+  </data>
+  <data name="AutolockDescription" xml:space="preserve">
+    <value>Аўтаматычна блакіруе праграму пасля выбранага перыяду бяздзейнасці прылады</value>
+  </data>
   <data name="AddNewPassword" xml:space="preserve">
     <value>Дадайце новы пароль</value>
   </data>
@@ -125,6 +134,12 @@
   </data>
   <data name="ChangeUser" xml:space="preserve">
     <value>Змяніць Карыстальніка</value>
+  </data>
+  <data name="ClearCopiedData" xml:space="preserve">
+    <value>Ачысціць скапіраваныя даныя элемента</value>
+  </data>
+  <data name="ClearCopiedDataDescription" xml:space="preserve">
+    <value>Аўтаматычна ачышчае скапіраваныя дэталі з буфера абмену пасля ўстаўкі</value>
   </data>
   <data name="CopyPassword" xml:space="preserve">
     <value>Скапіраваць пароль</value>
@@ -147,8 +162,14 @@
   <data name="Home" xml:space="preserve">
     <value>Галоўная</value>
   </data>
+  <data name="LaunchAtStartup" xml:space="preserve">
+    <value>Запуск пры загрузцы сістэмы</value>
+  </data>
   <data name="MasterCode" xml:space="preserve">
     <value>Код</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Іншае</value>
   </data>
   <data name="MyPasswords" xml:space="preserve">
     <value>Мае Паролі</value>
@@ -165,6 +186,9 @@
   <data name="Secrets" xml:space="preserve">
     <value>Сакрэты</value>
   </data>
+  <data name="Security" xml:space="preserve">
+    <value>Бяспека</value>
+  </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Абярыце Карыстальника</value>
   </data>
@@ -174,10 +198,25 @@
   <data name="SignIn" xml:space="preserve">
     <value>Увайсці</value>
   </data>
+  <data name="Switcher_Off" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
+  <data name="Switcher_On" xml:space="preserve">
+    <value>Укл.</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Тэма</value>
+  </data>
   <data name="User" xml:space="preserve">
     <value>Карыстальнік</value>
   </data>
   <data name="UserInfo" xml:space="preserve">
     <value>Інфармацыя пра карыстальніка</value>
+  </data>
+  <data name="ChooseApplicationLanguage" xml:space="preserve">
+    <value>Выберыце мову праграмы</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Мова</value>
   </data>
 </root>

@@ -117,6 +117,15 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Appearance" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="Autolock" xml:space="preserve">
+    <value>Autolock</value>
+  </data>
+  <data name="AutolockDescription" xml:space="preserve">
+    <value>Automatically locks the app after chosen period of device inactivity</value>
+  </data>
   <data name="AddNewPassword" xml:space="preserve">
     <value>Add new password</value>
   </data>
@@ -125,6 +134,12 @@
   </data>
   <data name="ChangeUser" xml:space="preserve">
     <value>Change User</value>
+  </data>
+  <data name="ClearCopiedData" xml:space="preserve">
+    <value>Clear copied item data</value>
+  </data>
+  <data name="ClearCopiedDataDescription" xml:space="preserve">
+    <value>Automatically clears copied details from clipboard after insertion</value>
   </data>
   <data name="CopyPassword" xml:space="preserve">
     <value>Copy password</value>
@@ -149,8 +164,14 @@
   <data name="Home" xml:space="preserve">
     <value>Home</value>
   </data>
+  <data name="LaunchAtStartup" xml:space="preserve">
+    <value>Launch at startup</value>
+  </data>
   <data name="MasterCode" xml:space="preserve">
     <value>Mastercode</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Other</value>
   </data>
   <data name="MyPasswords" xml:space="preserve">
     <value>My Passwords</value>
@@ -167,6 +188,9 @@
   <data name="Secrets" xml:space="preserve">
     <value>Secrets</value>
   </data>
+  <data name="Security" xml:space="preserve">
+    <value>Security</value>
+  </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Select a User</value>
   </data>
@@ -176,10 +200,25 @@
   <data name="SignIn" xml:space="preserve">
     <value>Sign In</value>
   </data>
+  <data name="Switcher_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="Switcher_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
   <data name="User" xml:space="preserve">
     <value>User</value>
   </data>
   <data name="UserInfo" xml:space="preserve">
     <value>User Info</value>
+  </data>
+  <data name="ChooseApplicationLanguage" xml:space="preserve">
+    <value>Choose application language</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
   </data>
 </root>
