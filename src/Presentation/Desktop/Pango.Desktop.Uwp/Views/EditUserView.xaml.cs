@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -6,11 +8,12 @@ using Pango.Desktop.Uwp.Views.Abstract;
 
 namespace Pango.Desktop.Uwp.Views;
 
-public sealed partial class NewUserView : ViewBase
+[AppView(AppView.EditUser)]
+public sealed partial class EditUserView : ViewBase
 {
-    public NewUserView()
+    public EditUserView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<NewUserViewModel>();
+        DataContext = Ioc.Default.GetRequiredService<EditUserViewModel>();
     }
 }

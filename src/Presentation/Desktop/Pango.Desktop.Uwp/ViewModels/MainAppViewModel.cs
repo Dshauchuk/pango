@@ -1,22 +1,13 @@
-﻿using Pango.Application.Common.Interfaces.Persistence;
-using System.Threading.Tasks;
+﻿using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public sealed class MainAppViewModel : IViewModel
+[AppView(AppView.MainAppView)]
+public sealed class MainAppViewModel : ViewModelBase
 {
-    public MainAppViewModel(IPasswordRepository passwordRepository)
+    public MainAppViewModel()
     {
             
-    }
-
-    public async Task OnNavigatedFromAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
-    {
-        await Task.CompletedTask;
     }
 }

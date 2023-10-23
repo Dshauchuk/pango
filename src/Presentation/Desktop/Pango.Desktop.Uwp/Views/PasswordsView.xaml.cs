@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
@@ -8,6 +10,7 @@ using Pango.Desktop.Uwp.Views.Abstract;
 
 namespace Pango.Desktop.Uwp.Views;
 
+[AppView(AppView.PasswordsIndex)]
 public sealed partial class PasswordsView : PageBase
 {
     public PasswordsView()
@@ -25,9 +28,9 @@ public sealed partial class PasswordsView : PageBase
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
     {
-        switch(message.Value)
+        switch(message.Value.NavigatedView)
         {
-            case Core.Enums.AppView.NewPassword:
+            case Core.Enums.AppView.EditPassword:
                 PasswordsIndex_Pivot.SelectedIndex = 1;
                 break;
             case Core.Enums.AppView.PasswordsIndex:

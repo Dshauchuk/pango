@@ -9,13 +9,8 @@ public sealed class HomeViewModel : ObservableRecipient, IViewModel
     {
     }
 
-    public async Task OnNavigatedFromAsync(object parameter)
+    public Task OnNavigatedToAsync(object parameter)
     {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
-    {
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 }

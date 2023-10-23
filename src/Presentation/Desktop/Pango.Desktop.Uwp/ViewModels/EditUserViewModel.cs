@@ -3,7 +3,7 @@ using Pango.Desktop.Uwp.Core.Enums;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-[AppView(AppView.Settings)]
-public class SettingsViewModel : ViewModelBase
+[AppView(AppView.EditUser)]
+public sealed class EditUserViewModel : ViewModelBase
 {
 }

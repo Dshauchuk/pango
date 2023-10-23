@@ -44,4 +44,14 @@ public class PasswordDto
     /// Name of the password owner
     /// </summary>
     public string UserName { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public DateTimeOffset LastModifiedAt { get; set; }
 }

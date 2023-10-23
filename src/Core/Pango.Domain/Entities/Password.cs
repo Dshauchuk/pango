@@ -15,7 +15,7 @@ public class Password : BaseAuditableEntity
         Name = string.Empty;
         Login = string.Empty;
         Properties = new();
-	}
+    }
 
 	/// <summary>
 	/// A password title

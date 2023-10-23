@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
-using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Mvvm.Models;
 
 namespace Pango.Desktop.Uwp.Mvvm.Messages;
 
-public class NavigationRequstedMessage : ValueChangedMessage<AppView>
+public class NavigationRequstedMessage : ValueChangedMessage<NavigationParameters>
 {
-    public NavigationRequstedMessage(AppView value) : base(value)
+    public NavigationRequstedMessage(NavigationParameters value) : base(value)
     {
 
     }

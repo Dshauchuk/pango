@@ -1,10 +1,11 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -13,7 +14,8 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public sealed class PasswordsViewModel : ObservableObject, IViewModel
+[AppView(AppView.PasswordsIndex)]
+public sealed class PasswordsViewModel : ViewModelBase
 {
     private ISender _sender;
     private bool _hasPasswords;
@@ -44,12 +46,7 @@ public sealed class PasswordsViewModel : ObservableObject, IViewModel
 
     #endregion
 
-    public async Task OnNavigatedFromAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object parameter)
     {
         await LoadPasswords();
     }
@@ -69,6 +66,6 @@ public sealed class PasswordsViewModel : ObservableObject, IViewModel
 
     private void OnCreatePassword()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(Core.Enums.AppView.NewPassword));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword)));
     }
 }

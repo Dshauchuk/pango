@@ -16,7 +16,4 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Pango.Domain\Pango.Domain.csproj" />
 	</ItemGroup>
-	<ItemGroup>
-	  <Folder Include="UseCases\Password\Commands\" />
-	</ItemGroup>
 </Project>

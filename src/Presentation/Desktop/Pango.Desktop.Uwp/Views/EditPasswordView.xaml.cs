@@ -1,4 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -6,6 +8,7 @@ using Pango.Desktop.Uwp.Views.Abstract;
 
 namespace Pango.Desktop.Uwp.Views;
 
+[AppView(AppView.EditPassword)]
 public sealed partial class EditPasswordView : ViewBase
 {
     public EditPasswordView()
