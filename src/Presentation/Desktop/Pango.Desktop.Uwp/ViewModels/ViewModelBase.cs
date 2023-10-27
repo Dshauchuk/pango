@@ -6,6 +6,7 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -14,6 +15,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 	public ViewModelBase()
 	{
         WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+        ViewResourceLoader = ResourceLoader.GetForCurrentView();
     }
 
     private async void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
@@ -23,6 +25,8 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
             await OnNavigatedToAsync(message.Value);
         }
     }
+
+    protected ResourceLoader ViewResourceLoader { get; }
 
     protected AppView View => this.GetType().GetCustomAttribute<AppViewAttribute>().View;
 

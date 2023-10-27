@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
@@ -45,6 +47,21 @@ public sealed partial class Shell : ViewBase
         SetTitleBar();
 
         NavigateInitialPage();
+
+        WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
+    }
+
+    private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
+    {
+        //object inAppNotificationWithButtonsTemplate;
+        //bool isTemplatePresent = Resources.TryGetValue("InAppNotificationTemplate", out inAppNotificationWithButtonsTemplate);
+
+        //if (isTemplatePresent && inAppNotificationWithButtonsTemplate is DataTemplate)
+        //{
+        //    InAppNotification.Show(inAppNotificationWithButtonsTemplate as DataTemplate,);
+        //}
+
+        InAppNotification.Show(message, 3000);
     }
 
     private async void NavigateInitialPage()

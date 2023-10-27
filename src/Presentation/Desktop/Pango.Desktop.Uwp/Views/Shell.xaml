@@ -6,7 +6,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
-    xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
+    xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels" 
+    xmlns:muxc1="using:Microsoft.Toolkit.Uwp.UI.Controls"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Shell_OnLoaded"
     mc:Ignorable="d"
@@ -36,5 +37,17 @@
                 </TextBlock>
             </StackPanel>
         </Border>
+
+        <muxc1:InAppNotification x:Name="InAppNotification" 
+                                 StackMode="StackInFront">
+            <muxc1:InAppNotification.ContentTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <!--<TextBlock Text="{Binding Type}" Margin="0,0,0,8" />-->
+                        <TextBlock Text="{Binding Message}" Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.8" />
+                    </StackPanel>
+                </DataTemplate>
+            </muxc1:InAppNotification.ContentTemplate>
+        </muxc1:InAppNotification>
     </Grid>
 </abstract:ViewBase>
