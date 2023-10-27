@@ -17,7 +17,7 @@ public class SignInViewModel : ViewModelBase
     #region Fields
 
     private UserDto _selectedUser;
-    private ISender _sender;
+    private readonly ISender _sender;
     private int _signInStepIndex;
 
     #endregion

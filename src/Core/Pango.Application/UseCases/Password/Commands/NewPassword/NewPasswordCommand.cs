@@ -2,16 +2,16 @@
 using MediatR;
 using Pango.Application.Models;
 
-namespace Pango.Application.UseCases.Password.Commands;
+namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
 public record NewPasswordCommand : IRequest<ErrorOr<PasswordDto>>
 {
-    public NewPasswordCommand()
+    public NewPasswordCommand(string name, string login, string value, Dictionary<string, string>? properties = null)
     {
-        Name = string.Empty;
-        Login = string.Empty;
-        Value = string.Empty;
-        Properties = new();
+        Name = name;
+        Login = login;
+        Value = value;
+        Properties = properties ?? new();
     }
 
     /// <summary>

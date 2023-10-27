@@ -9,6 +9,7 @@ public class Password : BaseAuditableEntity
 {
 	public Password()
 	{
+		Id = Guid.NewGuid();
         Value = string.Empty;
         Target = string.Empty;
         UserName = string.Empty;

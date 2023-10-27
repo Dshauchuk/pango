@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
+using Pango.Application.UseCases.Password.Commands.DeletePassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -26,11 +27,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = new();
 
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
+        DeletePasswordCommand = new RelayCommand<PasswordDto>(OnDeletePassword);
     }
 
     #region Commands
 
     public RelayCommand CreatePasswordCommand { get; }
+    public RelayCommand<PasswordDto> DeletePasswordCommand { get; }
 
     #endregion
 
@@ -62,6 +65,17 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
 
         HasPasswords = Passwords.Any();
+    }
+
+    private async void OnDeletePassword(PasswordDto dto)
+    {
+        var result = await _sender.Send(new DeletePasswordCommand(dto.Id));
+
+        if (!result.IsError)
+        {
+            Passwords.Remove(dto);
+            HasPasswords = Passwords.Any();
+        }
     }
 
     private void OnCreatePassword()

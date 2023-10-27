@@ -4,7 +4,7 @@ using MediatR;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
 
-namespace Pango.Application.UseCases.Password.Commands;
+namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
 public class NewPasswordCommandHandler
     : IRequestHandler<NewPasswordCommand, ErrorOr<PasswordDto>>

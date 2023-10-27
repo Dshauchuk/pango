@@ -15,6 +15,8 @@ public class PasswordDto
         Properties = new();
     }
 
+    public Guid Id { get; set; }
+
     /// <summary>
     /// A password title
     /// </summary>
