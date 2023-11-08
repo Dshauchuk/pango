@@ -82,7 +82,6 @@ public sealed partial class Shell : ViewBase
     {
         // Set the custom title bar to act as a draggable region
         Window.Current.SetTitleBar(TitleBarBorder);
-        AppVersionTextBlock.Text = $"v{Assembly.GetAssembly(typeof(Shell)).GetName().Version.ToString()}";
     }
 
     private void SignInViewModel_SignInSuceeded(string userId)
