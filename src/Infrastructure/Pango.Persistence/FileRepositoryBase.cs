@@ -41,7 +41,7 @@ public abstract class FileRepositoryBase<T>
             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
             File.Create(filePath).Dispose();
         }
-        //ApplicationData.Current.LocalFolder.GetFileAsync("my.json");
+
         using var reader = File.OpenText(filePath);
         string content = await reader.ReadToEndAsync();
 

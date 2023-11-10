@@ -5,6 +5,7 @@ using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.ViewModels.Validators;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -20,6 +21,8 @@ public class EditPasswordViewModel : ViewModelBase
     private string _login;
     private string _value;
 
+    private EditPasswordValidator _passwordValidator;
+
     #endregion
 
     public EditPasswordViewModel(ISender sender)
@@ -31,6 +34,12 @@ public class EditPasswordViewModel : ViewModelBase
     }
 
     #region Properties
+
+    public EditPasswordValidator PasswordValidator
+    {
+        get => _passwordValidator;
+        set => SetProperty(ref _passwordValidator, value);
+    }
 
     public string Name
     {
@@ -77,6 +86,8 @@ public class EditPasswordViewModel : ViewModelBase
         Name = string.Empty; 
         Login = string.Empty; 
         Value = string.Empty;
+
+        PasswordValidator = new EditPasswordValidator();
     }
 
     private async void OnSavePassword()
