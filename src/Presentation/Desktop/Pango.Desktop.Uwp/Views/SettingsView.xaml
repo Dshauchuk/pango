@@ -29,16 +29,14 @@
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">
-                        <ToggleSwitch Grid.Column="1"
-                                      IsOn="{Binding AllowAutolock}"
+                        <ToggleSwitch IsOn="{Binding AllowAutolock}"
                                       Header="{loc:StringResource Key='Autolock'}"/>
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
                                    Text="{loc:StringResource Key='AutolockDescription'}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">
-                        <ToggleSwitch Grid.Column="1"
-                                      IsOn="{Binding AllowClearCopiedData}"
+                        <ToggleSwitch IsOn="{Binding AllowClearCopiedData}"
                                       Header="{loc:StringResource Key='ClearCopiedData'}"/>
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
                                    Text="{loc:StringResource Key='ClearCopiedDataDescription'}"/>
@@ -49,20 +47,19 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Language'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ComboBox Grid.Column="1"
+                    <ComboBox DisplayMemberPath="Name"
+                              SelectedValuePath="Name"
+                              ItemsSource="{Binding Languages}"
                               Margin="{StaticResource ControlSectionMargin}"
-                              Header="{loc:StringResource Key='ChooseApplicationLanguage'}">
-                        <x:String>English</x:String>
-                        <x:String>Беларуская</x:String>
-                    </ComboBox>
+                              SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
+                              Header="{loc:StringResource Key='ChooseApplicationLanguage'}"/>
                 </StackPanel>
 
                 <!--Appearance Section-->
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Appearance'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ComboBox Grid.Column="1"
-                              Header="{loc:StringResource Key='Theme'}"
+                    <ComboBox Header="{loc:StringResource Key='Theme'}"
                               Margin="{StaticResource ControlSectionMargin}">
                         <x:String>Light</x:String>
                         <x:String>Dark</x:String>
@@ -74,8 +71,7 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Other'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ToggleSwitch Grid.Column="1"
-                                  IsOn="{Binding AllowLaunchAtStartup}"
+                    <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}"
                                   Margin="{StaticResource ControlSectionMargin}"
                                   Header="{loc:StringResource Key='LaunchAtStartup'}"/>
                 </StackPanel>

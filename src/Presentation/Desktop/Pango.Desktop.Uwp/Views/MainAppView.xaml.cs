@@ -15,13 +15,18 @@ namespace Pango.Desktop.Uwp.Views;
 
 public sealed partial class MainAppView : ViewBase
 {
+    /// <summary>
+    /// Contains Type of a view to which User should be redirected, when the View will be loaded
+    /// </summary>
+    private Type _initialView;
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
     private ResourceLoader _viewResourceLoader;
 
-    public MainAppView()
+    public MainAppView(Type initialView = null)
     {
         this.InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<MainAppViewModel>();
+        _initialView = initialView;
 
         Loaded += MainAppView_Loaded;
 
@@ -39,8 +44,7 @@ public sealed partial class MainAppView : ViewBase
         if (ViewModel != null)
             await ViewModel.OnNavigatedToAsync(null);
 
-        NavigationView.SelectedItem = HomeItem;
-        NavigationFrame.Navigate(typeof(HomeView));
+        NavigateToInitialPage();
 
         ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).Content = _viewResourceLoader.GetString("Settings");
     }
@@ -70,5 +74,34 @@ public sealed partial class MainAppView : ViewBase
 
             NavigationFrame.GoBack();
         }
+    }
+
+    /// <summary>
+    /// Navigates the User to the <see cref="_initialView"/> page if it specified. If <see cref="_initialView"/> does not specified or incorrect - navigates to the default initial page
+    /// </summary>
+    private void NavigateToInitialPage()
+    {
+        if (_initialView is not null)
+        {
+            if (_initialView == typeof(SettingsView))
+            {
+                NavigationView.SelectedItem = NavigationView.SettingsItem;
+            }
+            else
+            {
+                NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == _initialView);
+            }
+        }
+        if (NavigationView.SelectedItem is null)
+        {
+            NavigationView.SelectedItem = HomeItem;
+            NavigationFrame.Navigate(typeof(HomeView));
+        }
+        else
+        {
+            NavigationFrame.Navigate(_initialView);
+        }
+
+        _initialView = null;
     }
 }

@@ -6,6 +6,11 @@ namespace Pango.Desktop.Uwp.Views.Abstract;
 
 public abstract class ViewBase : UserControl
 {
+    public ViewBase()
+    {
+        RegisterMessages();
+    }
+
     public IViewModel ViewModel => (IViewModel)DataContext;
 
     protected virtual async void OnNavigatedTo(NavigationEventArgs e)
@@ -18,5 +23,10 @@ public abstract class ViewBase : UserControl
     {
         if (ViewModel != null)
             await ViewModel.OnNavigatedFromAsync(e.Parameter);
+    }
+
+    protected virtual void RegisterMessages()
+    {
+
     }
 }
