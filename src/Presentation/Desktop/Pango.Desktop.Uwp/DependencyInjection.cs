@@ -11,7 +11,7 @@ public static class DependencyInjection
             .AddTransient<ShellViewModel>()
             .AddTransient<HomeViewModel>()
             .AddTransient<MainAppViewModel>()
-            .AddTransient<NewUserViewModel>()
+            .AddTransient<EditUserViewModel>()
             .AddTransient<EditPasswordViewModel>()
             .AddTransient<SettingsViewModel>()
             .AddTransient<PasswordsViewModel>()

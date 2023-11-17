@@ -1,16 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public class ShellViewModel : IViewModel
+[AppView(AppView.Shell)]
+public class ShellViewModel : ViewModelBase
 {
-    public async Task OnNavigatedFromAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
 }

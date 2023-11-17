@@ -1,12 +1,13 @@
 ﻿<abstract:ViewBase
-    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     x:Class="Pango.Desktop.Uwp.Views.Shell"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc1="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
+    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     Loaded="Shell_OnLoaded"
     mc:Ignorable="d"
@@ -18,23 +19,33 @@
         <ContentControl x:Name="AppContent" 
                         VerticalContentAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
-                        Margin="10,40,10,10"/>
+                        Margin="10,30,10,10"/>
 
         <!--  Custom title bar  -->
-        <Border Height="40"
+        <Border Height="30"
                 Margin="0,0,0,0"
-                Padding="10,0,0,0"
+                Padding="20,5,0,0"
                 x:Name="TitleBarBorder"
                 VerticalAlignment="Top"
                 Background="Transparent">
             <StackPanel Spacing="5"
                         Orientation="Horizontal">
-                <TextBlock VerticalAlignment="Center"
-                           Style="{StaticResource CaptionTextBlockStyle}">
-                    <Run Text="Pango"/>
-                    <Run x:Name="AppVersionTextBlock" />
-                </TextBlock>
+                <Image Width="20"
+                       Height="20"
+                       Source="ms-appx:///assets/logo.png" />
             </StackPanel>
         </Border>
+
+        <muxc1:InAppNotification x:Name="InAppNotification" 
+                                 StackMode="StackInFront">
+            <muxc1:InAppNotification.ContentTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <!--<TextBlock Text="{Binding Type}" Margin="0,0,0,8" />-->
+                        <TextBlock Text="{Binding Message}" Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.8" />
+                    </StackPanel>
+                </DataTemplate>
+            </muxc1:InAppNotification.ContentTemplate>
+        </muxc1:InAppNotification>
     </Grid>
 </abstract:ViewBase>

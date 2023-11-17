@@ -1,13 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Security.Principal;
 using System.Threading;
 using Windows.UI.Core;
@@ -20,6 +22,7 @@ namespace Pango.Desktop.Uwp.Views;
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
+[AppView(AppView.Shell)]
 public sealed partial class Shell : ViewBase
 {
     #region Fields
@@ -40,6 +43,8 @@ public sealed partial class Shell : ViewBase
         SetTitleBar();
 
         NavigateInitialPage();
+
+        WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
     }
 
     #region Overrides
@@ -61,6 +66,19 @@ public sealed partial class Shell : ViewBase
 
     #endregion
 
+    private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
+    {
+        //object inAppNotificationWithButtonsTemplate;
+        //bool isTemplatePresent = Resources.TryGetValue("InAppNotificationTemplate", out inAppNotificationWithButtonsTemplate);
+
+        //if (isTemplatePresent && inAppNotificationWithButtonsTemplate is DataTemplate)
+        //{
+        //    InAppNotification.Show(inAppNotificationWithButtonsTemplate as DataTemplate,);
+        //}
+
+        InAppNotification.Show(message, 3000);
+    }
+
     private async void NavigateInitialPage()
     {
         SignInView signInView = new();
@@ -79,7 +97,6 @@ public sealed partial class Shell : ViewBase
     {
         // Set the custom title bar to act as a draggable region
         Window.Current.SetTitleBar(TitleBarBorder);
-        AppVersionTextBlock.Text = $"v{Assembly.GetAssembly(typeof(Shell)).GetName().Version.ToString()}";
     }
 
     private void SignInViewModel_SignInSuceeded(string userId)

@@ -1,8 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
+using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using System;
 using System.Collections.Generic;
@@ -11,12 +11,13 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public class SignInViewModel : ObservableObject, IViewModel
+[AppView(AppView.SignIn)]
+public class SignInViewModel : ViewModelBase
 {
     #region Fields
 
     private UserDto _selectedUser;
-    private ISender _sender;
+    private readonly ISender _sender;
     private int _signInStepIndex;
 
     #endregion
@@ -71,12 +72,7 @@ public class SignInViewModel : ObservableObject, IViewModel
 
     #region Overrides
 
-    public async Task OnNavigatedFromAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object parameter)
     {
         GoToUserSelection();
         await LoadUsersAsync();

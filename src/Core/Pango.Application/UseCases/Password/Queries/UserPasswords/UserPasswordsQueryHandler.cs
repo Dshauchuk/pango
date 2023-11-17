@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using Mapster;
 using MediatR;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
@@ -6,7 +7,7 @@ using Pango.Application.Models;
 namespace Pango.Application.UseCases.Password.Queries.UserPasswords;
 
 public class UserPasswordsQueryHandler
-    : IRequestHandler<UserPasswordsQuery, ErrorOr<IEnumerable<Models.PasswordDto>>>
+    : IRequestHandler<UserPasswordsQuery, ErrorOr<IEnumerable<Models.PasswordListItemDto>>>
 {
     private readonly IPasswordRepository _passwordRepository;
 
@@ -15,24 +16,9 @@ public class UserPasswordsQueryHandler
         _passwordRepository = passwordRepository;
     }
 
-    public async Task<ErrorOr<IEnumerable<Models.PasswordDto>>> Handle(UserPasswordsQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<Models.PasswordListItemDto>>> Handle(UserPasswordsQuery request, CancellationToken cancellationToken)
     {
-        //IEnumerable<PasswordDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PasswordDto>());
-
-        // DS
-        // TODO: the hardcode is for testing purpose - remove when the password creation flow is implemented
-        List<PasswordDto> passwords = new()
-        {
-            //new PasswordDto()
-            //{
-            //    Login = "VK",
-            //    Name = "VK Password",
-            //    Value = "qwerty",
-            //    Properties = new Dictionary<string, string>(),
-            //    Target = "vk.com",
-            //    UserName = "Alice"
-            //}
-        };
+        IEnumerable<PasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PasswordListItemDto>());
 
         return passwords.ToList();
     }

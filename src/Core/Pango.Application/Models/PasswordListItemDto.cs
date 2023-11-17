@@ -1,0 +1,21 @@
+﻿namespace Pango.Application.Models;
+
+public class PasswordListItemDto
+{
+    public Guid Id { get; set; }
+
+    /// <summary>
+    /// A password title
+    /// </summary>
+    public string Name { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public DateTimeOffset LastModifiedAt { get; set; }
+}

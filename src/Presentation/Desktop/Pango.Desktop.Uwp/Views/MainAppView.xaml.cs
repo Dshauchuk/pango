@@ -1,10 +1,15 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using CommunityToolkit.Mvvm.Messaging;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -51,14 +56,19 @@ public sealed partial class MainAppView : ViewBase
 
     private void NavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
     {
+        AppView appView = AppView.MainAppView;
         if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
             NavigationFrame.Navigate(pageType);
+            appView = pageType.GetCustomAttribute<AppViewAttribute>().View;
         }
         else if (args.IsSettingsInvoked)
         {
             NavigationFrame.Navigate(typeof(SettingsView));
+            appView = AppView.Settings;
         }
+
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView)));
     }
 
     private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)

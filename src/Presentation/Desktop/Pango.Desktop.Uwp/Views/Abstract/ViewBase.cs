@@ -19,12 +19,6 @@ public abstract class ViewBase : UserControl
             await ViewModel.OnNavigatedToAsync(e.Parameter);
     }
 
-    protected virtual async void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        if (ViewModel != null)
-            await ViewModel.OnNavigatedFromAsync(e.Parameter);
-    }
-
     protected virtual void RegisterMessages()
     {
 

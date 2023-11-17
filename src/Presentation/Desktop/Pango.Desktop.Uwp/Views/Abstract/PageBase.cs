@@ -17,16 +17,13 @@ public abstract class PageBase : Page
     {
         base.OnNavigatedTo(e);
 
-        if (ViewModel != null)
-            await ViewModel.OnNavigatedToAsync(e.Parameter);
+        //if (ViewModel != null)
+        //    await ViewModel.OnNavigatedToAsync(e.Parameter);
     }
 
     protected override async void OnNavigatedFrom(NavigationEventArgs e)
     {
         base.OnNavigatedFrom(e);
-
-        if (ViewModel != null)
-            await ViewModel.OnNavigatedFromAsync(e.Parameter);
     }
 
     protected virtual void RegisterMessages()

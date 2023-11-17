@@ -1,14 +1,15 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Views;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public class SettingsViewModel : ObservableObject, IViewModel
+[AppView(AppView.Settings)]
+public class SettingsViewModel : ViewModelBase
 {
     #region Fields
 
@@ -41,14 +42,4 @@ public class SettingsViewModel : ObservableObject, IViewModel
     }
 
     #endregion
-
-    public async Task OnNavigatedFromAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
-
-    public async Task OnNavigatedToAsync(object parameter)
-    {
-        await Task.CompletedTask;
-    }
 }

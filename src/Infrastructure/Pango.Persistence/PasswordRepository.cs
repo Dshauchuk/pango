@@ -31,9 +31,11 @@ public class PasswordRepository : FileRepositoryBase<Password>, IPasswordReposit
         string userId = _context.UserId;
         var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
 
-        if(passwordList.Contains(password)) 
+        var pwdToRemove = passwordList.FirstOrDefault(p => p.Id == password.Id);
+
+        if (pwdToRemove != null) 
         {
-            passwordList.Remove(password);
+            passwordList.Remove(pwdToRemove);
             await SaveItemsForUserAsync(_context.UserId, passwordList);
         }
     }

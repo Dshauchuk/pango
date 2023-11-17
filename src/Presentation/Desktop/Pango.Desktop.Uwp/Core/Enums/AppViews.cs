@@ -2,6 +2,14 @@
 
 public enum AppView
 {
+    Shell,
+
+    SignIn,
+    MainAppView,
+    Settings,
+
     PasswordsIndex,
-    NewPassword
+    EditPassword,
+
+    EditUser
 }
