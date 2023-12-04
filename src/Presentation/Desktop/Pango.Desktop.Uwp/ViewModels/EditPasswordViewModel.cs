@@ -17,10 +17,6 @@ public class EditPasswordViewModel : ViewModelBase
 
     private readonly ISender _sender;
 
-    private string _name;
-    private string _login;
-    private string _value;
-
     private EditPasswordValidator _passwordValidator;
 
     #endregion
@@ -39,24 +35,6 @@ public class EditPasswordViewModel : ViewModelBase
     {
         get => _passwordValidator;
         set => SetProperty(ref _passwordValidator, value);
-    }
-
-    public string Name
-    {
-        get => _name;
-        set => SetProperty(ref _name, value);
-    }
-
-    public string Login
-    {
-        get => _login;
-        set => SetProperty(ref _login, value);
-    }
-
-    public string Value
-    {
-        get => _value;
-        set => SetProperty(ref _value, value);
     }
 
     #endregion
@@ -83,17 +61,18 @@ public class EditPasswordViewModel : ViewModelBase
 
     private void Clear()
     {
-        Name = string.Empty; 
-        Login = string.Empty; 
-        Value = string.Empty;
-
         PasswordValidator = new EditPasswordValidator();
     }
 
     private async void OnSavePassword()
     {
-        await _sender.Send(new NewPasswordCommand(Name, Login, Value));
-        OnOpenIndexView();
+        PasswordValidator.Validate();
+
+        if (!PasswordValidator.HasErrors)
+        {
+            await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password));
+            OnOpenIndexView();
+        }
     }
 
     private void OnOpenIndexView()

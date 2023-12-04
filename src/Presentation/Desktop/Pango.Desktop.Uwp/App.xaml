@@ -17,6 +17,7 @@
                         <ResourceDictionary Source="Resources/Styles/ToggleSwitchStyles.xaml" />
                         
                         <ResourceDictionary Source="Controls/ValidationTextBox.xaml" />
+                        <ResourceDictionary Source="Controls/ValidationPasswordBox.xaml" />
                     </ResourceDictionary.MergedDictionaries>
 
                     <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>

@@ -16,7 +16,7 @@ public class EditPasswordValidator : ObservableValidator
         _viewResourceLoader = ResourceLoader.GetForCurrentView();
     }
 
-    [Required(AllowEmptyStrings = false, ErrorMessageResourceName = "Back", ErrorMessageResourceType = typeof(ResourceLoader))]
+    [Required()]
     public string Title
     {
         get => _title;
@@ -33,5 +33,10 @@ public class EditPasswordValidator : ObservableValidator
     {
         get => _password;
         set => SetProperty(ref _password, value);
+    }
+
+    public void Validate()
+    {
+        ValidateAllProperties();
     }
 }
