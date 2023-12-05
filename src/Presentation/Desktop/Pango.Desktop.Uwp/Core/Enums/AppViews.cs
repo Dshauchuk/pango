@@ -3,7 +3,8 @@
 public enum AppView
 {
     Shell,
-
+    
+    Home,
     SignIn,
     MainAppView,
     Settings,

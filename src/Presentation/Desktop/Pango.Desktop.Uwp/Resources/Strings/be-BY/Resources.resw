@@ -243,4 +243,10 @@
   <data name="PasswordCopiedToClipboard" xml:space="preserve">
     <value>Пароль скапіраваны ў буфер абмену</value>
   </data>
+  <data name="AddPassword" xml:space="preserve">
+    <value>Дадаць пароль</value>
+  </data>
+  <data name="NoPasswordsYet" xml:space="preserve">
+    <value>У вас яшчэ няма пароляў</value>
+  </data>
 </root>

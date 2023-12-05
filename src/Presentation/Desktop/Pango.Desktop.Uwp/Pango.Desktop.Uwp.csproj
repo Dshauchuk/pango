@@ -127,6 +127,12 @@
     <Compile Include="Controls\FiltrationTextBox.xaml.cs">
       <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\ValidationPasswordBox.xaml.cs">
+      <DependentUpon>ValidationPasswordBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\ValidationTextBox.xaml.cs">
+      <DependentUpon>ValidationTextBox.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Core\Attributes\AppViewAttribute.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
@@ -146,6 +152,7 @@
     <Compile Include="ViewModels\IViewModel.cs" />
     <Compile Include="ViewModels\MainAppViewModel.cs" />
     <Compile Include="ViewModels\EditPasswordViewModel.cs" />
+    <Compile Include="ViewModels\Validators\EditPasswordValidator.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
     <Compile Include="Views\Abstract\ViewBase.cs" />
     <Compile Include="Core\Enums\AppViews.cs" />
@@ -248,6 +255,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Controls\FiltrationTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ValidationPasswordBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\ValidationTextBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

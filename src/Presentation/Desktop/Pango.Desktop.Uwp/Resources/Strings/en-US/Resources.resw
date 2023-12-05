@@ -245,4 +245,10 @@
   <data name="PasswordCopiedToClipboard" xml:space="preserve">
     <value>Password has been copied to clipboard</value>
   </data>
+  <data name="AddPassword" xml:space="preserve">
+    <value>Add Password</value>
+  </data>
+  <data name="NoPasswordsYet" xml:space="preserve">
+    <value>You have no passwords yet</value>
+  </data>
 </root>

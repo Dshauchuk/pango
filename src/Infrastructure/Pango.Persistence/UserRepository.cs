@@ -54,7 +54,7 @@ public class UserRepository : IUserRepository
             return users;
         }
 
-        if (credentialList.Any() is true)
+        if (credentialList?.Any() is true)
         {
             foreach(var credential in credentialList)
             {
