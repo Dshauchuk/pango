@@ -134,14 +134,18 @@
       <DependentUpon>ValidationTextBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Core\Attributes\AppViewAttribute.cs" />
+    <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
     <Compile Include="Core\Converters\NullToCollapsedConverter.cs" />
     <Compile Include="Core\Enums\AppNotificationType.cs" />
     <Compile Include="Core\Enums\SignInStep.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
+    <Compile Include="Core\Utility\AppLanguageHelper.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
+    <Compile Include="Models\AppLanguage.cs" />
+    <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />
@@ -360,7 +364,9 @@
     <Folder Include="Core\Exceptions\" />
   </ItemGroup>
   <ItemGroup>
-    <PRIResource Include="Resources\Strings\en-US\Resources.resw" />
+    <PRIResource Include="Resources\Strings\en-US\Resources.resw">
+      <SubType>Designer</SubType>
+    </PRIResource>
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="Resources\Strings\be-BY\Resources.resw" />

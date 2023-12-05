@@ -2,15 +2,16 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Models;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
-using System.Globalization;
-using System.Reflection;
+using System.Linq;
 using System.Security.Principal;
 using System.Threading;
-using Windows.Globalization;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -35,13 +36,8 @@ public sealed partial class Shell : ViewBase
         this.InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<ShellViewModel>();
 
-        CultureInfo ci = new CultureInfo("be-BY");
-        Thread.CurrentThread.CurrentCulture = ci;
-        Thread.CurrentThread.CurrentUICulture = ci;
-        ApplicationLanguages.PrimaryLanguageOverride = "be-BY";
-        Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().Reset();
-        Windows.ApplicationModel.Resources.Core.ResourceContext.GetForViewIndependentUse().Reset();
-
+        AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
+        
         Window.Current.Activated += Current_Activated;
         
         SetTitleBar();
@@ -50,6 +46,25 @@ public sealed partial class Shell : ViewBase
 
         WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
     }
+
+    #region Overrides
+
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+
+        WeakReferenceMessenger.Default.Register<AppLanguageChangedMessage>(this, OnAppLanguageChanged);
+    }
+
+    private void OnAppLanguageChanged(object recipient, AppLanguageChangedMessage message)
+    {
+        if (message.Value is null)
+            return;
+
+        AppContent.Content = new MainAppView(message.Value);
+    }
+
+    #endregion
 
     private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
     {
