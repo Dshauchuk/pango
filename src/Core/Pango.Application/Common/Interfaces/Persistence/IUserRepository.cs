@@ -19,7 +19,7 @@ public interface IUserRepository : IRepository
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<User> FindAsync(Func<User, bool> predicate);
+    Task<User?> FindAsync(string userName);
     
     /// <summary>
     /// 

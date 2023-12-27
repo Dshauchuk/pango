@@ -1,6 +1,5 @@
 ﻿using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
-using Windows.Security.Credentials;
 
 namespace Pango.Persistence;
 
@@ -8,61 +7,34 @@ public class UserRepository : IUserRepository
 {
     private const string CredentialsStore = "Pango.Desktop.Uwp";
 
-    public async Task CreateAsync(User user)
-    {
-        PasswordVault vault = new();
-        PasswordCredential credentials = new(CredentialsStore, user.UserName, user.MasterPasswordHash);
+    private readonly IPasswordVault _passwordVault;
 
-        await Task.Run(() => vault.Add(credentials));
+    public UserRepository(IPasswordVault passwordVault)
+    {
+        _passwordVault = passwordVault;
     }
 
-    public async Task DeleteAsync(User user)
+    public Task CreateAsync(User user)
+        => _passwordVault.AddAsync(CredentialsStore, user.UserName, user.MasterPasswordHash);
+
+    public Task DeleteAsync(User user)
+        => _passwordVault.RemoveAsync(CredentialsStore, user.UserName);
+
+    public async Task<User?> FindAsync(string userName)
     {
-        PasswordVault vault = new();
-
-        PasswordCredential existentCredentials = 
-            vault
-            .FindAllByResource(CredentialsStore)
-            .FirstOrDefault(c => c.UserName == user.UserName);
-
-        if (existentCredentials != null)
+        ICredentials? credentials = await _passwordVault.FindAsync(CredentialsStore, userName);
+        
+        if(credentials is null)
         {
-            await Task.Run(() => vault.Remove(existentCredentials));
+            return null;
         }
+        return new User() { UserName = credentials.UserName, MasterPasswordHash = credentials.Password };
     }
-
-    public async Task<User> FindAsync(Func<User, bool> predicate)
-        => (await ListAsync()).FirstOrDefault(predicate);
 
     public async Task<IEnumerable<User>> ListAsync()
     {
-        PasswordVault vault = new();
-        List<User> users = new()
-        {
-            new User(){UserName = "Alice"}
-        };
+        IEnumerable<string> users = await _passwordVault.ListUsersAsync(CredentialsStore);
 
-        IReadOnlyList<PasswordCredential>? credentialList = null;
-
-        try
-        {
-            credentialList = await Task.Run(() => vault.FindAllByResource(CredentialsStore));
-        }
-        catch (Exception)
-        {
-            // TODO: add logging
-            return users;
-        }
-
-        if (credentialList?.Any() is true)
-        {
-            foreach(var credential in credentialList)
-            {
-                credential.RetrievePassword();
-                users.Add(new User() { UserName = credential.UserName, MasterPasswordHash = credential.Password });
-            }
-        }
-
-        return users;
+        return users.Select(u => new User() { UserName = u });
     }
 }

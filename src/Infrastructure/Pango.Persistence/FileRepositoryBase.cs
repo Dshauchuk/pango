@@ -1,14 +1,14 @@
-﻿using Windows.Storage;
-
-namespace Pango.Persistence;
+﻿namespace Pango.Persistence;
 
 public abstract class FileRepositoryBase<T>
 {
     private readonly IContentEncoder _contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider;
 
-    public FileRepositoryBase(IContentEncoder contentEncoder)
+    public FileRepositoryBase(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider)
     {
         _contentEncoder = contentEncoder;
+        _appDomainProvider = appDomainProvider;
     }
 
     protected abstract string FileName { get; }
@@ -32,7 +32,7 @@ public abstract class FileRepositoryBase<T>
     #region Private Methods
 
     private string BuildPath(string userId)
-        => Path.Combine(ApplicationData.Current.LocalFolder.Path, "users", userId, FileName);
+        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, FileName);
 
     private async Task<string> ReadFileContentAsync(string filePath)
     {

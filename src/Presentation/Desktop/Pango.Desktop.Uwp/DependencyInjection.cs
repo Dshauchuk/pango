@@ -1,5 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
+using Pango.Persistence;
 
 namespace Pango.Desktop.Uwp;
 
@@ -16,6 +19,14 @@ public static class DependencyInjection
             .AddTransient<SettingsViewModel>()
             .AddTransient<PasswordsViewModel>()
             .AddTransient<SignInViewModel>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddAppServices(this IServiceCollection services)
+    {
+        services.AddScoped<IPasswordVault, AppPasswordVault>();
+        services.AddScoped<IAppDomainProvider, AppDomainProvider>();
 
         return services;
     }

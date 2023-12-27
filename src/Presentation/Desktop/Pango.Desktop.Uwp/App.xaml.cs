@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Application;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Pango.Persistence;
@@ -76,6 +77,7 @@ sealed partial class App : ApplicationBase
             .RegisterViewModels()
             .AddApplicationServices()
             .AddInfrastructureServices()
+            .AddAppServices()
             .AddTransient<IRepositoryContext>((services) => CreateContext());
 
         // Register services

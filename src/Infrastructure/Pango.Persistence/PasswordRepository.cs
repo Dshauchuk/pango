@@ -9,8 +9,8 @@ public class PasswordRepository : FileRepositoryBase<Password>, IPasswordReposit
 
     protected override string FileName => "pwddata.dat";
 
-    public PasswordRepository(IContentEncoder contentEncoder, IRepositoryContext context)
-        : base(contentEncoder)
+    public PasswordRepository(IContentEncoder contentEncoder, IRepositoryContext context, IAppDomainProvider appDomainProvider)
+        : base(contentEncoder, appDomainProvider)
     {
         _context = context;
     }
