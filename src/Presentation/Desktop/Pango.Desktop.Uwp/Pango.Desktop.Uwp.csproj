@@ -10,8 +10,8 @@
     <RootNamespace>Pango.Desktop.Uwp</RootNamespace>
     <AssemblyName>Pango.Desktop.Uwp</AssemblyName>
     <LangVersion>10.0</LangVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.22000.0</TargetPlatformVersion>
@@ -143,15 +143,17 @@
     <Compile Include="Core\Enums\SignInStep.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
+    <Compile Include="Core\Utility\AppDomainProvider.cs" />
     <Compile Include="Core\Utility\AppLanguageHelper.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
-    <Compile Include="Data\AppPasswordVault.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />
+    <Compile Include="Security\AppCredentials.cs" />
+    <Compile Include="Security\AppPasswordVault.cs" />
     <Compile Include="ViewModels\IViewModel.cs" />
     <Compile Include="ViewModels\MainAppViewModel.cs" />
     <Compile Include="ViewModels\EditPasswordViewModel.cs" />
