@@ -9,7 +9,9 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
+using Windows.System;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -21,6 +23,7 @@ public class SignInViewModel : ViewModelBase
     private PangoUserDto _selectedUser;
     private readonly ISender _sender;
     private int _signInStepIndex;
+    private bool _hasUsers;
 
     #endregion
 
@@ -68,6 +71,12 @@ public class SignInViewModel : ViewModelBase
     {
         get => _signInStepIndex;
         set => SetProperty(ref _signInStepIndex, value);
+    }
+
+    public bool HasUsers
+    {
+        get => _hasUsers;
+        set => SetProperty(ref _hasUsers, value);   
     }
 
     #endregion
@@ -127,13 +136,26 @@ public class SignInViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
-        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
-
-        Users.Clear();
-        foreach (var user in queryResult.Value)
+        await DoAsync(async () =>
         {
-            Users.Add(user);
-        }
+            var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
+            HasUsers = !queryResult.IsError && queryResult.Value.Any();
+
+            if (!HasUsers)
+            {
+                return;
+            }
+
+            DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            dispatcherQueue.TryEnqueue(() =>
+            {
+                Users.Clear();
+                foreach (var user in queryResult.Value)
+                {
+                    Users.Add(user);
+                }
+            });
+        });
     }
 
     private async Task OnSignIn()

@@ -266,4 +266,7 @@
   <data name="PasswordConfirmationDoesNotMatch" xml:space="preserve">
     <value>Password Confirmation does not match</value>
   </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Loading</value>
+  </data>
 </root>

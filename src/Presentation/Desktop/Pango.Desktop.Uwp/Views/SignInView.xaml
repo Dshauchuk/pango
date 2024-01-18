@@ -17,67 +17,99 @@
     d:DesignWidth="800">
 
     <Grid>
-        <Pivot SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+        <Pivot SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
             <PivotItem>
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
+                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConvereter}}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock HorizontalAlignment="Center" 
+                        <TextBlock HorizontalAlignment="Center" 
                                Text="{loc:StringResource Key=SelectUser}"
                                Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                    <ListView Margin="0,40"
+                        <ListView Margin="0,40"
                               Grid.Row="1"
                               ItemsSource="{Binding Path=Users}"
                               HorizontalAlignment="Center"
                               SelectedValue="{Binding Path=SelectedUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-                        <ListView.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <StackPanel Background="Transparent" 
+                            <ListView.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel Background="Transparent" 
                                             Orientation="Horizontal" />
-                            </ItemsPanelTemplate>
-                        </ListView.ItemsPanel>
+                                </ItemsPanelTemplate>
+                            </ListView.ItemsPanel>
 
-                        <ListView.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal">
-                                    <SymbolIcon Symbol="Contact2" Margin="2"/>
-                                    <TextBlock Margin="2"
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <SymbolIcon Symbol="Contact2" Margin="2"/>
+                                        <TextBlock Margin="2"
                                                Text="{Binding UserName}" />
-                                </StackPanel>
-                            </DataTemplate>
-                        </ListView.ItemTemplate>
-                    </ListView>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
 
-                    <TextBlock Grid.Row="2" 
+                        <TextBlock Grid.Row="2" 
                                HorizontalAlignment="Center" 
                                Text="{loc:StringResource Key=OrCreateUser}"
                                Style="{StaticResource SubtitleTextBlockStyle}"/>
-                 
-                    <Button Grid.Row="3"
+
+                        <Button Grid.Row="3"
                             Margin="10"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Center"
                             Command="{Binding Path=NavigateToStepCommand}">
-                        <Button.CommandParameter>
-                            <enums:SignInStep>CreateUser</enums:SignInStep>
-                        </Button.CommandParameter>
-                        <Button.Content>
-                            <StackPanel Orientation="Horizontal">
-                                <SymbolIcon Margin="2"
+                            <Button.CommandParameter>
+                                <enums:SignInStep>CreateUser</enums:SignInStep>
+                            </Button.CommandParameter>
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon Margin="2"
                                             Symbol="Contact2"/>
-                                <TextBlock Margin="2"
+                                    <TextBlock Margin="2"
                                            Text="{loc:StringResource Key=CreateUser}" />
-                            </StackPanel>
-                        </Button.Content>
-                    </Button>
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                    </Grid>
+
+                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" 
+                               HorizontalAlignment="Center" 
+                               Text="{loc:StringResource Key=CreateUser}"
+                               Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <Button Grid.Row="1"
+                            Margin="10"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            Command="{Binding Path=NavigateToStepCommand}">
+                            <Button.CommandParameter>
+                                <enums:SignInStep>CreateUser</enums:SignInStep>
+                            </Button.CommandParameter>
+                            <Button.Content>
+                                <StackPanel Orientation="Horizontal">
+                                    <SymbolIcon Margin="2"
+                                            Symbol="Contact2"/>
+                                    <TextBlock Margin="2"
+                                           Text="{loc:StringResource Key=CreateUser}" />
+                                </StackPanel>
+                            </Button.Content>
+                        </Button>
+                    </Grid>
                 </Grid>
             </PivotItem>
             
@@ -139,5 +171,12 @@
                 <views:EditUserView />
             </PivotItem>
         </Pivot>
+
+        <Grid Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}}">
+            <TextBlock VerticalAlignment="Center" 
+                       HorizontalAlignment="Center">
+                <Run Text="{loc:StringResource Key=Loading}"/><Run Text="..."/>
+            </TextBlock>
+        </Grid>
     </Grid>
 </abstract:ViewBase>
