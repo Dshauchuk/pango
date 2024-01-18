@@ -12,25 +12,25 @@ public interface IUserRepository : IRepository
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>
-    Task CreateAsync(User user);
+    Task CreateAsync(PangoUser user);
     
     /// <summary>
     /// 
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<User?> FindAsync(string userName);
+    Task<PangoUser?> FindAsync(string userName);
     
     /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>
-    Task<IEnumerable<User>> ListAsync();
+    Task<IEnumerable<PangoUser>> ListAsync();
     
     /// <summary>
     /// 
     /// </summary>
     /// <param name="user"></param>
     /// <returns></returns>
-    Task DeleteAsync(User user);
+    Task DeleteAsync(PangoUser user);
 }

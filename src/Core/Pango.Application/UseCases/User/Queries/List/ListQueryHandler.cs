@@ -7,7 +7,7 @@ using Pango.Application.Models;
 namespace Pango.Application.UseCases.User.Queries.List;
 
 public class ListQueryHandler
-    : IRequestHandler<ListQuery, ErrorOr<IEnumerable<Models.UserDto>>>
+    : IRequestHandler<ListQuery, ErrorOr<IEnumerable<Models.PangoUserDto>>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -16,9 +16,9 @@ public class ListQueryHandler
         _userRepository = userRepository;
     }
 
-    public async Task<ErrorOr<IEnumerable<Models.UserDto>>> Handle(ListQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<Models.PangoUserDto>>> Handle(ListQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<UserDto> users = (await _userRepository.ListAsync()).Select(u => u.Adapt<UserDto>());
+        IEnumerable<PangoUserDto> users = (await _userRepository.ListAsync()).Select(u => u.Adapt<PangoUserDto>());
         return users.ToList();
     }
 }

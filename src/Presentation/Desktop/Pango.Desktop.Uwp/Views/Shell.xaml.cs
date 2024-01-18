@@ -45,6 +45,15 @@ public sealed partial class Shell : ViewBase
         NavigateInitialPage();
 
         WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
+        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+    }
+
+    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    {
+        if(message.Value.NavigatedView == AppView.SignIn)
+        {
+            NavigateInitialPage();
+        }
     }
 
     #region Overrides

@@ -249,4 +249,19 @@
   <data name="NoPasswordsYet" xml:space="preserve">
     <value>У вас яшчэ няма пароляў</value>
   </data>
+  <data name="CreateUser" xml:space="preserve">
+    <value>Дадаць Карыстальника</value>
+  </data>
+  <data name="OrCreateUser" xml:space="preserve">
+    <value>Або стварыць новага карыстальника</value>
+  </data>
+  <data name="PasswordConfirmation" xml:space="preserve">
+    <value>Пацвярджэнне пароля</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>Імя карыстальніка</value>
+  </data>
+  <data name="PasswordConfirmationDoesNotMatch" xml:space="preserve">
+    <value>Паролі не супадаюць</value>
+  </data>
 </root>

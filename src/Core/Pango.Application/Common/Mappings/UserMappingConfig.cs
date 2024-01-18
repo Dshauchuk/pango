@@ -8,6 +8,6 @@ public class UserMappingConfig : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<User, UserDto>();
+        config.NewConfig<PangoUser, PangoUserDto>();
     }
 }

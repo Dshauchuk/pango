@@ -14,13 +14,13 @@ public class UserRepository : IUserRepository
         _passwordVault = passwordVault;
     }
 
-    public Task CreateAsync(User user)
+    public Task CreateAsync(PangoUser user)
         => _passwordVault.AddAsync(CredentialsStore, user.UserName, user.MasterPasswordHash);
 
-    public Task DeleteAsync(User user)
+    public Task DeleteAsync(PangoUser user)
         => _passwordVault.RemoveAsync(CredentialsStore, user.UserName);
 
-    public async Task<User?> FindAsync(string userName)
+    public async Task<PangoUser?> FindAsync(string userName)
     {
         ICredentials? credentials = await _passwordVault.FindAsync(CredentialsStore, userName);
         
@@ -28,13 +28,13 @@ public class UserRepository : IUserRepository
         {
             return null;
         }
-        return new User() { UserName = credentials.UserName, MasterPasswordHash = credentials.Password };
+        return new PangoUser() { UserName = credentials.UserName, MasterPasswordHash = credentials.Password };
     }
 
-    public async Task<IEnumerable<User>> ListAsync()
+    public async Task<IEnumerable<PangoUser>> ListAsync()
     {
         IEnumerable<string> users = await _passwordVault.ListUsersAsync(CredentialsStore);
 
-        return users.Select(u => new User() { UserName = u });
+        return users.Select(u => new PangoUser() { UserName = u });
     }
 }

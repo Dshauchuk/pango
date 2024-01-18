@@ -251,4 +251,19 @@
   <data name="NoPasswordsYet" xml:space="preserve">
     <value>You have no passwords yet</value>
   </data>
+  <data name="CreateUser" xml:space="preserve">
+    <value>Create a User</value>
+  </data>
+  <data name="OrCreateUser" xml:space="preserve">
+    <value>or Create a New User</value>
+  </data>
+  <data name="PasswordConfirmation" xml:space="preserve">
+    <value>Password Confirmation</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>User name</value>
+  </data>
+  <data name="PasswordConfirmationDoesNotMatch" xml:space="preserve">
+    <value>Password Confirmation does not match</value>
+  </data>
 </root>

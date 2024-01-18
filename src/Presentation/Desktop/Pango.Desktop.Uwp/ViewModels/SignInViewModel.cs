@@ -1,9 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,7 +18,7 @@ public class SignInViewModel : ViewModelBase
 {
     #region Fields
 
-    private UserDto _selectedUser;
+    private PangoUserDto _selectedUser;
     private readonly ISender _sender;
     private int _signInStepIndex;
 
@@ -30,19 +32,19 @@ public class SignInViewModel : ViewModelBase
         UserSelected += SignInViewModel_UserSelected;
 
         SignInCommand = new AsyncRelayCommand(OnSignIn);
-        NavigateToStep = new RelayCommand<int>(OnNavigateToStep);
+        NavigateToStepCommand = new RelayCommand<int>(OnNavigateToStep);
     }
 
     #region Events
 
     public event Action<string> SignInSuceeded;
-    public event Action<UserDto> UserSelected;
+    public event Action<PangoUserDto> UserSelected;
 
     #endregion
 
     #region Commands
 
-    public RelayCommand<int> NavigateToStep { get; }
+    public RelayCommand<int> NavigateToStepCommand { get; }
 
     public AsyncRelayCommand SignInCommand { get; }
 
@@ -50,9 +52,9 @@ public class SignInViewModel : ViewModelBase
 
     #region Properties
 
-    public ObservableCollection<UserDto> Users { get; private set; }
+    public ObservableCollection<PangoUserDto> Users { get; private set; }
 
-    public UserDto SelectedUser
+    public PangoUserDto SelectedUser
     {
         get => _selectedUser;
         set
@@ -101,19 +103,21 @@ public class SignInViewModel : ViewModelBase
         };
     }
 
-    private void SignInViewModel_UserSelected(UserDto obj)
+    private void SignInViewModel_UserSelected(PangoUserDto obj)
     {
         GoToCodeEnteringForm();
     }
 
     private void GoToUserSelection()
     {
+        SelectedUser = null;
         SignInStepIndex = (int)SignInStep.SelectUser;
     }
 
     private void GoToUserCreation()
     {
         SignInStepIndex = (int)SignInStep.CreateUser;
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditUser)));
     }
 
     private void GoToCodeEnteringForm()
@@ -123,7 +127,7 @@ public class SignInViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
-        var queryResult = await _sender.Send<ErrorOr<IEnumerable<UserDto>>>(new ListQuery());
+        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
 
         Users.Clear();
         foreach (var user in queryResult.Value)

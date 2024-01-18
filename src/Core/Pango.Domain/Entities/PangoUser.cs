@@ -5,9 +5,9 @@ namespace Pango.Domain.Entities;
 /// <summary>
 /// A Pango user
 /// </summary>
-public class User : BaseEntity
+public class PangoUser : BaseEntity
 {
-	public User()
+	public PangoUser()
 	{
 		UserName = string.Empty;
 		MasterPasswordHash = string.Empty;
@@ -18,7 +18,7 @@ public class User : BaseEntity
 	/// </summary>
 	/// <param name="id">user id</param>
 	/// <param name="username">user name</param>
-	public User(Guid id, string username)
+	public PangoUser(Guid id, string username)
 		: base(id)
 	{
 		UserName = username;
