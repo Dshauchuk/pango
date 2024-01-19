@@ -13,4 +13,12 @@ public sealed partial class SignInView : ViewBase
         this.InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<SignInViewModel>();
     }
+
+    private async void PasscodePasswordBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            await ((SignInViewModel)DataContext).SignInCommand.ExecuteAsync(null);
+        }
+    }
 }
