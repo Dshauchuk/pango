@@ -6,34 +6,33 @@ using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Domain.Entities;
 
-namespace Pango.Application.UseCases.User.Commands.Register
+namespace Pango.Application.UseCases.User.Commands.Register;
+
+public class RegisterUserCommandHandler
+: IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
 {
-    public class RegisterUserCommandHandler
-    : IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
+    private readonly IUserRepository _userRepository;
+    private readonly IPasswordHashProvider _passwordHashProvider;
+
+    public RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider)
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IPasswordHashProvider _passwordHashProvider;
+        _userRepository = userRepository;
+        _passwordHashProvider = passwordHashProvider;
+    }
 
-        public RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider)
+    public async Task<ErrorOr<PangoUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    {
+        // TODO: has the password
+        string passwordHash = _passwordHashProvider.Hash(request.Password, out _);
+
+        PangoUser user = new()
         {
-            _userRepository = userRepository;
-            _passwordHashProvider = passwordHashProvider;
-        }
+            UserName = request.UserName,
+            MasterPasswordHash = passwordHash
+        };
 
-        public async Task<ErrorOr<PangoUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
-        {
-            // TODO: has the password
-            string passwordHash = _passwordHashProvider.Hash(request.Password, out _);
+        await _userRepository.CreateAsync(user);
 
-            PangoUser user = new()
-            {
-                UserName = request.UserName,
-                MasterPasswordHash = passwordHash
-            };
-
-            await _userRepository.CreateAsync(user);
-
-            return user.Adapt<PangoUserDto>();
-        }
+        return user.Adapt<PangoUserDto>();
     }
 }

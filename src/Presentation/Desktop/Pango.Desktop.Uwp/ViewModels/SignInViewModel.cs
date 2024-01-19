@@ -3,9 +3,11 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
+using Pango.Application.UseCases.User.Commands.SignIn;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,6 +26,7 @@ public class SignInViewModel : ViewModelBase
     private readonly ISender _sender;
     private int _signInStepIndex;
     private bool _hasUsers;
+    private string _passcode;
 
     #endregion
 
@@ -65,6 +68,12 @@ public class SignInViewModel : ViewModelBase
             SetProperty(ref _selectedUser, value);
             UserSelected?.Invoke(value);
         }
+    }
+
+    public string Passcode
+    {
+        get => _passcode;
+        set => SetProperty(ref _passcode, value);
     }
 
     public int SignInStepIndex
@@ -131,6 +140,7 @@ public class SignInViewModel : ViewModelBase
 
     private void GoToCodeEnteringForm()
     {
+        Passcode = string.Empty;
         SignInStepIndex = (int)SignInStep.EnterMastercode;
     }
 
@@ -160,7 +170,22 @@ public class SignInViewModel : ViewModelBase
 
     private async Task OnSignIn()
     {
-        await Task.CompletedTask;
+        var auth = await _sender.Send(new SignInCommand(SelectedUser.UserName, Passcode));
+
+        if (auth.IsError)
+        {
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
+
+            return;
+        }
+
+        if (!auth.Value)
+        {
+            // show error
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
+
+            return;
+        }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
     }
