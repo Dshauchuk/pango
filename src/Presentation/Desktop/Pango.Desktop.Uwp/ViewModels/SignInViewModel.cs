@@ -117,7 +117,7 @@ public class SignInViewModel : ViewModelBase
             case SignInStep.EnterMastercode:
                 GoToCodeEnteringForm();
                 break;
-            default: throw new InvalidCastException("Unkown step");
+            default: throw new InvalidCastException("Unknown step");
         };
     }
 
