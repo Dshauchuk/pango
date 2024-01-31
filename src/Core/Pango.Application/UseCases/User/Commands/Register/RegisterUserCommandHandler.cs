@@ -24,11 +24,13 @@ public class RegisterUserCommandHandler
     {
         // TODO: has the password
         string passwordHash = _passwordHashProvider.Hash(request.Password, out _);
+        string salt = Guid.NewGuid().ToString("N");
 
         PangoUser user = new()
         {
             UserName = request.UserName,
-            MasterPasswordHash = passwordHash
+            MasterPasswordHash = passwordHash,
+            PasswordSalt = salt,
         };
 
         await _userRepository.CreateAsync(user);

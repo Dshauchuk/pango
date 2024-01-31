@@ -2,13 +2,16 @@
 
 public class AppCredentials : Persistence.ICredentials
 {
-    public AppCredentials(string userName, string password)
+    public AppCredentials(string userName, string password, string passwordSalt = null)
     {
         UserName = userName;
-        Password = password;
+        PasswordHash = password;
+        PasswordSalt = passwordSalt;
     }
 
     public string UserName { get; }
 
-    public string Password { get; }
+    public string PasswordHash { get; }
+
+    public string PasswordSalt { get; }
 }

@@ -3,5 +3,6 @@
 public interface ICredentials
 {
     string UserName { get; }    
-    string Password { get; }
+    string PasswordHash { get; }
+    string PasswordSalt { get; }
 }

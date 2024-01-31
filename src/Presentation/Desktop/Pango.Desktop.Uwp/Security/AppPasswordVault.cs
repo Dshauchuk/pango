@@ -1,4 +1,6 @@
-﻿using Pango.Persistence;
+﻿using Newtonsoft.Json;
+using Pango.Application.Common;
+using Pango.Persistence;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +11,17 @@ namespace Pango.Desktop.Uwp.Security;
 
 public class AppPasswordVault : IPasswordVault
 {
-    public async Task AddAsync(string resource, string userName, string password)
+    public async Task AddAsync(string resource, string userName, string password, IDictionary<string, object>? properties = null)
     {
         PasswordVault vault = new();
-        PasswordCredential credentials = new(resource, userName, password);
+
+        properties ??= new Dictionary<string, object>();    
+        Dictionary<string, object> securedContent = new(properties)
+        {
+            { UserProperties.Password, password }
+        };
+
+        PasswordCredential credentials = new(resource, userName, JsonConvert.SerializeObject(securedContent));
 
         await Task.Run(() => vault.Add(credentials));
     }
@@ -41,7 +50,9 @@ public class AppPasswordVault : IPasswordVault
                 {
                     credential.RetrievePassword();
 
-                    return new AppCredentials(credential.UserName, credential.Password);
+                    Dictionary<string, object> securedContent = JsonConvert.DeserializeObject<Dictionary<string, object>>(credential.Password);
+
+                    return new AppCredentials(credential.UserName, securedContent[UserProperties.Password].ToString(), securedContent[UserProperties.PasswordSalt].ToString());
                 }
             }
         }
@@ -52,10 +63,7 @@ public class AppPasswordVault : IPasswordVault
     public async Task<IEnumerable<string>> ListUsersAsync(string resource)
     {
         PasswordVault vault = new();
-        List<string> users = new()
-        {
-            //"Alice", "Bob", "Ivan", "Dzmitry", "Alex"
-        };
+        List<string> users = new();
 
         IReadOnlyList<PasswordCredential>? credentialList = null;
 

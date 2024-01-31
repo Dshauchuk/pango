@@ -2,7 +2,7 @@
 
 public interface IPasswordVault
 {
-    Task AddAsync(string resource, string userName, string password);
+    Task AddAsync(string resource, string userName, string password, IDictionary<string, object>? properties = null);
 
     Task<ICredentials?> FindAsync(string resource, string userName);
     
