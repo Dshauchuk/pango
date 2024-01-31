@@ -1,26 +1,40 @@
-﻿using Pango.Application.Common.Interfaces.Services;
+﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Pango.Application.Common.Interfaces.Services;
 using System.Security.Cryptography;
 
 namespace Pango.Infrastructure.Services;
 
-// TODO: complete the implementation
 public class PasswordHashProvider : IPasswordHashProvider
 {
-    const int KeySize = 64;
-    const int Iterations = 350000;
-    HashAlgorithmName _hashAlgorithm = HashAlgorithmName.SHA512;
+    const int Iterations = 10000;
 
-    // TODO: complete the implementation
     public string Hash(string password, out byte[] salt)
     {
-        salt = new byte[KeySize];
+        salt = new byte[16];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(salt);
+        }
 
-        return password;
+        return Convert.ToBase64String(KeyDerivation.Pbkdf2(
+            password: password,
+            salt: salt,
+            prf: KeyDerivationPrf.HMACSHA256,
+            iterationCount: Iterations,
+            numBytesRequested: 32));
     }
 
-    // TODO: complete the implementation
     public bool VerifyPassword(string password, string hash, byte[] salt)
     {
-        return hash == password;
+        var passwordHash = KeyDerivation.Pbkdf2(
+            password: password,
+            salt: salt,
+            prf: KeyDerivationPrf.HMACSHA256,
+            iterationCount: Iterations,
+            numBytesRequested: 32);
+
+        var expectedHash = Convert.FromBase64String(hash);
+
+        return expectedHash.SequenceEqual(passwordHash);
     }
 }

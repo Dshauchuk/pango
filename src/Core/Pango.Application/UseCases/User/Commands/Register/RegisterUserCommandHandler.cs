@@ -22,15 +22,13 @@ public class RegisterUserCommandHandler
 
     public async Task<ErrorOr<PangoUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
-        // TODO: has the password
-        string passwordHash = _passwordHashProvider.Hash(request.Password, out _);
-        string salt = Guid.NewGuid().ToString("N");
+        string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
 
         PangoUser user = new()
         {
             UserName = request.UserName,
             MasterPasswordHash = passwordHash,
-            PasswordSalt = salt,
+            PasswordSalt = Convert.ToBase64String(salt),
         };
 
         await _userRepository.CreateAsync(user);

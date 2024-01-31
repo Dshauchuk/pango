@@ -26,7 +26,7 @@ public class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<bool>
             if (user is null)
                 return false;
 
-            return _passwordHashProvider.VerifyPassword(request.Password, user.MasterPasswordHash, new byte[0]);
+            return _passwordHashProvider.VerifyPassword(request.Password, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt));
         }
         catch(Exception ex)
         {
