@@ -3,5 +3,5 @@
 public interface IUserContextProvider
 {
     string GetUserName();
-    string GetSalt();
+    Task<string> GetSaltAsync();
 }
