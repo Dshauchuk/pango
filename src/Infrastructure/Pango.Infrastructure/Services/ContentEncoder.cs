@@ -16,11 +16,11 @@ public class ContentEncoder : IContentEncoder
         _userContextProvider = userContextProvider;
     }
 
-    public async Task<T?> DecryptAsync<T>(string encryptedContent)
+    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent)
     {
         try
         {
-            string jsonContent = Decrypt(Convert.FromBase64String(encryptedContent), await GetKeyAsync(), await GetVectorAsync());
+            string jsonContent = Decrypt(encryptedContent, await GetKeyAsync(), await GetVectorAsync());
 
             return JsonConvert.DeserializeObject<T>(jsonContent);
         }
@@ -30,13 +30,13 @@ public class ContentEncoder : IContentEncoder
         }
     }
 
-    public async Task<string> EncryptAsync<T>(T content)
+    public async Task<byte[]> EncryptAsync<T>(T content)
     {
         try
         {
             string json = JsonConvert.SerializeObject(content);
 
-            return Convert.ToBase64String(Encrypt(json, await GetKeyAsync(), await GetVectorAsync()));
+            return Encrypt(json, await GetKeyAsync(), await GetVectorAsync());
         }
         catch (Exception ex)
         {
