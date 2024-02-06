@@ -13,10 +13,10 @@ public class UserPasswordsQueryHandlerTests
         var mockRepository = new Mock<IPasswordRepository>();
         var handler = new UserPasswordsQueryHandler(mockRepository.Object);
         var expectedPasswords = new List<Domain.Entities.Password>
-    {
-        new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password1" },
-        new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password2" }
-    };
+        {
+            new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password1" },
+            new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password2" }
+        };
 
         mockRepository.Setup(repo => repo.QueryAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
             .ReturnsAsync(expectedPasswords);

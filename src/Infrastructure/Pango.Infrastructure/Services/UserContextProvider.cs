@@ -3,6 +3,7 @@ using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Security.Principal;
 
 namespace Pango.Infrastructure.Services;
@@ -40,5 +41,12 @@ public class UserContextProvider : IUserContextProvider
         }
 
         return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "Unknown";
+    }
+
+    public async Task<string> GetKeyAsync()
+    {
+        PangoUser? user = await _userRepository.FindAsync(GetUserName());
+
+        return user?.MasterPasswordHash ?? string.Empty;
     }
 }

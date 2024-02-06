@@ -81,7 +81,6 @@ public class AppPasswordVault : IPasswordVault
         {
             foreach (var credential in credentialList)
             {
-                //credential.RetrievePassword();
                 users.Add(credential.UserName);
             }
         }
