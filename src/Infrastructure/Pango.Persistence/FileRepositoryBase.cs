@@ -5,6 +5,9 @@ public abstract class FileRepositoryBase<T>
     private readonly IContentEncoder _contentEncoder;
     private readonly IAppDomainProvider _appDomainProvider;
 
+    private const int RetryCount = 3;
+    private SemaphoreSlim semaphore = new SemaphoreSlim(1);
+
     public FileRepositoryBase(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider)
     {
         _contentEncoder = contentEncoder;
@@ -36,34 +39,60 @@ public abstract class FileRepositoryBase<T>
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {
-        if(!File.Exists(filePath))
+        try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            File.Create(filePath).Dispose();
-        }
+            await semaphore.WaitAsync();
 
-        byte[] result;
-        using (FileStream stream = File.Open(filePath, FileMode.Open))
+            if (!File.Exists(filePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                File.Create(filePath).Dispose();
+            }
+
+            byte[] result;
+            using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                result = new byte[stream.Length];
+                await stream.ReadAsync(result, 0, (int)stream.Length);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
         {
-            result = new byte[stream.Length];
-            await stream.ReadAsync(result, 0, (int)stream.Length);
+            throw;
         }
-
-        return result;
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     private async Task WriteFileContentAsync(string filePath, byte[] content)
     {
-        if (!File.Exists(filePath))
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-            File.Create(filePath).Dispose();
-        }
+        await semaphore.WaitAsync();
 
-        using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+        try
         {
-            await sourceStream.WriteAsync(content, 0, content.Length);
-        };
+            if (!File.Exists(filePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                File.Create(filePath).Dispose();
+            }
+
+            using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            {
+                await sourceStream.WriteAsync(content, 0, content.Length);
+            };
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+        finally
+        {
+            semaphore.Release();
+        }
     }
 
     #endregion
