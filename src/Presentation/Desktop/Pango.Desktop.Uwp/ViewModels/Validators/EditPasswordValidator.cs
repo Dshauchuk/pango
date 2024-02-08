@@ -9,6 +9,8 @@ public class EditPasswordValidator : ObservableValidator
     private string _login;
     private string _password;
     private string _title;
+    private string _notes;
+
     private ResourceLoader _viewResourceLoader;
 
     public EditPasswordValidator()
@@ -33,6 +35,12 @@ public class EditPasswordValidator : ObservableValidator
     {
         get => _password;
         set => SetProperty(ref _password, value);
+    }
+
+    public string Notes
+    {
+        get => _notes;
+        set => SetProperty(ref _notes, value);
     }
 
     public void Validate()

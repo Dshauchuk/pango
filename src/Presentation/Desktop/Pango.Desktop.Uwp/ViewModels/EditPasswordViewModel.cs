@@ -1,11 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
+using Pango.Application.Common;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels.Validators;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -70,7 +72,12 @@ public class EditPasswordViewModel : ViewModelBase
 
         if (!PasswordValidator.HasErrors)
         {
-            await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password));
+            Dictionary<string, string> props = new()
+            {
+                { PasswordProperties.Notes, PasswordValidator.Notes }
+            };
+
+            await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
             OnOpenIndexView();
         }
     }
