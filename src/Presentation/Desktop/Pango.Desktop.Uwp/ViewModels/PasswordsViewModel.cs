@@ -31,21 +31,21 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = new();
 
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
-        DeletePasswordCommand = new RelayCommand<PasswordListItemDto>(OnDeletePassword);
-        CopyPasswordToClipboardCommand = new RelayCommand<PasswordListItemDto>(OnCopyPasswordToClipboard);
+        DeletePasswordCommand = new RelayCommand<PangoPasswordListItemDto>(OnDeletePassword);
+        CopyPasswordToClipboardCommand = new RelayCommand<PangoPasswordListItemDto>(OnCopyPasswordToClipboard);
     }
 
     #region Commands
 
     public RelayCommand CreatePasswordCommand { get; }
-    public RelayCommand<PasswordListItemDto> DeletePasswordCommand { get; }
-    public RelayCommand<PasswordListItemDto> CopyPasswordToClipboardCommand { get; }
+    public RelayCommand<PangoPasswordListItemDto> DeletePasswordCommand { get; }
+    public RelayCommand<PangoPasswordListItemDto> CopyPasswordToClipboardCommand { get; }
 
     #endregion
 
     #region Properties
 
-    public ObservableCollection<PasswordListItemDto> Passwords { get; private set; }
+    public ObservableCollection<PangoPasswordListItemDto> Passwords { get; private set; }
 
     public bool HasPasswords
     {
@@ -62,7 +62,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async Task LoadPasswords()
     {
-        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PasswordListItemDto>>>(new UserPasswordsQuery());
+        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
         Passwords.Clear();
         foreach (var pwd in queryResult.Value)
@@ -73,15 +73,17 @@ public sealed class PasswordsViewModel : ViewModelBase
         HasPasswords = Passwords.Any();
     }
 
-    private async void OnCopyPasswordToClipboard(PasswordListItemDto dto)
+    private async void OnCopyPasswordToClipboard(PangoPasswordListItemDto dto)
     {
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
 
         if (!passwordResult.IsError)
         {
-            DataPackage dataPackage = new();
-            dataPackage.RequestedOperation = DataPackageOperation.Copy;
-            dataPackage.SetText(passwordResult.Value.Value.ToString());
+            DataPackage dataPackage = new()
+            {
+                RequestedOperation = DataPackageOperation.Copy
+            };
+            dataPackage.SetText(passwordResult.Value.Value?.ToString() ?? string.Empty);
 
             Clipboard.SetContent(dataPackage);
 
@@ -89,7 +91,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnDeletePassword(PasswordListItemDto dto)
+    private async void OnDeletePassword(PangoPasswordListItemDto dto)
     {
         var result = await _sender.Send(new DeletePasswordCommand(dto.Id));
 

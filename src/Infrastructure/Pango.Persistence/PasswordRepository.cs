@@ -3,7 +3,7 @@ using Pango.Domain.Entities;
 
 namespace Pango.Persistence;
 
-public class PasswordRepository : FileRepositoryBase<Password>, IPasswordRepository
+public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
 {
     private readonly IRepositoryContext _context;
 
@@ -15,7 +15,7 @@ public class PasswordRepository : FileRepositoryBase<Password>, IPasswordReposit
         _context = context;
     }
 
-    public async Task CreateAsync(Password password)
+    public async Task CreateAsync(PangoPassword password)
     {
         string userId = _context.UserId;
         password.UserName = userId;
@@ -26,7 +26,7 @@ public class PasswordRepository : FileRepositoryBase<Password>, IPasswordReposit
         await SaveItemsForUserAsync(userId, passwordList);
     }
 
-    public async Task DeleteAsync(Password password)
+    public async Task DeleteAsync(PangoPassword password)
     {
         string userId = _context.UserId;
         var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
@@ -40,14 +40,14 @@ public class PasswordRepository : FileRepositoryBase<Password>, IPasswordReposit
         }
     }
 
-    public async Task<Password> FindAsync(Func<Password, bool> predicate)
+    public async Task<PangoPassword> FindAsync(Func<PangoPassword, bool> predicate)
     {
         string userId = _context.UserId;
 
         return (await ExtractAllItemsForUserAsync(userId)).FirstOrDefault(predicate);
     }
 
-    public async Task<IEnumerable<Password>> QueryAsync(Func<Password, bool> predicate)
+    public async Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate)
     {
         string userId = _context.UserId;
 

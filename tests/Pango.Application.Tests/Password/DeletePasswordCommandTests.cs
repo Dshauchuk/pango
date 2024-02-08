@@ -30,9 +30,9 @@ public class DeletePasswordCommandHandlerTests
         var handler = new DeletePasswordCommandHandler(mockRepository.Object);
         var passwordId = Guid.NewGuid();
         var request = new DeletePasswordCommand(passwordId);
-        var password = new Domain.Entities.Password { Id = passwordId };
+        var password = new Domain.Entities.PangoPassword { Id = passwordId };
 
-        mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
+        mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
             .ReturnsAsync(password);
 
         // Act
@@ -53,14 +53,14 @@ public class DeletePasswordCommandHandlerTests
         var passwordId = Guid.NewGuid();
         var request = new DeletePasswordCommand(passwordId);
 
-        mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
-            .ReturnsAsync((Domain.Entities.Password)null);
+        mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
+            .ReturnsAsync((Domain.Entities.PangoPassword)null);
 
         // Act
         var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        mockRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Domain.Entities.Password>()), Times.Never);
+        mockRepository.Verify(repo => repo.DeleteAsync(It.IsAny<Domain.Entities.PangoPassword>()), Times.Never);
         Assert.False(result.IsError);
         Assert.False(result.Value);
     }

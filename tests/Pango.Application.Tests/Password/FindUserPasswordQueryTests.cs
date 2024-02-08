@@ -31,8 +31,8 @@ namespace Pango.Application.Tests.Password
             var passwordId = Guid.NewGuid();
             var query = new FindUserPasswordQuery(passwordId);
 
-            mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
-                .ReturnsAsync((Domain.Entities.Password)null);
+            mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
+                .ReturnsAsync((Domain.Entities.PangoPassword)null);
 
             // Act
             var result = await handler.Handle(query, CancellationToken.None);
@@ -50,9 +50,9 @@ namespace Pango.Application.Tests.Password
             var handler = new FindUserPasswordQueryHandler(mockRepository.Object);
             var passwordId = Guid.NewGuid();
             var query = new FindUserPasswordQuery(passwordId);
-            var password = new Domain.Entities.Password { Id = passwordId };
+            var password = new Domain.Entities.PangoPassword { Id = passwordId };
 
-            mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
+            mockRepository.Setup(repo => repo.FindAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
                 .ReturnsAsync(password);
 
             // Act
