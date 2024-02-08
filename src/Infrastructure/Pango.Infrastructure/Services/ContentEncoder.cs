@@ -56,6 +56,9 @@ public class ContentEncoder : IContentEncoder
 
     private static byte[] Encrypt(string simpletext, byte[] key, byte[] iv)
     {
+        Ensure.AreEqual(key.Length, 32, nameof(key));
+        Ensure.AreEqual(iv.Length, 16, nameof(key));
+
         byte[] cipheredtext;
         using (Aes aes = Aes.Create())
         {
@@ -80,6 +83,9 @@ public class ContentEncoder : IContentEncoder
 
     private static string Decrypt(byte[] cipheredText, byte[] key, byte[] iv)
     {
+        Ensure.AreEqual(key.Length, 32, nameof(key));
+        Ensure.AreEqual(iv.Length, 16, nameof(key));
+
         string simpletext = String.Empty;
         using (Aes aes = Aes.Create())
         {
