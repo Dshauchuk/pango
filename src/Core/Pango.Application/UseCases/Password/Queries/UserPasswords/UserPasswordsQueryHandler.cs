@@ -7,7 +7,7 @@ using Pango.Application.Models;
 namespace Pango.Application.UseCases.Password.Queries.UserPasswords;
 
 public class UserPasswordsQueryHandler
-    : IRequestHandler<UserPasswordsQuery, ErrorOr<IEnumerable<Models.PasswordListItemDto>>>
+    : IRequestHandler<UserPasswordsQuery, ErrorOr<IEnumerable<Models.PangoPasswordListItemDto>>>
 {
     private readonly IPasswordRepository _passwordRepository;
 
@@ -16,9 +16,9 @@ public class UserPasswordsQueryHandler
         _passwordRepository = passwordRepository;
     }
 
-    public async Task<ErrorOr<IEnumerable<Models.PasswordListItemDto>>> Handle(UserPasswordsQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<IEnumerable<Models.PangoPasswordListItemDto>>> Handle(UserPasswordsQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<PasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PasswordListItemDto>());
+        IEnumerable<PangoPasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PangoPasswordListItemDto>());
 
         return passwords.ToList();
     }

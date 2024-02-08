@@ -7,7 +7,7 @@ using Pango.Application.Models;
 namespace Pango.Application.UseCases.Password.Queries.FindUserPassword;
 
 public class FindUserPasswordQueryHandler
-    : IRequestHandler<FindUserPasswordQuery, ErrorOr<Models.PasswordDto>>
+    : IRequestHandler<FindUserPasswordQuery, ErrorOr<Models.PangoPasswordDto>>
 {
     private readonly IPasswordRepository _passwordRepository;
 
@@ -16,15 +16,15 @@ public class FindUserPasswordQueryHandler
         _passwordRepository = passwordRepository;
     }
 
-    public async Task<ErrorOr<PasswordDto>> Handle(FindUserPasswordQuery request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<PangoPasswordDto>> Handle(FindUserPasswordQuery request, CancellationToken cancellationToken)
     {
-        Domain.Entities.Password password = await _passwordRepository.FindAsync(pwd => pwd.Id == request.PasswordId);
+        Domain.Entities.PangoPassword password = await _passwordRepository.FindAsync(pwd => pwd.Id == request.PasswordId);
 
         if(password is null)
         {
             return Error.NotFound();
         }
 
-        return password.Adapt<PasswordDto>();
+        return password.Adapt<PangoPasswordDto>();
     }
 }

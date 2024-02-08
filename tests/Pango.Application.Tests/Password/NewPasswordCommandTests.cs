@@ -40,7 +40,7 @@ public class NewPasswordCommandHandlerTests
         var result = await handler.Handle(request, CancellationToken.None);
 
         // Assert
-        mockRepository.Verify(repo => repo.CreateAsync(It.IsAny<Domain.Entities.Password>()), Times.Once);
+        mockRepository.Verify(repo => repo.CreateAsync(It.IsAny<Domain.Entities.PangoPassword>()), Times.Once);
         Assert.False(result.IsError);
     }
 }

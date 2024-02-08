@@ -2,7 +2,7 @@
 
 public interface IContentEncoder
 {
-    Task<string> EncryptAsync<T>(T content);
+    Task<byte[]> EncryptAsync<T>(T content);
 
-    Task<T?> DecryptAsync<T>(string encryptedContent);
+    Task<T?> DecryptAsync<T>(byte[] encryptedContent);
 }

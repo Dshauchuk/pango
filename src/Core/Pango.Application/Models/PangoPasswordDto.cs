@@ -3,9 +3,9 @@
 /// <summary>
 /// 
 /// </summary>
-public class PasswordDto
+public class PangoPasswordDto
 {
-    public PasswordDto()
+    public PangoPasswordDto()
     {
         Value = string.Empty;
         Target = string.Empty;

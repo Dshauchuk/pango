@@ -41,4 +41,11 @@ public class UserContextProvider : IUserContextProvider
 
         return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "Unknown";
     }
+
+    public async Task<string> GetKeyAsync()
+    {
+        PangoUser? user = await _userRepository.FindAsync(GetUserName());
+
+        return user?.MasterPasswordHash ?? string.Empty;
+    }
 }

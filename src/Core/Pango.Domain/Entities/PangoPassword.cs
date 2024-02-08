@@ -5,9 +5,9 @@ namespace Pango.Domain.Entities;
 /// <summary>
 /// A password persisted in pango
 /// </summary>
-public class Password : BaseAuditableEntity
+public class PangoPassword : BaseAuditableEntity
 {
-	public Password()
+	public PangoPassword()
 	{
 		Id = Guid.NewGuid();
         Value = string.Empty;

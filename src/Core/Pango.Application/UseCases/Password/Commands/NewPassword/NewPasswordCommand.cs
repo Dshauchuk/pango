@@ -4,7 +4,7 @@ using Pango.Application.Models;
 
 namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
-public record NewPasswordCommand : IRequest<ErrorOr<PasswordDto>>
+public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
 {
     public NewPasswordCommand(string name, string login, string value, Dictionary<string, string>? properties = null)
     {

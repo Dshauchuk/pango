@@ -12,26 +12,26 @@ public interface IPasswordRepository
     /// </summary>
     /// <param name="password"></param>
     /// <returns></returns>
-    Task CreateAsync(Password password);
+    Task CreateAsync(PangoPassword password);
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<Password> FindAsync(Func<Password, bool> predicate);
+    Task<PangoPassword> FindAsync(Func<PangoPassword, bool> predicate);
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<IEnumerable<Password>> QueryAsync(Func<Password, bool> predicate);
+    Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate);
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="password"></param>
     /// <returns></returns>
-    Task DeleteAsync(Password password);
+    Task DeleteAsync(PangoPassword password);
 }

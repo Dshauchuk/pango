@@ -12,13 +12,13 @@ public class UserPasswordsQueryHandlerTests
         // Arrange
         var mockRepository = new Mock<IPasswordRepository>();
         var handler = new UserPasswordsQueryHandler(mockRepository.Object);
-        var expectedPasswords = new List<Domain.Entities.Password>
-    {
-        new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password1" },
-        new Domain.Entities.Password { Id = Guid.NewGuid(), Name = "Password2" }
-    };
+        var expectedPasswords = new List<Domain.Entities.PangoPassword>
+        {
+            new Domain.Entities.PangoPassword { Id = Guid.NewGuid(), Name = "Password1" },
+            new Domain.Entities.PangoPassword { Id = Guid.NewGuid(), Name = "Password2" }
+        };
 
-        mockRepository.Setup(repo => repo.QueryAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
+        mockRepository.Setup(repo => repo.QueryAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
             .ReturnsAsync(expectedPasswords);
 
         // Act
@@ -41,8 +41,8 @@ public class UserPasswordsQueryHandlerTests
         var mockRepository = new Mock<IPasswordRepository>();
         var handler = new UserPasswordsQueryHandler(mockRepository.Object);
 
-        mockRepository.Setup(repo => repo.QueryAsync(It.IsAny<Func<Domain.Entities.Password, bool>>()))
-            .ReturnsAsync(new List<Domain.Entities.Password>());
+        mockRepository.Setup(repo => repo.QueryAsync(It.IsAny<Func<Domain.Entities.PangoPassword, bool>>()))
+            .ReturnsAsync(new List<Domain.Entities.PangoPassword>());
 
         // Act
         var request = new UserPasswordsQuery();

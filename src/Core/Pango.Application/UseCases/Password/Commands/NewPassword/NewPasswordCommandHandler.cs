@@ -7,7 +7,7 @@ using Pango.Application.Models;
 namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
 public class NewPasswordCommandHandler
-    : IRequestHandler<NewPasswordCommand, ErrorOr<PasswordDto>>
+    : IRequestHandler<NewPasswordCommand, ErrorOr<PangoPasswordDto>>
 {
     private readonly IPasswordRepository _passwordRepository;
 
@@ -16,9 +16,9 @@ public class NewPasswordCommandHandler
         _passwordRepository = passwordRepository;
     }
 
-    public async Task<ErrorOr<PasswordDto>> Handle(NewPasswordCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<PangoPasswordDto>> Handle(NewPasswordCommand request, CancellationToken cancellationToken)
     {
-        Domain.Entities.Password entity = new()
+        Domain.Entities.PangoPassword entity = new()
         {
             Login = request.Login,
             Name = request.Name,
@@ -29,6 +29,6 @@ public class NewPasswordCommandHandler
 
         await _passwordRepository.CreateAsync(entity);
 
-        return entity.Adapt<PasswordDto>();
+        return entity.Adapt<PangoPasswordDto>();
     }
 }
