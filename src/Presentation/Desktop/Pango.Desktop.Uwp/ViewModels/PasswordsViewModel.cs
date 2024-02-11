@@ -31,6 +31,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = new();
 
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
+        EditPasswordCommand = new RelayCommand<PangoPasswordListItemDto>(OnEditPassword);
         DeletePasswordCommand = new RelayCommand<PangoPasswordListItemDto>(OnDeletePassword);
         CopyPasswordToClipboardCommand = new RelayCommand<PangoPasswordListItemDto>(OnCopyPasswordToClipboard);
     }
@@ -38,6 +39,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     #region Commands
 
     public RelayCommand CreatePasswordCommand { get; }
+    public RelayCommand<PangoPasswordListItemDto> EditPasswordCommand { get; }
     public RelayCommand<PangoPasswordListItemDto> DeletePasswordCommand { get; }
     public RelayCommand<PangoPasswordListItemDto> CopyPasswordToClipboardCommand { get; }
 
@@ -100,6 +102,11 @@ public sealed class PasswordsViewModel : ViewModelBase
             Passwords.Remove(dto);
             HasPasswords = Passwords.Any();
         }
+    }
+
+    private void OnEditPassword(PangoPasswordListItemDto selected)
+    {
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, selected?.Id)));
     }
 
     private void OnCreatePassword()

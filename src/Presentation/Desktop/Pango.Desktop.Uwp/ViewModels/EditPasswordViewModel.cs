@@ -3,10 +3,12 @@ using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
 using Pango.Application.Common;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
+using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels.Validators;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -18,6 +20,7 @@ public class EditPasswordViewModel : ViewModelBase
     #region Fields
 
     private readonly ISender _sender;
+    private bool _isNew;
 
     private EditPasswordValidator _passwordValidator;
 
@@ -39,6 +42,12 @@ public class EditPasswordViewModel : ViewModelBase
         set => SetProperty(ref _passwordValidator, value);
     }
 
+    public bool IsNew
+    {
+        get => _isNew;
+        set => SetProperty(ref _isNew, value);
+    }
+
     #endregion
 
     #region Commands
@@ -50,11 +59,27 @@ public class EditPasswordViewModel : ViewModelBase
 
     #region Overrides
 
-    public override Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object parameter)
     {
         Clear();
 
-        return Task.CompletedTask;
+        if(parameter is null)
+        {
+            IsNew = true;
+            return;
+        }
+        else
+        {
+            IsNew = false;
+        }
+
+        Guid passwordId = (Guid)parameter;
+        var passwordResult = await _sender.Send(new FindUserPasswordQuery(passwordId));
+
+        if (!passwordResult.IsError)
+        {
+            todo
+        }
     }
 
     #endregion

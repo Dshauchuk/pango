@@ -6,4 +6,9 @@ public static class ApplicationErrors
     {
         public const string EncryptionError = "Data.EncryptionError";
     }
+
+    public static class Password
+    {
+        public const string NotFound = "Password.NotFound";
+    }
 }
