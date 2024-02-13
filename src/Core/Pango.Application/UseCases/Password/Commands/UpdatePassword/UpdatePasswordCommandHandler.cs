@@ -1,6 +1,6 @@
 ﻿using ErrorOr;
+using Mapster;
 using MediatR;
-using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
@@ -30,27 +30,10 @@ public class UpdatePasswordCommandHandler
         password.Name = request.Name;
         password.Value = request.Value;
         password.Login = request.Login;
+        password.Properties = request.Properties;
 
-        Dictionary<string, string> props = password.Properties ?? new();
+        PangoPassword updated = await _passwordRepository.UpdateAsync(password);
 
-        if (!props.ContainsKey(PasswordProperties.Notes))
-        {
-
-        }
-
-        //Domain.Entities.PangoPassword entity = new()
-        //{
-        //    Login = request.Login,
-        //    Name = request.Name,
-        //    Properties = request.Properties,
-        //    Value = request.Value,
-        //    CreatedAt = DateTimeOffset.UtcNow
-        //};
-
-        //await _passwordRepository.CreateAsync(entity);
-
-        //return entity.Adapt<PangoPasswordDto>();
-
-        return new PangoPasswordDto();
+        return updated.Adapt<PangoPasswordDto>();
     }
 }

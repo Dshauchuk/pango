@@ -1,4 +1,5 @@
-﻿using Pango.Application.Common.Interfaces.Persistence;
+﻿using Pango.Application.Common.Exceptions;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
 
 namespace Pango.Persistence;
@@ -24,6 +25,30 @@ public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRe
         passwordList.Add(password);
 
         await SaveItemsForUserAsync(userId, passwordList);
+    }
+
+    public async Task<PangoPassword> UpdateAsync(PangoPassword password)
+    {
+        string userId = _context.UserId;
+        var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
+
+        var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id);
+
+        if(pwdToUpdate is null)
+        {
+            throw new PasswordNotFoundException($"Pango password with ID \"{password.Id}\" not found");
+        }
+
+        pwdToUpdate.Name = password.Name;
+        pwdToUpdate.Login= password.Login;
+        pwdToUpdate.Properties = password.Properties;
+        pwdToUpdate.Value = password.Value;
+        pwdToUpdate.Target = password.Target;
+        pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
+
+        await SaveItemsForUserAsync(_context.UserId, passwordList);
+
+        return pwdToUpdate;
     }
 
     public async Task DeleteAsync(PangoPassword password)

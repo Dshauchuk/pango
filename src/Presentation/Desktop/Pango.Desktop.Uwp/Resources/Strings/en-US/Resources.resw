@@ -269,4 +269,10 @@
   <data name="Loading" xml:space="preserve">
     <value>Loading</value>
   </data>
+  <data name="PasswordCreated" xml:space="preserve">
+    <value>Password "{0}" has been successfully added</value>
+  </data>
+  <data name="PasswordModified" xml:space="preserve">
+    <value>Password "{0}" has been successfully updated</value>
+  </data>
 </root>

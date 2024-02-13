@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
 using Pango.Application.Common;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
+using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -81,8 +82,15 @@ public class EditPasswordViewModel : ViewModelBase
 
         if (!passwordResult.IsError)
         {
-            // DS
-            // TODO: complete the implementation
+            PasswordValidator.Id = passwordId;
+            PasswordValidator.Login = passwordResult.Value.Login;
+            PasswordValidator.Title = passwordResult.Value.Name;
+            PasswordValidator.Password = passwordResult.Value.Value;
+
+            if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
+            {
+                PasswordValidator.Notes = passwordResult.Value.Properties[PasswordProperties.Notes];
+            }
         }
     }
 
@@ -106,8 +114,19 @@ public class EditPasswordViewModel : ViewModelBase
                 { PasswordProperties.Notes, PasswordValidator.Notes }
             };
 
-            await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+            if (IsNew)
+            {
+                await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+            }
+            else
+            {
+                await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+            }
+            
             OnOpenIndexView();
+
+            string message = IsNew ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title) : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message));
         }
     }
 

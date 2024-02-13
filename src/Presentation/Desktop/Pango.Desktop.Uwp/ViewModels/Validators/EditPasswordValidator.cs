@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.ComponentModel.DataAnnotations;
 using Windows.ApplicationModel.Resources;
 
@@ -10,12 +11,19 @@ public class EditPasswordValidator : ObservableValidator
     private string _password;
     private string _title;
     private string _notes;
+    private Guid? _id;
 
     private ResourceLoader _viewResourceLoader;
 
     public EditPasswordValidator()
     {
         _viewResourceLoader = ResourceLoader.GetForCurrentView();
+    }
+
+    public Guid? Id
+    {
+        get => _id;
+        set => SetProperty(ref _id, value);
     }
 
     [Required()]

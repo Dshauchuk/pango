@@ -33,5 +33,12 @@ public interface IPasswordRepository
     /// </summary>
     /// <param name="password"></param>
     /// <returns></returns>
+    Task<PangoPassword> UpdateAsync(PangoPassword password);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="password"></param>
+    /// <returns></returns>
     Task DeleteAsync(PangoPassword password);
 }
