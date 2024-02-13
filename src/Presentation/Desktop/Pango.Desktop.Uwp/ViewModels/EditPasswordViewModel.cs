@@ -78,7 +78,8 @@ public class EditPasswordViewModel : ViewModelBase
 
         if (!passwordResult.IsError)
         {
-            todo
+            // DS
+            // TODO: complete the implementation
         }
     }
 
