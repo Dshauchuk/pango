@@ -7,6 +7,7 @@ using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels.Validators;
 using System;
 using System.Collections.Generic;
@@ -63,7 +64,9 @@ public class EditPasswordViewModel : ViewModelBase
     {
         Clear();
 
-        if(parameter is null)
+        NavigationParameters navigationParameters = parameter as NavigationParameters;
+
+        if(navigationParameters.Value is null)
         {
             IsNew = true;
             return;
@@ -73,7 +76,7 @@ public class EditPasswordViewModel : ViewModelBase
             IsNew = false;
         }
 
-        Guid passwordId = (Guid)parameter;
+        Guid passwordId = (Guid)navigationParameters.Value;
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(passwordId));
 
         if (!passwordResult.IsError)
