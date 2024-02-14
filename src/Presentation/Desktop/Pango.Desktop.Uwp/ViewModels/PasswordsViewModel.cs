@@ -66,8 +66,10 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
+        var passwordsOrderedList = queryResult.Value.OrderBy(p => p.Name);
+
         Passwords.Clear();
-        foreach (var pwd in queryResult.Value)
+        foreach (var pwd in passwordsOrderedList)
         {
             Passwords.Add(pwd);
         }
