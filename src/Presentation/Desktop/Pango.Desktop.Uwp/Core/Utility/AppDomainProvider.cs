@@ -7,6 +7,6 @@ public class AppDomainProvider : IAppDomainProvider
 {
     public string GetAppDataFolderPath()
     {
-        return ApplicationData.Current.LocalFolder.Path;
+        return ApplicationData.Current.RoamingFolder.Path;
     }
 }
