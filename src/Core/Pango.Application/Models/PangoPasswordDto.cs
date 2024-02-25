@@ -3,7 +3,7 @@
 /// <summary>
 /// 
 /// </summary>
-public class PangoPasswordDto
+public class PangoPasswordDto : DtoBase
 {
     public PangoPasswordDto()
     {
@@ -14,8 +14,6 @@ public class PangoPasswordDto
         Login = string.Empty;
         Properties = new();
     }
-
-    public Guid Id { get; set; }
 
     /// <summary>
     /// A password title

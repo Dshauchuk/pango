@@ -1,9 +1,7 @@
 ﻿namespace Pango.Application.Models;
 
-public class PangoPasswordListItemDto
+public class PangoPasswordListItemDto : DtoBase
 {
-    public Guid Id { get; set; }
-
     /// <summary>
     /// A password title
     /// </summary>
