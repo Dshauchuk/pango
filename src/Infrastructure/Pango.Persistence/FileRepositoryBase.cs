@@ -32,10 +32,26 @@ public abstract class FileRepositoryBase<T>
         await WriteFileContentAsync(filePath, content);
     }
 
+    protected Task DeleteUserDataAsync(string userId)
+    {
+        DirectoryInfo directory = new(BuildUserFolderPath(userId));
+
+        if (directory.Exists)
+        {
+            // delete user's directory, all files and subdirectories
+            return Task.Run(() => directory.Delete(true));
+        }
+
+        return Task.CompletedTask;
+    }
+
     #region Private Methods
 
+    private string BuildUserFolderPath(string userId)
+        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId);
+
     private string BuildPath(string userId)
-        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, FileName);
+        => Path.Combine(BuildUserFolderPath(userId), FileName);
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {

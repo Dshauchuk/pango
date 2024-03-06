@@ -12,5 +12,6 @@ public enum AppView
     PasswordsIndex,
     EditPassword,
 
+    User,
     EditUser
 }

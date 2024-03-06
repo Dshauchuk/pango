@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
     {
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IUserDataRepository, UserDataRepository>();
         services.AddScoped<IPasswordRepository, PasswordRepository>();
         services.AddScoped<IContentEncoder, ContentEncoder>();
 

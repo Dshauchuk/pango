@@ -111,15 +111,25 @@ public sealed partial class Shell : ViewBase
     private void SignInViewModel_SignInSuceeded(string userId)
     {
         SetThreadPrincipal(userId);
+        // Unsibscribe from the event to prevent memory leak
+        SignInViewModel signInViewModel = (AppContent.Content as SignInView)?.DataContext as SignInViewModel;
+        if (signInViewModel is not null)
+        {
+            signInViewModel.SignInSuceeded -= SignInViewModel_SignInSuceeded;
+        }
+
         AppContent.Content = new MainAppView();
     }
 
     private void SetThreadPrincipal(string userId)
     {
-        IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId.ToLower(), "Passport"), new string[] { });
+        IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
 
+        // Stores current user's principal
         Thread.CurrentPrincipal = principal;
-        AppDomain.CurrentDomain.SetThreadPrincipal(principal);
+        // Stores application level principal, can be set only once
+        // Uncomment if needed
+        //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
     }
 
     private void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)

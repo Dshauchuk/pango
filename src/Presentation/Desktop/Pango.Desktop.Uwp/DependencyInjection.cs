@@ -20,7 +20,8 @@ public static class DependencyInjection
             .AddTransient<EditPasswordViewModel>()
             .AddTransient<SettingsViewModel>()
             .AddTransient<PasswordsViewModel>()
-            .AddTransient<SignInViewModel>();
+            .AddTransient<SignInViewModel>()
+            .AddTransient<UserViewModel>();
 
         return services;
     }

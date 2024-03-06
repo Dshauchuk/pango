@@ -273,4 +273,10 @@
   <data name="PasswordModified" xml:space="preserve">
     <value>Пароль "{0}" быў паспяхова абноўлены</value>
   </data>
+  <data name="CreationDate" xml:space="preserve">
+    <value>Дата стварэння</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>Выдаліць Карыстальника</value>
+  </data>
 </root>
