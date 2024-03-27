@@ -16,26 +16,42 @@ public abstract class FileRepositoryBase<T>
 
     protected abstract string FileName { get; }
 
-    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string userId)
+    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string userName)
     {
-        string filePath = BuildPath(userId);
+        string filePath = BuildPath(userName);
         byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
 
         return await _contentEncoder.DecryptAsync<IEnumerable<T>>(encryptedFileContent) ?? Enumerable.Empty<T>();
     }
 
-    protected async Task SaveItemsForUserAsync(string userId, IEnumerable<T> items)
+    protected async Task SaveItemsForUserAsync(string userName, IEnumerable<T> items)
     {
-        string filePath = BuildPath(userId);
+        string filePath = BuildPath(userName);
         byte[] content = await _contentEncoder.EncryptAsync(items);
 
         await WriteFileContentAsync(filePath, content);
     }
 
+    protected Task DeleteUserDataAsync(string userName)
+    {
+        DirectoryInfo directory = new(BuildUserFolderPath(userName));
+
+        if (directory.Exists)
+        {
+            // delete user's directory, all files and subdirectories
+            return Task.Run(() => directory.Delete(true));
+        }
+
+        return Task.CompletedTask;
+    }
+
     #region Private Methods
 
-    private string BuildPath(string userId)
-        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, FileName);
+    private string BuildUserFolderPath(string userName)
+        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userName);
+
+    private string BuildPath(string userName)
+        => Path.Combine(BuildUserFolderPath(userName), FileName);
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {

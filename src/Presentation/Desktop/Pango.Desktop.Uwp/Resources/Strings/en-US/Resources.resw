@@ -275,4 +275,10 @@
   <data name="PasswordModified" xml:space="preserve">
     <value>Password "{0}" has been successfully updated</value>
   </data>
+  <data name="CreationDate" xml:space="preserve">
+    <value>Creation date</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>Delete User</value>
+  </data>
 </root>

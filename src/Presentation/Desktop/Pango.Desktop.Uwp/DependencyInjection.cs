@@ -20,7 +20,8 @@ public static class DependencyInjection
             .AddTransient<EditPasswordViewModel>()
             .AddTransient<SettingsViewModel>()
             .AddTransient<PasswordsViewModel>()
-            .AddTransient<SignInViewModel>();
+            .AddTransient<SignInViewModel>()
+            .AddTransient<UserViewModel>();
 
         return services;
     }
@@ -31,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IAppDomainProvider, AppDomainProvider>();
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
+        services.AddScoped<IAppUserProvider, AppUserProvider>();
 
         return services;
     }

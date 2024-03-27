@@ -1,0 +1,66 @@
+﻿<abstract:PageBase
+    x:Class="Pango.Desktop.Uwp.Views.UserView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Pango.Desktop.Uwp.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
+    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    d:DataContext="{d:DesignInstance Type=viewmodels:UserViewModel}"
+    mc:Ignorable="d">
+
+    <Grid Margin="{StaticResource PageContentContainerMargin}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{loc:StringResource Key='UserInfo'}"
+                   Style="{StaticResource HeaderTextBlockStyle}"/>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Margin="0 30 0 0"
+                        Orientation="Vertical">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Center"
+                               Text="{loc:StringResource Key='User'}"/>
+                    <TextBlock Text="{Binding CurrentUserName}"
+                               Grid.Column="1"
+                               VerticalAlignment="Center"/>
+                </Grid>
+                <Grid Height="Auto"
+                      Margin="0 6 0 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock VerticalAlignment="Center"
+                               Text="{loc:StringResource Key='CreationDate'}"/>
+                    <TextBlock Grid.Column="1"
+                               Text="NEED TO IMPLEMENT"
+                               VerticalAlignment="Center"/>
+                </Grid>
+
+                <Button Margin="0 20 0 0"
+                        Command="{Binding Path=DeleteUserCommand}">
+                    <Button.Content>
+                        <StackPanel Orientation="Horizontal">
+                            <FontIcon Glyph="&#xE74D;"
+                                      FontSize="{StaticResource FontIconSize}"/>
+                            <TextBlock Margin="2"
+                                       Text="{loc:StringResource Key=DeleteUser}" />
+                        </StackPanel>
+                    </Button.Content>
+                </Button>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</abstract:PageBase>

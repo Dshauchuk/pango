@@ -9,10 +9,12 @@ public class DeleteUserCommandHandler
     : IRequestHandler<DeleteUserCommand, ErrorOr<bool>>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserDataRepository _userDataRepository;
 
-    public DeleteUserCommandHandler(IUserRepository userRepository)
+    public DeleteUserCommandHandler(IUserRepository userRepository, IUserDataRepository userDataRepository)
     {
         _userRepository = userRepository;
+        _userDataRepository = userDataRepository;
     }
 
     public async Task<ErrorOr<bool>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
@@ -27,6 +29,7 @@ public class DeleteUserCommandHandler
             }
 
             await _userRepository.DeleteAsync(user);
+            await _userDataRepository.DeleteAllUserDataAsync(user.UserName);
 
             return true;
         }

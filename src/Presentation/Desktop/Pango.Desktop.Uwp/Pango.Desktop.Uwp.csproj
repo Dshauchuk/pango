@@ -162,6 +162,7 @@
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\AppDomainProvider.cs" />
     <Compile Include="Core\Utility\AppLanguageHelper.cs" />
+    <Compile Include="Core\Utility\AppUserProvider.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Models\AppLanguage.cs" />
@@ -174,6 +175,7 @@
     <Compile Include="ViewModels\IViewModel.cs" />
     <Compile Include="ViewModels\MainAppViewModel.cs" />
     <Compile Include="ViewModels\EditPasswordViewModel.cs" />
+    <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="ViewModels\Validators\EditPasswordValidator.cs" />
     <Compile Include="ViewModels\Validators\UserValidator.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
@@ -210,6 +212,9 @@
     </Compile>
     <Compile Include="Views\SettingsView.xaml.cs">
       <DependentUpon>SettingsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\UserView.xaml.cs">
+      <DependentUpon>UserView.xaml</DependentUpon>
     </Compile>
   </ItemGroup>
   <ItemGroup>
@@ -340,6 +345,10 @@
     <Page Include="Views\SettingsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\UserView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
