@@ -18,6 +18,6 @@ public class UserDataRepository : FileRepositoryBase<PangoUser>, IUserDataReposi
     }
 
     /// <inheritdoc/>
-    public Task DeleteAllUserDataAsync(string userId)
-        => DeleteUserDataAsync(userId);
+    public Task DeleteAllUserDataAsync(string userName)
+        => DeleteUserDataAsync(userName);
 }

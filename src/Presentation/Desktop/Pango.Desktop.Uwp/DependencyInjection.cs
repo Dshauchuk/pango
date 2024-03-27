@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IAppDomainProvider, AppDomainProvider>();
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
+        services.AddScoped<IAppUserProvider, AppUserProvider>();
 
         return services;
     }

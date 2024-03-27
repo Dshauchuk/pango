@@ -29,7 +29,7 @@ public class DeleteUserCommandHandler
             }
 
             await _userRepository.DeleteAsync(user);
-            await _userDataRepository.DeleteAllUserDataAsync(user.Id.ToString());
+            await _userDataRepository.DeleteAllUserDataAsync(user.UserName);
 
             return true;
         }
