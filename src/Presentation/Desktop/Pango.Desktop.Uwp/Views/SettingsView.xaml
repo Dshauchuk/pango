@@ -59,12 +59,12 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Appearance'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ComboBox Header="{loc:StringResource Key='Theme'}"
-                              Margin="{StaticResource ControlSectionMargin}">
-                        <x:String>Light</x:String>
-                        <x:String>Dark</x:String>
-                        <x:String>Use system setting</x:String>
-                    </ComboBox>
+                    <ComboBox DisplayMemberPath="Name"
+                              SelectedValuePath="Name"
+                              ItemsSource="{Binding AppThemes}"
+                              Header="{loc:StringResource Key='Theme'}"
+                              Margin="{StaticResource ControlSectionMargin}"
+                              SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"/>
                 </StackPanel>
 
                 <!--Other Section-->

@@ -8,5 +8,10 @@ public static class Constants
         /// Contains key, by which selected application language can be retrived from the <see cref="Windows.Storage.ApplicationDataContainer"/>
         /// </summary>
         public const string AppLanguage = "AppLanguage";
+
+        /// <summary>
+        /// Contains key, by which selected application theme can be retrived from the <see cref="Windows.Storage.ApplicationDataContainer"/>
+        /// </summary>
+        public const string AppTheme = "AppTheme";
     }
 }

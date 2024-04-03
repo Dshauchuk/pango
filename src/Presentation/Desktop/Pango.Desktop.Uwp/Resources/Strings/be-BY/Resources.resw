@@ -279,4 +279,13 @@
   <data name="DeleteUser" xml:space="preserve">
     <value>Выдаліць Карыстальника</value>
   </data>
+  <data name="AppTheme_Dark" xml:space="preserve">
+    <value>Цёмная</value>
+  </data>
+  <data name="AppTheme_Default" xml:space="preserve">
+    <value>Па змаўчанні</value>
+  </data>
+  <data name="AppTheme_Light" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
 </root>
