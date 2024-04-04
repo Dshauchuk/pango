@@ -5,7 +5,7 @@ public enum ContentType
     Passwords
 }
 
-public class FileContentPackage
+public class FileContentPackage : IHaveEncodedData
 {
     public FileContentPackage()
     {
