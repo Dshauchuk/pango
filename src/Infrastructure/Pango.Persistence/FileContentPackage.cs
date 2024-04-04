@@ -5,14 +5,14 @@ public enum ContentType
     Passwords
 }
 
-public class FileContent
+public class FileContentPackage
 {
-    public FileContent()
+    public FileContentPackage()
     {
         Id = Guid.NewGuid();
     }
 
-    public FileContent(string user, ContentType contentType, string dataType, int itemsCount, object data, DateTimeOffset lastModifiedAt)
+    public FileContentPackage(string user, ContentType contentType, string dataType, int itemsCount, object data, DateTimeOffset lastModifiedAt)
         : this()
     {
         Owner = user;
@@ -23,6 +23,9 @@ public class FileContent
         LastModifiedAt = lastModifiedAt;
     }
 
+    /// <summary>
+    /// Package id
+    /// </summary>
     public Guid Id { get; }
 
     /// <summary>

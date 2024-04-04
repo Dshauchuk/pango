@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Services;
@@ -6,6 +7,38 @@ using Pango.Persistence;
 using System.Security.Cryptography;
 
 namespace Pango.Infrastructure.Services;
+public class MyObjectConverter : JsonConverter
+{
+    public override bool CanConvert(Type objectType)
+    {
+        return objectType == typeof(object);
+    }
+
+    public override object ReadJson(Newtonsoft.Json.JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+    {
+        switch (reader.TokenType)
+        {
+            case Newtonsoft.Json.JsonToken.StartArray:
+                return JToken.Load(reader).ToObject<List<object>>();
+            case Newtonsoft.Json.JsonToken.StartObject:
+                return JToken.Load(reader).ToObject<Dictionary<string, object>>();
+            default:
+                if (reader.ValueType == null && reader.TokenType != Newtonsoft.Json.JsonToken.Null)
+                    throw new NotImplementedException("MyObjectConverter");
+                return reader.Value;
+        }
+    }
+
+    public override bool CanWrite
+    {
+        get { return false; }
+    }
+
+    public override void WriteJson(Newtonsoft.Json.JsonWriter writer, object value, JsonSerializer serializer)
+    {
+        throw new NotSupportedException("MyObjectConverter");
+    }
+}
 
 public class ContentEncoder : IContentEncoder
 {
@@ -22,7 +55,7 @@ public class ContentEncoder : IContentEncoder
         {
             string jsonContent = Decrypt(encryptedContent, await GetKeyAsync(), await GetVectorAsync());
 
-            return JsonConvert.DeserializeObject<T>(jsonContent);
+            return JsonConvert.DeserializeObject<T>(jsonContent, new MyObjectConverter());
         }
         catch(Exception ex)
         {

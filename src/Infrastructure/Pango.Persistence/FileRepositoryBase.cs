@@ -17,7 +17,11 @@ public abstract class FileRepositoryBase<T>
     private readonly ILogger _logger; 
     private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
-    public FileRepositoryBase(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider, IAppOptions appOptions, IUserContextProvider userContextProvider, ILogger logger)
+    public FileRepositoryBase(IContentEncoder contentEncoder, 
+        IAppDomainProvider appDomainProvider, 
+        IAppOptions appOptions, 
+        IUserContextProvider userContextProvider, 
+        ILogger logger)
     {
         _contentEncoder = contentEncoder;
         _appDomainProvider = appDomainProvider;
@@ -26,84 +30,110 @@ public abstract class FileRepositoryBase<T>
         _logger = logger;
     }
 
+    #region Properties
+
     protected abstract string DirectoryName { get; }
+
+    protected IUserContextProvider UserContextProvider => _userContextProvider; 
+
+    #endregion
+
+    #region Methods
 
     protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync()
     {
-        string userId = _userContextProvider.GetUserName();
         List<T> items = new();
+        IEnumerable<string> files = ListRepositoryFiles();
 
-        foreach(string file in ListRepositoryFiles())
+        foreach (string file in files)
         {
             var package = await ReadDataPackageAsync(file);
             
-            var t = package.Data as IEnumerable<T>;
+            if(package is null)
+            {
+                continue;
+            }
 
-            items.AddRange(t);
+            items.AddRange(await ProcessDataPackageAsync(package));
         }
 
-
-
         return items;
-        //string filePath = BuildPath(userId);
-        //byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
-
-        //return await _contentEncoder.DecryptAsync<IEnumerable<T>>(encryptedFileContent) ?? Enumerable.Empty<T>();
     }
 
     protected async Task SaveItemsForUserAsync(IEnumerable<T> items)
     {
         string userId = _userContextProvider.GetUserName();
 
-        IEnumerable<FileContent> contentParts = PrepareContent(items);
+        IEnumerable<FileContentPackage> contentParts = PrepareContent(items);
 
         int packageIndex = 1;
-        foreach(FileContent contentPart in contentParts)
+        foreach(FileContentPackage contentPart in contentParts)
         {
             string filePath = BuildPath(userId, $"{contentPart.Id}_part{packageIndex}{DefineFileExtension()}");
             await WriteDataPackageAsync(contentPart, filePath);
         }
     }
 
+    #endregion
+
     #region Private Methods
 
-    private async Task<IEnumerable<T>> ProcessDataPackage(FileContent fileContent)
+    private async Task<IEnumerable<T>> ProcessDataPackageAsync(FileContentPackage fileContent)
     {
+        if(fileContent is null)
+        {
+            return Enumerable.Empty<T>();
+        }
 
+        // todo: handle packaga data type & check the count
+
+
+
+        var type = Type.GetType(fileContent.DataType);
+        var t = Convert.ChangeType(fileContent.Data, type);
+        var t2 = t as IEnumerable<T>;
+
+        return fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
     }
 
-    private async Task<FileContent> ReadDataPackageAsync(string filePath)
+    private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath)
     {
         try
         {
             byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
-            var package = await _contentEncoder.DecryptAsync<FileContent>(encryptedFileContent);
+            var package = await _contentEncoder.DecryptAsync<FileContentPackage>(encryptedFileContent);
+
+            // todo: verify if the package id matches the file
 
             return package;
         }
         catch (Exception ex)
         {
+            _logger.LogError($"Cannot read data package from \"{filePath}\"", ex);
 
+            return null;
         }
     }
 
-    private async Task WriteDataPackageAsync(FileContent package, string filePath)
+    private async Task WriteDataPackageAsync(FileContentPackage package, string filePath)
     {
         byte[] content = await _contentEncoder.EncryptAsync(package);
         await WriteFileContentAsync(filePath, content);
     }
 
     private string BuildPath(string userId, string? fileName = null)
-        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, DirectoryName, fileName);
+        => string.IsNullOrWhiteSpace(fileName) ? 
+            Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, DirectoryName) : 
+            Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, DirectoryName, fileName);
 
-    private IEnumerable<FileContent> PrepareContent<TContent>(IEnumerable<TContent> items)
+    private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items)
     {
-        List<FileContent> fileContents = new(10);
+        List<FileContentPackage> fileContents = new(100);
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            FileContent fileContent = new(_userContextProvider.GetUserName(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
+            FileContentPackage fileContent = new(_userContextProvider.GetUserName(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 
@@ -113,7 +143,16 @@ public abstract class FileRepositoryBase<T>
     private IEnumerable<string> ListRepositoryFiles()
     {
         string directoryPath = BuildPath(_userContextProvider.GetUserName());
-        return Directory.GetFiles(directoryPath, $"*{DefineFileExtension()}");
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+            return new List<string>();
+        }
+        else
+        {
+            return Directory.GetFiles(directoryPath, $"*{DefineFileExtension()}");
+        }
     }
 
     private int DefineCountOfItemsPerFile()
