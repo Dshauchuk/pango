@@ -67,10 +67,20 @@ public abstract class FileRepositoryBase<T>
         IEnumerable<FileContentPackage> contentParts = PrepareContent(items);
 
         int packageIndex = 1;
+        List<string> usedFiles = new();
         foreach(FileContentPackage contentPart in contentParts)
         {
             string filePath = BuildPath(userId, $"{contentPart.Id}_part{packageIndex}{DefineFileExtension()}");
             await WriteDataPackageAsync(contentPart, filePath);
+            usedFiles.Add(filePath);
+        }
+
+        IEnumerable<string> allFiles = ListRepositoryFiles();
+        IEnumerable<string> uselessFiles = allFiles.Except(usedFiles);
+
+        foreach(string fileToRemove in uselessFiles)
+        {
+            File.Delete(fileToRemove);
         }
     }
 
@@ -78,22 +88,16 @@ public abstract class FileRepositoryBase<T>
 
     #region Private Methods
 
-    private async Task<IEnumerable<T>> ProcessDataPackageAsync(FileContentPackage fileContent)
+    private Task<IEnumerable<T>> ProcessDataPackageAsync(FileContentPackage fileContent)
     {
         if(fileContent is null)
         {
-            return Enumerable.Empty<T>();
+            return Task.FromResult(Enumerable.Empty<T>());
         }
 
-        // todo: handle packaga data type & check the count
+        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
 
-
-
-        var type = Type.GetType(fileContent.DataType);
-        var t = Convert.ChangeType(fileContent.Data, type);
-        var t2 = t as IEnumerable<T>;
-
-        return fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
+        return Task.FromResult(data);
     }
 
     private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath)

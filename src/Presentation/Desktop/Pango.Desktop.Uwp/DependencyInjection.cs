@@ -67,7 +67,7 @@ public static class DependencyInjection
 
         // DS
         // TODO: move to the config file
-        services.AddSingleton<IAppOptions>((s) => new AppOptions() { FileOptions = new FileOptions() { PasswordsPerFile = 5 } });
+        services.AddSingleton<IAppOptions>((s) => new AppOptions() { FileOptions = new FileOptions() { PasswordsPerFile = 2 } });
 
         return services;
     }
