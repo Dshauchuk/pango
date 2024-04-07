@@ -2,27 +2,27 @@
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
-using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
 
 namespace Pango.Persistence;
 
 public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
 {
-    protected override string DirectoryName => "Passwords";
-
-    public PasswordRepository(IContentEncoder contentEncoder, 
-        IAppDomainProvider appDomainProvider, 
-        IUserContextProvider userContextProvider,
+    protected override string DirectoryName => "passwords";
+    
+    public PasswordRepository(IContentEncoder contentEncoder,
+        IAppUserProvider userProvider,
+        IAppDomainProvider appDomainProvider,
         ILogger logger,
         IAppOptions appOptions)
-        : base(contentEncoder, appDomainProvider, appOptions, userContextProvider, logger)
+        : base(contentEncoder, userProvider, appDomainProvider, appOptions, logger)
     {
+
     }
 
     public async Task CreateAsync(PangoPassword password)
     {
-        string userId = UserContextProvider.GetUserName();
+        string userId = UserDataProvider.GetUserId();
         password.UserName = userId;
 
         var passwordList = (await ExtractAllItemsForUserAsync()).ToList();

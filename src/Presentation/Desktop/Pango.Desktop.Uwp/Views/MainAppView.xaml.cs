@@ -38,7 +38,8 @@ public sealed partial class MainAppView : ViewBase
         NavigationItems = new[]
         {
             new NavigationEntry(HomeItem, typeof(HomeView)),
-            new NavigationEntry(PasswordsItem, typeof(PasswordsView))
+            new NavigationEntry(PasswordsItem, typeof(PasswordsView)),
+            new NavigationEntry(UserItem, typeof(UserView))
         };
 
         _viewResourceLoader = ResourceLoader.GetForCurrentView();

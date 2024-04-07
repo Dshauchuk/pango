@@ -3,7 +3,6 @@ using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Extensions;
 using Pango.Application.Common.Interfaces;
-using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
 
 namespace Pango.Persistence;
@@ -13,29 +12,27 @@ public abstract class FileRepositoryBase<T>
     private readonly IContentEncoder _contentEncoder;
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppOptions _appOptions;
-    private readonly IUserContextProvider _userContextProvider;
     private readonly ILogger _logger; 
     private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
-    public FileRepositoryBase(IContentEncoder contentEncoder, 
+    public FileRepositoryBase(IContentEncoder contentEncoder,
+        IAppUserProvider appUserProvider,
         IAppDomainProvider appDomainProvider, 
         IAppOptions appOptions, 
-        IUserContextProvider userContextProvider, 
         ILogger logger)
     {
         _contentEncoder = contentEncoder;
         _appDomainProvider = appDomainProvider;
         _appOptions = appOptions;
-        _userContextProvider = userContextProvider;
         _logger = logger;
+        UserDataProvider = appUserProvider;
     }
 
     #region Properties
 
     protected abstract string DirectoryName { get; }
 
-    protected IUserContextProvider UserContextProvider => _userContextProvider; 
-
+    protected IAppUserProvider UserDataProvider { get; }
     #endregion
 
     #region Methods
@@ -62,7 +59,7 @@ public abstract class FileRepositoryBase<T>
 
     protected async Task SaveItemsForUserAsync(IEnumerable<T> items)
     {
-        string userId = _userContextProvider.GetUserName();
+        string userId = UserDataProvider.GetUserId();
 
         IEnumerable<FileContentPackage> contentParts = PrepareContent(items);
 
@@ -70,7 +67,7 @@ public abstract class FileRepositoryBase<T>
         List<string> usedFiles = new();
         foreach(FileContentPackage contentPart in contentParts)
         {
-            string filePath = BuildPath(userId, $"{contentPart.Id}_part{packageIndex}{DefineFileExtension()}");
+            string filePath = BuildPath(userId, $"{contentPart.Id}_p{packageIndex++}{DefineFileExtension()}");
             await WriteDataPackageAsync(contentPart, filePath);
             usedFiles.Add(filePath);
         }
@@ -125,11 +122,6 @@ public abstract class FileRepositoryBase<T>
         await WriteFileContentAsync(filePath, content);
     }
 
-    private string BuildPath(string userId, string? fileName = null)
-        => string.IsNullOrWhiteSpace(fileName) ? 
-            Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, DirectoryName) : 
-            Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userId, DirectoryName, fileName);
-
     private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items)
     {
         List<FileContentPackage> fileContents = new(100);
@@ -137,7 +129,7 @@ public abstract class FileRepositoryBase<T>
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            FileContentPackage fileContent = new(_userContextProvider.GetUserName(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
+            FileContentPackage fileContent = new(UserDataProvider.GetUserId(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 
@@ -146,7 +138,7 @@ public abstract class FileRepositoryBase<T>
 
     private IEnumerable<string> ListRepositoryFiles()
     {
-        string directoryPath = BuildPath(_userContextProvider.GetUserName());
+        string directoryPath = BuildPath(UserDataProvider.GetUserId());
 
         if (!Directory.Exists(directoryPath))
         {
@@ -177,10 +169,32 @@ public abstract class FileRepositoryBase<T>
         };
     }
 
+    protected Task DeleteUserDataAsync(string userName)
+    {
+        DirectoryInfo directory = new(BuildUserFolderPath(userName));
+
+        if (directory.Exists)
+        {
+            // delete user's directory, all files and subdirectories
+            return Task.Run(() => directory.Delete(true));
+        }
+
+        return Task.CompletedTask;
+    }
+
     private string DefineFileExtension()
     {
         return ".pngdat";
     }
+
+    private string BuildUserFolderPath(string userName)
+        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userName);
+
+    private string BuildPath(string userName, string? fileName = null)
+        => string.IsNullOrWhiteSpace(fileName) ?
+            Path.Combine(BuildUserFolderPath(userName), DirectoryName) :
+            Path.Combine(BuildUserFolderPath(userName), DirectoryName, fileName);
+
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {

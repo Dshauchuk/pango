@@ -5,8 +5,6 @@ using Pango.Application;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
-using Pango.Persistence;
-using System.Threading;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -76,8 +74,7 @@ sealed partial class App : ApplicationBase
             .RegisterViewModels()
             .AddApplicationServices()
             .AddInfrastructureServices()
-            .AddAppServices()
-            .AddTransient<IRepositoryContext>((services) => CreateContext());
+            .AddAppServices();
 
         // Register services
         Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
@@ -96,12 +93,5 @@ sealed partial class App : ApplicationBase
 
         //TODO: Save application state and stop any background activity
         deferral.Complete();
-    }
-
-    private RepositoryContext CreateContext()
-    {
-        string userId = Thread.CurrentPrincipal.Identity.Name;
-
-        return new RepositoryContext(userId);
     }
 }
