@@ -56,7 +56,7 @@ public class SettingsViewModel : ViewModelBase
             ElementTheme? elementTheme = (ElementTheme)value?.Value;
             if (elementTheme.HasValue && elementTheme.Value != AppThemeHelper.Theme)
             {
-                AppThemeHelper.SetThemeAsync(elementTheme.Value).Wait();
+                AppThemeHelper.SetTheme(elementTheme.Value);
             }
             SetProperty(ref _selectedAppTheme, value);
         }

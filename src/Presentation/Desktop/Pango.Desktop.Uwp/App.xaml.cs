@@ -55,7 +55,7 @@ sealed partial class App : ApplicationBase
 
             Window.Current.Content = new Shell();
 
-            AppThemeHelper.InitializeAsync().Wait();
+            AppThemeHelper.Initialize();
             TitleBarHelper.StyleTitleBar();
             TitleBarHelper.ExpandViewIntoTitleBar();
         }

@@ -1,7 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.UI.Xaml;
 
@@ -27,10 +26,10 @@ internal static class AppThemeHelper
     /// <summary>
     /// Applies theme to the application on startup
     /// </summary>
-    public static async Task InitializeAsync()
+    public static void Initialize()
     {
         _theme = LoadThemeFromSettings();
-        await SetRequestedThemeAsync();
+        SetRequestedTheme();
     }
 
     /// <summary>
@@ -38,19 +37,17 @@ internal static class AppThemeHelper
     /// </summary>
     /// <param name="theme">New theme to apply to the application</param>
     /// <returns></returns>
-    public static async Task SetThemeAsync(ElementTheme theme)
+    public static void SetTheme(ElementTheme theme)
     {
         _theme = theme;
 
-        await SetRequestedThemeAsync();
+        SetRequestedTheme();
         SaveThemeInSettings(Theme);
     }
 
-    private static async Task SetRequestedThemeAsync()
+    private static void SetRequestedTheme()
     {
         WeakReferenceMessenger.Default.Send(new AppThemeChangedMessage(_theme));
-
-        await Task.CompletedTask;
     }
 
     private static ElementTheme LoadThemeFromSettings()
