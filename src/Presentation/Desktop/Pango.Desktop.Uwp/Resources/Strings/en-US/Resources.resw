@@ -281,4 +281,13 @@
   <data name="DeleteUser" xml:space="preserve">
     <value>Delete User</value>
   </data>
+  <data name="AppTheme_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppTheme_Default" xml:space="preserve">
+    <value>Default</value>
+  </data>
+  <data name="AppTheme_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
 </root>

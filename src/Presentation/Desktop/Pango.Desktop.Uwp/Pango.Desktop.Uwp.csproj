@@ -163,11 +163,14 @@
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\AppDomainProvider.cs" />
     <Compile Include="Core\Utility\AppLanguageHelper.cs" />
+    <Compile Include="Core\Utility\AppThemeHelper.cs" />
     <Compile Include="Core\Utility\AppUserProvider.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Models\AppLanguage.cs" />
+    <Compile Include="Models\AppTheme.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
+    <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />

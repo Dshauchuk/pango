@@ -8,7 +8,6 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using System;
 using System.Linq;
 using System.Security.Principal;
 using System.Threading;
@@ -46,6 +45,12 @@ public sealed partial class Shell : ViewBase
 
         WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
         WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+        WeakReferenceMessenger.Default.Register<AppThemeChangedMessage>(this, OnAppThemeChanged);
+    }
+
+    private void OnAppThemeChanged(object recipient, AppThemeChangedMessage message)
+    {
+        ShellRootElement.RequestedTheme = message.Value;
     }
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)

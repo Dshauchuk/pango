@@ -9,6 +9,7 @@
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    x:Name="ShellRootElement"
     Loaded="Shell_OnLoaded"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=viewmodels:ShellViewModel}"
