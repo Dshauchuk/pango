@@ -1,35 +1,172 @@
-﻿namespace Pango.Persistence;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
+using Pango.Application.Common.Exceptions;
+using Pango.Application.Common.Extensions;
+using Pango.Application.Common.Interfaces;
+using Pango.Domain.Entities;
+
+namespace Pango.Persistence;
 
 public abstract class FileRepositoryBase<T>
 {
     private readonly IContentEncoder _contentEncoder;
     private readonly IAppDomainProvider _appDomainProvider;
+    private readonly IAppOptions _appOptions;
+    private readonly ILogger _logger; 
+    private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
-    private const int RetryCount = 3;
-    private SemaphoreSlim semaphore = new SemaphoreSlim(1);
-
-    public FileRepositoryBase(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider)
+    public FileRepositoryBase(IContentEncoder contentEncoder,
+        IAppUserProvider appUserProvider,
+        IAppDomainProvider appDomainProvider, 
+        IAppOptions appOptions, 
+        ILogger logger)
     {
         _contentEncoder = contentEncoder;
         _appDomainProvider = appDomainProvider;
+        _appOptions = appOptions;
+        _logger = logger;
+        UserDataProvider = appUserProvider;
     }
 
-    protected abstract string FileName { get; }
+    #region Properties
 
-    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string userName)
+    protected abstract string DirectoryName { get; }
+
+    protected IAppUserProvider UserDataProvider { get; }
+    #endregion
+
+    #region Methods
+
+    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync()
     {
-        string filePath = BuildPath(userName);
-        byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
+        List<T> items = new();
+        IEnumerable<string> files = ListRepositoryFiles();
 
-        return await _contentEncoder.DecryptAsync<IEnumerable<T>>(encryptedFileContent) ?? Enumerable.Empty<T>();
+        foreach (string file in files)
+        {
+            var package = await ReadDataPackageAsync(file);
+            
+            if(package is null)
+            {
+                continue;
+            }
+
+            items.AddRange(await ProcessDataPackageAsync(package));
+        }
+
+        return items;
     }
 
-    protected async Task SaveItemsForUserAsync(string userName, IEnumerable<T> items)
+    protected async Task SaveItemsForUserAsync(IEnumerable<T> items)
     {
-        string filePath = BuildPath(userName);
-        byte[] content = await _contentEncoder.EncryptAsync(items);
+        string userId = UserDataProvider.GetUserId();
 
+        IEnumerable<FileContentPackage> contentParts = PrepareContent(items);
+
+        int packageIndex = 1;
+        List<string> usedFiles = new();
+        foreach(FileContentPackage contentPart in contentParts)
+        {
+            string filePath = BuildPath(userId, $"{contentPart.Id}_p{packageIndex++}{DefineFileExtension()}");
+            await WriteDataPackageAsync(contentPart, filePath);
+            usedFiles.Add(filePath);
+        }
+
+        IEnumerable<string> allFiles = ListRepositoryFiles();
+        IEnumerable<string> uselessFiles = allFiles.Except(usedFiles);
+
+        foreach(string fileToRemove in uselessFiles)
+        {
+            File.Delete(fileToRemove);
+        }
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    private Task<IEnumerable<T>> ProcessDataPackageAsync(FileContentPackage fileContent)
+    {
+        if(fileContent is null)
+        {
+            return Task.FromResult(Enumerable.Empty<T>());
+        }
+
+        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
+
+        return Task.FromResult(data);
+    }
+
+    private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath)
+    {
+        try
+        {
+            byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
+            var package = await _contentEncoder.DecryptAsync<FileContentPackage>(encryptedFileContent);
+
+            // todo: verify if the package id matches the file
+
+            return package;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"Cannot read data package from \"{filePath}\"", ex);
+
+            return null;
+        }
+    }
+
+    private async Task WriteDataPackageAsync(FileContentPackage package, string filePath)
+    {
+        byte[] content = await _contentEncoder.EncryptAsync(package);
         await WriteFileContentAsync(filePath, content);
+    }
+
+    private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items)
+    {
+        List<FileContentPackage> fileContents = new(100);
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+
+        foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
+        {
+            FileContentPackage fileContent = new(UserDataProvider.GetUserId(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
+            fileContents.Add(fileContent);
+        }
+
+        return fileContents;
+    }
+
+    private IEnumerable<string> ListRepositoryFiles()
+    {
+        string directoryPath = BuildPath(UserDataProvider.GetUserId());
+
+        if (!Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+            return new List<string>();
+        }
+        else
+        {
+            return Directory.GetFiles(directoryPath, $"*{DefineFileExtension()}");
+        }
+    }
+
+    private int DefineCountOfItemsPerFile()
+    {
+        return DefineContentType() switch
+        {
+            ContentType.Passwords => _appOptions.FileOptions.PasswordsPerFile,
+            _ => AppConstants.DefaultNumberOfItemsPerFile
+        };
+    }
+
+    private ContentType DefineContentType()
+    {
+        return typeof(T).Name switch
+        {
+            nameof(PangoPassword) => ContentType.Passwords,
+            _ => throw new PangoException(ApplicationErrors.Data.CannotDefineContentType, $"Cannot define content type for \"{typeof(T).FullName}\" data type")
+        };
     }
 
     protected Task DeleteUserDataAsync(string userName)
@@ -45,19 +182,25 @@ public abstract class FileRepositoryBase<T>
         return Task.CompletedTask;
     }
 
-    #region Private Methods
+    private string DefineFileExtension()
+    {
+        return ".pngdat";
+    }
 
     private string BuildUserFolderPath(string userName)
         => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userName);
 
-    private string BuildPath(string userName)
-        => Path.Combine(BuildUserFolderPath(userName), FileName);
+    private string BuildPath(string userName, string? fileName = null)
+        => string.IsNullOrWhiteSpace(fileName) ?
+            Path.Combine(BuildUserFolderPath(userName), DirectoryName) :
+            Path.Combine(BuildUserFolderPath(userName), DirectoryName, fileName);
+
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {
         try
         {
-            await semaphore.WaitAsync();
+            await _semaphore.WaitAsync();
 
             if (!File.Exists(filePath))
             {
@@ -80,13 +223,13 @@ public abstract class FileRepositoryBase<T>
         }
         finally
         {
-            semaphore.Release();
+            _semaphore.Release();
         }
     }
 
     private async Task WriteFileContentAsync(string filePath, byte[] content)
     {
-        await semaphore.WaitAsync();
+        await _semaphore.WaitAsync();
 
         try
         {
@@ -107,7 +250,7 @@ public abstract class FileRepositoryBase<T>
         }
         finally
         {
-            semaphore.Release();
+            _semaphore.Release();
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Services;
@@ -22,7 +23,26 @@ public class ContentEncoder : IContentEncoder
         {
             string jsonContent = Decrypt(encryptedContent, await GetKeyAsync(), await GetVectorAsync());
 
-            return JsonConvert.DeserializeObject<T>(jsonContent);
+            var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
+
+            // DS
+            // this code converts JArray into a List<object>
+            if(deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
+            {
+                var encodedDataType = encodedData.Data.GetType();
+
+                if (encodedDataType == typeof(JArray))
+                {
+                    var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
+
+                    if(dataType != null)
+                    {
+                        encodedData.Data = ((JArray)encodedData.Data).ToObject(dataType);
+                    }
+                }
+            }
+
+            return deserializedObject;
         }
         catch(Exception ex)
         {
