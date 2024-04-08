@@ -1,4 +1,6 @@
-﻿using Pango.Application.Common.Interfaces.Persistence;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Application.Common.Interfaces;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
 
 namespace Pango.Persistence;
@@ -10,10 +12,14 @@ namespace Pango.Persistence;
 public class UserDataRepository : FileRepositoryBase<PangoUser>, IUserDataRepository
 {
     // user data doesn't have a separate file
-    protected override string FileName => string.Empty;
+    protected override string DirectoryName => "users";
 
-    public UserDataRepository(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider)
-        : base(contentEncoder, appDomainProvider)
+    public UserDataRepository(IContentEncoder contentEncoder, 
+        IAppUserProvider appUserProvider, 
+        IAppDomainProvider appDomainProvider,
+        IAppOptions appOptions,
+        ILogger logger)
+        : base(contentEncoder, appUserProvider, appDomainProvider, appOptions, logger)
     {
     }
 

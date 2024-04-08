@@ -1,4 +1,6 @@
-﻿using Pango.Application.Common.Exceptions;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Application.Common.Exceptions;
+using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
 
@@ -6,31 +8,32 @@ namespace Pango.Persistence;
 
 public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
 {
-    private readonly IAppUserProvider _userProvider;
-
-    protected override string FileName => "pwddata.dat";
-
-    public PasswordRepository(IContentEncoder contentEncoder, IAppUserProvider userProvider, IAppDomainProvider appDomainProvider)
-        : base(contentEncoder, appDomainProvider)
+    protected override string DirectoryName => "passwords";
+    
+    public PasswordRepository(IContentEncoder contentEncoder,
+        IAppUserProvider userProvider,
+        IAppDomainProvider appDomainProvider,
+        ILogger logger,
+        IAppOptions appOptions)
+        : base(contentEncoder, userProvider, appDomainProvider, appOptions, logger)
     {
-        _userProvider = userProvider;
+
     }
 
     public async Task CreateAsync(PangoPassword password)
     {
-        string userId = _userProvider.GetUserId();
+        string userId = UserDataProvider.GetUserId();
         password.UserName = userId;
 
-        var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
+        var passwordList = (await ExtractAllItemsForUserAsync()).ToList();
         passwordList.Add(password);
 
-        await SaveItemsForUserAsync(userId, passwordList);
+        await SaveItemsForUserAsync(passwordList);
     }
 
     public async Task<PangoPassword> UpdateAsync(PangoPassword password)
     {
-        string userId = _userProvider.GetUserId();
-        var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
+        var passwordList = (await ExtractAllItemsForUserAsync()).ToList();
 
         var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id);
 
@@ -40,42 +43,37 @@ public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRe
         }
 
         pwdToUpdate.Name = password.Name;
-        pwdToUpdate.Login= password.Login;
+        pwdToUpdate.Login = password.Login;
         pwdToUpdate.Properties = password.Properties;
         pwdToUpdate.Value = password.Value;
         pwdToUpdate.Target = password.Target;
         pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
 
-        await SaveItemsForUserAsync(_userProvider.GetUserId(), passwordList);
+        await SaveItemsForUserAsync(passwordList);
 
         return pwdToUpdate;
     }
 
     public async Task DeleteAsync(PangoPassword password)
     {
-        string userId = _userProvider.GetUserId();
-        var passwordList = (await ExtractAllItemsForUserAsync(userId)).ToList();
+        var passwordList = (await ExtractAllItemsForUserAsync()).ToList();
 
         var pwdToRemove = passwordList.FirstOrDefault(p => p.Id == password.Id);
 
         if (pwdToRemove != null) 
         {
             passwordList.Remove(pwdToRemove);
-            await SaveItemsForUserAsync(_userProvider.GetUserId(), passwordList);
+            await SaveItemsForUserAsync(passwordList);
         }
     }
 
     public async Task<PangoPassword> FindAsync(Func<PangoPassword, bool> predicate)
     {
-        string userId = _userProvider.GetUserId();
-
-        return (await ExtractAllItemsForUserAsync(userId)).FirstOrDefault(predicate);
+        return (await ExtractAllItemsForUserAsync()).FirstOrDefault(predicate);
     }
 
     public async Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate)
     {
-        string userId = _userProvider.GetUserId();
-
-        return await ExtractAllItemsForUserAsync(userId);
+        return await ExtractAllItemsForUserAsync();
     }
 }
