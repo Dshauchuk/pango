@@ -169,6 +169,7 @@
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
+    <Compile Include="Models\PasswordExplorerItem.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
@@ -406,9 +407,6 @@
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="Resources\Strings\be-BY\Resources.resw" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Pango.Desktop.Uwp_TemporaryKey.pfx" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

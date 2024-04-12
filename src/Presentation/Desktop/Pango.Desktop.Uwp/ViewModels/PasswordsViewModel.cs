@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
+using Mapster;
 using MediatR;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
@@ -8,6 +9,7 @@ using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
@@ -31,23 +33,23 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = new();
 
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
-        EditPasswordCommand = new RelayCommand<PangoPasswordListItemDto>(OnEditPassword);
-        DeletePasswordCommand = new RelayCommand<PangoPasswordListItemDto>(OnDeletePassword);
-        CopyPasswordToClipboardCommand = new RelayCommand<PangoPasswordListItemDto>(OnCopyPasswordToClipboard);
+        EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPassword);
+        DeletePasswordCommand = new RelayCommand<PasswordExplorerItem>(OnDeletePassword);
+        CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
     }
 
     #region Commands
 
     public RelayCommand CreatePasswordCommand { get; }
-    public RelayCommand<PangoPasswordListItemDto> EditPasswordCommand { get; }
-    public RelayCommand<PangoPasswordListItemDto> DeletePasswordCommand { get; }
-    public RelayCommand<PangoPasswordListItemDto> CopyPasswordToClipboardCommand { get; }
+    public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
+    public RelayCommand<PasswordExplorerItem> DeletePasswordCommand { get; }
+    public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
 
     #endregion
 
     #region Properties
 
-    public ObservableCollection<PangoPasswordListItemDto> Passwords { get; private set; }
+    public ObservableCollection<PasswordExplorerItem> Passwords { get; private set; }
 
     public bool HasPasswords
     {
@@ -66,18 +68,19 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
-        var passwordsOrderedList = queryResult.Value.OrderBy(p => p.Name);
+        var passwordsOrderedList = queryResult.Value.OrderBy(p => p.IsCatalog).ThenBy(p => p.Name);
 
         Passwords.Clear();
         foreach (var pwd in passwordsOrderedList)
         {
-            Passwords.Add(pwd);
+            var item = pwd.Adapt<PasswordExplorerItem>();
+            Passwords.Add(item);
         }
 
         HasPasswords = Passwords.Any();
     }
 
-    private async void OnCopyPasswordToClipboard(PangoPasswordListItemDto dto)
+    private async void OnCopyPasswordToClipboard(PasswordExplorerItem dto)
     {
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
 
@@ -95,7 +98,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnDeletePassword(PangoPasswordListItemDto dto)
+    private async void OnDeletePassword(PasswordExplorerItem dto)
     {
         var result = await _sender.Send(new DeletePasswordCommand(dto.Id));
 
@@ -106,7 +109,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private void OnEditPassword(PangoPasswordListItemDto selected)
+    private void OnEditPassword(PasswordExplorerItem selected)
     {
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, selected?.Id)));
     }

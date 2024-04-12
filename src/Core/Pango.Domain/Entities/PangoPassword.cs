@@ -5,7 +5,7 @@ namespace Pango.Domain.Entities;
 /// <summary>
 /// A password persisted in pango
 /// </summary>
-public class PangoPassword : BaseAuditableEntity
+public class PangoPassword : BaseAuditableEntity, ICataloguable
 {
 	public PangoPassword()
 	{
@@ -47,4 +47,9 @@ public class PangoPassword : BaseAuditableEntity
     /// Name of the password owner
     /// </summary>
     public string UserName { get; set; }
+	
+	/// <summary>
+	/// Path of the catalog, e.g. folder1/folder1_1
+	/// </summary>
+    public string CatalogPath { get; set; }
 }

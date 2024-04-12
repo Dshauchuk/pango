@@ -54,4 +54,9 @@ public class PangoPasswordDto : DtoBase
     /// 
     /// </summary>
     public DateTimeOffset LastModifiedAt { get; set; }
+
+    /// <summary>
+    /// Path of the catalog, e.g. folder1/folder1_1
+    /// </summary>
+    public string CatalogPath { get; set; }
 }

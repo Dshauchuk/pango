@@ -1,13 +1,17 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Mapster;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
 using Pango.Persistence;
 using System;
+using System.Collections.ObjectModel;
 
 namespace Pango.Desktop.Uwp;
 
@@ -42,6 +46,15 @@ public class FileOptions : IFileOptions
 
 public static class DependencyInjection
 {
+    public static IServiceCollection RegisterUIMappings(this IServiceCollection services)
+    {
+        TypeAdapterConfig<PangoPasswordListItemDto, PasswordExplorerItem>
+        .NewConfig()
+        .Map(dest => dest.IsExpanded, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
+
+        return services;
+    }
+
     public static IServiceCollection RegisterViewModels(this IServiceCollection services)
     {
         services
