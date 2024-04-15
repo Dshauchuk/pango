@@ -165,6 +165,7 @@
     <Compile Include="Core\Utility\AppLanguageHelper.cs" />
     <Compile Include="Core\Utility\AppThemeHelper.cs" />
     <Compile Include="Core\Utility\AppUserProvider.cs" />
+    <Compile Include="Core\Utility\LaunchAtStartupHelper.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Models\AppLanguage.cs" />
@@ -376,6 +377,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.UI.Xaml">
       <Version>2.8.5</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.Win32.Registry">
+      <Version>5.0.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

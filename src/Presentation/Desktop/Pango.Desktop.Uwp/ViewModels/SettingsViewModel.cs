@@ -17,6 +17,7 @@ public class SettingsViewModel : ViewModelBase
 
     private AppLanguage _selectedLanguage;
     private AppTheme _selectedAppTheme;
+    private bool _allowLaunchAtStartup;
 
     #endregion
 
@@ -27,6 +28,7 @@ public class SettingsViewModel : ViewModelBase
 
         _selectedLanguage = Languages.FirstOrDefault(e => e.Locale == AppLanguageHelper.GetAppliedAppLanguage().Locale) ?? Languages.First();
         _selectedAppTheme = AppThemes.First(e => e.Value == (int)AppThemeHelper.Theme);
+        _allowLaunchAtStartup = LaunchAtStartupHelper.GetLaunchAtStartup();
     }
 
     #region Properties
@@ -59,6 +61,16 @@ public class SettingsViewModel : ViewModelBase
                 AppThemeHelper.SetTheme(elementTheme.Value);
             }
             SetProperty(ref _selectedAppTheme, value);
+        }
+    }
+
+    public bool AllowLaunchAtStartup
+    {
+        get => _allowLaunchAtStartup;
+        set
+        {
+            LaunchAtStartupHelper.SetLaunchAtStartup(value);
+            SetProperty(ref _allowLaunchAtStartup, value);
         }
     }
 
