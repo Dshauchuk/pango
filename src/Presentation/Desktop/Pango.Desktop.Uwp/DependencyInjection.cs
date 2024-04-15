@@ -50,7 +50,7 @@ public static class DependencyInjection
     {
         TypeAdapterConfig<PangoPasswordListItemDto, PasswordExplorerItem>
         .NewConfig()
-        .Map(dest => dest.IsExpanded, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
 
         return services;
     }

@@ -77,6 +77,8 @@ sealed partial class App : ApplicationBase
             .AddInfrastructureServices()
             .AddAppServices();
 
+        serviceCollection.RegisterUIMappings();
+
         // Register services
         Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
     }

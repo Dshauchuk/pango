@@ -147,6 +147,7 @@
     <Compile Include="Controls\FiltrationTextBox.xaml.cs">
       <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TemplateSelectors\PasswordExplorerItemTemplateSelector.cs" />
     <Compile Include="Controls\ValidationPasswordBox.xaml.cs">
       <DependentUpon>ValidationPasswordBox.xaml</DependentUpon>
     </Compile>
@@ -228,6 +229,7 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\folder.png" />
     <Content Include="Assets\LargeTile.scale-100.png" />
     <Content Include="Assets\LargeTile.scale-125.png" />
     <Content Include="Assets\LargeTile.scale-150.png" />
