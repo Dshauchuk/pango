@@ -13,6 +13,7 @@ public class PangoPasswordDto : DtoBase
         Name = string.Empty;
         Login = string.Empty;
         Properties = new();
+        CatalogPath = string.Empty;
     }
 
     /// <summary>
@@ -44,6 +45,11 @@ public class PangoPasswordDto : DtoBase
     /// Name of the password owner
     /// </summary>
     public string UserName { get; set; }
+
+    /// <summary>
+    /// Indicates if this model is a dummy for keeping the catalog
+    /// </summary>
+    public bool IsCatalogHolder { get; set; }
 
     /// <summary>
     /// 

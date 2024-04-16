@@ -25,6 +25,11 @@ public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     public string Login { get; set; }
 
     /// <summary>
+    /// Indicates if this model is a dummy for keeping the catalog
+    /// </summary>
+    public bool IsCatalogHolder { get; set; }
+
+    /// <summary>
     /// Encrypted value of the password
     /// </summary>
     public string Value { get; set; }
