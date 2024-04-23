@@ -144,6 +144,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AttachedProperties\AncestorSource.cs" />
     <Compile Include="Controls\FiltrationTextBox.xaml.cs">
       <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
     </Compile>
@@ -315,6 +316,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Resources\Styles\TextBlockStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles\TreeViewStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
