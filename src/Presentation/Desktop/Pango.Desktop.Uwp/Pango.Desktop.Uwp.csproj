@@ -168,6 +168,7 @@
     <Compile Include="Core\Utility\AppUserProvider.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
+    <Compile Include="Dialogs\Dialogs.cs" />
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
     <Compile Include="Models\PasswordExplorerItem.cs" />

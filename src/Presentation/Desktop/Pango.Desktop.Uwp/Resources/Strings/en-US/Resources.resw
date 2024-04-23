@@ -290,4 +290,7 @@
   <data name="AppTheme_Light" xml:space="preserve">
     <value>Light</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
 </root>

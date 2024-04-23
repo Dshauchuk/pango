@@ -82,6 +82,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async void OnCopyPasswordToClipboard(PasswordExplorerItem dto)
     {
+        bool deletionConfirmed = await Dialogs.Dialogs.ConfirmAsync("Delete the password?", "The password will be deleted permamently");
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
 
         if (!passwordResult.IsError)
@@ -100,6 +101,13 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async void OnDeletePassword(PasswordExplorerItem dto)
     {
+        bool deletionConfirmed = await Dialogs.Dialogs.ConfirmAsync("Delete the password?", "The password will be deleted permamently");
+
+        if (!deletionConfirmed)
+        {
+            return;
+        }
+
         var result = await _sender.Send(new DeletePasswordCommand(dto.Id));
 
         if (!result.IsError)

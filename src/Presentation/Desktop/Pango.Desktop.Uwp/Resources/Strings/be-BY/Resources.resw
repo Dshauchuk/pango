@@ -288,4 +288,7 @@
   <data name="AppTheme_Light" xml:space="preserve">
     <value>Светлая</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Так</value>
+  </data>
 </root>
