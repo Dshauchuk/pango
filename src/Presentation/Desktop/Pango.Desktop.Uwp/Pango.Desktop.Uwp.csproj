@@ -170,6 +170,9 @@
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Dialogs\Dialogs.cs" />
+    <Compile Include="Dialogs\NewPasswordCatalogDialog.xaml.cs">
+      <DependentUpon>NewPasswordCatalogDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
     <Compile Include="Models\PasswordExplorerItem.cs" />
@@ -300,6 +303,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Controls\ValidationTextBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\NewPasswordCatalogDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
