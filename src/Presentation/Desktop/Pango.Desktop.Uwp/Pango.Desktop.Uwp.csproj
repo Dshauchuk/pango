@@ -158,7 +158,7 @@
     <Compile Include="Core\Attributes\AppViewAttribute.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
-    <Compile Include="Core\Converters\NullToCollapsedConverter.cs" />
+    <Compile Include="Core\Converters\NullOrEmptyToCollapsedConverter.cs" />
     <Compile Include="Core\Enums\AppNotificationType.cs" />
     <Compile Include="Core\Enums\SignInStep.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
@@ -169,8 +169,12 @@
     <Compile Include="Core\Utility\AppUserProvider.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
-    <Compile Include="Dialogs\Dialogs.cs" />
-    <Compile Include="Dialogs\NewPasswordCatalogDialog.xaml.cs">
+    <Compile Include="Dialogs\IContentDialog.cs" />
+    <Compile Include="Dialogs\DialogService.cs" />
+    <Compile Include="Dialogs\IDialogService.cs" />
+    <Compile Include="Dialogs\IDialogViewModel.cs" />
+    <Compile Include="Dialogs\ViewModels\NewPasswordCatalogDialogViewModel.cs" />
+    <Compile Include="Dialogs\Views\NewPasswordCatalogDialog.xaml.cs">
       <DependentUpon>NewPasswordCatalogDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AppLanguage.cs" />
@@ -179,6 +183,7 @@
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
+    <Compile Include="Mvvm\Messages\PasswordCreatedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />
     <Compile Include="Security\AppCredentials.cs" />
@@ -306,7 +311,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\NewPasswordCatalogDialog.xaml">
+    <Page Include="Dialogs\Views\NewPasswordCatalogDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -413,6 +418,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Core\Behaviors\" />
     <Folder Include="Core\Exceptions\" />
   </ItemGroup>
   <ItemGroup>

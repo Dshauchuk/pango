@@ -24,7 +24,9 @@ public class NewPasswordCommandHandler
             Name = request.Name,
             Properties = request.Properties,
             Value = request.Value,
-            CreatedAt = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
+            CatalogPath = request.CatalogPath,
+            IsCatalog = request.IsCatalogHolder,
         };
 
         await _passwordRepository.CreateAsync(entity);

@@ -5,13 +5,14 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
 using Pango.Persistence;
 using System;
-using System.Collections.ObjectModel;
 
 namespace Pango.Desktop.Uwp;
 
@@ -66,6 +67,7 @@ public static class DependencyInjection
             .AddTransient<SettingsViewModel>()
             .AddTransient<PasswordsViewModel>()
             .AddTransient<SignInViewModel>()
+            .AddTransient<NewPasswordCatalogDialogViewModel>()
             .AddTransient<UserViewModel>();
 
         return services;
@@ -78,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
+        services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<ILogger, TmpLogger>();
 
         // DS

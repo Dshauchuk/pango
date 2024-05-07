@@ -33,7 +33,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 
     protected ResourceLoader ViewResourceLoader { get; }
 
-    protected AppView View => this.GetType().GetCustomAttribute<AppViewAttribute>().View;
+    protected AppView? View => this.GetType().GetCustomAttribute<AppViewAttribute>()?.View;
 
     #endregion
 

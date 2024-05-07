@@ -4,12 +4,14 @@ public class PangoPasswordListItemDto : DtoBase
 {
     public PangoPasswordListItemDto(IEnumerable<PangoPasswordListItemDto> children)
     {
-        Children = children;
+        Children = children?.ToList() ?? new List<PangoPasswordListItemDto>();
+        CatalogPath = string.Empty;
     }
 
     public PangoPasswordListItemDto()
     {
         Children = new List<PangoPasswordListItemDto>();
+        CatalogPath = string.Empty;
     }
 
     /// <summary>
@@ -25,7 +27,9 @@ public class PangoPasswordListItemDto : DtoBase
     /// <summary>
     /// 
     /// </summary>
-    public IEnumerable<PangoPasswordListItemDto> Children { get; set; }
+    public List<PangoPasswordListItemDto> Children { get; set; }
+
+    public string CatalogPath { get; set; }
 
     /// <summary>
     /// 

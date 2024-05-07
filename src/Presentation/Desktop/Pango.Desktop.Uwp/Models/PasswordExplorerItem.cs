@@ -34,6 +34,8 @@ public class PasswordExplorerItem : ObservableObject
 
     public string Name { get; set; }
 
+    public string CatalogPath { get; set; }
+
     public ExplorerItemType Type { get; set; }
 
     public ObservableCollection<PasswordExplorerItem> Children

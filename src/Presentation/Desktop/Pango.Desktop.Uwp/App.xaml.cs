@@ -13,6 +13,9 @@ using ApplicationBase = Windows.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
 
+
+
+
 /// <summary>
 /// Provides application-specific behavior to supplement the default Application class.
 /// </summary>

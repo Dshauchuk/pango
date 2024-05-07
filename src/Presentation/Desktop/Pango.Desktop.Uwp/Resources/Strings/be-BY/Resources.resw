@@ -291,4 +291,19 @@
   <data name="Yes" xml:space="preserve">
     <value>Так</value>
   </data>
+  <data name="Confirm_PasswordDeletion" xml:space="preserve">
+    <value>Выдаліць пароль?</value>
+  </data>
+  <data name="Confirm_PasswordDeletionDetails" xml:space="preserve">
+    <value>Пароль будзе выдалены назаўсёды. Вы хочаце працягнуць?</value>
+  </data>
+  <data name="NewCatalogDialogTitle" xml:space="preserve">
+    <value>Дадаць Каталог</value>
+  </data>
+  <data name="NewCatalogName" xml:space="preserve">
+    <value>Новы каталог</value>
+  </data>
+  <data name="AddNewCatalog" xml:space="preserve">
+    <value>Дадаць каталог</value>
+  </data>
 </root>

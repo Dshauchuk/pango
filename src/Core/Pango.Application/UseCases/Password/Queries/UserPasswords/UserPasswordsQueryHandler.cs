@@ -1,5 +1,4 @@
 ﻿using ErrorOr;
-using Mapster;
 using MediatR;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
@@ -25,22 +24,24 @@ public class UserPasswordsQueryHandler
             {
                 Id = Guid.NewGuid(),
                 IsCatalog = true,
+                Name = "Facebook",
                 Children = new List<PangoPasswordListItemDto>()
                 {
                     new PangoPasswordListItemDto()
                     {
                          Id = Guid.NewGuid(),
                          IsCatalog = false,
-                         Name = "My Facebook"
+                         Name = "My Facebook",
+                         CatalogPath = "Facebook"
                     },
                     new PangoPasswordListItemDto()
                     {
                          Id = Guid.NewGuid(),
                          IsCatalog = false,
-                         Name = "Dad's Facebook"
+                         Name = "Dad's Facebook",
+                         CatalogPath = "Facebook"
                     }
-                },
-                Name = "Facebook"
+                }
             }
         };
 

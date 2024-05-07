@@ -49,7 +49,7 @@ public class PangoPasswordDto : DtoBase
     /// <summary>
     /// Indicates if this model is a dummy for keeping the catalog
     /// </summary>
-    public bool IsCatalogHolder { get; set; }
+    public bool IsCatalog { get; set; }
 
     /// <summary>
     /// 

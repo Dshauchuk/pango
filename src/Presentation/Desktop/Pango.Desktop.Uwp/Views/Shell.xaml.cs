@@ -3,16 +3,20 @@ using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
+using System;
 using System.Linq;
 using System.Security.Principal;
 using System.Threading;
+using System.Threading.Tasks;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -145,6 +149,24 @@ public sealed partial class Shell : ViewBase
     // Select the introduction item when the shell is loaded
     private void Shell_OnLoaded(object sender, RoutedEventArgs e)
     {
+
+    }
+
+    public async Task ShowContentDialogAsync(IContentDialog contentDialog)
+    {
+        ContentDialog dialog = new();
+
+        // XamlRoot must be set in the case of a ContentDialog running in a Desktop app
+        dialog.XamlRoot = this.XamlRoot;
+        dialog.Style = Windows.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style;
+        dialog.Title = "Save your work?";
+        dialog.PrimaryButtonText = "Save";
+        dialog.SecondaryButtonText = "Don't Save";
+        dialog.CloseButtonText = "Cancel";
+        dialog.DefaultButton = ContentDialogButton.Primary;
+        dialog.Content = contentDialog;
+
+        var result = await dialog.ShowAsync();
 
     }
 }

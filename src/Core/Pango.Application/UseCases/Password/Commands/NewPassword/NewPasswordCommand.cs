@@ -11,6 +11,7 @@ public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
         Name = name;
         Login = login;
         Value = value;
+        CatalogPath = string.Empty;
         Properties = properties ?? new();
     }
 
@@ -28,6 +29,11 @@ public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     /// Indicates if this model is a dummy for keeping the catalog
     /// </summary>
     public bool IsCatalogHolder { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string CatalogPath { get; set; } 
 
     /// <summary>
     /// Encrypted value of the password
