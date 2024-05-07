@@ -1,5 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
+using System.Collections.Generic;
+using System.Linq;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Controls;
 
@@ -14,14 +16,14 @@ public sealed partial class NewPasswordCatalogDialog : Page, IContentDialog
 {
     private readonly ResourceLoader _viewResourceLoader;
 
-    public NewPasswordCatalogDialog(string initialCatalog = null)
+    public NewPasswordCatalogDialog(IEnumerable<string> availableCatalogs)
     {
         this.InitializeComponent();
 
         _viewResourceLoader = ResourceLoader.GetForCurrentView();
         DataContext = Ioc.Default.GetRequiredService<NewPasswordCatalogDialogViewModel>();
 
-        ((NewPasswordCatalogDialogViewModel)DataContext).InitialCatalog = initialCatalog;
+        ((NewPasswordCatalogDialogViewModel)DataContext).AvailableCatalogs = availableCatalogs.ToList();
     }
 
     public string Title => _viewResourceLoader.GetString("NewCatalogDialogTitle");

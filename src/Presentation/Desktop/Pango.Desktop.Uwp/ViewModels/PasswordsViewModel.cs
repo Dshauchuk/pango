@@ -153,7 +153,14 @@ public sealed class PasswordsViewModel : ViewModelBase
             SelectedItem.CatalogPath + $"/{SelectedItem.Name}" : 
             SelectedItem.CatalogPath;
 
-        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(initialPath));
+        List<string> catalogs =
+            Passwords
+            .Where(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}/{p.Name}")
+            .OrderBy(p => p)
+            .ToList();
+
+        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(catalogs));
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)

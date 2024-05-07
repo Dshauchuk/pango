@@ -6,6 +6,7 @@ using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
@@ -15,6 +16,7 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
     private readonly ISender _sender;
     private string _newCatalogName;
     private string _initialCatalog;
+    private List<string> _availableCatalogs;
 
     public NewPasswordCatalogDialogViewModel(ISender sender)
     {
@@ -31,6 +33,12 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
     {
         get => _initialCatalog;
         set => SetProperty(ref _initialCatalog, value);
+    }
+
+    public List<string> AvailableCatalogs
+    {
+        get => _availableCatalogs;
+        set => SetProperty(ref _availableCatalogs, value);
     }
 
     public Task OnCancelAsync()
