@@ -9,6 +9,7 @@ using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Dialogs.Views;
 using Pango.Desktop.Uwp.Models;
@@ -46,7 +47,6 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
     }
-
 
     #region Commands
 
@@ -91,7 +91,9 @@ public sealed class PasswordsViewModel : ViewModelBase
         foreach (var pwd in passwordsOrderedList)
         {
             var item = pwd.Adapt<PasswordExplorerItem>();
-            Passwords.Add(item);
+            //Passwords.Add(item);
+
+            AddPassword(Passwords, item, item.CatalogPath.ParseCatalogPath());
         }
 
         HasPasswords = Passwords.Any();
@@ -150,11 +152,11 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         string initialPath = SelectedItem == null ? null : 
             SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ? 
-            SelectedItem.CatalogPath + $"/{SelectedItem.Name}" : 
+            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : "/") + SelectedItem.Name : 
             SelectedItem.CatalogPath;
 
         List<string> catalogs =
-            [..FindItems(Passwords, p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            [..Passwords.FindItems(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
             .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}/{p.Name}")
             .OrderBy(p => p)];
 
@@ -169,38 +171,8 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
         else
         {
-            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), new Queue<string>(message.Value.CatalogPath.Split('/')));
+            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath.ParseCatalogPath());
         }
-    }
-
-    private List<PasswordExplorerItem> FindItems(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> predicate)
-    {
-        List<PasswordExplorerItem> resultList = [];
-
-        if(items == null || !items.Any())
-        {
-            return resultList;
-        }
-
-        foreach(var item in items)
-        {
-            if (predicate(item))
-            {
-                resultList.Add(item);
-            }
-
-            if (item.Children.Any())
-            {
-                List<PasswordExplorerItem> findings = FindItems(item.Children, predicate);
-
-                if (findings.Any())
-                {
-                    resultList.AddRange(findings);
-                }
-            }
-        }
-
-        return resultList;
     }
 
     /// <summary>
@@ -213,8 +185,9 @@ public sealed class PasswordsViewModel : ViewModelBase
     private bool AddPassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password, Queue<string> catalogs)
     {
         if(catalogs is null || catalogs.Count == 0)
-        { 
-            return false; 
+        {
+            passwords.Add(password);
+            return true; 
         }
 
         string catalogName = catalogs.Dequeue();

@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using Mapster;
 using MediatR;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
@@ -17,33 +18,38 @@ public class UserPasswordsQueryHandler
 
     public async Task<ErrorOr<IEnumerable<Models.PangoPasswordListItemDto>>> Handle(UserPasswordsQuery request, CancellationToken cancellationToken)
     {
-        //IEnumerable<PangoPasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PangoPasswordListItemDto>());
-        IEnumerable<PangoPasswordListItemDto> passwords = new List<PangoPasswordListItemDto>()
-        {
-            new PangoPasswordListItemDto()
-            {
-                Id = Guid.NewGuid(),
-                IsCatalog = true,
-                Name = "Facebook",
-                Children = new List<PangoPasswordListItemDto>()
-                {
-                    new PangoPasswordListItemDto()
-                    {
-                         Id = Guid.NewGuid(),
-                         IsCatalog = false,
-                         Name = "My Facebook",
-                         CatalogPath = "Facebook"
-                    },
-                    new PangoPasswordListItemDto()
-                    {
-                         Id = Guid.NewGuid(),
-                         IsCatalog = false,
-                         Name = "Dad's Facebook",
-                         CatalogPath = "Facebook"
-                    }
-                }
-            }
-        };
+        IEnumerable<PangoPasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PangoPasswordListItemDto>());
+
+
+
+
+
+        //IEnumerable<PangoPasswordListItemDto> passwords = new List<PangoPasswordListItemDto>()
+        //{
+        //    new PangoPasswordListItemDto()
+        //    {
+        //        Id = Guid.NewGuid(),
+        //        IsCatalog = true,
+        //        Name = "Facebook",
+        //        Children = new List<PangoPasswordListItemDto>()
+        //        {
+        //            new PangoPasswordListItemDto()
+        //            {
+        //                 Id = Guid.NewGuid(),
+        //                 IsCatalog = false,
+        //                 Name = "My Facebook",
+        //                 CatalogPath = "Facebook"
+        //            },
+        //            new PangoPasswordListItemDto()
+        //            {
+        //                 Id = Guid.NewGuid(),
+        //                 IsCatalog = false,
+        //                 Name = "Dad's Facebook",
+        //                 CatalogPath = "Facebook"
+        //            }
+        //        }
+        //    }
+        //};
 
         return passwords.ToList();
     }

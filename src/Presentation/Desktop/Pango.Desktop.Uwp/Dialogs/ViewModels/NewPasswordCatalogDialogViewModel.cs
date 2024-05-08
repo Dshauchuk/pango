@@ -7,6 +7,7 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
@@ -45,8 +46,14 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
     public List<string> AvailableCatalogs
     {
         get => _availableCatalogs;
-        set => SetProperty(ref _availableCatalogs, value);
+        set
+        {
+            SetProperty(ref _availableCatalogs, value);
+            OnPropertyChanged(nameof(HasCatalogs));
+        }
     }
+
+    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
 
     public Task OnCancelAsync()
     {

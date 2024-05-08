@@ -18,7 +18,7 @@ public class PasswordExplorerItem : ObservableObject
 
     public PasswordExplorerItem()
     {
-        
+        Children = [];
     }
 
     public PasswordExplorerItem(Guid id, string name, ExplorerItemType type)
