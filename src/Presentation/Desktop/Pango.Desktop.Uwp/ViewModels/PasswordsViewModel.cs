@@ -154,13 +154,11 @@ public sealed class PasswordsViewModel : ViewModelBase
             SelectedItem.CatalogPath;
 
         List<string> catalogs =
-            Passwords
-            .Where(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            [..FindItems(Passwords, p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
             .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}/{p.Name}")
-            .OrderBy(p => p)
-            .ToList();
+            .OrderBy(p => p)];
 
-        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(catalogs));
+        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(catalogs, initialPath));
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
@@ -173,6 +171,36 @@ public sealed class PasswordsViewModel : ViewModelBase
         {
             AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), new Queue<string>(message.Value.CatalogPath.Split('/')));
         }
+    }
+
+    private List<PasswordExplorerItem> FindItems(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> predicate)
+    {
+        List<PasswordExplorerItem> resultList = [];
+
+        if(items == null || !items.Any())
+        {
+            return resultList;
+        }
+
+        foreach(var item in items)
+        {
+            if (predicate(item))
+            {
+                resultList.Add(item);
+            }
+
+            if (item.Children.Any())
+            {
+                List<PasswordExplorerItem> findings = FindItems(item.Children, predicate);
+
+                if (findings.Any())
+                {
+                    resultList.AddRange(findings);
+                }
+            }
+        }
+
+        return resultList;
     }
 
     /// <summary>

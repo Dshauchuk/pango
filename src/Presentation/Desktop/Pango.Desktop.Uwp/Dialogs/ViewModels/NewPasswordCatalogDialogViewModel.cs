@@ -16,6 +16,7 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
     private readonly ISender _sender;
     private string _newCatalogName;
     private string _initialCatalog;
+    private string _defaultCatalog;
     private List<string> _availableCatalogs;
 
     public NewPasswordCatalogDialogViewModel(ISender sender)
@@ -33,6 +34,12 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
     {
         get => _initialCatalog;
         set => SetProperty(ref _initialCatalog, value);
+    }
+
+    public string DefaultCatalog
+    {
+        get => _defaultCatalog;
+        set => SetProperty(ref _defaultCatalog, value);
     }
 
     public List<string> AvailableCatalogs
