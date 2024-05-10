@@ -20,17 +20,13 @@ public class UpdatePasswordCommandHandler
 
     public async Task<ErrorOr<PangoPasswordDto>> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
     {
-        PangoPassword password = await _passwordRepository.FindAsync(p => p.Id == request.PasswordId);
-
-        if(password is null)
-        {
-            throw new PasswordNotFoundException($"Password with id {request.PasswordId} not found");
-        }
-
+        PangoPassword password = await _passwordRepository.FindAsync(p => p.Id == request.PasswordId) ?? throw new PasswordNotFoundException($"Password with id {request.PasswordId} not found");
+        
         password.Name = request.Name;
         password.Value = request.Value;
         password.Login = request.Login;
         password.Properties = request.Properties;
+        password.CatalogPath = request.CatalogPath; 
 
         PangoPassword updated = await _passwordRepository.UpdateAsync(password);
 

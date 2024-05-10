@@ -7,11 +7,13 @@ using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels.Validators;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -23,6 +25,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     private readonly ISender _sender;
     private bool _isNew;
+    private List<string> _availableCatalogs;
 
     private EditPasswordValidator _passwordValidator;
 
@@ -50,6 +53,18 @@ public class EditPasswordViewModel : ViewModelBase
         set => SetProperty(ref _isNew, value);
     }
 
+    public List<string> AvailableCatalogs
+    {
+        get => _availableCatalogs;
+        set
+        {
+            SetProperty(ref _availableCatalogs, value);
+            OnPropertyChanged(nameof(HasCatalogs));
+        }
+    }
+
+    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
+
     #endregion
 
     #region Commands
@@ -67,29 +82,36 @@ public class EditPasswordViewModel : ViewModelBase
 
         NavigationParameters navigationParameters = parameter as NavigationParameters;
 
-        if(navigationParameters.Value is null)
+        if (navigationParameters.Value is not EditPasswordParameters parameters)
         {
             IsNew = true;
+            PasswordValidator.SelectedCatalog = null;
+
             return;
         }
         else
         {
-            IsNew = false;
-        }
+            IsNew = parameters.IsNew;
+            AvailableCatalogs = parameters.AvailableCatalogs;
+            PasswordValidator.SelectedCatalog = parameters.Catalog;
 
-        Guid passwordId = (Guid)navigationParameters.Value;
-        var passwordResult = await _sender.Send(new FindUserPasswordQuery(passwordId));
-
-        if (!passwordResult.IsError)
-        {
-            PasswordValidator.Id = passwordId;
-            PasswordValidator.Login = passwordResult.Value.Login;
-            PasswordValidator.Title = passwordResult.Value.Name;
-            PasswordValidator.Password = passwordResult.Value.Value;
-
-            if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
+            if (!IsNew && parameters.SelectedPasswordId != null)
             {
-                PasswordValidator.Notes = passwordResult.Value.Properties[PasswordProperties.Notes];
+                Guid passwordId = parameters.SelectedPasswordId.Value;
+                var passwordResult = await _sender.Send(new FindUserPasswordQuery(passwordId));
+
+                if (!passwordResult.IsError)
+                {
+                    PasswordValidator.Id = passwordId;
+                    PasswordValidator.Login = passwordResult.Value.Login;
+                    PasswordValidator.Title = passwordResult.Value.Name;
+                    PasswordValidator.Password = passwordResult.Value.Value;
+
+                    if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
+                    {
+                        PasswordValidator.Notes = passwordResult.Value.Properties[PasswordProperties.Notes];
+                    }
+                }
             }
         }
     }
@@ -116,7 +138,7 @@ public class EditPasswordViewModel : ViewModelBase
 
             if (IsNew)
             {
-                await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+                await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
             }
             else
             {

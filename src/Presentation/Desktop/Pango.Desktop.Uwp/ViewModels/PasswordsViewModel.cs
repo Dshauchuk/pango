@@ -14,6 +14,7 @@ using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Dialogs.Views;
 using Pango.Desktop.Uwp.Models;
+using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
@@ -131,34 +132,24 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (!result.IsError)
         {
-            Passwords.Remove(dto);
+            RemovePassword(Passwords, dto);
             HasPasswords = Passwords.Any();
         }
     }
 
     private void OnEditPassword(PasswordExplorerItem selected)
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, selected?.Id)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
     }
 
     private void OnCreatePassword()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
     }
 
     private async void OnCreateCatalogAsync()
     {
-        string initialPath = SelectedItem == null ? null : 
-            SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ? 
-            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name : 
-            SelectedItem.CatalogPath;
-
-        List<string> catalogs =
-            [..Passwords.FindItems(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
-            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}")
-            .OrderBy(p => p)];
-
-        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(catalogs, initialPath));
+        await _dialogService.ShowAsync(new NewPasswordCatalogDialog(GetAvailableCatalogs(), GetPathToSelectedFolder()));
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
@@ -206,4 +197,58 @@ public sealed class PasswordsViewModel : ViewModelBase
             return true;
         }
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="passwords"></param>
+    /// <param name="password"></param>
+    private bool RemovePassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
+    {
+        if(passwords is null || !passwords.Any() || password is null)
+        {
+            return false;
+        }
+
+        PasswordExplorerItem passwordToRemove = passwords.FirstOrDefault(p => p.Id == password.Id);
+
+        if(passwordToRemove is not null)
+        {
+            passwords.Remove(passwordToRemove);
+            return true;
+        }
+        else
+        {
+            foreach(var p in passwords)
+            {
+                if(RemovePassword(p.Children, password))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+
+    private List<string> GetAvailableCatalogs()
+    {
+        List<string> catalogs =
+            [..Passwords.FindItems(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}")
+            .OrderBy(p => p)];
+
+        if (catalogs.Any())
+        {
+            catalogs.Insert(0, "");
+        }
+
+        return catalogs;
+    }
+
+    private string GetPathToSelectedFolder()
+        => SelectedItem == null ? null :
+            SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ?
+            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
+            SelectedItem.CatalogPath;
 }

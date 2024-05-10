@@ -158,6 +158,7 @@
     <Compile Include="Core\Attributes\AppViewAttribute.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
+    <Compile Include="Core\Converters\EmptyStringToRootFolderNameConverter.cs" />
     <Compile Include="Core\Converters\NullOrEmptyToCollapsedConverter.cs" />
     <Compile Include="Core\Enums\AppNotificationType.cs" />
     <Compile Include="Core\Enums\SignInStep.cs" />
@@ -181,6 +182,8 @@
     </Compile>
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
+    <Compile Include="Models\Parameters\INavigationParameter.cs" />
+    <Compile Include="Models\Parameters\EditPasswordParameters.cs" />
     <Compile Include="Models\PasswordExplorerItem.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />

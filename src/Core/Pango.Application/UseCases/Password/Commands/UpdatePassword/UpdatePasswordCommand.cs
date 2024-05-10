@@ -13,6 +13,7 @@ public record UpdatePasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
         Login = login;
         Value = value;
         Properties = properties ?? new();
+        CatalogPath = string.Empty;
     }
 
     public Guid PasswordId { get; set; }
@@ -31,6 +32,11 @@ public record UpdatePasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     /// Encrypted value of the password
     /// </summary>
     public string Value { get; set; }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string CatalogPath { get; set; }
 
     /// <summary>
     /// Password entry properties

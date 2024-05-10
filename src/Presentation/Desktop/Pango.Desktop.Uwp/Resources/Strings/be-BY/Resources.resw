@@ -306,4 +306,7 @@
   <data name="AddNewCatalog" xml:space="preserve">
     <value>Дадаць каталог</value>
   </data>
+  <data name="Or" xml:space="preserve">
+    <value>Або</value>
+  </data>
 </root>
