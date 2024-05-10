@@ -45,7 +45,7 @@ public class PasswordExplorerItem : ObservableObject
         set
         {
             SetProperty(ref _catalogPath, value);
-            NestingLevel = string.IsNullOrEmpty(CatalogPath) ? 0 : CatalogPath.Count((c) => c == AppConstants.CatalogDelimeter);
+            NestingLevel = string.IsNullOrEmpty(CatalogPath) ? 0 : CatalogPath.Count((c) => c == AppConstants.CatalogDelimeter) + 1;
         }
     }
 

@@ -44,7 +44,6 @@ public class FileOptions : IFileOptions
     public int PasswordsPerFile { get; set; }
 }
 
-
 public static class DependencyInjection
 {
     public static IServiceCollection RegisterUIMappings(this IServiceCollection services)
