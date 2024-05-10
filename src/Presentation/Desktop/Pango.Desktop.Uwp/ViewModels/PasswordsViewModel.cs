@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using Mapster;
 using MediatR;
+using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
@@ -85,15 +86,12 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
-        var passwordsOrderedList = queryResult.Value.OrderBy(p => p.IsCatalog).ThenBy(p => p.Name);
+        var passwordsOrderedList = queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
 
         Passwords.Clear();
         foreach (var pwd in passwordsOrderedList)
         {
-            var item = pwd.Adapt<PasswordExplorerItem>();
-            //Passwords.Add(item);
-
-            AddPassword(Passwords, item, item.CatalogPath.ParseCatalogPath());
+            AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
         }
 
         HasPasswords = Passwords.Any();
@@ -152,12 +150,12 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         string initialPath = SelectedItem == null ? null : 
             SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ? 
-            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : "/") + SelectedItem.Name : 
+            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name : 
             SelectedItem.CatalogPath;
 
         List<string> catalogs =
             [..Passwords.FindItems(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder)
-            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}/{p.Name}")
+            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}")
             .OrderBy(p => p)];
 
         await _dialogService.ShowAsync(new NewPasswordCatalogDialog(catalogs, initialPath));

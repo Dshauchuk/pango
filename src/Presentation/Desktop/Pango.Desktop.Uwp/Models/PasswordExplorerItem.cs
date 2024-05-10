@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Pango.Application.Common;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Pango.Desktop.Uwp.Models;
 
@@ -11,6 +13,7 @@ public class PasswordExplorerItem : ObservableObject
     #region Fields
 
     private bool _isExpanded;
+    private string _catalogPath;
 
     private ObservableCollection<PasswordExplorerItem> _children;
 
@@ -34,7 +37,17 @@ public class PasswordExplorerItem : ObservableObject
 
     public string Name { get; set; }
 
-    public string CatalogPath { get; set; }
+    public int NestingLevel { get; private set; } 
+
+    public string CatalogPath
+    {
+        get => _catalogPath;
+        set
+        {
+            SetProperty(ref _catalogPath, value);
+            NestingLevel = string.IsNullOrEmpty(CatalogPath) ? 0 : CatalogPath.Count((c) => c == AppConstants.CatalogDelimeter);
+        }
+    }
 
     public ExplorerItemType Type { get; set; }
 
