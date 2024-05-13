@@ -66,7 +66,7 @@ public static class DependencyInjection
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<PasswordsViewModel>()
             .AddSingleton<SignInViewModel>()
-            .AddSingleton<NewPasswordCatalogDialogViewModel>()
+            .AddSingleton<EditPasswordCatalogDialogViewModel>()
             .AddSingleton<UserViewModel>();
 
         return services;

@@ -20,10 +20,6 @@ public class UserPasswordsQueryHandler
     {
         IEnumerable<PangoPasswordListItemDto> passwords = (await _passwordRepository.QueryAsync(p => true)).Select(p => p.Adapt<PangoPasswordListItemDto>());
 
-
-
-
-
         //IEnumerable<PangoPasswordListItemDto> passwords = new List<PangoPasswordListItemDto>()
         //{
         //    new PangoPasswordListItemDto()

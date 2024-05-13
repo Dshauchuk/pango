@@ -47,6 +47,7 @@ public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRe
         pwdToUpdate.Properties = password.Properties;
         pwdToUpdate.Value = password.Value;
         pwdToUpdate.Target = password.Target;
+        pwdToUpdate.CatalogPath = password.CatalogPath;
         pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
 
         await SaveItemsForUserAsync(passwordList);

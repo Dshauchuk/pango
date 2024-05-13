@@ -317,6 +317,9 @@
   <data name="Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="EditCatalogDialogTitle" xml:space="preserve">
+    <value>Edit Catalog</value>
+  </data>
   <data name="RemoveCatalog_Message" xml:space="preserve">
     <value>The catalog containing 5 passwords will be removed. Do you want to continue?</value>
   </data>

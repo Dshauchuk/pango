@@ -34,6 +34,11 @@ public record UpdatePasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     public string Value { get; set; }
 
     /// <summary>
+    /// Indicates if this model is a dummy for keeping the catalog
+    /// </summary>
+    public bool IsCatalogHolder { get; set; }
+
+    /// <summary>
     /// 
     /// </summary>
     public string CatalogPath { get; set; }

@@ -93,7 +93,6 @@ public class EditPasswordViewModel : ViewModelBase
         {
             IsNew = parameters.IsNew;
             AvailableCatalogs = parameters.AvailableCatalogs;
-            PasswordValidator.SelectedCatalog = parameters.Catalog;
 
             if (!IsNew && parameters.SelectedPasswordId != null)
             {
@@ -106,12 +105,17 @@ public class EditPasswordViewModel : ViewModelBase
                     PasswordValidator.Login = passwordResult.Value.Login;
                     PasswordValidator.Title = passwordResult.Value.Name;
                     PasswordValidator.Password = passwordResult.Value.Value;
+                    PasswordValidator.SelectedCatalog = passwordResult.Value.CatalogPath;
 
                     if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
                     {
                         PasswordValidator.Notes = passwordResult.Value.Properties[PasswordProperties.Notes];
                     }
                 }
+            }
+            else
+            {
+                PasswordValidator.SelectedCatalog = parameters.Catalog;
             }
         }
     }

@@ -27,7 +27,12 @@ public class DeletePasswordCommandHandler
             if (password.IsCatalog)
             {
                 string catalogPath = string.IsNullOrEmpty(password.CatalogPath) ? password.Name : $"{password.CatalogPath}{AppConstants.CatalogDelimeter}{password.Name}";
-                passwordsToRemove = (await _passwordRepository.QueryAsync(p => p.CatalogPath == catalogPath)).ToList();
+                var internalPasswords = (await _passwordRepository.QueryAsync(p => p.CatalogPath == catalogPath)).ToList();
+
+                if(internalPasswords.Any()) 
+                {
+                    passwordsToRemove.AddRange(internalPasswords);
+                }
             }
 
             foreach (var pwd in passwordsToRemove)

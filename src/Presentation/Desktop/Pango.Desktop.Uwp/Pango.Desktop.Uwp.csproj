@@ -176,9 +176,9 @@
     <Compile Include="Dialogs\DialogService.cs" />
     <Compile Include="Dialogs\IDialogService.cs" />
     <Compile Include="Dialogs\IDialogViewModel.cs" />
-    <Compile Include="Dialogs\ViewModels\NewPasswordCatalogDialogViewModel.cs" />
-    <Compile Include="Dialogs\Views\NewPasswordCatalogDialog.xaml.cs">
-      <DependentUpon>NewPasswordCatalogDialog.xaml</DependentUpon>
+    <Compile Include="Dialogs\ViewModels\EditPasswordCatalogDialogViewModel.cs" />
+    <Compile Include="Dialogs\Views\EditPasswordCatalogDialog.xaml.cs">
+      <DependentUpon>EditPasswordCatalogDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
@@ -189,6 +189,7 @@
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Messages\PasswordCreatedMessage.cs" />
+    <Compile Include="Mvvm\Messages\PasswordUpdatedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />
     <Compile Include="Security\AppCredentials.cs" />
@@ -316,7 +317,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Dialogs\Views\NewPasswordCatalogDialog.xaml">
+    <Page Include="Dialogs\Views\EditPasswordCatalogDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
