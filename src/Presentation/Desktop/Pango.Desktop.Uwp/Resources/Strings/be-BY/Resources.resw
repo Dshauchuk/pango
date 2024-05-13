@@ -309,4 +309,13 @@
   <data name="Or" xml:space="preserve">
     <value>Або</value>
   </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Выдаліць</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Рэдагаваць</value>
+  </data>
+  <data name="RemoveCatalog_Message" xml:space="preserve">
+    <value>Каталог "{0}", які змяшчае "{1}" пароляў, будзе выдалены. Працягнуць?</value>
+  </data>
 </root>

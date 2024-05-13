@@ -74,6 +74,6 @@ public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRe
 
     public async Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate)
     {
-        return await ExtractAllItemsForUserAsync();
+        return (await ExtractAllItemsForUserAsync()).Where(predicate);
     }
 }

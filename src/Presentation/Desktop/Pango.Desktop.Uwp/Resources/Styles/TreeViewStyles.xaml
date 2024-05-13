@@ -230,20 +230,6 @@
                         <FontIcon Glyph="&#xE8C8;"
                                   FontSize="{StaticResource FontIconSize}"/>
                     </Button>
-                    <Button Margin="2"
-                            CommandParameter="{Binding}"
-                            ToolTipService.ToolTip="{loc:StringResource Key=EditPassword}"
-                            Command="{Binding DataContext.DataContext.EditPasswordCommand, ElementName=proxy}">
-                        <FontIcon Glyph="&#xE70F;"
-                                  FontSize="{StaticResource FontIconSize}"/>
-                    </Button>
-                    <Button Margin="2" 
-                            CommandParameter="{Binding}"
-                            Command="{Binding DataContext.DataContext.DeletePasswordCommand, ElementName=proxy}"
-                            ToolTipService.ToolTip="{loc:StringResource Key=DeletePassword}">
-                        <FontIcon Glyph="&#xE74D;"
-                                  FontSize="{StaticResource FontIconSize}"/>
-                    </Button>
                 </StackPanel>
             </Grid>
         </TreeViewItem>

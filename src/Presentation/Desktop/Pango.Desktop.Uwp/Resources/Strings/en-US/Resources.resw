@@ -311,4 +311,13 @@
   <data name="Or" xml:space="preserve">
     <value>Or</value>
   </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="RemoveCatalog_Message" xml:space="preserve">
+    <value>The catalog containing 5 passwords will be removed. Do you want to continue?</value>
+  </data>
 </root>

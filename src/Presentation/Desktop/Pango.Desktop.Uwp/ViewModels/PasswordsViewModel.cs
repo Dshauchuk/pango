@@ -38,24 +38,24 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         _sender = sender;
         _dialogService = dialogService;
-        Passwords = new();
+
+        Passwords = [];
+        Passwords.CollectionChanged += Passwords_CollectionChanged;
 
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
+        DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync);
         EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPassword);
-        DeletePasswordCommand = new RelayCommand<PasswordExplorerItem>(OnDeletePassword);
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
-
 
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
     }
-
     #region Commands
 
-    public RelayCommand CreatePasswordCommand { get; }
+    public RelayCommand<PasswordExplorerItem> DeleteCommand { get; }
     public RelayCommand CreateCatalogCommand { get; }
+    public RelayCommand CreatePasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
-    public RelayCommand<PasswordExplorerItem> DeletePasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
 
     #endregion
@@ -78,24 +78,33 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #endregion
 
+    #region Overrides
+
     public override async Task OnNavigatedToAsync(object parameter)
     {
-        await LoadPasswords();
+        SelectedItem = null;
+        DisplayPasswords(await LoadPasswordsAsync());
     }
 
-    private async Task LoadPasswords()
+    #endregion
+
+    #region Event&Command Handlers
+
+    private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
-
-        var passwordsOrderedList = queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
-
-        Passwords.Clear();
-        foreach (var pwd in passwordsOrderedList)
-        {
-            AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
-        }
-
         HasPasswords = Passwords.Any();
+    }
+
+    private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
+    {
+        if (string.IsNullOrEmpty(message.Value.CatalogPath))
+        {
+            Passwords.Add(message.Value.Adapt<PasswordExplorerItem>());
+        }
+        else
+        {
+            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath.ParseCatalogPath());
+        }
     }
 
     private async void OnCopyPasswordToClipboard(PasswordExplorerItem dto)
@@ -116,10 +125,19 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnDeletePassword(PasswordExplorerItem dto)
+    private async void OnDeleteAsync(PasswordExplorerItem dto)
     {
         string confirmationTitle = ViewResourceLoader.GetString("Confirm_PasswordDeletion");
-        string confirmationDescription = ViewResourceLoader.GetString("Confirm_PasswordDeletionDetails");
+        string confirmationDescription;
+
+        if (dto.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+        {
+            confirmationDescription = ViewResourceLoader.GetString("RemoveCatalog_Message");
+        }
+        else
+        {
+            confirmationDescription = ViewResourceLoader.GetString("Confirm_PasswordDeletionDetails");
+        }
 
         bool deletionConfirmed = await _dialogService.ConfirmAsync(confirmationTitle, confirmationDescription);
 
@@ -133,7 +151,6 @@ public sealed class PasswordsViewModel : ViewModelBase
         if (!result.IsError)
         {
             RemovePassword(Passwords, dto);
-            HasPasswords = Passwords.Any();
         }
     }
 
@@ -152,20 +169,28 @@ public sealed class PasswordsViewModel : ViewModelBase
         await _dialogService.ShowAsync(new NewPasswordCatalogDialog(GetAvailableCatalogs(), GetPathToSelectedFolder()));
     }
 
-    private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
+    #endregion
+
+    #region Private Methods
+
+    private async Task<IEnumerable<PasswordExplorerItem>> LoadPasswordsAsync()
     {
-        if (string.IsNullOrEmpty(message.Value.CatalogPath))
+        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
+
+        return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
+    }
+
+    private void DisplayPasswords(IEnumerable<PasswordExplorerItem> passwords)
+    {
+        Passwords.Clear();
+        foreach (var pwd in passwords)
         {
-            Passwords.Add(message.Value.Adapt<PasswordExplorerItem>());
-        }
-        else
-        {
-            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath.ParseCatalogPath());
+            AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
         }
     }
 
     /// <summary>
-    /// 
+    /// Adds a <paramref name="password"/> to the tree collection of <paramref name="passwords"/>
     /// </summary>
     /// <param name="passwords"></param>
     /// <param name="password"></param>
@@ -199,7 +224,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// 
+    /// Removes the <paramref name="password"/> from the tree collection of <paramref name="passwords"/>
     /// </summary>
     /// <param name="passwords"></param>
     /// <param name="password"></param>
@@ -231,6 +256,10 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Returns a list of all currently existing catalogs
+    /// </summary>
+    /// <returns></returns>
     private List<string> GetAvailableCatalogs()
     {
         List<string> catalogs =
@@ -246,9 +275,15 @@ public sealed class PasswordsViewModel : ViewModelBase
         return catalogs;
     }
 
+    /// <summary>
+    /// Returns the currently selected folder path
+    /// </summary>
+    /// <returns></returns>
     private string GetPathToSelectedFolder()
         => SelectedItem == null ? null :
             SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ?
             SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
             SelectedItem.CatalogPath;
+
+    #endregion
 }

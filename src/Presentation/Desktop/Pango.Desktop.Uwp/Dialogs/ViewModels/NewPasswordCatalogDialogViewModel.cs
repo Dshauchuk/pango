@@ -55,6 +55,15 @@ public class NewPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
 
     public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
 
+    public void Initialize(List<string>? catalogs = null, string? defaultCatalog = null)
+    {
+        NewCatalogName = string.Empty;
+        DefaultCatalog = string.Empty;
+        InitialCatalog = defaultCatalog ?? string.Empty;
+
+        AvailableCatalogs = catalogs ?? [];
+    }
+
     public Task OnCancelAsync()
     {
         return Task.CompletedTask;

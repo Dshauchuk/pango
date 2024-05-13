@@ -22,8 +22,7 @@ public sealed partial class NewPasswordCatalogDialog : Page, IContentDialog
         _viewResourceLoader = ResourceLoader.GetForCurrentView();
         DataContext = Ioc.Default.GetRequiredService<NewPasswordCatalogDialogViewModel>();
 
-        ((NewPasswordCatalogDialogViewModel)DataContext).AvailableCatalogs = availableCatalogs;
-        ((NewPasswordCatalogDialogViewModel)DataContext).InitialCatalog = defaultCatalog;
+        ((NewPasswordCatalogDialogViewModel)DataContext).Initialize(availableCatalogs, defaultCatalog);
     }
 
     public string Title => _viewResourceLoader.GetString("NewCatalogDialogTitle");
