@@ -19,7 +19,8 @@ namespace Pango.Desktop.Uwp;
 sealed partial class App : ApplicationBase
 {
     private ILogger _logger;
-
+    public static new App Current => (App)ApplicationBase.Current;
+    
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().

@@ -13,5 +13,10 @@ public static class Constants
         /// Contains key, by which selected application theme can be retrived from the <see cref="Windows.Storage.ApplicationDataContainer"/>
         /// </summary>
         public const string AppTheme = "AppTheme";
+
+        /// <summary>
+        /// Contains key, by which value of idle to block the application can be retrived from the <see cref="Windows.Storage.ApplicationDataContainer"/>
+        /// </summary>
+        public const string BlockAppAfterIdleMinutes = "BlockAppAfterIdleMinutes";
     }
 }

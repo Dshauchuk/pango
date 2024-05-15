@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
@@ -39,7 +40,6 @@ public class FileOptions : IFileOptions
     public int PasswordsPerFile { get; set; }
 }
 
-
 public static class DependencyInjection
 {
     public static IServiceCollection RegisterViewModels(this IServiceCollection services)
@@ -66,6 +66,8 @@ public static class DependencyInjection
         services.AddScoped<IUserContextProvider, UserContextProvider>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<ILogger, TmpLogger>();
+
+        services.AddSingleton<IAppIdleService, AppIdleService>();
 
         // DS
         // TODO: move to the config file
