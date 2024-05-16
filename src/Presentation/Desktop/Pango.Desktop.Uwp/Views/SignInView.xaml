@@ -150,7 +150,7 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Stretch">
 
-                        <Button Margin="2" 
+                        <Button Margin="5" 
                                 HorizontalAlignment="Left"
                                 Command="{Binding Path=NavigateToStepCommand}"
                                 Content="{loc:StringResource Key=ChangeUser}">
@@ -159,7 +159,7 @@
                             </Button.CommandParameter>
                         </Button>
 
-                        <Button Margin="2" 
+                        <Button Margin="5" 
                                 HorizontalAlignment="Right"
                                 Command="{Binding Path=SignInCommand}" 
                                 Content="{loc:StringResource Key=SignIn}"

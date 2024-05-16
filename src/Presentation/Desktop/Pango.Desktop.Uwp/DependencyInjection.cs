@@ -1,8 +1,13 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Mapster;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.ViewModels;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
@@ -39,21 +44,30 @@ public class FileOptions : IFileOptions
     public int PasswordsPerFile { get; set; }
 }
 
-
 public static class DependencyInjection
 {
+    public static IServiceCollection RegisterUIMappings(this IServiceCollection services)
+    {
+        TypeAdapterConfig<PangoPasswordListItemDto, PasswordExplorerItem>
+        .NewConfig()
+        .Map(dest => dest.Type, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
+
+        return services;
+    }
+
     public static IServiceCollection RegisterViewModels(this IServiceCollection services)
     {
         services
-            .AddTransient<ShellViewModel>()
-            .AddTransient<HomeViewModel>()
-            .AddTransient<MainAppViewModel>()
-            .AddTransient<EditUserViewModel>()
-            .AddTransient<EditPasswordViewModel>()
-            .AddTransient<SettingsViewModel>()
-            .AddTransient<PasswordsViewModel>()
-            .AddTransient<SignInViewModel>()
-            .AddTransient<UserViewModel>();
+            .AddSingleton<ShellViewModel>()
+            .AddSingleton<HomeViewModel>()
+            .AddSingleton<MainAppViewModel>()
+            .AddSingleton<EditUserViewModel>()
+            .AddSingleton<EditPasswordViewModel>()
+            .AddSingleton<SettingsViewModel>()
+            .AddSingleton<PasswordsViewModel>()
+            .AddSingleton<SignInViewModel>()
+            .AddSingleton<EditPasswordCatalogDialogViewModel>()
+            .AddSingleton<UserViewModel>();
 
         return services;
     }
@@ -65,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
+        services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<ILogger, TmpLogger>();
 
         // DS

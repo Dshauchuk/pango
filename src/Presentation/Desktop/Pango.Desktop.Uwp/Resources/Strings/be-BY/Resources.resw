@@ -288,4 +288,37 @@
   <data name="AppTheme_Light" xml:space="preserve">
     <value>Светлая</value>
   </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Так</value>
+  </data>
+  <data name="Confirm_PasswordDeletion" xml:space="preserve">
+    <value>Выдаліць пароль?</value>
+  </data>
+  <data name="Confirm_PasswordDeletionDetails" xml:space="preserve">
+    <value>Пароль будзе выдалены назаўсёды. Вы хочаце працягнуць?</value>
+  </data>
+  <data name="NewCatalogDialogTitle" xml:space="preserve">
+    <value>Дадаць Каталог</value>
+  </data>
+  <data name="NewCatalogName" xml:space="preserve">
+    <value>Новы каталог</value>
+  </data>
+  <data name="AddNewCatalog" xml:space="preserve">
+    <value>Дадаць каталог</value>
+  </data>
+  <data name="Or" xml:space="preserve">
+    <value>Або</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Выдаліць</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Рэдагаваць</value>
+  </data>
+  <data name="EditCatalogDialogTitle" xml:space="preserve">
+    <value>Рэдагаваць Каталог</value>
+  </data>
+  <data name="RemoveCatalog_Message" xml:space="preserve">
+    <value>Каталог "{0}", які змяшчае "{1}" пароляў, будзе выдалены. Працягнуць?</value>
+  </data>
 </root>

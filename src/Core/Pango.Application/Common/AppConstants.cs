@@ -6,4 +6,6 @@ public static class AppConstants
     /// Presents a default number of items stored in each file
     /// </summary>
     public const int DefaultNumberOfItemsPerFile = 20;
+
+    public const char CatalogDelimeter = '/';
 }

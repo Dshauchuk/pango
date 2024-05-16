@@ -144,9 +144,11 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\AttachedProperties\AncestorSource.cs" />
     <Compile Include="Controls\FiltrationTextBox.xaml.cs">
       <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\TemplateSelectors\PasswordExplorerItemTemplateSelector.cs" />
     <Compile Include="Controls\ValidationPasswordBox.xaml.cs">
       <DependentUpon>ValidationPasswordBox.xaml</DependentUpon>
     </Compile>
@@ -156,9 +158,12 @@
     <Compile Include="Core\Attributes\AppViewAttribute.cs" />
     <Compile Include="Core\Constants.cs" />
     <Compile Include="Core\Converters\BoolToVisibilityConvereter.cs" />
-    <Compile Include="Core\Converters\NullToCollapsedConverter.cs" />
+    <Compile Include="Core\Converters\EmptyStringToRootFolderNameConverter.cs" />
+    <Compile Include="Core\Converters\NullOrEmptyToCollapsedConverter.cs" />
     <Compile Include="Core\Enums\AppNotificationType.cs" />
     <Compile Include="Core\Enums\SignInStep.cs" />
+    <Compile Include="Core\Extensions\CollectionExtensions.cs" />
+    <Compile Include="Core\Extensions\StringExtensions.cs" />
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\AppDomainProvider.cs" />
@@ -167,11 +172,24 @@
     <Compile Include="Core\Utility\AppUserProvider.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
+    <Compile Include="Dialogs\IContentDialog.cs" />
+    <Compile Include="Dialogs\DialogService.cs" />
+    <Compile Include="Dialogs\IDialogService.cs" />
+    <Compile Include="Dialogs\IDialogViewModel.cs" />
+    <Compile Include="Dialogs\ViewModels\EditPasswordCatalogDialogViewModel.cs" />
+    <Compile Include="Dialogs\Views\EditPasswordCatalogDialog.xaml.cs">
+      <DependentUpon>EditPasswordCatalogDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Models\AppLanguage.cs" />
     <Compile Include="Models\AppTheme.cs" />
+    <Compile Include="Models\Parameters\INavigationParameter.cs" />
+    <Compile Include="Models\Parameters\EditPasswordParameters.cs" />
+    <Compile Include="Models\PasswordExplorerItem.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
+    <Compile Include="Mvvm\Messages\PasswordCreatedMessage.cs" />
+    <Compile Include="Mvvm\Messages\PasswordUpdatedMessage.cs" />
     <Compile Include="Mvvm\Models\InAppNotificationMessage.cs" />
     <Compile Include="Mvvm\Models\NavigationParameters.cs" />
     <Compile Include="Security\AppCredentials.cs" />
@@ -227,6 +245,7 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\folder.png" />
     <Content Include="Assets\LargeTile.scale-100.png" />
     <Content Include="Assets\LargeTile.scale-125.png" />
     <Content Include="Assets\LargeTile.scale-150.png" />
@@ -298,6 +317,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Dialogs\Views\EditPasswordCatalogDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Resources\Styles\Text.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -311,6 +334,10 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="Resources\Styles\TextBlockStyles.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Resources\Styles\TreeViewStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -397,6 +424,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Core\Behaviors\" />
     <Folder Include="Core\Exceptions\" />
   </ItemGroup>
   <ItemGroup>
@@ -406,9 +434,6 @@
   </ItemGroup>
   <ItemGroup>
     <PRIResource Include="Resources\Strings\be-BY\Resources.resw" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Pango.Desktop.Uwp_TemporaryKey.pfx" />
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
