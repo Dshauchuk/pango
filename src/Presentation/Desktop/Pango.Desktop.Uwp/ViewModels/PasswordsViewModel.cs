@@ -12,7 +12,7 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Dialogs;
-using Pango.Desktop.Uwp.Dialogs.Views;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -175,7 +175,9 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if(selected.Type == PasswordExplorerItem.ExplorerItemType.Folder)
         {
-            await _dialogService.ShowAsync(new EditPasswordCatalogDialog(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected));
+            await _dialogService
+                .ShowNewCatalogDialog(
+                    new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected, (selected?.Parent?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
         }
         else
         {
@@ -190,7 +192,9 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async void OnCreateCatalogAsync()
     {
-        await _dialogService.ShowAsync(new EditPasswordCatalogDialog(GetAvailableCatalogs(), GetPathToSelectedFolder()));
+        await _dialogService
+            .ShowNewCatalogDialog(
+                new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
     }
 
     #endregion
@@ -258,6 +262,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
         else
         {
+            password.Parent = catalog;
             catalog.Children.Add(password);
             return true;
         }

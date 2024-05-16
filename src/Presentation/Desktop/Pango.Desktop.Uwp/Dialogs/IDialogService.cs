@@ -1,11 +1,11 @@
-﻿using System.Threading.Tasks;
-using Windows.UI.Xaml.Controls;
+﻿using Pango.Desktop.Uwp.Dialogs.Parameters;
+using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs;
 
 public interface IDialogService
 {
-    Task ShowAsync(IContentDialog dialog);
+    Task ShowNewCatalogDialog(EditCatalogParameters catalogParameters);
 
     Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText);
 }

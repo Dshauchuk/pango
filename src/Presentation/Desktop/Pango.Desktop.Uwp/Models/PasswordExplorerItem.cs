@@ -51,6 +51,8 @@ public class PasswordExplorerItem : ObservableObject
 
     public ExplorerItemType Type { get; set; }
 
+    public PasswordExplorerItem Parent { get; set; }
+
     public ObservableCollection<PasswordExplorerItem> Children
     {
         get => _children;

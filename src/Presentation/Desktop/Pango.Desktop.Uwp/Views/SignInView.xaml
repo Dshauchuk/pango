@@ -116,7 +116,7 @@
             <PivotItem>
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center"
-                      MinWidth="250">
+                      MinWidth="300">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>

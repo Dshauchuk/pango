@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
-using Pango.Desktop.Uwp.Models;
-using System.Collections.Generic;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml.Controls;
 
@@ -16,16 +15,18 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
 {
     private readonly ResourceLoader _viewResourceLoader;
 
-    public EditPasswordCatalogDialog(List<string> availableCatalogs, string defaultCatalog, PasswordExplorerItem catalog = null)
+    public EditPasswordCatalogDialog(EditCatalogParameters editCatalogParameters)
     {
         this.InitializeComponent();
 
         _viewResourceLoader = ResourceLoader.GetForCurrentView();
         DataContext = Ioc.Default.GetRequiredService<EditPasswordCatalogDialogViewModel>();
 
-        ((EditPasswordCatalogDialogViewModel)DataContext).Initialize(availableCatalogs, defaultCatalog, catalog );
+        ((EditPasswordCatalogDialogViewModel)DataContext).Initialize(editCatalogParameters);
 
-        Title = ((EditPasswordCatalogDialogViewModel)DataContext).IsNew ? _viewResourceLoader.GetString("NewCatalogDialogTitle") : _viewResourceLoader.GetString("EditCatalogDialogTitle");
+        Title = ((EditPasswordCatalogDialogViewModel)DataContext).IsNew ? 
+            _viewResourceLoader.GetString("NewCatalogDialogTitle") : 
+            _viewResourceLoader.GetString("EditCatalogDialogTitle");
     }
 
     public string Title { get; private set; }

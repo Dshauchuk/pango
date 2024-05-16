@@ -176,6 +176,8 @@
     <Compile Include="Dialogs\DialogService.cs" />
     <Compile Include="Dialogs\IDialogService.cs" />
     <Compile Include="Dialogs\IDialogViewModel.cs" />
+    <Compile Include="Dialogs\Parameters\EditCatalogParameters.cs" />
+    <Compile Include="Dialogs\Parameters\IDialogParameter.cs" />
     <Compile Include="Dialogs\ViewModels\EditPasswordCatalogDialogViewModel.cs" />
     <Compile Include="Dialogs\Views\EditPasswordCatalogDialog.xaml.cs">
       <DependentUpon>EditPasswordCatalogDialog.xaml</DependentUpon>
