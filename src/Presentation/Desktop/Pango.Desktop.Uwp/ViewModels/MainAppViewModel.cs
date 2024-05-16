@@ -2,7 +2,6 @@
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
-using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -30,15 +29,16 @@ public sealed class MainAppViewModel : ViewModelBase
         {
             _appIdleService.StartAppIdle(TimeSpan.FromMinutes(blockAppAfterIdleMinutes.Value), OnIsIdleChanged);
         }
+        return Task.CompletedTask;
     }
 
     public override Task OnNavigatedFromAsync(object parameter)
     {
-        AppIdleHelper.IsIdleChanged -= OnIsIdleChanged;
+        _appIdleService.StopAppIdle();
         return Task.CompletedTask;
     }
 
-    private void OnIsIdleChanged(object sender, EventArgs e)
+    private void OnIsIdleChanged()
     {
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
     }

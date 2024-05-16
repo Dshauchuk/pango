@@ -4,6 +4,7 @@ using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Views;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.UI.Xaml;
@@ -17,6 +18,7 @@ public class SettingsViewModel : ViewModelBase
 
     private AppLanguage _selectedLanguage;
     private AppTheme _selectedAppTheme;
+    private ObservableCollection<KeyValuePair<int, string>> _lockOnIdleInMinutesItems;
 
     #endregion
 
@@ -27,6 +29,10 @@ public class SettingsViewModel : ViewModelBase
 
         _selectedLanguage = Languages.FirstOrDefault(e => e.Locale == AppLanguageHelper.GetAppliedAppLanguage().Locale) ?? Languages.First();
         _selectedAppTheme = AppThemes.First(e => e.Value == (int)AppThemeHelper.Theme);
+        _lockOnIdleInMinutesItems = new ObservableCollection<KeyValuePair<int, string>>(new List<KeyValuePair<int, string>> 
+        {
+            new KeyValuePair<int, string>(1, )
+        });
     }
 
     #region Properties

@@ -30,9 +30,12 @@ public class AppIdleService : IAppIdleService
 
     public void StartAppIdle(TimeSpan timeOfIdle, Action onIdle)
     {
-        _idleTimer = new();
-        _idleTimer.Interval = timeOfIdle;
+        _idleTimer = new()
+        {
+            Interval = timeOfIdle
+        };
         _idleTimer.Tick += OnIdleTimerTick;
+
         Window.Current.CoreWindow.PointerMoved += OnCoreWindowPointerMoved;
         Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
     }
