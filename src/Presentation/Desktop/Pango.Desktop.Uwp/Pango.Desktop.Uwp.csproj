@@ -190,8 +190,10 @@
     <Compile Include="Models\Parameters\INavigationParameter.cs" />
     <Compile Include="Models\Parameters\EditPasswordParameters.cs" />
     <Compile Include="Models\PasswordExplorerItem.cs" />
+    <Compile Include="Models\TimerAction.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
+    <Compile Include="Mvvm\Messages\AutolockIdleChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Messages\PasswordCreatedMessage.cs" />
     <Compile Include="Mvvm\Messages\PasswordUpdatedMessage.cs" />

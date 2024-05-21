@@ -16,30 +16,62 @@ public sealed class MainAppViewModel : ViewModelBase
 {
     private readonly IAppIdleService _appIdleService;
 
+    private Guid? _lockAppIdleId;
+
     public MainAppViewModel(IAppIdleService appIdleService)
     {
         _appIdleService = appIdleService;
+        WeakReferenceMessenger.Default.Register<AutolockIdleChangedMessage>(this, OnAutolockIdleChanged);
     }
 
     public override Task OnNavigatedToAsync(object parameter)
     {
-        double? blockAppAfterIdleMinutes = (double?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.BlockAppAfterIdleMinutes];
+        int? blockAppAfterIdleMinutes = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.BlockAppAfterIdleMinutes];
 
         if (blockAppAfterIdleMinutes.HasValue)
         {
-            _appIdleService.StartAppIdle(TimeSpan.FromMinutes(blockAppAfterIdleMinutes.Value), OnIsIdleChanged);
+            _lockAppIdleId = _appIdleService.StartAppIdle(TimeSpan.FromMinutes(blockAppAfterIdleMinutes.Value), OnLockIdleTimerElapsed);
         }
         return Task.CompletedTask;
     }
 
     public override Task OnNavigatedFromAsync(object parameter)
     {
-        _appIdleService.StopAppIdle();
+        StopLockAppIdle();
         return Task.CompletedTask;
     }
 
-    private void OnIsIdleChanged()
+    /// <summary>
+    /// Handles lock app idle time changing. Stops current lock app idle timer if <see cref="AutolockIdleChangedMessage"/>.Value is null, 
+    /// otherwise - sets lock app idle timer to the passed value in minutes
+    /// </summary>
+    private void OnAutolockIdleChanged(object recipient, AutolockIdleChangedMessage message)
     {
+        StopLockAppIdle();
+        if (message.Value.HasValue)
+        {
+            _lockAppIdleId = _appIdleService.StartAppIdle(TimeSpan.FromMinutes(message.Value.Value), OnLockIdleTimerElapsed);
+        }
+    }
+
+    /// <summary>
+    /// Stops current lock app idle timer if it is active
+    /// </summary>
+    private void StopLockAppIdle()
+    {
+        if (_lockAppIdleId.HasValue)
+        {
+            _appIdleService.StopAppIdle(_lockAppIdleId.Value);
+            _lockAppIdleId = null;
+        }
+    }
+
+    /// <summary>
+    /// Stops current lock app idle timer and navigates to the Sign In page
+    /// </summary>
+    private void OnLockIdleTimerElapsed()
+    {
+        StopLockAppIdle();
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
     }
 }

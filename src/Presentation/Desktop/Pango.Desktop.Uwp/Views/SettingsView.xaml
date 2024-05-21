@@ -29,16 +29,17 @@
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">
-                        <ToggleSwitch IsOn="{Binding AllowAutolock}"
+                        <ToggleSwitch IsOn="{Binding AllowAutolock, Mode=TwoWay}"
                                       Header="{loc:StringResource Key='Autolock'}"/>
                         <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
                                    Text="{loc:StringResource Key='AutolockDescription'}"/>
-                        <ComboBox DisplayMemberPath="Name"
-                                  SelectedValuePath="Name"
-                                  ItemsSource="{Binding Languages}"
+                        <ComboBox DisplayMemberPath="Value"
+                                  SelectedValuePath="Value"
+                                  ItemsSource="{Binding LockOnIdleInMinutesItems}"
                                   Margin="{StaticResource ControlSectionMargin}"
-                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                                  Header="{loc:StringResource Key='ChooseApplicationLanguage'}"/>
+                                  SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"
+                                  Header="{loc:StringResource Key='AutolockAfterMinutes'}"
+                                  Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}"/>
                     </StackPanel>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">

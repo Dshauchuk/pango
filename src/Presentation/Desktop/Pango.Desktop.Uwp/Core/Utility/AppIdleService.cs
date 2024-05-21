@@ -1,5 +1,7 @@
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
+using Pango.Desktop.Uwp.Models;
 using System;
+using System.Collections.Generic;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 
@@ -7,62 +9,68 @@ namespace Pango.Desktop.Uwp.Core.Utility;
 
 public class AppIdleService : IAppIdleService
 {
-    private bool _isIdle;
-    private DispatcherTimer _idleTimer;
-    private event EventHandler _isIdleChanged;
+    private readonly Dictionary<Guid, TimerAction> _timerActions = new();
 
-    public bool IsIdle
+    /// <inheritdoc/>
+    public Guid StartAppIdle(TimeSpan timeOfIdle, Action onIdle)
     {
-        get
-        {
-            return _isIdle;
-        }
-
-        private set
-        {
-            if (_isIdle != value)
-            {
-                _isIdle = value;
-                _isIdleChanged?.Invoke(App.Current, EventArgs.Empty);
-            }
-        }
-    }
-
-    public void StartAppIdle(TimeSpan timeOfIdle, Action onIdle)
-    {
-        _idleTimer = new()
+        EventHandler<object> timerTickHandler = new((_, _) => onIdle());
+        DispatcherTimer idleTimer = new()
         {
             Interval = timeOfIdle
         };
-        _idleTimer.Tick += OnIdleTimerTick;
+        idleTimer.Tick += timerTickHandler;
 
-        Window.Current.CoreWindow.PointerMoved += OnCoreWindowPointerMoved;
-        Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
+        Guid appIdleId = Guid.NewGuid();
+        _timerActions.Add(appIdleId, new TimerAction(idleTimer, timerTickHandler));
+
+        if (_timerActions.Count == 1)
+        {
+            Window.Current.CoreWindow.PointerMoved += OnCoreWindowPointerMoved;
+            Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
+        }
+
+        return appIdleId;
     }
 
-    public void StopAppIdle()
+    /// <inheritdoc/>
+    public void StopAppIdle(Guid appIdleId)
     {
-        _idleTimer = null;
-        _isIdleChanged = null;
+        TimerAction timerActionToStop = _timerActions[appIdleId];
+        if (timerActionToStop == null)
+            return;
+
+        timerActionToStop.Timer.Stop();
+        timerActionToStop.Timer.Tick -= timerActionToStop.TimerTickHadler;
+
+        if (_timerActions.Count == 1)
+        {
+            Window.Current.CoreWindow.PointerMoved -= OnCoreWindowPointerMoved;
+            Window.Current.CoreWindow.KeyDown -= OnCoreWindowKeyDown;
+        }
+
+        _timerActions.Remove(appIdleId);
     }
 
-    private void OnIdleTimerTick(object sender, object e)
+    /// <summary>
+    /// Restarts all timers imtervals of the <see cref="_timerActions"/> list
+    /// </summary>
+    private void RestartAllTimers()
     {
-        _idleTimer.Stop();
-        IsIdle = true;
+        foreach (TimerAction timerAction in _timerActions.Values)
+        {
+            timerAction.Timer.Stop();
+            timerAction.Timer.Start();
+        }
     }
 
     private void OnCoreWindowPointerMoved(CoreWindow sender, PointerEventArgs args)
     {
-        _idleTimer.Stop();
-        _idleTimer.Start();
-        IsIdle = false;
+        RestartAllTimers();
     }
 
     private void OnCoreWindowKeyDown(CoreWindow sender, KeyEventArgs args)
     {
-        _idleTimer.Stop();
-        _idleTimer.Start();
-        IsIdle = false;
+        RestartAllTimers();
     }
 }
