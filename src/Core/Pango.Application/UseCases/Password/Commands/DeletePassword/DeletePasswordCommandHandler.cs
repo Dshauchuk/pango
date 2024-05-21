@@ -1,6 +1,8 @@
 ﻿using ErrorOr;
 using MediatR;
+using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Persistence;
+using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.Password.Commands.DeletePassword;
 
@@ -20,8 +22,24 @@ public class DeletePasswordCommandHandler
     
         if(password is not null)
         {
-            await _passwordRepository.DeleteAsync(password);
-            
+            List<PangoPassword> passwordsToRemove = new() { password };
+
+            if (password.IsCatalog)
+            {
+                string catalogPath = string.IsNullOrEmpty(password.CatalogPath) ? password.Name : $"{password.CatalogPath}{AppConstants.CatalogDelimeter}{password.Name}";
+                var internalPasswords = (await _passwordRepository.QueryAsync(p => p.CatalogPath == catalogPath)).ToList();
+
+                if(internalPasswords.Any()) 
+                {
+                    passwordsToRemove.AddRange(internalPasswords);
+                }
+            }
+
+            foreach (var pwd in passwordsToRemove)
+            {
+                await _passwordRepository.DeleteAsync(pwd);
+            }
+
             return true;
         }
 

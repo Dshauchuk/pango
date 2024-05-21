@@ -8,6 +8,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -32,12 +33,28 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 
     protected ResourceLoader ViewResourceLoader { get; }
 
-    protected AppView View => this.GetType().GetCustomAttribute<AppViewAttribute>().View;
+    protected AppView? View => this.GetType().GetCustomAttribute<AppViewAttribute>()?.View;
 
     #endregion
 
 
     #region Methods
+
+    protected async Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText)
+    {
+        ContentDialog subscribeDialog = new()
+        {
+            Title = confirmationTitle,
+            Content = confirmationText,
+            CloseButtonText = ViewResourceLoader.GetString("Cancel"),
+            PrimaryButtonText = ViewResourceLoader.GetString("Yes"),
+            DefaultButton = ContentDialogButton.Primary
+        };
+
+        ContentDialogResult result = await subscribeDialog.ShowAsync();
+
+        return result == ContentDialogResult.Primary;
+    }
 
     protected async Task DoAsync(Func<Task> action)
     {

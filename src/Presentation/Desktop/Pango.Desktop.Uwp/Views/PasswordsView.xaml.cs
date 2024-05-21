@@ -2,11 +2,10 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-
-// The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -17,6 +16,18 @@ public sealed partial class PasswordsView : PageBase
     {
         this.InitializeComponent();
         DataContext = Ioc.Default.GetRequiredService<PasswordsViewModel>();
+
+        PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
+    }
+
+    private void PasswordsTreeView_ItemInvoked(Windows.UI.Xaml.Controls.TreeView sender, Windows.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    {
+        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
+
+        if (viewModel is not null)
+        {
+            viewModel.SelectedItem = args.InvokedItem as PasswordExplorerItem;
+        }
     }
 
     protected override void RegisterMessages()

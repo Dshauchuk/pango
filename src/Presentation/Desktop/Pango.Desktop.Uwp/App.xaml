@@ -15,13 +15,15 @@
                         <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/TextBlockStyles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/ToggleSwitchStyles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/TreeViewStyles.xaml" />
                         
                         <ResourceDictionary Source="Controls/ValidationTextBox.xaml" />
                         <ResourceDictionary Source="Controls/ValidationPasswordBox.xaml" />
                     </ResourceDictionary.MergedDictionaries>
 
-                    <converters:NullToCollapsedConverter x:Key="NullToCollapsedConverter"/>
+                    <converters:NullOrEmptyToCollapsedConverter x:Key="NullOrEmptyToCollapsedConverter"/>
                     <converters:BoolToVisibilityConvereter x:Key="BoolToVisibilityConvereter"/>
+                    <converters:EmptyStringToRootFolderNameConverter x:Key="EmptyStringToRootFolderNameConverter"/>
                     
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>
