@@ -1,8 +1,13 @@
-﻿using System.ComponentModel;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Pango.Desktop.Uwp.Mvvm.Models;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using Windows.ApplicationModel.DataTransfer;
+using Windows.ApplicationModel.Resources;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -16,12 +21,16 @@ public sealed class ValidationPasswordBox : ContentControl
     /// <summary>
     /// The <see cref="PasswordBox"/> instance in use.
     /// </summary>
-    private PasswordBox passwordBox;
+    private PasswordBox _passwordBox;
 
     /// <summary>
     /// The <see cref="MarkdownTextBlock"/> instance in use.
     /// </summary>
-    private FontIcon warningIcon;
+    private FontIcon _warningIcon;
+
+    private ToggleButton _revealButton;
+
+    private Button _copyButton;
 
     /// <summary>
     /// The previous data context in use.
@@ -38,10 +47,18 @@ public sealed class ValidationPasswordBox : ContentControl
     {
         base.OnApplyTemplate();
 
-        passwordBox = (PasswordBox)GetTemplateChild("PART_PasswordBox");
-        warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
+        _passwordBox = (PasswordBox)GetTemplateChild("PART_PasswordBox");
+        _warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
 
-        passwordBox.PasswordChanged += PasswordBox_TextChanged;
+        _copyButton = GetTemplateChild("CopyButton") as Button;
+        _revealButton = GetTemplateChild("RevealButton") as ToggleButton;
+
+        _revealButton.Checked += RevealButton_Checked;
+        _revealButton.Unchecked += RevealButton_Unchecked;
+
+        _copyButton.Click += CopyBtn_Click;
+
+        _passwordBox.PasswordChanged += PasswordBox_TextChanged;
     }
 
     /// <summary>
@@ -129,6 +146,29 @@ public sealed class ValidationPasswordBox : ContentControl
         ((ValidationPasswordBox)sender).RefreshErrors();
     }
 
+    private void CopyBtn_Click(object sender, RoutedEventArgs e)
+    {
+        DataPackage dataPackage = new()
+        {
+            RequestedOperation = DataPackageOperation.Copy
+        };
+        dataPackage.SetText(Password ?? string.Empty);
+
+        Clipboard.SetContent(dataPackage);
+
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ResourceLoader.GetForCurrentView().GetString("PasswordCopiedToClipboard")));
+    }
+
+    private void RevealButton_Unchecked(object sender, RoutedEventArgs e)
+    {
+        _passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;
+    }
+
+    private void RevealButton_Checked(object sender, RoutedEventArgs e)
+    {
+        _passwordBox.PasswordRevealMode = PasswordRevealMode.Visible;
+    }
+
     /// <summary>
     /// Updates the bindings whenever the data context changes.
     /// </summary>
@@ -142,7 +182,6 @@ public sealed class ValidationPasswordBox : ContentControl
         if (args.NewValue is INotifyDataErrorInfo dataContext)
         {
             oldDataContext = dataContext;
-
             oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
         }
 
@@ -157,12 +196,26 @@ public sealed class ValidationPasswordBox : ContentControl
         RefreshErrors();
     }
 
+    private void TriggerActionButtonsVisibility()
+    {
+        if (_revealButton != null)
+        {
+            _revealButton.Visibility = string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        if (_copyButton != null)
+        {
+            _copyButton.Visibility = string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
+        }
+    }
+
     /// <summary>
     /// Updates <see cref="Text"/> when needed.
     /// </summary>
     private void PasswordBox_TextChanged(object sender, RoutedEventArgs e)
     {
         Password = ((PasswordBox)sender).Password;
+        TriggerActionButtonsVisibility();
     }
 
     /// <summary>
@@ -170,7 +223,7 @@ public sealed class ValidationPasswordBox : ContentControl
     /// </summary>
     private void RefreshErrors()
     {
-        if (this.warningIcon is not FontIcon warningIcon ||
+        if (this._warningIcon is not FontIcon warningIcon ||
             PropertyName is not string propertyName ||
             DataContext is not INotifyDataErrorInfo dataContext)
         {
