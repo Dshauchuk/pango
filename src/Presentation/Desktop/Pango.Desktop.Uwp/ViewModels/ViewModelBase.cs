@@ -90,5 +90,12 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
         return Task.CompletedTask;
     }
 
+    public virtual Task OnNavigatedFromAsync(object parameter)
+    {
+        Debug.WriteLine($"Navigated from {this.GetType().Name}");
+
+        return Task.CompletedTask;
+    }
+
     #endregion
 }

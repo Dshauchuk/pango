@@ -323,4 +323,11 @@
   <data name="RemoveCatalog_Message" xml:space="preserve">
     <value>The catalog containing 5 passwords will be removed. Do you want to continue?</value>
   </data>
+  <data name="AutolockAfterMinutes" xml:space="preserve">
+    <value>Lock after minutes</value>
+  </data>
+  <data name="Minute(-s)" xml:space="preserve">
+    <value>minute(-s)</value>
+    <comment>1 minute(-s), 3 minute(-s)</comment>
+  </data>
 </root>

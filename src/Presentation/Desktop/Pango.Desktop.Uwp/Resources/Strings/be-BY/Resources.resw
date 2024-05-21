@@ -321,4 +321,11 @@
   <data name="RemoveCatalog_Message" xml:space="preserve">
     <value>Каталог "{0}", які змяшчае "{1}" пароляў, будзе выдалены. Працягнуць?</value>
   </data>
+  <data name="AutolockAfterMinutes" xml:space="preserve">
+    <value>Заблакіраваць праз хвіліны</value>
+  </data>
+  <data name="Minute(-s)" xml:space="preserve">
+    <value>хвілін(-ы)</value>
+    <comment>1 хвілін(-ы), 3 хвілін(-ы)</comment>
+  </data>
 </root>

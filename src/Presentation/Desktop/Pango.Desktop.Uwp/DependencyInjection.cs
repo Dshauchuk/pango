@@ -8,6 +8,7 @@ using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Pango.Desktop.Uwp.Models;
+using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
@@ -81,6 +82,8 @@ public static class DependencyInjection
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
         services.AddScoped<ILogger, TmpLogger>();
+
+        services.AddSingleton<IAppIdleService, AppIdleService>();
 
         // DS
         // TODO: move to the config file
