@@ -25,17 +25,15 @@ public class SignInViewModel : ViewModelBase
 
     private PangoUserDto _selectedUser;
     private readonly ISender _sender;
-    private readonly ILogger<SignInViewModel> _logger;
     private int _signInStepIndex;
     private bool _hasUsers;
     private string _passcode;
 
     #endregion
 
-    public SignInViewModel(ISender sender, ILogger<SignInViewModel> logger)
+    public SignInViewModel(ISender sender, ILogger<SignInViewModel> logger) : base(logger)
     {
         _sender = sender;
-        _logger = logger;
 
         Users = [];
         UserSelected += SignInViewModel_UserSelected;
@@ -109,7 +107,7 @@ public class SignInViewModel : ViewModelBase
     {
         SignInStep step = (SignInStep)stepIndex;
 
-        _logger.LogInformation($"Navigating to {step.ToString()}");
+        Logger.LogInformation($"Navigating to {step.ToString()}");
 
         switch (step)
         {
@@ -151,14 +149,14 @@ public class SignInViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
-        _logger.LogDebug($"Loading users...");
+        Logger.LogDebug($"Loading users...");
 
         await DoAsync(async () =>
         {
             var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
             HasUsers = !queryResult.IsError && queryResult.Value.Any();
 
-            _logger.LogDebug($"{queryResult.Value?.Count()} users loaded");
+            Logger.LogDebug($"{queryResult.Value?.Count()} users loaded");
 
             if (!HasUsers)
             {
@@ -184,6 +182,7 @@ public class SignInViewModel : ViewModelBase
         if (auth.IsError)
         {
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
+            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": {auth.FirstError.Code}. {auth.FirstError.Description}");
 
             return;
         }
@@ -192,12 +191,13 @@ public class SignInViewModel : ViewModelBase
         {
             // show error
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
+            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": User name or password is wrong");
 
             return;
         }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
-        _logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
+        Logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
     }
 
     #endregion

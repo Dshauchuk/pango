@@ -1,4 +1,5 @@
-﻿using Pango.Desktop.Uwp.Core.Attributes;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
@@ -20,7 +21,7 @@ public class SettingsViewModel : ViewModelBase
 
     #endregion
 
-    public SettingsViewModel()
+    public SettingsViewModel(ILogger<SettingsViewModel> logger) : base(logger)
     {
         Languages = new ObservableCollection<AppLanguage>(AppLanguage.GetAppLanguageCollection());
         AppThemes = new ObservableCollection<AppTheme>(Enum.GetValues(typeof(ElementTheme)).Cast<ElementTheme>().Select(e => new AppTheme { Name = ViewResourceLoader.GetString($"AppTheme_{e}"), Value = (int)e }));

@@ -1,4 +1,5 @@
-﻿using Pango.Desktop.Uwp.Core.Attributes;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -6,7 +7,7 @@ namespace Pango.Desktop.Uwp.ViewModels;
 [AppView(AppView.MainAppView)]
 public sealed class MainAppViewModel : ViewModelBase
 {
-    public MainAppViewModel()
+    public MainAppViewModel(ILogger<MainAppViewModel> logger) : base(logger)
     {
             
     }

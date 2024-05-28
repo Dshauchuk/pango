@@ -81,6 +81,7 @@ public static class DependencyInjection
                 rollingInterval: RollingInterval.Day,
                 rollOnFileSizeLimit: true,
                 restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+            .MinimumLevel.Debug()
             .CreateLogger();
 
         services.AddScoped<IPasswordVault, AppPasswordVault>();

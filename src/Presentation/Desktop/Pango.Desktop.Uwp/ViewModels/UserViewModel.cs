@@ -21,7 +21,7 @@ public class UserViewModel : ViewModelBase
     private readonly ILogger<UserViewModel> _logger;
     private string _currentUserName;
 
-    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger)
+    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger) : base(logger)
     {
         _sender = sender;
         _userContext = userContext;
