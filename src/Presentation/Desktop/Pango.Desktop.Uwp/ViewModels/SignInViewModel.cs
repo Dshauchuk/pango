@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Models;
 using Pango.Application.UseCases.User.Commands.SignIn;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -24,17 +25,19 @@ public class SignInViewModel : ViewModelBase
 
     private PangoUserDto _selectedUser;
     private readonly ISender _sender;
+    private readonly ILogger<SignInViewModel> _logger;
     private int _signInStepIndex;
     private bool _hasUsers;
     private string _passcode;
 
     #endregion
 
-    public SignInViewModel(ISender sender)
+    public SignInViewModel(ISender sender, ILogger<SignInViewModel> logger)
     {
         _sender = sender;
+        _logger = logger;
 
-        Users = new();
+        Users = [];
         UserSelected += SignInViewModel_UserSelected;
 
         SignInCommand = new AsyncRelayCommand(OnSignIn);
@@ -106,6 +109,8 @@ public class SignInViewModel : ViewModelBase
     {
         SignInStep step = (SignInStep)stepIndex;
 
+        _logger.LogInformation($"Navigating to {step.ToString()}");
+
         switch (step)
         {
             case SignInStep.SelectUser:
@@ -146,10 +151,14 @@ public class SignInViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
+        _logger.LogDebug($"Loading users...");
+
         await DoAsync(async () =>
         {
             var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
             HasUsers = !queryResult.IsError && queryResult.Value.Any();
+
+            _logger.LogDebug($"{queryResult.Value?.Count()} users loaded");
 
             if (!HasUsers)
             {
@@ -188,6 +197,7 @@ public class SignInViewModel : ViewModelBase
         }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
+        _logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
     }
 
     #endregion

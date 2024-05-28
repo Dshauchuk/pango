@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.User.Commands.Delete;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -17,13 +18,15 @@ public class UserViewModel : ViewModelBase
 {
     private readonly ISender _sender;
     private readonly IUserContextProvider _userContext;
-
+    private readonly ILogger<UserViewModel> _logger;
     private string _currentUserName;
 
-    public UserViewModel(ISender sender, IUserContextProvider userContext)
+    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger)
     {
         _sender = sender;
         _userContext = userContext;
+        _logger = logger;
+
         DeleteUserCommand = new(OnDeleteUser);
     }
 
@@ -56,7 +59,12 @@ public class UserViewModel : ViewModelBase
 
         if (!result.IsError && result.Value)
         {
+            _logger.LogDebug($"User \"{_currentUserName}\" successfully deleted");
             WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(AppView.SignIn)));
+        }
+        else
+        {
+            _logger.LogWarning($"User deletion failed: {result.FirstError}");
         }
     }
 }

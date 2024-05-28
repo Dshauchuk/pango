@@ -1,6 +1,5 @@
 ﻿using Mapster;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
@@ -12,27 +11,29 @@ using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
 using Pango.Persistence;
-using System;
+using Serilog;
+using System.IO;
+using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
 
-public class TmpLogger : ILogger
-{
-    public IDisposable BeginScope<TState>(TState state) where TState : notnull
-    {
-        return null;
-    }
+//public class TmpLogger : ILogger
+//{
+//    public IDisposable BeginScope<TState>(TState state) where TState : notnull
+//    {
+//        return null;
+//    }
 
-    public bool IsEnabled(LogLevel logLevel)
-    {
-        return true;
-    }
+//    public bool IsEnabled(LogLevel logLevel)
+//    {
+//        return true;
+//    }
 
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-    {
+//    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+//    {
 
-    }
-}
+//    }
+//}
 
 public class AppOptions : IAppOptions
 {
@@ -74,13 +75,22 @@ public static class DependencyInjection
 
     public static IServiceCollection AddAppServices(this IServiceCollection services)
     {
+        string logFilePath = Path.Combine(Path.Combine(ApplicationData.Current.LocalFolder.Path, "logs/log.txt"));
+        Log.Logger = new LoggerConfiguration()
+            .WriteTo.File(logFilePath,
+                rollingInterval: RollingInterval.Day,
+                rollOnFileSizeLimit: true,
+                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
+            .CreateLogger();
+
         services.AddScoped<IPasswordVault, AppPasswordVault>();
         services.AddScoped<IAppDomainProvider, AppDomainProvider>();
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
-        services.AddScoped<ILogger, TmpLogger>();
+        services.AddLogging(loggingBuilder =>
+                loggingBuilder.AddSerilog(dispose: true));
 
         // DS
         // TODO: move to the config file
