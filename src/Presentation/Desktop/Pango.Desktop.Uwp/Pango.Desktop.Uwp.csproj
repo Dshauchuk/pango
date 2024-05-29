@@ -167,9 +167,11 @@
     <Compile Include="Core\Localization\StringResourceExtension.cs" />
     <Compile Include="Core\Navigation\NavigationEntry.cs" />
     <Compile Include="Core\Utility\AppDomainProvider.cs" />
+    <Compile Include="Core\Utility\AppIdleService.cs" />
     <Compile Include="Core\Utility\AppLanguageHelper.cs" />
     <Compile Include="Core\Utility\AppThemeHelper.cs" />
     <Compile Include="Core\Utility\AppUserProvider.cs" />
+    <Compile Include="Core\Utility\Contracts\IAppIdleService.cs" />
     <Compile Include="Core\Utility\TitleBarHelper.cs" />
     <Compile Include="DependencyInjection.cs" />
     <Compile Include="Dialogs\IContentDialog.cs" />
@@ -187,8 +189,10 @@
     <Compile Include="Models\Parameters\INavigationParameter.cs" />
     <Compile Include="Models\Parameters\EditPasswordParameters.cs" />
     <Compile Include="Models\PasswordExplorerItem.cs" />
+    <Compile Include="Models\TimerAction.cs" />
     <Compile Include="Mvvm\Messages\AppLanguageChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\AppThemeChangedMessage.cs" />
+    <Compile Include="Mvvm\Messages\AutolockIdleChangedMessage.cs" />
     <Compile Include="Mvvm\Messages\NavigationRequstedMessage.cs" />
     <Compile Include="Mvvm\Messages\PasswordCreatedMessage.cs" />
     <Compile Include="Mvvm\Messages\PasswordUpdatedMessage.cs" />
