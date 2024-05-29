@@ -329,9 +329,21 @@
     <comment>1 хвілін(-ы), 3 хвілін(-ы)</comment>
   </data>
   <data name="PasswordDeleted_Format" xml:space="preserve">
-    <value />
+    <value>Пароль "{0}" быў паспяхова выдалены</value>
   </data>
   <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
-    <value />
+    <value>Не атрымалася выдаліць пароль "{0}"</value>
+  </data>
+  <data name="CatalogCreated_Format" xml:space="preserve">
+    <value>Каталог "{0}" быў дададзены</value>
+  </data>
+  <data name="CatalogCreationFailed_Format" xml:space="preserve">
+    <value>Не атрымалася дадаць каталог "{0}"</value>
+  </data>
+  <data name="CatalogUpdated_Format" xml:space="preserve">
+    <value>Каталог "{0}" быў абноўлены</value>
+  </data>
+  <data name="CatalogUpdateFailed_Format" xml:space="preserve">
+    <value>Не атрымалася абнавіць каталог "{0}"</value>
   </data>
 </root>
