@@ -18,7 +18,7 @@ public class UserDataRepository : FileRepositoryBase<PangoUser>, IUserDataReposi
         IAppUserProvider appUserProvider, 
         IAppDomainProvider appDomainProvider,
         IAppOptions appOptions,
-        ILogger logger)
+        ILogger<UserDataRepository> logger)
         : base(contentEncoder, appUserProvider, appDomainProvider, appOptions, logger)
     {
     }
