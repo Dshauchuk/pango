@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Core;
+using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
@@ -18,7 +19,7 @@ public sealed class MainAppViewModel : ViewModelBase
 
     private Guid? _lockAppIdleId;
 
-    public MainAppViewModel(IAppIdleService appIdleService)
+    public MainAppViewModel(IAppIdleService appIdleService, ILogger<MainAppViewModel> logger) : base(logger)
     {
         _appIdleService = appIdleService;
         WeakReferenceMessenger.Default.Register<AutolockIdleChangedMessage>(this, OnAutolockIdleChanged);
