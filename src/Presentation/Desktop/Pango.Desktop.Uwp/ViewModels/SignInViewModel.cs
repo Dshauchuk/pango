@@ -5,6 +5,7 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Models;
 using Pango.Application.UseCases.User.Commands.SignIn;
+using Pango.Application.UseCases.User.Queries.FindUser;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -13,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
 
@@ -95,8 +97,23 @@ public class SignInViewModel : ViewModelBase
 
     public override async Task OnNavigatedToAsync(object parameter)
     {
-        GoToUserSelection();
-        await LoadUsersAsync();
+        if (Thread.CurrentPrincipal is null || string.IsNullOrEmpty(Thread.CurrentPrincipal.Identity?.Name))
+        {
+            GoToUserSelection();
+            await LoadUsersAsync();
+        }
+        else
+        {
+            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(Thread.CurrentPrincipal.Identity.Name));
+            if (previouslySelectedUser.IsError)
+            {
+                Thread.CurrentPrincipal = null;
+                await OnNavigatedToAsync(parameter);
+                return;
+            }
+
+            SelectedUser = previouslySelectedUser.Value;
+        }
     }
 
     #endregion

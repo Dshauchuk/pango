@@ -9,6 +9,7 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -60,6 +61,7 @@ public class UserViewModel : ViewModelBase
         if (!result.IsError && result.Value)
         {
             _logger.LogDebug($"User \"{_currentUserName}\" successfully deleted");
+            Thread.CurrentPrincipal = null;
             WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(AppView.SignIn)));
         }
         else
