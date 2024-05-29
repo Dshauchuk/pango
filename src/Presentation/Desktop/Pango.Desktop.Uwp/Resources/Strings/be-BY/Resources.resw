@@ -328,4 +328,10 @@
     <value>хвілін(-ы)</value>
     <comment>1 хвілін(-ы), 3 хвілін(-ы)</comment>
   </data>
+  <data name="PasswordDeleted_Format" xml:space="preserve">
+    <value />
+  </data>
+  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
+    <value />
+  </data>
 </root>
