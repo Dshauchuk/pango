@@ -1,10 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Pango.Application;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
+using Serilog;
+using System;
+using System.Text;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Core;
@@ -18,7 +20,6 @@ namespace Pango.Desktop.Uwp;
 /// </summary>
 sealed partial class App : ApplicationBase
 {
-    private ILogger _logger;
     public static new App Current => (App)ApplicationBase.Current;
     
     /// <summary>
@@ -37,7 +38,7 @@ sealed partial class App : ApplicationBase
     {
         e.Handled = true;
 
-        _logger?.LogError(e.Exception, e?.Message ?? "Unhandled error");
+        Log.Logger?.Error(e.Exception, e?.Message ?? "Unhandled error");
 
         //WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(e?.Message ?? "Unhandled error", AppNotificationType.Error));
     }
@@ -68,6 +69,13 @@ sealed partial class App : ApplicationBase
 
             Window.Current.Activate();
         }
+
+        var sb = new StringBuilder();
+        sb.AppendLine("System information: ")
+            .AppendLine(string.Format("{0, -25} {1}", "Machine:", Environment.MachineName))
+            .AppendLine(string.Format("{0, -25} {1}", "Windows (OS) Version:", Environment.OSVersion));
+
+        Log.Logger.Information(sb.ToString());
     }
 
     private void AddDependencyInjection()

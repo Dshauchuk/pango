@@ -2,12 +2,14 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Mapster;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using System;
 using System.Collections.Generic;
@@ -27,7 +29,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public RelayCommand SaveCommand { get; }
 
-    public EditPasswordCatalogDialogViewModel(ISender sender)
+    public EditPasswordCatalogDialogViewModel(ISender sender, ILogger<EditPasswordCatalogDialogViewModel> logger): base(logger)
     {
         _sender = sender;
         DialogContext = new DialogContext();
@@ -109,21 +111,33 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
             if (result.IsError)
             {
-
+                Logger.LogError($"Creating catalog \"{NewCatalogName}\" failed: {result.FirstError}");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogCreationFailed_Format"), NewCatalogName), Core.Enums.AppNotificationType.Warning));
             }
             else
             {
                 var entity = result.Value.Adapt<PangoPasswordListItemDto>();
                 WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogCreated_Format"), NewCatalogName)));
+                Logger.LogDebug($"Catalog \"{NewCatalogName}\" successfully created");
             }
         }
         else
         {
             ErrorOr.ErrorOr<PangoPasswordDto> result = await _sender.Send(new UpdatePasswordCommand(_selectedCatalog.Id, NewCatalogName, null, null) { IsCatalogHolder = true, CatalogPath = InitialCatalog });
-            if (!result.IsError)
+
+            if (result.IsError)
+            {
+                Logger.LogError($"Updating catalog \"{NewCatalogName}\" failed: {result.FirstError}");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogUpdateFailed_Format"), NewCatalogName), Core.Enums.AppNotificationType.Warning));
+            }
+            else
             {
                 var entity = result.Value.Adapt<PangoPasswordListItemDto>();
                 WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogUpdated_Format"), NewCatalogName)));
+
+                Logger.LogDebug($"Catalog \"{NewCatalogName}\" successfully updated");
             }
         }
     }

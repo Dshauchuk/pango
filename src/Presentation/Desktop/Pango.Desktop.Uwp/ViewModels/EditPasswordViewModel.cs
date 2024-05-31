@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
+using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
@@ -31,7 +33,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     #endregion
 
-    public EditPasswordViewModel(ISender sender)
+    public EditPasswordViewModel(ISender sender, ILogger<EditPasswordViewModel> logger): base(logger)
     {
         _sender = sender;
 
@@ -140,13 +142,33 @@ public class EditPasswordViewModel : ViewModelBase
                 { PasswordProperties.Notes, PasswordValidator.Notes }
             };
 
+            ErrorOr.ErrorOr<PangoPasswordDto> result;
+
             if (IsNew)
             {
-                await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
+                result = await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
+
+                if(result.IsError)
+                {
+                    Logger.LogError($"Creating password \"{PasswordValidator.Title}\" failed: {result.FirstError}");
+                }
+                else
+                {
+                    Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully created");
+                }
             }
             else
             {
-                await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+                result = await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+
+                if (result.IsError)
+                {
+                    Logger.LogError($"Updating password \"{PasswordValidator.Title}\" failed: {result.FirstError}");
+                }
+                else
+                {
+                    Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully updated");
+                }
             }
             
             OnOpenIndexView();
