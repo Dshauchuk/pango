@@ -1,4 +1,6 @@
-﻿using Windows.UI.Xaml;
+﻿using CommunityToolkit.Mvvm.Input;
+using System.Windows.Input;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Controls;
@@ -33,13 +35,29 @@ public sealed class SearchTextBox : ContentControl
         _deleteButton = (Button)GetTemplateChild("PART_DeleteButton");
 
         _textBox.TextChanged += TextBox_TextChanged;
-        _deleteButton.Click += _deleteButton_Click;
+        _deleteButton.Click += DeleteButton_Click;
+        _searchButton.Click += SearchButton_Click;
     }
 
-    private void _deleteButton_Click(object sender, RoutedEventArgs e)
+    #region Properties
+
+    /// <summary>
+    /// Gets or sets the <see cref="ICommand"/> representing the command that's triggerred when the search button clicked
+    /// </summary>
+    public RelayCommand<string> SearchCommand
     {
-        _textBox.Text = string.Empty; 
+        get => (RelayCommand<string>)GetValue(SearchCommandProperty);
+        set => SetValue(SearchCommandProperty, value);
     }
+
+    /// <summary>
+    /// The <see cref="DependencyProperty"/> backing <see cref="Text"/>.
+    /// </summary>
+    public static readonly DependencyProperty SearchCommandProperty = DependencyProperty.Register(
+        nameof(SearchCommand),
+        typeof(ICommand),
+        typeof(SearchTextBox),
+        new PropertyMetadata(null));
 
     /// <summary>
     /// Gets or sets the <see cref="string"/> representing the text to display.
@@ -77,6 +95,10 @@ public sealed class SearchTextBox : ContentControl
         typeof(SearchTextBox),
         new PropertyMetadata(default(string)));
 
+    #endregion
+
+    #region Handlers
+
     /// <summary>
     /// Updates <see cref="Text"/> when needed.
     /// </summary>
@@ -86,4 +108,23 @@ public sealed class SearchTextBox : ContentControl
 
         _deleteButton.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
     }
+
+    private void DeleteButton_Click(object sender, RoutedEventArgs e)
+    {
+        _textBox.Text = string.Empty;
+
+        TriggerSearch();
+    }
+
+    private void SearchButton_Click(object sender, RoutedEventArgs e)
+    {
+        TriggerSearch();
+    }
+
+    private void TriggerSearch()
+    {
+        SearchCommand?.Execute(Text);
+    }
+
+    #endregion
 }

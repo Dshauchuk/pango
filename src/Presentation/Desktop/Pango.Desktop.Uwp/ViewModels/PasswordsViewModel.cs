@@ -34,6 +34,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private bool _hasPasswords;
     private PasswordExplorerItem _selectedItem;
+    private IEnumerable<PasswordExplorerItem> _originalList;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
@@ -43,6 +44,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = [];
         Passwords.CollectionChanged += Passwords_CollectionChanged;
 
+        SearchCommand = new RelayCommand<string>(OnSearchAsync);
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
@@ -58,6 +60,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     public RelayCommand<PasswordExplorerItem> DeleteCommand { get; }
     public RelayCommand CreateCatalogCommand { get; }
     public RelayCommand CreatePasswordCommand { get; }
+    public RelayCommand<string> SearchCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
 
@@ -96,6 +99,36 @@ public sealed class PasswordsViewModel : ViewModelBase
     #endregion
 
     #region Event&Command Handlers
+
+    private void OnSearchAsync(string searchText)
+    {
+        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
+
+        DisplayPasswords(foundItems);
+    }
+
+    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
+    {
+        if(items == null || !items.Any())
+        {
+            return [];
+        }
+
+        List<PasswordExplorerItem> foundItems = [];
+
+        foreach(var item in items)
+        {
+            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+            
+            if(foundChildren.Any() || searchPredicate(item)) 
+            {
+                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
+                foundItems.Add(item);
+            }
+        }
+
+        return foundItems;
+    }
 
     private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -249,6 +282,8 @@ public sealed class PasswordsViewModel : ViewModelBase
         {
             AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
         }
+
+        _originalList = Passwords;
     }
 
     /// <summary>
