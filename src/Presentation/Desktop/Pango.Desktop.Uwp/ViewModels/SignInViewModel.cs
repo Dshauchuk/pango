@@ -2,8 +2,10 @@
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Models;
 using Pango.Application.UseCases.User.Commands.SignIn;
+using Pango.Application.UseCases.User.Queries.FindUser;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -12,6 +14,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.System;
 
@@ -30,11 +33,11 @@ public class SignInViewModel : ViewModelBase
 
     #endregion
 
-    public SignInViewModel(ISender sender)
+    public SignInViewModel(ISender sender, ILogger<SignInViewModel> logger) : base(logger)
     {
         _sender = sender;
 
-        Users = new();
+        Users = [];
         UserSelected += SignInViewModel_UserSelected;
 
         SignInCommand = new AsyncRelayCommand(OnSignIn);
@@ -94,8 +97,23 @@ public class SignInViewModel : ViewModelBase
 
     public override async Task OnNavigatedToAsync(object parameter)
     {
-        GoToUserSelection();
-        await LoadUsersAsync();
+        if (Thread.CurrentPrincipal is null || string.IsNullOrEmpty(Thread.CurrentPrincipal.Identity?.Name))
+        {
+            GoToUserSelection();
+            await LoadUsersAsync();
+        }
+        else
+        {
+            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(Thread.CurrentPrincipal.Identity.Name));
+            if (previouslySelectedUser.IsError)
+            {
+                Thread.CurrentPrincipal = null;
+                await OnNavigatedToAsync(parameter);
+                return;
+            }
+
+            SelectedUser = previouslySelectedUser.Value;
+        }
     }
 
     #endregion
@@ -105,6 +123,8 @@ public class SignInViewModel : ViewModelBase
     private void OnNavigateToStep(int stepIndex)
     {
         SignInStep step = (SignInStep)stepIndex;
+
+        Logger.LogInformation($"Navigating to {step.ToString()}");
 
         switch (step)
         {
@@ -146,10 +166,14 @@ public class SignInViewModel : ViewModelBase
 
     private async Task LoadUsersAsync()
     {
+        Logger.LogDebug($"Loading users...");
+
         await DoAsync(async () =>
         {
             var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoUserDto>>>(new ListQuery());
             HasUsers = !queryResult.IsError && queryResult.Value.Any();
+
+            Logger.LogDebug($"{queryResult.Value?.Count()} users loaded");
 
             if (!HasUsers)
             {
@@ -175,6 +199,7 @@ public class SignInViewModel : ViewModelBase
         if (auth.IsError)
         {
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
+            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": {auth.FirstError.Code}. {auth.FirstError.Description}");
 
             return;
         }
@@ -183,11 +208,13 @@ public class SignInViewModel : ViewModelBase
         {
             // show error
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
+            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": User name or password is wrong");
 
             return;
         }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
+        Logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
     }
 
     #endregion

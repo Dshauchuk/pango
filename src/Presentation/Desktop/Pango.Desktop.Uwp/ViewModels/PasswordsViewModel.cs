@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using Mapster;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
@@ -34,7 +35,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private bool _hasPasswords;
     private PasswordExplorerItem _selectedItem;
 
-    public PasswordsViewModel(ISender sender, IDialogService dialogService)
+    public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
         _sender = sender;
         _dialogService = dialogService;
@@ -160,9 +161,14 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         var result = await _sender.Send(new DeletePasswordCommand(dto.Id));
 
-        if (!result.IsError)
+        if(result.IsError)
+        {
+            Logger.LogError($"Deleting {(dto.Type == PasswordExplorerItem.ExplorerItemType.File ? "password" : "catalog")} \"{dto.Name}\" failed: {result.FirstError}");
+        }
+        else
         {
             RemovePassword(Passwords, dto);
+            Logger.LogDebug($"{(dto.Type == PasswordExplorerItem.ExplorerItemType.File ? "Password" : "Catalog")} \"{dto.Name}\" has been successfully deleted");
         }
     }
 
@@ -219,9 +225,19 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async Task<IEnumerable<PasswordExplorerItem>> LoadPasswordsAsync()
     {
+        Logger.LogDebug($"Loading passwords...");
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
-        return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
+        if (queryResult.IsError)
+        {
+            Logger.LogError($"Loaded passwords failed: {queryResult.FirstError}");
+            return [];
+        }
+        else
+        {
+            Logger.LogDebug($"Loaded {queryResult.Value.Count(p => !p.IsCatalog)} passwords"); 
+            return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
+        }
     }
 
     private void DisplayPasswords(IEnumerable<PasswordExplorerItem> passwords)

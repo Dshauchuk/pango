@@ -13,7 +13,7 @@ public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRe
     public PasswordRepository(IContentEncoder contentEncoder,
         IAppUserProvider userProvider,
         IAppDomainProvider appDomainProvider,
-        ILogger logger,
+        ILogger<PasswordRepository> logger,
         IAppOptions appOptions)
         : base(contentEncoder, userProvider, appDomainProvider, appOptions, logger)
     {

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -20,7 +21,7 @@ public sealed class EditUserViewModel : ViewModelBase
 
     #endregion
 
-    public EditUserViewModel(ISender sender)
+    public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger): base(logger)
     {
         _sender = sender;
 

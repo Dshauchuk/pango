@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -16,8 +17,9 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 {
     private bool _isBusy;
 
-	public ViewModelBase()
+	public ViewModelBase(ILogger logger)
 	{
+        this.Logger = logger;
         WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
         ViewResourceLoader = ResourceLoader.GetForCurrentView();
     }
@@ -35,6 +37,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 
     protected AppView? View => this.GetType().GetCustomAttribute<AppViewAttribute>()?.View;
 
+    protected ILogger Logger { get; }   
     #endregion
 
 
