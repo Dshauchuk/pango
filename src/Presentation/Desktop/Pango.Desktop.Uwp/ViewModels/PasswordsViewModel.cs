@@ -21,6 +21,7 @@ using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -349,6 +350,14 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private void Insert(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
     {
+
+        Debug.WriteLine($"Adding \"{password.Name}\"...");
+
+        if(password.Name == "a11")
+        {
+
+        }
+
         if (!passwords.Any())
         {
             passwords.Add(password);
@@ -361,7 +370,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         {
             for (; index < passwords.Count; index++)
             {
-                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.Folder)
+                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File)
                 {
                     break;
                 }
