@@ -114,36 +114,6 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Event&Command Handlers
 
-    private void OnSearchAsync(string searchText)
-    {
-        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
-
-        DisplayPasswords(foundItems);
-    }
-
-    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
-    {
-        if(items == null || !items.Any())
-        {
-            return [];
-        }
-
-        List<PasswordExplorerItem> foundItems = [];
-
-        foreach(var item in items)
-        {
-            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
-            
-            if(foundChildren.Any() || searchPredicate(item)) 
-            {
-                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
-                foundItems.Add(item);
-            }
-        }
-
-        return foundItems;
-    }
-
     private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
@@ -152,14 +122,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
     {
-        if (string.IsNullOrEmpty(message.Value.CatalogPath))
-        {
-            Passwords.Add(message.Value.Adapt<PasswordExplorerItem>());
-        }
-        else
-        {
-            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath.ParseCatalogPath());
-        }
+        AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath?.ParseCatalogPath());
     }
 
     private async void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message)
@@ -257,6 +220,36 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
+    private void OnSearchAsync(string searchText)
+    {
+        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
+
+        DisplayPasswords(foundItems);
+    }
+
+    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
+    {
+        if (items == null || !items.Any())
+        {
+            return [];
+        }
+
+        List<PasswordExplorerItem> foundItems = [];
+
+        foreach (var item in items)
+        {
+            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+
+            if (foundChildren.Any() || searchPredicate(item))
+            {
+                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
+                foundItems.Add(item);
+            }
+        }
+
+        return foundItems;
+    }
+
     private bool CanDelete(PasswordExplorerItem item)
     {
         return item != null;
@@ -330,7 +323,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         if(catalogs is null || catalogs.Count == 0)
         {
-            passwords.Add(password);
+            Insert(passwords, password);
             return true; 
         }
 
@@ -349,9 +342,50 @@ public sealed class PasswordsViewModel : ViewModelBase
         else
         {
             password.Parent = catalog;
-            catalog.Children.Add(password);
+            Insert(catalog.Children, password);
             return true;
         }
+    }
+
+    private void Insert(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
+    {
+        if (!passwords.Any())
+        {
+            passwords.Add(password);
+            return;
+        }
+
+        int index = 0;
+
+        if (password.Type == PasswordExplorerItem.ExplorerItemType.File)
+        {
+            for (; index < passwords.Count; index++)
+            {
+                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.Folder)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (; index < passwords.Count; index++)
+        {
+            if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File && password.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            {
+                break;
+            }
+
+            if (passwords[index].Name.CompareTo(password.Name) < 0)
+            {
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        passwords.Insert(index, password);
     }
 
     /// <summary>
