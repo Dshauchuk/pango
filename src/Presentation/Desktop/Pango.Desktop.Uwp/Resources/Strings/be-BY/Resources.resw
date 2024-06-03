@@ -346,4 +346,7 @@
   <data name="CatalogUpdateFailed_Format" xml:space="preserve">
     <value>Не атрымалася абнавіць каталог "{0}"</value>
   </data>
+  <data name="NoPasswordsFound" xml:space="preserve">
+    <value>Паролі не знойдзены</value>
+  </data>
 </root>

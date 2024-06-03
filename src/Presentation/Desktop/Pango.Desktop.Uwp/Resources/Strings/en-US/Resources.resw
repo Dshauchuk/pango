@@ -348,4 +348,7 @@
   <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
     <value>Failed to delete password "{0}"</value>
   </data>
+  <data name="NoPasswordsFound" xml:space="preserve">
+    <value>No passwords found</value>
+  </data>
 </root>

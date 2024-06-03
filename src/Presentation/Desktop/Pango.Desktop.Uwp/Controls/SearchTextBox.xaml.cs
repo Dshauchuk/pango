@@ -35,6 +35,7 @@ public sealed class SearchTextBox : ContentControl
         _deleteButton = (Button)GetTemplateChild("PART_DeleteButton");
 
         _textBox.TextChanged += TextBox_TextChanged;
+        _textBox.KeyUp += TextBox_KeyUp;
         _deleteButton.Click += DeleteButton_Click;
         _searchButton.Click += SearchButton_Click;
     }
@@ -99,6 +100,14 @@ public sealed class SearchTextBox : ContentControl
 
     #region Handlers
 
+    private void TextBox_KeyUp(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        if(e.Key == Windows.System.VirtualKey.Enter)
+        {
+            TriggerSearch();
+        }
+    }
+
     /// <summary>
     /// Updates <see cref="Text"/> when needed.
     /// </summary>
@@ -112,6 +121,7 @@ public sealed class SearchTextBox : ContentControl
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
         _textBox.Text = string.Empty;
+        Text = string.Empty;
 
         TriggerSearch();
     }
