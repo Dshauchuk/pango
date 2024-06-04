@@ -330,4 +330,7 @@
     <value>minute(-s)</value>
     <comment>1 minute(-s), 3 minute(-s)</comment>
   </data>
+  <data name="AboutApp" xml:space="preserve">
+    <value>About</value>
+  </data>
 </root>

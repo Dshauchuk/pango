@@ -328,4 +328,7 @@
     <value>хвілін(-ы)</value>
     <comment>1 хвілін(-ы), 3 хвілін(-ы)</comment>
   </data>
+  <data name="AboutApp" xml:space="preserve">
+    <value>Аб дадатку</value>
+  </data>
 </root>
