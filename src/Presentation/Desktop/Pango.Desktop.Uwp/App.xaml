@@ -19,6 +19,7 @@
                         
                         <ResourceDictionary Source="Controls/ValidationTextBox.xaml" />
                         <ResourceDictionary Source="Controls/ValidationPasswordBox.xaml" />
+                        <ResourceDictionary Source="Controls/SearchTextBox.xaml" />
                     </ResourceDictionary.MergedDictionaries>
 
                     <x:String x:Key="AppTitleName">Pango</x:String>

@@ -330,6 +330,27 @@
     <value>minute(-s)</value>
     <comment>1 minute(-s), 3 minute(-s)</comment>
   </data>
+  <data name="CatalogCreated_Format" xml:space="preserve">
+    <value>Catalog "{0}" has been successfully created</value>
+  </data>
+  <data name="CatalogCreationFailed_Format" xml:space="preserve">
+    <value>Failed to create catalog "{0}"</value>
+  </data>
+  <data name="CatalogUpdated_Format" xml:space="preserve">
+    <value>Catalog "{0}" has been successfully updated</value>
+  </data>
+  <data name="CatalogUpdateFailed_Format" xml:space="preserve">
+    <value>Failed to update catalog "{0}"</value>
+  </data>
+  <data name="PasswordDeleted_Format" xml:space="preserve">
+    <value>Password "{0}" has been successfully deleted</value>
+  </data>
+  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
+    <value>Failed to delete password "{0}"</value>
+  </data>
+  <data name="NoPasswordsFound" xml:space="preserve">
+    <value>No passwords found</value>
+  </data>
   <data name="AboutApp" xml:space="preserve">
     <value>About</value>
   </data>

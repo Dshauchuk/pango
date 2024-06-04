@@ -21,6 +21,7 @@ using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -34,15 +35,19 @@ public sealed class PasswordsViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private bool _hasPasswords;
     private PasswordExplorerItem _selectedItem;
+    private ObservableCollection<PasswordExplorerItem> _originalList;
+    private string _searchText;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
         _sender = sender;
         _dialogService = dialogService;
 
+        _originalList = [];
         Passwords = [];
         Passwords.CollectionChanged += Passwords_CollectionChanged;
 
+        SearchCommand = new RelayCommand<string>(OnSearchAsync);
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
@@ -58,6 +63,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     public RelayCommand<PasswordExplorerItem> DeleteCommand { get; }
     public RelayCommand CreateCatalogCommand { get; }
     public RelayCommand CreatePasswordCommand { get; }
+    public RelayCommand<string> SearchCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
 
@@ -81,7 +87,19 @@ public sealed class PasswordsViewModel : ViewModelBase
     public bool HasPasswords
     {
         get => _hasPasswords;
-        set => SetProperty(ref _hasPasswords, value);
+        set
+        {
+            SetProperty(ref _hasPasswords, value);
+            OnPropertyChanged(nameof(ShowInitialScreen));
+        }
+    }
+
+    public bool ShowInitialScreen => !HasPasswords && !_originalList.Any();
+
+    public string SearchText
+    {
+        get => _searchText;
+        set => SetProperty(ref _searchText, value);
     }
 
     #endregion
@@ -105,14 +123,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
     {
-        if (string.IsNullOrEmpty(message.Value.CatalogPath))
-        {
-            Passwords.Add(message.Value.Adapt<PasswordExplorerItem>());
-        }
-        else
-        {
-            AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath.ParseCatalogPath());
-        }
+        AddPassword(Passwords, message.Value.Adapt<PasswordExplorerItem>(), message.Value.CatalogPath?.ParseCatalogPath());
     }
 
     private async void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message)
@@ -164,11 +175,14 @@ public sealed class PasswordsViewModel : ViewModelBase
         if(result.IsError)
         {
             Logger.LogError($"Deleting {(dto.Type == PasswordExplorerItem.ExplorerItemType.File ? "password" : "catalog")} \"{dto.Name}\" failed: {result.FirstError}");
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("PasswordDeletetionFailed_Format"), dto.Name)));
         }
         else
         {
             RemovePassword(Passwords, dto);
+
             Logger.LogDebug($"{(dto.Type == PasswordExplorerItem.ExplorerItemType.File ? "Password" : "Catalog")} \"{dto.Name}\" has been successfully deleted");
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("PasswordDeleted_Format"), dto.Name)));
         }
     }
 
@@ -207,6 +221,36 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
+    private void OnSearchAsync(string searchText)
+    {
+        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
+
+        DisplayPasswords(foundItems);
+    }
+
+    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
+    {
+        if (items == null || !items.Any())
+        {
+            return [];
+        }
+
+        List<PasswordExplorerItem> foundItems = [];
+
+        foreach (var item in items)
+        {
+            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+
+            if (foundChildren.Any() || searchPredicate(item))
+            {
+                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
+                foundItems.Add(item);
+            }
+        }
+
+        return foundItems;
+    }
+
     private bool CanDelete(PasswordExplorerItem item)
     {
         return item != null;
@@ -220,7 +264,12 @@ public sealed class PasswordsViewModel : ViewModelBase
     private async Task ResetViewAsync()
     {
         SelectedItem = null;
-        DisplayPasswords(await LoadPasswordsAsync());
+        SearchText = string.Empty;
+
+        IEnumerable<PasswordExplorerItem> passwords = await LoadPasswordsAsync();
+
+        DisplayPasswords(passwords);
+        SetOriginalList(passwords);
     }
 
     private async Task<IEnumerable<PasswordExplorerItem>> LoadPasswordsAsync()
@@ -235,8 +284,23 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
         else
         {
-            Logger.LogDebug($"Loaded {queryResult.Value.Count(p => !p.IsCatalog)} passwords"); 
+            Logger.LogDebug($"Loaded {queryResult.Value.Count(p => !p.IsCatalog)} passwords");
             return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
+        }
+    }
+
+    private void SetOriginalList(IEnumerable<PasswordExplorerItem> passwords)
+    {
+        _originalList ??= [];
+
+        if (_originalList.Any())
+        {
+            _originalList.Clear();
+        }
+
+        foreach (var pwd in passwords)
+        {
+            AddPassword(_originalList, pwd, pwd.CatalogPath.ParseCatalogPath());
         }
     }
 
@@ -260,7 +324,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         if(catalogs is null || catalogs.Count == 0)
         {
-            passwords.Add(password);
+            Insert(passwords, password);
             return true; 
         }
 
@@ -279,9 +343,58 @@ public sealed class PasswordsViewModel : ViewModelBase
         else
         {
             password.Parent = catalog;
-            catalog.Children.Add(password);
+            Insert(catalog.Children, password);
             return true;
         }
+    }
+
+    private void Insert(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
+    {
+
+        Debug.WriteLine($"Adding \"{password.Name}\"...");
+
+        if(password.Name == "a11")
+        {
+
+        }
+
+        if (!passwords.Any())
+        {
+            passwords.Add(password);
+            return;
+        }
+
+        int index = 0;
+
+        if (password.Type == PasswordExplorerItem.ExplorerItemType.File)
+        {
+            for (; index < passwords.Count; index++)
+            {
+                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File)
+                {
+                    break;
+                }
+            }
+        }
+
+        for (; index < passwords.Count; index++)
+        {
+            if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File && password.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            {
+                break;
+            }
+
+            if (passwords[index].Name.CompareTo(password.Name) < 0)
+            {
+                continue;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        passwords.Insert(index, password);
     }
 
     /// <summary>
@@ -300,7 +413,16 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if(passwordToRemove is not null)
         {
+            // remove it from the original list firstly
+            // becase the removing from the displayed collection triggers notification of change of HasPasswords prop
+            var originalItemToRemove = _originalList.FirstOrDefault(p => p.Id.Equals(passwordToRemove.Id));
+            if (originalItemToRemove != null)
+            {
+                _originalList.Remove(originalItemToRemove);
+            }
+
             passwords.Remove(passwordToRemove);
+
             return true;
         }
         else
