@@ -1,0 +1,352 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Appearance" xml:space="preserve">
+    <value>Выгляд</value>
+  </data>
+  <data name="Autolock" xml:space="preserve">
+    <value>Аўтаблакіроўка</value>
+  </data>
+  <data name="AutolockDescription" xml:space="preserve">
+    <value>Аўтаматычна блакіруе праграму пасля выбранага перыяду бяздзейнасці прылады</value>
+  </data>
+  <data name="AddNewPassword" xml:space="preserve">
+    <value>Дадайце новы пароль</value>
+  </data>
+  <data name="Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="ChangeUser" xml:space="preserve">
+    <value>Змяніць Карыстальніка</value>
+  </data>
+  <data name="ClearCopiedData" xml:space="preserve">
+    <value>Ачысціць скапіраваныя даныя элемента</value>
+  </data>
+  <data name="ClearCopiedDataDescription" xml:space="preserve">
+    <value>Аўтаматычна ачышчае скапіраваныя дэталі з буфера абмену пасля ўстаўкі</value>
+  </data>
+  <data name="CopyPassword" xml:space="preserve">
+    <value>Скапіраваць пароль</value>
+  </data>
+  <data name="DeletePassword" xml:space="preserve">
+    <value>Выдаліць пароль</value>
+  </data>
+  <data name="EditPassword" xml:space="preserve">
+    <value>Рэдагаваць пароль</value>
+  </data>
+  <data name="EnterMasterCode" xml:space="preserve">
+    <value>Увядзіце код</value>
+  </data>
+  <data name="Greeting.Text" xml:space="preserve">
+    <value>Прыветанне</value>
+  </data>
+  <data name="Greeting.Width" xml:space="preserve">
+    <value>200</value>
+  </data>
+  <data name="Home" xml:space="preserve">
+    <value>Галоўная</value>
+  </data>
+  <data name="LaunchAtStartup" xml:space="preserve">
+    <value>Запуск пры загрузцы сістэмы</value>
+  </data>
+  <data name="MasterCode" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="Other" xml:space="preserve">
+    <value>Іншае</value>
+  </data>
+  <data name="MyPasswords" xml:space="preserve">
+    <value>Мае Паролі</value>
+  </data>
+  <data name="New" xml:space="preserve">
+    <value>Новы</value>
+  </data>
+  <data name="Passwords" xml:space="preserve">
+    <value>Паролі</value>
+  </data>
+  <data name="SearchPasswords" xml:space="preserve">
+    <value>Пошук пароляў</value>
+  </data>
+  <data name="Secrets" xml:space="preserve">
+    <value>Сакрэты</value>
+  </data>
+  <data name="Security" xml:space="preserve">
+    <value>Бяспека</value>
+  </data>
+  <data name="SelectUser" xml:space="preserve">
+    <value>Абярыце Карыстальника</value>
+  </data>
+  <data name="Settings" xml:space="preserve">
+    <value>Налады</value>
+  </data>
+  <data name="SignIn" xml:space="preserve">
+    <value>Увайсці</value>
+  </data>
+  <data name="Switcher_Off" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
+  <data name="Switcher_On" xml:space="preserve">
+    <value>Укл.</value>
+  </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Тэма</value>
+  </data>
+  <data name="User" xml:space="preserve">
+    <value>Карыстальнік</value>
+  </data>
+  <data name="UserInfo" xml:space="preserve">
+    <value>Інфармацыя пра карыстальніка</value>
+  </data>
+  <data name="ChooseApplicationLanguage" xml:space="preserve">
+    <value>Выберыце мову праграмы</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Мова</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Адмяніць</value>
+  </data>
+  <data name="EmailOrUsername" xml:space="preserve">
+    <value>Электронная пошта або імя карыстальніка</value>
+  </data>
+  <data name="Login" xml:space="preserve">
+    <value>Імя карыстальніка</value>
+  </data>
+  <data name="NewPassword" xml:space="preserve">
+    <value>Новы пароль</value>
+  </data>
+  <data name="Password" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="Save" xml:space="preserve">
+    <value>Захаваць</value>
+  </data>
+  <data name="Title" xml:space="preserve">
+    <value>Назва</value>
+  </data>
+  <data name="PasswordCopiedToClipboard" xml:space="preserve">
+    <value>Пароль скапіраваны ў буфер абмену</value>
+  </data>
+  <data name="AddPassword" xml:space="preserve">
+    <value>Дадаць пароль</value>
+  </data>
+  <data name="NoPasswordsYet" xml:space="preserve">
+    <value>У вас яшчэ няма пароляў</value>
+  </data>
+  <data name="CreateUser" xml:space="preserve">
+    <value>Дадаць Карыстальника</value>
+  </data>
+  <data name="OrCreateUser" xml:space="preserve">
+    <value>Або стварыць новага карыстальника</value>
+  </data>
+  <data name="PasswordConfirmation" xml:space="preserve">
+    <value>Пацвярджэнне пароля</value>
+  </data>
+  <data name="UserName" xml:space="preserve">
+    <value>Імя карыстальніка</value>
+  </data>
+  <data name="PasswordConfirmationDoesNotMatch" xml:space="preserve">
+    <value>Паролі не супадаюць</value>
+  </data>
+  <data name="Loading" xml:space="preserve">
+    <value>Загрузка</value>
+  </data>
+  <data name="PasswordCreated" xml:space="preserve">
+    <value>Пароль "{0}" быў паспяхова дададзены</value>
+  </data>
+  <data name="PasswordModified" xml:space="preserve">
+    <value>Пароль "{0}" быў паспяхова абноўлены</value>
+  </data>
+  <data name="CreationDate" xml:space="preserve">
+    <value>Дата стварэння</value>
+  </data>
+  <data name="DeleteUser" xml:space="preserve">
+    <value>Выдаліць Карыстальника</value>
+  </data>
+  <data name="AppTheme_Dark" xml:space="preserve">
+    <value>Цёмная</value>
+  </data>
+  <data name="AppTheme_Default" xml:space="preserve">
+    <value>Па змаўчанні</value>
+  </data>
+  <data name="AppTheme_Light" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="Yes" xml:space="preserve">
+    <value>Так</value>
+  </data>
+  <data name="Confirm_PasswordDeletion" xml:space="preserve">
+    <value>Выдаліць пароль?</value>
+  </data>
+  <data name="Confirm_PasswordDeletionDetails" xml:space="preserve">
+    <value>Пароль будзе выдалены назаўсёды. Вы хочаце працягнуць?</value>
+  </data>
+  <data name="NewCatalogDialogTitle" xml:space="preserve">
+    <value>Дадаць Каталог</value>
+  </data>
+  <data name="NewCatalogName" xml:space="preserve">
+    <value>Новы каталог</value>
+  </data>
+  <data name="AddNewCatalog" xml:space="preserve">
+    <value>Дадаць каталог</value>
+  </data>
+  <data name="Or" xml:space="preserve">
+    <value>Або</value>
+  </data>
+  <data name="Delete" xml:space="preserve">
+    <value>Выдаліць</value>
+  </data>
+  <data name="Edit" xml:space="preserve">
+    <value>Рэдагаваць</value>
+  </data>
+  <data name="EditCatalogDialogTitle" xml:space="preserve">
+    <value>Рэдагаваць Каталог</value>
+  </data>
+  <data name="RemoveCatalog_Message" xml:space="preserve">
+    <value>Каталог "{0}", які змяшчае "{1}" пароляў, будзе выдалены. Працягнуць?</value>
+  </data>
+  <data name="AutolockAfterMinutes" xml:space="preserve">
+    <value>Заблакіраваць праз хвіліны</value>
+  </data>
+  <data name="Minute(-s)" xml:space="preserve">
+    <value>хвілін(-ы)</value>
+    <comment>1 хвілін(-ы), 3 хвілін(-ы)</comment>
+  </data>
+  <data name="PasswordDeleted_Format" xml:space="preserve">
+    <value>Пароль "{0}" быў паспяхова выдалены</value>
+  </data>
+  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
+    <value>Не атрымалася выдаліць пароль "{0}"</value>
+  </data>
+  <data name="CatalogCreated_Format" xml:space="preserve">
+    <value>Каталог "{0}" быў дададзены</value>
+  </data>
+  <data name="CatalogCreationFailed_Format" xml:space="preserve">
+    <value>Не атрымалася дадаць каталог "{0}"</value>
+  </data>
+  <data name="CatalogUpdated_Format" xml:space="preserve">
+    <value>Каталог "{0}" быў абноўлены</value>
+  </data>
+  <data name="CatalogUpdateFailed_Format" xml:space="preserve">
+    <value>Не атрымалася абнавіць каталог "{0}"</value>
+  </data>
+  <data name="NoPasswordsFound" xml:space="preserve">
+    <value>Паролі не знойдзены</value>
+  </data>
+</root>

@@ -1,0 +1,35 @@
+﻿<Application
+    x:Class="Pango.Desktop.Uwp.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:converters="using:Pango.Desktop.Uwp.Core.Converters">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary>
+                    <!--  Resource dictionaries  -->
+                    <ResourceDictionary.MergedDictionaries>
+                        <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+
+                        <ResourceDictionary Source="Resources/Styles/Text.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/TextBlockStyles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/ToggleSwitchStyles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/TreeViewStyles.xaml" />
+                        
+                        <ResourceDictionary Source="Controls/ValidationTextBox.xaml" />
+                        <ResourceDictionary Source="Controls/ValidationPasswordBox.xaml" />
+                        <ResourceDictionary Source="Controls/SearchTextBox.xaml" />
+                    </ResourceDictionary.MergedDictionaries>
+
+                    <converters:NullOrEmptyToCollapsedConverter x:Key="NullOrEmptyToCollapsedConverter"/>
+                    <converters:BoolToVisibilityConvereter x:Key="BoolToVisibilityConvereter"/>
+                    <converters:EmptyStringToRootFolderNameConverter x:Key="EmptyStringToRootFolderNameConverter"/>
+                    
+                    <!--  Misc resources  -->
+                    <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

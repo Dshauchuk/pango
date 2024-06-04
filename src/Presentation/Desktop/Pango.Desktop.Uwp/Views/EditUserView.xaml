@@ -1,0 +1,61 @@
+﻿<abstract:ViewBase
+    x:Class="Pango.Desktop.Uwp.Views.EditUserView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Pango.Desktop.Uwp.Controls"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
+    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
+    mc:Ignorable="d"
+    d:DataContext="{d:DesignInstance Type=viewmodels:EditUserViewModel}"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="{loc:StringResource Key='CreateUser'}"
+                   Style="{StaticResource HeaderTextBlockStyle}"/>
+
+        <ScrollViewer Grid.Row="1">
+
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Vertical" 
+                            DataContext="{Binding UserValidator}">
+                    <controls:ValidationTextBox Margin="10"
+                                                PropertyName="UserName"
+                                                Text="{Binding Path=UserName, Mode=TwoWay}"
+                                                HeaderText="{loc:StringResource Key='UserName'}"  
+                                                PlaceholderText="{loc:StringResource Key='UserName'}" />
+                    <controls:ValidationPasswordBox Margin="10" 
+                                                    PropertyName="Password"
+                                                    Password="{Binding Path=Password, Mode=TwoWay}"
+                                                    HeaderText="{loc:StringResource Key='Password'}" 
+                                                    PlaceholderText="{loc:StringResource Key='Password'}" />
+                    <controls:ValidationPasswordBox Margin="10" 
+                                                    PropertyName="PasswordConfirmation"
+                                                    Password="{Binding Path=PasswordConfirmation, Mode=TwoWay}"
+                                                    HeaderText="{loc:StringResource Key='PasswordConfirmation'}" 
+                                                    PlaceholderText="{loc:StringResource Key='PasswordConfirmation'}" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button Margin="5" 
+                            Content="{loc:StringResource Key='Save'}"
+                            Style="{StaticResource AccentButtonStyle}"
+                            Command="{Binding Path=SaveUserComand}"/>
+                    <Button Margin="5" 
+                            Content="{loc:StringResource Key='Cancel'}"
+                            Command="{Binding Path=OpenSignInViewCommand}"/>
+                </StackPanel>
+            </StackPanel>
+
+        </ScrollViewer>
+    </Grid>
+</abstract:ViewBase>

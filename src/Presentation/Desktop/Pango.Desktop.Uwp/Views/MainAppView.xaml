@@ -1,0 +1,54 @@
+﻿<abstract:ViewBase
+    x:Class="Pango.Desktop.Uwp.Views.MainAppView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
+    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    mc:Ignorable="d"
+    d:DesignHeight="300"
+    d:DesignWidth="400">
+
+    <Grid>
+        <!--  Navigation view  -->
+        <muxc:NavigationView
+                    x:Name="NavigationView"
+                    BackRequested="NavigationView_BackRequested"
+                    IsBackButtonVisible="Collapsed"
+                    IsBackEnabled="False"
+                    IsSettingsVisible="True"
+                    IsTitleBarAutoPaddingEnabled="False"
+                    ItemInvoked="NavigationView_ItemInvoked">
+            <muxc:NavigationView.Resources>
+                <Thickness x:Key="NavigationViewContentMargin">0,0,0,12</Thickness>
+            </muxc:NavigationView.Resources>
+            <muxc:NavigationView.MenuItems>
+                <muxc:NavigationViewItem
+                            x:Name="HomeItem"
+                            Content="{loc:StringResource Key=Home}"
+                            Icon="Home"
+                            ToolTipService.ToolTip="{loc:StringResource Key=Home}"/>
+                <muxc:NavigationViewItemSeparator />
+                <muxc:NavigationViewItem
+                            x:Name="PasswordsItem"
+                            Content="{loc:StringResource Key=Passwords}"
+                            Icon="Permissions"
+                            ToolTipService.ToolTip="{loc:StringResource Key=Passwords}" />
+                <muxc:NavigationViewItem
+                            x:Name="UserItem"
+                            Content="{loc:StringResource Key=User}"
+                            Icon="Contact" 
+                            ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
+            </muxc:NavigationView.MenuItems>
+            
+            <muxc:NavigationView.Content>
+                <!--  Navigation frame  -->
+                <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" />
+            </muxc:NavigationView.Content>
+
+        </muxc:NavigationView>
+    </Grid>
+</abstract:ViewBase>
