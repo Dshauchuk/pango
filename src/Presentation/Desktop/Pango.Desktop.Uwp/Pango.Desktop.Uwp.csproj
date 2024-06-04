@@ -145,12 +145,12 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\AttachedProperties\AncestorSource.cs" />
-    <Compile Include="Controls\FiltrationTextBox.xaml.cs">
-      <DependentUpon>FiltrationTextBox.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Controls\TemplateSelectors\PasswordExplorerItemTemplateSelector.cs" />
     <Compile Include="Controls\ValidationPasswordBox.xaml.cs">
       <DependentUpon>ValidationPasswordBox.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\SearchTextBox.xaml.cs">
+      <DependentUpon>SearchTextBox.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\ValidationTextBox.xaml.cs">
       <DependentUpon>ValidationTextBox.xaml</DependentUpon>
@@ -311,13 +311,13 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Controls\FiltrationTextBox.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="Controls\ValidationPasswordBox.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Controls\SearchTextBox.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Controls\ValidationTextBox.xaml">
       <SubType>Designer</SubType>
