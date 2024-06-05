@@ -6,7 +6,7 @@
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:models="using:Pango.Desktop.Uwp.Models">
 
-    <Style TargetType="TreeViewItem"
+    <!--<Style TargetType="TreeViewItem"
            BasedOn="{StaticResource ListViewItemRevealStyle}"
            x:Key="MUX_TreeViewItemStyle">
         <Setter Property="Padding" Value="0"/>
@@ -191,6 +191,15 @@
     <DataTemplate x:Key="FolderTemplate">
         <TreeViewItem AutomationProperties.Name="{Binding Name}"
                       ItemsSource="{Binding Children}" IsExpanded="True">
+            <TreeViewItem.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Text="Edit" Icon="Edit"/>
+                    <MenuFlyoutItem Text="Delete" Icon="Delete"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Text="Add a password" Icon="Add"/>
+                    <MenuFlyoutItem Text="Add a catalog" Icon="NewFolder"/>
+                </MenuFlyout>
+            </TreeViewItem.ContextFlyout>
             <StackPanel Orientation="Horizontal">
                 <Image Width="20"
                        Source="../Assets/folder.png"/>
@@ -204,6 +213,20 @@
         <TreeViewItem HorizontalAlignment="Stretch" 
                       HorizontalContentAlignment="Stretch"
                       AutomationProperties.Name="{Binding Name}">
+            <TreeViewItem.ContextFlyout>
+                <MenuFlyout >
+                    <MenuFlyoutItem Text="Edit" Icon="Edit"
+                                    CommandParameter="{Binding}"
+                                    Command="{Binding DataContext.DataContext.EditPasswordCommand, ElementName=proxy}"/>
+                    <MenuFlyoutItem Text="Delete" Icon="Delete"
+                                    CommandParameter="{Binding}"
+                                    Command="{Binding DataContext.DataContext.DeleteCommand, ElementName=proxy}"/>
+                    <MenuFlyoutSeparator/>
+                    <MenuFlyoutItem Text="Copy" Icon="Copy"
+                                    CommandParameter="{Binding}"
+                                    Command="{Binding DataContext.DataContext.CopyPasswordToClipboardCommand, ElementName=proxy}"/>
+                </MenuFlyout>
+            </TreeViewItem.ContextFlyout>
             <Grid HorizontalAlignment="Stretch">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -237,6 +260,6 @@
 
     <templateselectors:PasswordExplorerItemTemplateSelector x:Key="PasswordExplorerItemTemplateSelector"
                                                             FolderTemplate="{StaticResource FolderTemplate}"
-                                                            FileTemplate="{StaticResource FileTemplate}" />
+                                                            FileTemplate="{StaticResource FileTemplate}" />-->
 
 </ResourceDictionary>

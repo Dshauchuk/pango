@@ -222,7 +222,9 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private void OnSearchAsync(string searchText)
     {
-        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
+        Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
+
+        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, searchPredicate);
 
         DisplayPasswords(foundItems);
     }
@@ -242,7 +244,20 @@ public sealed class PasswordsViewModel : ViewModelBase
 
             if (foundChildren.Any() || searchPredicate(item))
             {
-                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
+                if(item.Children == null)
+                {
+                    item.Children = [];
+                }
+                else
+                {
+                    item.Children.Clear();
+                }
+
+                foreach(var child in foundChildren)
+                {
+                    item.Children.Add(child);
+                }
+
                 foundItems.Add(item);
             }
         }
