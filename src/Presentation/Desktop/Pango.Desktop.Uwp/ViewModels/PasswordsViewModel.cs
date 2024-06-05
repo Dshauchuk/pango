@@ -224,7 +224,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
 
-        DisplayPasswords(foundItems);
+        DisplayPasswordsInTree(foundItems);
     }
 
     private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
@@ -260,6 +260,10 @@ public sealed class PasswordsViewModel : ViewModelBase
         return item != null;
     }
 
+    /// <summary>
+    /// Resets the view
+    /// </summary>
+    /// <returns></returns>
     private async Task ResetViewAsync()
     {
         SelectedItem = null;
@@ -267,10 +271,14 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         IEnumerable<PasswordExplorerItem> passwords = await LoadPasswordsAsync();
 
-        DisplayPasswords(passwords);
+        DisplayPasswordsInTree(passwords);
         SetOriginalList(passwords);
     }
 
+    /// <summary>
+    /// Loads passwords and returns a list of that
+    /// </summary>
+    /// <returns></returns>
     private async Task<IEnumerable<PasswordExplorerItem>> LoadPasswordsAsync()
     {
         Logger.LogDebug($"Loading passwords...");
@@ -288,6 +296,10 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Saves the list of <paramref name="passwords"/> into a buffer
+    /// </summary>
+    /// <param name="passwords"></param>
     private void SetOriginalList(IEnumerable<PasswordExplorerItem> passwords)
     {
         _originalList ??= [];
@@ -303,7 +315,11 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private void DisplayPasswords(IEnumerable<PasswordExplorerItem> passwords)
+    /// <summary>
+    /// Displays <paramref name="passwords"/> in a tree view
+    /// </summary>
+    /// <param name="passwords"></param>
+    private void DisplayPasswordsInTree(IEnumerable<PasswordExplorerItem> passwords)
     {
         Passwords.Clear();
         foreach (var pwd in passwords)
@@ -347,35 +363,40 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private void Insert(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
+    /// <summary>
+    /// Inserts <paramref name="passwordToInsert"/> into sorted <paramref name="sortedPasswordsList"/>
+    /// </summary>
+    /// <param name="sortedPasswordsList">already sorted collection of passwords</param>
+    /// <param name="passwordToInsert">a password to add into the <paramref name="sortedPasswordsList"/></param>
+    private void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
     {
-        if (!passwords.Any())
+        if (!sortedPasswordsList.Any())
         {
-            passwords.Add(password);
+            sortedPasswordsList.Add(passwordToInsert);
             return;
         }
 
         int index = 0;
 
-        if (password.Type == PasswordExplorerItem.ExplorerItemType.File)
+        if (passwordToInsert.Type == PasswordExplorerItem.ExplorerItemType.File)
         {
-            for (; index < passwords.Count; index++)
+            for (; index < sortedPasswordsList.Count; index++)
             {
-                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File)
+                if (sortedPasswordsList[index].Type == PasswordExplorerItem.ExplorerItemType.File)
                 {
                     break;
                 }
             }
         }
 
-        for (; index < passwords.Count; index++)
+        for (; index < sortedPasswordsList.Count; index++)
         {
-            if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File && password.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            if (sortedPasswordsList[index].Type == PasswordExplorerItem.ExplorerItemType.File && passwordToInsert.Type == PasswordExplorerItem.ExplorerItemType.Folder)
             {
                 break;
             }
 
-            if (passwords[index].Name.CompareTo(password.Name) < 0)
+            if (sortedPasswordsList[index].Name.CompareTo(passwordToInsert.Name) < 0)
             {
                 continue;
             }
@@ -385,7 +406,7 @@ public sealed class PasswordsViewModel : ViewModelBase
             }
         }
 
-        passwords.Insert(index, password);
+        sortedPasswordsList.Insert(index, passwordToInsert);
     }
 
     /// <summary>
@@ -430,6 +451,12 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Returns a password that fits <paramref name="predicate"/>
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="predicate"></param>
+    /// <returns></returns>
     private PasswordExplorerItem? FindPassword(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> predicate)
     {
         if(items is null || !items.Any())
