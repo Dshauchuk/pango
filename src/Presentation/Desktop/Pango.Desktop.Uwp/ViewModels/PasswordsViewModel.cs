@@ -46,7 +46,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = [];
         Passwords.CollectionChanged += Passwords_CollectionChanged;
 
-        SearchCommand = new RelayCommand<string>(OnSearchAsync);
+        SearchCommand = new RelayCommand<string>(OnFilterAsync);
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
@@ -220,49 +220,43 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
-    private void OnSearchAsync(string searchText)
+    private void OnFilterAsync(string searchText)
     {
         Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
-
-        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, searchPredicate);
-
-        DisplayPasswords(foundItems);
+        foreach(PasswordExplorerItem password in Passwords)
+        {
+            Filter(password, searchPredicate);
+        }
     }
 
-    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
+    private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
     {
-        if (items == null || !items.Any())
+        if(node is null)
         {
-            return [];
+            return false;
         }
 
-        List<PasswordExplorerItem> foundItems = [];
-
-        foreach (var item in items)
+        if(node.Type == PasswordExplorerItem.ExplorerItemType.File)
         {
-            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+            return node.IsVisible = searchPredicate(node);
+        }
+        else
+        {
+            bool hasVisibleItems = false;
 
-            if (foundChildren.Any() || searchPredicate(item))
+            if (node.Children.Any())
             {
-                if(item.Children == null)
+                foreach(PasswordExplorerItem item in node.Children)
                 {
-                    item.Children = [];
+                    if (Filter(item, searchPredicate) && !hasVisibleItems)
+                    {
+                        hasVisibleItems = true;
+                    }
                 }
-                else
-                {
-                    item.Children.Clear();
-                }
-
-                foreach(var child in foundChildren)
-                {
-                    item.Children.Add(child);
-                }
-
-                foundItems.Add(item);
             }
-        }
 
-        return foundItems;
+            return node.IsVisible = hasVisibleItems || searchPredicate(node);
+        }
     }
 
     private bool CanDelete(PasswordExplorerItem item)
