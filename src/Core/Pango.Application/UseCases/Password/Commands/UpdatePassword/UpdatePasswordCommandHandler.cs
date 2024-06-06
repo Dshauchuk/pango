@@ -46,6 +46,7 @@ public class UpdatePasswordCommandHandler
             password.Value = request.Value;
             password.Login = request.Login;
             password.Properties = request.Properties;
+            password.CatalogPath = request.CatalogPath;
         }
 
         password.Name = request.Name;

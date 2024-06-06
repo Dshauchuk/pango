@@ -24,7 +24,6 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
         ViewResourceLoader = ResourceLoader.GetForCurrentView();
     }
 
-
     #region Properties
 
     public bool IsBusy
@@ -39,7 +38,6 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 
     protected ILogger Logger { get; }   
     #endregion
-
 
     #region Methods
 
