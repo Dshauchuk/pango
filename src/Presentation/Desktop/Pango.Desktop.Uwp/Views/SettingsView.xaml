@@ -88,31 +88,32 @@
                             <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}"/>
                         </toolkit:SettingsCard>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical"
-                                Margin="{StaticResource ControlSectionMargin}">
-                        <TextBlock Text="{loc:StringResource Key=AboutApp}"
-                                   Style="{StaticResource BodyTextBlockStyle}"/>
-                        <toolkit:SettingsExpander Header="{StaticResource AppTitleName}" 
-                                                  Margin="0 10 0 30"
-                                                  Description="© 2024 Cats Lab. All rights reserved.">
-                            <toolkit:SettingsExpander.HeaderIcon>
-                                <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/StoreLogo.scale-400.png" />
-                            </toolkit:SettingsExpander.HeaderIcon>
-                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                       IsTextSelectionEnabled="True"
-                                       Text="{Binding Version}" />
-                            <toolkit:SettingsExpander.Items>
-                                <toolkit:SettingsCard x:Name="bugRequestCard"
-                                                      Click="bugRequestCard_Click"
-                                                      Header="File a bug or request new sample"
-                                                      IsClickEnabled="True">
-                                    <toolkit:SettingsCard.ActionIcon>
-                                        <FontIcon Glyph="&#xE8A7;" />
-                                    </toolkit:SettingsCard.ActionIcon>
-                                </toolkit:SettingsCard>
-                            </toolkit:SettingsExpander.Items>
-                        </toolkit:SettingsExpander>
-                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical"
+                            Margin="0 0 0 40">
+                    <TextBlock Text="{loc:StringResource Key=AboutApp}"
+                               Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                    <toolkit:SettingsExpander Header="{StaticResource AppTitleName}" 
+                                              Margin="{StaticResource ControlSectionMargin}"
+                                              Description="© 2024 Cats Lab. All rights reserved.">
+                        <toolkit:SettingsExpander.HeaderIcon>
+                            <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/StoreLogo.scale-400.png" />
+                        </toolkit:SettingsExpander.HeaderIcon>
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   IsTextSelectionEnabled="True"
+                                   Text="{Binding Version}" />
+                        <toolkit:SettingsExpander.Items>
+                            <toolkit:SettingsCard x:Name="bugRequestCard"
+                                                  Click="bugRequestCard_Click"
+                                                  Header="File a bug or request new sample"
+                                                  IsClickEnabled="True">
+                                <toolkit:SettingsCard.ActionIcon>
+                                    <FontIcon Glyph="&#xE8A7;" />
+                                </toolkit:SettingsCard.ActionIcon>
+                            </toolkit:SettingsCard>
+                        </toolkit:SettingsExpander.Items>
+                    </toolkit:SettingsExpander>
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>
