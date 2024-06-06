@@ -117,7 +117,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
-        HasPasswords = Passwords.Any();
+        HasPasswords = Passwords.Any(p => p.IsVisible);
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
@@ -220,6 +220,10 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
+    /// <summary>
+    /// Handles the command to filter passwords content
+    /// </summary>
+    /// <param name="searchText"></param>
     private void OnFilterAsync(string searchText)
     {
         Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
@@ -227,8 +231,16 @@ public sealed class PasswordsViewModel : ViewModelBase
         {
             Filter(password, searchPredicate);
         }
+
+        HasPasswords = Passwords.Any(p => p.IsVisible);
     }
 
+    /// <summary>
+    /// Returns true and makes the <paramref name="node"/> visible if it or any its children fits <paramref name="searchPredicate"/>, otherwise - false. 
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="searchPredicate"></param>
+    /// <returns></returns>
     private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
     {
         if(node is null)
@@ -259,11 +271,21 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be deleted, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanDelete(PasswordExplorerItem item)
     {
         return item != null;
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be edited, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanEdit(PasswordExplorerItem item)
     {
         return item != null;
