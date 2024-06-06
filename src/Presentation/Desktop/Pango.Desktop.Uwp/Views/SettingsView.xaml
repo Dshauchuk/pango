@@ -30,24 +30,25 @@
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">
-                        <ToggleSwitch IsOn="{Binding AllowAutolock, Mode=TwoWay}"
-                                      Header="{loc:StringResource Key='Autolock'}"/>
-                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
-                                   Text="{loc:StringResource Key='AutolockDescription'}"/>
-                        <ComboBox DisplayMemberPath="Value"
-                                  SelectedValuePath="Value"
-                                  ItemsSource="{Binding LockOnIdleInMinutesItems}"
-                                  Margin="{StaticResource ControlSectionMargin}"
-                                  SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"
-                                  Header="{loc:StringResource Key='AutolockAfterMinutes'}"
-                                  Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}"/>
+                        <toolkit:SettingsCard Header="{loc:StringResource Key='Autolock'}"
+                                              Description="{loc:StringResource Key='AutolockDescription'}">
+                            <ToggleSwitch IsOn="{Binding AllowAutolock, Mode=TwoWay}"/>
+                        </toolkit:SettingsCard>
+                        <toolkit:SettingsCard Margin="0 4 0 0" 
+                                              Header="{loc:StringResource Key='AutolockAfterMinutes'}"
+                                              Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}">
+                            <ComboBox DisplayMemberPath="Value"
+                                      SelectedValuePath="Value"
+                                      ItemsSource="{Binding LockOnIdleInMinutesItems}"
+                                      SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"/>
+                        </toolkit:SettingsCard>
                     </StackPanel>
                     <StackPanel Orientation="Vertical"
-                                Margin="{StaticResource ControlSectionMargin}">
-                        <ToggleSwitch IsOn="{Binding AllowClearCopiedData}"
-                                      Header="{loc:StringResource Key='ClearCopiedData'}"/>
-                        <TextBlock Style="{StaticResource CaptionTextBlockStyle}"
-                                   Text="{loc:StringResource Key='ClearCopiedDataDescription'}"/>
+                                Margin="0 4 40 0">
+                        <toolkit:SettingsCard Header="{loc:StringResource Key='ClearCopiedData'}"
+                                              Description="{loc:StringResource Key='ClearCopiedDataDescription'}">
+                            <ToggleSwitch IsOn="{Binding AllowClearCopiedData}"/>
+                        </toolkit:SettingsCard>
                     </StackPanel>
                 </StackPanel>
 
@@ -55,24 +56,26 @@
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Language'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ComboBox DisplayMemberPath="Name"
-                              SelectedValuePath="Name"
-                              ItemsSource="{Binding Languages}"
-                              Margin="{StaticResource ControlSectionMargin}"
-                              SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"
-                              Header="{loc:StringResource Key='ChooseApplicationLanguage'}"/>
+                    <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}"
+                                          Header="{loc:StringResource Key='ChooseApplicationLanguage'}">
+                        <ComboBox DisplayMemberPath="Name"
+                                  SelectedValuePath="Name"
+                                  ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"/>
+                    </toolkit:SettingsCard>
                 </StackPanel>
 
                 <!--Appearance Section-->
                 <StackPanel Orientation="Vertical">
                     <TextBlock Text="{loc:StringResource Key='Appearance'}"
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <ComboBox DisplayMemberPath="Name"
-                              SelectedValuePath="Name"
-                              ItemsSource="{Binding AppThemes}"
-                              Header="{loc:StringResource Key='Theme'}"
-                              Margin="{StaticResource ControlSectionMargin}"
-                              SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"/>
+                    <toolkit:SettingsCard Header="{loc:StringResource Key='Theme'}"
+                                          Margin="{StaticResource ControlSectionMargin}">
+                        <ComboBox DisplayMemberPath="Name"
+                                  SelectedValuePath="Name"
+                                  ItemsSource="{Binding AppThemes}"
+                                  SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"/>
+                    </toolkit:SettingsCard>
                 </StackPanel>
 
                 <!--Other Section-->
@@ -80,9 +83,10 @@
                     <StackPanel Orientation="Vertical">
                         <TextBlock Text="{loc:StringResource Key='Other'}"
                                    Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                        <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}"
-                                      Margin="{StaticResource ControlSectionMargin}"
-                                      Header="{loc:StringResource Key='LaunchAtStartup'}"/>
+                        <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}"
+                                              Header="{loc:StringResource Key='LaunchAtStartup'}">
+                            <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}"/>
+                        </toolkit:SettingsCard>
                     </StackPanel>
                     <StackPanel Orientation="Vertical"
                                 Margin="{StaticResource ControlSectionMargin}">
