@@ -46,7 +46,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = [];
         Passwords.CollectionChanged += Passwords_CollectionChanged;
 
-        SearchCommand = new RelayCommand<string>(OnSearchAsync);
+        SearchCommand = new RelayCommand<string>(OnFilterAsync);
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
@@ -117,7 +117,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
-        HasPasswords = Passwords.Any();
+        HasPasswords = Passwords.Any(p => p.IsVisible);
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
@@ -220,41 +220,72 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
-    private void OnSearchAsync(string searchText)
+    /// <summary>
+    /// Handles the command to filter passwords content
+    /// </summary>
+    /// <param name="searchText"></param>
+    private void OnFilterAsync(string searchText)
     {
-        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
-
-        DisplayPasswords(foundItems);
-    }
-
-    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
-    {
-        if (items == null || !items.Any())
+        Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
+        foreach(PasswordExplorerItem password in Passwords)
         {
-            return [];
+            Filter(password, searchPredicate);
         }
 
-        List<PasswordExplorerItem> foundItems = [];
+        HasPasswords = Passwords.Any(p => p.IsVisible);
+    }
 
-        foreach (var item in items)
+    /// <summary>
+    /// Returns true and makes the <paramref name="node"/> visible if it or any its children fits <paramref name="searchPredicate"/>, otherwise - false. 
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="searchPredicate"></param>
+    /// <returns></returns>
+    private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
+    {
+        if(node is null)
         {
-            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+            return false;
+        }
 
-            if (foundChildren.Any() || searchPredicate(item))
+        if(node.Type == PasswordExplorerItem.ExplorerItemType.File)
+        {
+            return node.IsVisible = searchPredicate(node);
+        }
+        else
+        {
+            bool hasVisibleItems = false;
+
+            if (node.Children.Any())
             {
-                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
-                foundItems.Add(item);
+                foreach(PasswordExplorerItem item in node.Children)
+                {
+                    if (Filter(item, searchPredicate) && !hasVisibleItems)
+                    {
+                        hasVisibleItems = true;
+                    }
+                }
             }
-        }
 
-        return foundItems;
+            return node.IsVisible = hasVisibleItems || searchPredicate(node);
+        }
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be deleted, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanDelete(PasswordExplorerItem item)
     {
         return item != null;
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be edited, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanEdit(PasswordExplorerItem item)
     {
         return item != null;
