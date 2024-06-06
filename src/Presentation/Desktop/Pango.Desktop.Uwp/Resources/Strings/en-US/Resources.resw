@@ -354,4 +354,7 @@
   <data name="AboutApp" xml:space="preserve">
     <value>About</value>
   </data>
+  <data name="Confirm_UserDeletion" xml:space="preserve">
+    <value>User {0} and all his passwords will be deleted. Do you want to continue?</value>
+  </data>
 </root>

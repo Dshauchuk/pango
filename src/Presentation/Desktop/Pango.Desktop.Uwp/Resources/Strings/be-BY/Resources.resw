@@ -352,4 +352,10 @@
   <data name="AboutApp" xml:space="preserve">
     <value>Аб дадатку</value>
   </data>
+  <data name="Confirm_UserDeletion" xml:space="preserve">
+    <value>Карыстальнік {0} і ўсе яго паролі будуць выдалены. Вы хочаце працягнуць?</value>
+  </data>
+  <data name="String1" xml:space="preserve">
+    <value />
+  </data>
 </root>
