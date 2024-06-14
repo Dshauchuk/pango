@@ -21,7 +21,6 @@ using Pango.Desktop.Uwp.Mvvm.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
@@ -47,7 +46,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         Passwords = [];
         Passwords.CollectionChanged += Passwords_CollectionChanged;
 
-        SearchCommand = new RelayCommand<string>(OnSearchAsync);
+        SearchCommand = new RelayCommand<string>(OnFilterAsync);
         CreatePasswordCommand = new RelayCommand(OnCreatePassword);
         CreateCatalogCommand = new RelayCommand(OnCreateCatalogAsync);
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
@@ -118,7 +117,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
-        HasPasswords = Passwords.Any();
+        HasPasswords = Passwords.Any(p => p.IsVisible);
     }
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
@@ -221,46 +220,81 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Private Methods
 
-    private void OnSearchAsync(string searchText)
+    /// <summary>
+    /// Handles the command to filter passwords content
+    /// </summary>
+    /// <param name="searchText"></param>
+    private void OnFilterAsync(string searchText)
     {
-        IEnumerable<PasswordExplorerItem> foundItems = Search(_originalList, (i) => i.Name.Contains(searchText));
-
-        DisplayPasswords(foundItems);
-    }
-
-    private IEnumerable<PasswordExplorerItem> Search(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> searchPredicate)
-    {
-        if (items == null || !items.Any())
+        Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
+        foreach(PasswordExplorerItem password in Passwords)
         {
-            return [];
+            Filter(password, searchPredicate);
         }
 
-        List<PasswordExplorerItem> foundItems = [];
+        HasPasswords = Passwords.Any(p => p.IsVisible);
+    }
 
-        foreach (var item in items)
+    /// <summary>
+    /// Returns true and makes the <paramref name="node"/> visible if it or any its children fits <paramref name="searchPredicate"/>, otherwise - false. 
+    /// </summary>
+    /// <param name="node"></param>
+    /// <param name="searchPredicate"></param>
+    /// <returns></returns>
+    private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
+    {
+        if(node is null)
         {
-            IEnumerable<PasswordExplorerItem> foundChildren = Search(item.Children, searchPredicate);
+            return false;
+        }
 
-            if (foundChildren.Any() || searchPredicate(item))
+        if(node.Type == PasswordExplorerItem.ExplorerItemType.File)
+        {
+            return node.IsVisible = searchPredicate(node);
+        }
+        else
+        {
+            bool hasVisibleItems = false;
+
+            if (node.Children.Any())
             {
-                item.Children = new ObservableCollection<PasswordExplorerItem>(foundChildren);
-                foundItems.Add(item);
+                foreach(PasswordExplorerItem item in node.Children)
+                {
+                    if (Filter(item, searchPredicate) && !hasVisibleItems)
+                    {
+                        hasVisibleItems = true;
+                    }
+                }
             }
-        }
 
-        return foundItems;
+            return node.IsVisible = hasVisibleItems || searchPredicate(node);
+        }
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be deleted, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanDelete(PasswordExplorerItem item)
     {
         return item != null;
     }
 
+    /// <summary>
+    /// Returns true if <paramref name="item"/> can be edited, otherwise - false
+    /// </summary>
+    /// <param name="item"></param>
+    /// <returns></returns>
     private bool CanEdit(PasswordExplorerItem item)
     {
         return item != null;
     }
 
+    /// <summary>
+    /// Resets the view
+    /// </summary>
+    /// <returns></returns>
     private async Task ResetViewAsync()
     {
         SelectedItem = null;
@@ -268,10 +302,14 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         IEnumerable<PasswordExplorerItem> passwords = await LoadPasswordsAsync();
 
-        DisplayPasswords(passwords);
+        DisplayPasswordsInTree(passwords);
         SetOriginalList(passwords);
     }
 
+    /// <summary>
+    /// Loads passwords and returns a list of that
+    /// </summary>
+    /// <returns></returns>
     private async Task<IEnumerable<PasswordExplorerItem>> LoadPasswordsAsync()
     {
         Logger.LogDebug($"Loading passwords...");
@@ -289,6 +327,10 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Saves the list of <paramref name="passwords"/> into a buffer
+    /// </summary>
+    /// <param name="passwords"></param>
     private void SetOriginalList(IEnumerable<PasswordExplorerItem> passwords)
     {
         _originalList ??= [];
@@ -304,7 +346,11 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private void DisplayPasswords(IEnumerable<PasswordExplorerItem> passwords)
+    /// <summary>
+    /// Displays <paramref name="passwords"/> in a tree view
+    /// </summary>
+    /// <param name="passwords"></param>
+    private void DisplayPasswordsInTree(IEnumerable<PasswordExplorerItem> passwords)
     {
         Passwords.Clear();
         foreach (var pwd in passwords)
@@ -348,43 +394,40 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private void Insert(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password)
+    /// <summary>
+    /// Inserts <paramref name="passwordToInsert"/> into sorted <paramref name="sortedPasswordsList"/>
+    /// </summary>
+    /// <param name="sortedPasswordsList">already sorted collection of passwords</param>
+    /// <param name="passwordToInsert">a password to add into the <paramref name="sortedPasswordsList"/></param>
+    private void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
     {
-
-        Debug.WriteLine($"Adding \"{password.Name}\"...");
-
-        if(password.Name == "a11")
+        if (!sortedPasswordsList.Any())
         {
-
-        }
-
-        if (!passwords.Any())
-        {
-            passwords.Add(password);
+            sortedPasswordsList.Add(passwordToInsert);
             return;
         }
 
         int index = 0;
 
-        if (password.Type == PasswordExplorerItem.ExplorerItemType.File)
+        if (passwordToInsert.Type == PasswordExplorerItem.ExplorerItemType.File)
         {
-            for (; index < passwords.Count; index++)
+            for (; index < sortedPasswordsList.Count; index++)
             {
-                if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File)
+                if (sortedPasswordsList[index].Type == PasswordExplorerItem.ExplorerItemType.File)
                 {
                     break;
                 }
             }
         }
 
-        for (; index < passwords.Count; index++)
+        for (; index < sortedPasswordsList.Count; index++)
         {
-            if (passwords[index].Type == PasswordExplorerItem.ExplorerItemType.File && password.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+            if (sortedPasswordsList[index].Type == PasswordExplorerItem.ExplorerItemType.File && passwordToInsert.Type == PasswordExplorerItem.ExplorerItemType.Folder)
             {
                 break;
             }
 
-            if (passwords[index].Name.CompareTo(password.Name) < 0)
+            if (sortedPasswordsList[index].Name.CompareTo(passwordToInsert.Name) < 0)
             {
                 continue;
             }
@@ -394,7 +437,7 @@ public sealed class PasswordsViewModel : ViewModelBase
             }
         }
 
-        passwords.Insert(index, password);
+        sortedPasswordsList.Insert(index, passwordToInsert);
     }
 
     /// <summary>
@@ -439,6 +482,12 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Returns a password that fits <paramref name="predicate"/>
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="predicate"></param>
+    /// <returns></returns>
     private PasswordExplorerItem? FindPassword(IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> predicate)
     {
         if(items is null || !items.Any())

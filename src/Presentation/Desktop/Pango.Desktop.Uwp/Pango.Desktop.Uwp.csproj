@@ -392,6 +392,9 @@
     <PackageReference Include="CommunityToolkit.Mvvm">
       <Version>8.2.1</Version>
     </PackageReference>
+    <PackageReference Include="CommunityToolkit.Uwp.Controls.SettingsControls">
+      <Version>8.0.240109</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection">
       <Version>9.0.0-preview.3.24172.9</Version>
     </PackageReference>

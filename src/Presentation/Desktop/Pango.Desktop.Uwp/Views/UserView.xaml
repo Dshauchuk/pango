@@ -49,17 +49,32 @@
                                VerticalAlignment="Center"/>
                 </Grid>
 
-                <Button Margin="0 20 0 0"
+                <StackPanel Margin="0 20 0 0" 
+                            Orientation="Horizontal">
+                    <Button Margin="0 5 5 5"
                         Command="{Binding Path=DeleteUserCommand}">
-                    <Button.Content>
-                        <StackPanel Orientation="Horizontal">
-                            <FontIcon Glyph="&#xE74D;"
-                                      FontSize="{StaticResource FontIconSize}"/>
-                            <TextBlock Margin="2"
-                                       Text="{loc:StringResource Key=DeleteUser}" />
-                        </StackPanel>
-                    </Button.Content>
-                </Button>
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon Glyph="&#xE74D;"
+                                          FontSize="{StaticResource FontIconSize}"/>
+                                <TextBlock Margin="5 0"
+                                           Text="{loc:StringResource Key=DeleteUser}" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                    <Button Margin="5" 
+                            HorizontalAlignment="Left"
+                            Command="{Binding Path=SignOutCommand}">
+                        <Button.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <FontIcon Glyph="&#xE748;"
+                                          FontSize="{StaticResource FontIconSize}"/>
+                                <TextBlock Margin="5 0"
+                                           Text="{loc:StringResource Key=ChangeUser}" />
+                            </StackPanel>
+                        </Button.Content>
+                    </Button>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </Grid>

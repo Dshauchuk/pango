@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -60,6 +60,15 @@ public class SettingsViewModel : ViewModelBase
     }
 
     #region Properties
+
+    public string Version
+    {
+        get
+        {
+            var version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+            return string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
+        }
+    }
 
     public ObservableCollection<AppLanguage> Languages { get; private set; }
 

@@ -159,7 +159,7 @@ public class EditPasswordViewModel : ViewModelBase
             }
             else
             {
-                result = await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props));
+                result = await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
 
                 if (result.IsError)
                 {
