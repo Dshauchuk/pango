@@ -43,13 +43,6 @@
                                       SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"/>
                         </toolkit:SettingsCard>
                     </StackPanel>
-                    <StackPanel Orientation="Vertical"
-                                Margin="0 4 40 0">
-                        <toolkit:SettingsCard Header="{loc:StringResource Key='ClearCopiedData'}"
-                                              Description="{loc:StringResource Key='ClearCopiedDataDescription'}">
-                            <ToggleSwitch IsOn="{Binding AllowClearCopiedData}"/>
-                        </toolkit:SettingsCard>
-                    </StackPanel>
                 </StackPanel>
 
                 <!--Language Section-->
