@@ -107,7 +107,10 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     public override async Task OnNavigatedToAsync(object parameter)
     {
-        await ResetViewAsync();
+        if(!Passwords.Any())
+        {
+            await ResetViewAsync();
+        }
     }
 
     #endregion
