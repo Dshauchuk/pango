@@ -52,6 +52,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
         EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPasswordAsync, CanEdit);
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
+        UpdateListCommand = new RelayCommand(OnUpdateListAsync);
 
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
         WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
@@ -65,6 +66,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     public RelayCommand<string> SearchCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
+    public RelayCommand UpdateListCommand { get; }
 
     #endregion
 
@@ -219,6 +221,10 @@ public sealed class PasswordsViewModel : ViewModelBase
                 new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
     }
 
+    private async void OnUpdateListAsync()
+    {
+        await ResetViewAsync();
+    }
     #endregion
 
     #region Private Methods
