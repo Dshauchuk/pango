@@ -2,6 +2,7 @@
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -27,6 +28,11 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
         Title = ((EditPasswordCatalogDialogViewModel)DataContext).IsNew ? 
             _viewResourceLoader.GetString("NewCatalogDialogTitle") : 
             _viewResourceLoader.GetString("EditCatalogDialogTitle");
+    }
+
+    public void DialogOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
+    {
+        NewCatalogNameTextBlock.Focus(FocusState.Programmatic);
     }
 
     public string Title { get; private set; }

@@ -42,6 +42,8 @@ public sealed class ValidationTextBox : ContentControl
         warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
 
         textBox.TextChanged += TextBox_TextChanged;
+
+        this.GotFocus += ValidationTextBox_GotFocus;
     }
 
     /// <summary>
@@ -155,6 +157,11 @@ public sealed class ValidationTextBox : ContentControl
     private void DataContext_ErrorsChanged(object sender, DataErrorsChangedEventArgs e)
     {
         RefreshErrors();
+    }
+
+    private void ValidationTextBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        textBox.Focus(FocusState.Programmatic);
     }
 
     /// <summary>

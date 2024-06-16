@@ -65,6 +65,8 @@ public class DialogService : IDialogService
             dialog.IsPrimaryButtonEnabled = dialogContent.ViewModel.CanSave();
         }
 
+        dialog.Opened += dialogContent.DialogOpened;
+
         _ = await dialog.ShowAsync();
     }
 }
