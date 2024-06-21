@@ -2,7 +2,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
 using Windows.Storage;
-using Windows.UI.Xaml;
+using Microsoft.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 

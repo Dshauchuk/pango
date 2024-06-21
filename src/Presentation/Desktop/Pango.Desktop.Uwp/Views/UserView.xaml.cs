@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
@@ -12,6 +13,6 @@ public sealed partial class UserView : PageBase
     public UserView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<UserViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<UserViewModel>();
     }
 }

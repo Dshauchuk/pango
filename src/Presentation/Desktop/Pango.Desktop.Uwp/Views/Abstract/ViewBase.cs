@@ -1,6 +1,6 @@
-﻿using Pango.Desktop.Uwp.ViewModels;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using Pango.Desktop.Uwp.ViewModels;
 
 namespace Pango.Desktop.Uwp.Views.Abstract;
 

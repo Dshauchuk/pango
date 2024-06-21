@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
@@ -14,6 +14,6 @@ public sealed partial class EditPasswordView : ViewBase
     public EditPasswordView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<EditPasswordViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<EditPasswordViewModel>();
     }
 }

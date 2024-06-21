@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
@@ -16,10 +17,10 @@ public sealed partial class SettingsView : PageBase
     public SettingsView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<SettingsViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<SettingsViewModel>();
     }
 
-    private async void bugRequestCard_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private async void bugRequestCard_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         await Launcher.LaunchUriAsync(new Uri("https://github.com/Dshauchuk/pango/issues/new/choose"));
     }

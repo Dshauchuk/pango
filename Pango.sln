@@ -21,13 +21,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{C0C1FE
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pango.Shared", "src\Shared\Pango.Shared\Pango.Shared.csproj", "{6570F43F-CE89-4436-91C2-E39558B2D8AF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pango.Desktop.Uwp", "src\Presentation\Desktop\Pango.Desktop.Uwp\Pango.Desktop.Uwp.csproj", "{EEEDE488-B4B5-442B-AF62-523694F90055}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pango.Desktop.Uwp", "src\Presentation\Desktop\Pango.Desktop.Uwp\Pango.Desktop.Uwp.csproj", "{EEEDE488-B4B5-442B-AF62-523694F90055}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{D55A9614-02DD-497E-9228-5012CF507EB2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pango.Infrastructure.Tests", "tests\Pango.Infrastructure.Tests\Pango.Infrastructure.Tests.csproj", "{6233D1DC-C3EA-4747-9DA7-E6ADC04DA13F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pango.Application.Tests", "tests\Pango.Application.Tests\Pango.Application.Tests.csproj", "{5189C12E-F438-4776-9FD0-CAFA7D509383}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Pango.Application.Tests", "tests\Pango.Application.Tests\Pango.Application.Tests.csproj", "{5189C12E-F438-4776-9FD0-CAFA7D509383}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -146,12 +146,12 @@ Global
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|Any CPU.Build.0 = Debug|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|Any CPU.Deploy.0 = Debug|x64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.ActiveCfg = Debug|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.Build.0 = Debug|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.Deploy.0 = Debug|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.ActiveCfg = Debug|ARM64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.Build.0 = Debug|ARM64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.Deploy.0 = Debug|ARM64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.ActiveCfg = Debug|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.Build.0 = Debug|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM.Deploy.0 = Debug|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.ActiveCfg = Debug|arm64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.Build.0 = Debug|arm64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|ARM64.Deploy.0 = Debug|arm64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|x64.ActiveCfg = Debug|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|x64.Build.0 = Debug|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Debug|x64.Deploy.0 = Debug|x64
@@ -161,12 +161,12 @@ Global
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|Any CPU.ActiveCfg = Release|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|Any CPU.Build.0 = Release|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|Any CPU.Deploy.0 = Release|x64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.ActiveCfg = Release|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.Build.0 = Release|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.Deploy.0 = Release|ARM
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.ActiveCfg = Release|ARM64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.Build.0 = Release|ARM64
-		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.Deploy.0 = Release|ARM64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.ActiveCfg = Release|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.Build.0 = Release|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM.Deploy.0 = Release|x64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.ActiveCfg = Release|arm64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.Build.0 = Release|arm64
+		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|ARM64.Deploy.0 = Release|arm64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|x64.ActiveCfg = Release|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|x64.Build.0 = Release|x64
 		{EEEDE488-B4B5-442B-AF62-523694F90055}.Release|x64.Deploy.0 = Release|x64

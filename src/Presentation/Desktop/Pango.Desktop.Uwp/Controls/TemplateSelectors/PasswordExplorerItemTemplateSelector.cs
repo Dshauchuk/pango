@@ -1,6 +1,6 @@
 ﻿using Pango.Desktop.Uwp.Models;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Controls.TemplateSelectors;
 

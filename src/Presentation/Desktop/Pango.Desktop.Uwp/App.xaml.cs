@@ -1,17 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 using Pango.Application;
-using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Serilog;
-using System;
-using System.Text;
 using Windows.ApplicationModel;
-using Windows.ApplicationModel.Activation;
-using Windows.ApplicationModel.Core;
-using Windows.UI.Xaml;
-using ApplicationBase = Windows.UI.Xaml.Application;
+using ApplicationBase = Microsoft.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
 
@@ -20,6 +17,7 @@ namespace Pango.Desktop.Uwp;
 /// </summary>
 sealed partial class App : ApplicationBase
 {
+    private Window? _window;
     public static new App Current => (App)ApplicationBase.Current;
     
     /// <summary>
@@ -29,18 +27,69 @@ sealed partial class App : ApplicationBase
     public App()
     {
         this.InitializeComponent();
-        this.Suspending += OnSuspending;
+        //this.Suspending += OnSuspending;
 
         this.UnhandledException += App_UnhandledException;
     }
 
-    private void App_UnhandledException(object sender, Windows.UI.Xaml.UnhandledExceptionEventArgs e)
+
+    public static IHost Host { get; } = BuildHost();
+
+    private void App_UnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
         e.Handled = true;
 
         Log.Logger?.Error(e.Exception, e?.Message ?? "Unhandled error");
 
         //WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(e?.Message ?? "Unhandled error", AppNotificationType.Error));
+    }
+
+    private static IHost BuildHost()
+    {
+        return Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder()
+            //.UseSerilog((context, service, configuration) =>
+            //{
+            //    _ = configuration
+            //        .MinimumLevel.Verbose()
+            //        .WriteTo.File(
+            //            "WinUI3Localizer.log",
+            //            restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Verbose,
+            //            rollingInterval: RollingInterval.Month);
+            //})
+            .ConfigureServices((context, services) =>
+            {
+                _ = services
+                    .AddLogging(configure =>
+                    {
+                        _ = configure
+                            .SetMinimumLevel(LogLevel.Trace)
+                            .AddSerilog()
+                            .AddDebug();
+                    })
+                    .RegisterViewModels()
+            .AddApplicationServices()
+            .AddInfrastructureServices()
+            .AddAppServices()
+            .RegisterUIMappings()
+                    .AddSingleton<MainWindow>()
+                    //.AddSingleton<ILocalizer>(factory =>
+                    //{
+                    //    return new LocalizerBuilder()
+                    //        .AddStringResourcesFolderForLanguageDictionaries(StringsFolderPath)
+                    //        .SetLogger(Host.Services
+                    //            .GetRequiredService<ILoggerFactory>()
+                    //            .CreateLogger<Localizer>())
+                    //        .SetOptions(options =>
+                    //        {
+                    //            options.DefaultLanguage = "ja";
+                    //        })
+                    //        .Build()
+                    //        .GetAwaiter()
+                    //        .GetResult();
+                    //})
+                    ;
+            })
+            .Build();
     }
 
     /// <summary>
@@ -50,32 +99,35 @@ sealed partial class App : ApplicationBase
     /// <param name="e">Details about the launch request and process.</param>
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        // Ensure the UI is initialized
-        if (Window.Current.Content is null)
-        {
-            AddDependencyInjection();
+        this._window = Host.Services.GetRequiredService<MainWindow>();
+        this._window.Activate();
 
-            Window.Current.Content = new Shell();
+        //// Ensure the UI is initialized
+        //if (Window.Current.Content is null)
+        //{
+        //    AddDependencyInjection();
 
-            AppThemeHelper.Initialize();
-            TitleBarHelper.StyleTitleBar();
-            TitleBarHelper.ExpandViewIntoTitleBar();
-        }
+        //    Window.Current.Content = new Shell();
 
-        // Enable the prelaunch if needed, and activate the window
-        if (!e.PrelaunchActivated)
-        {
-            CoreApplication.EnablePrelaunch(true);
+        //    AppThemeHelper.Initialize();
+        //    TitleBarHelper.StyleTitleBar();
+        //    TitleBarHelper.ExpandViewIntoTitleBar();
+        //}
 
-            Window.Current.Activate();
-        }
+        //// Enable the prelaunch if needed, and activate the window
+        ////if (!e.PrelaunchActivated)
+        ////{
+        ////    CoreApplication.EnablePrelaunch(true);
 
-        var sb = new StringBuilder();
-        sb.AppendLine("System information: ")
-            .AppendLine(string.Format("{0, -25} {1}", "Machine:", Environment.MachineName))
-            .AppendLine(string.Format("{0, -25} {1}", "Windows (OS) Version:", Environment.OSVersion));
+        ////    Window.Current.Activate();
+        ////}
 
-        Log.Logger.Information(sb.ToString());
+        //var sb = new StringBuilder();
+        //sb.AppendLine("System information: ")
+        //    .AppendLine(string.Format("{0, -25} {1}", "Machine:", Environment.MachineName))
+        //    .AppendLine(string.Format("{0, -25} {1}", "Windows (OS) Version:", Environment.OSVersion));
+
+        //Log.Logger.Information(sb.ToString());
     }
 
     private void AddDependencyInjection()
@@ -89,7 +141,7 @@ sealed partial class App : ApplicationBase
         serviceCollection.RegisterUIMappings();
 
         // Register services
-        Ioc.Default.ConfigureServices(serviceCollection.BuildServiceProvider());
+        //App.Host.Services.ConfigureServices(serviceCollection.BuildServiceProvider());
     }
 
     /// <summary>

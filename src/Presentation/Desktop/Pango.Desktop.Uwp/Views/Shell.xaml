@@ -4,17 +4,19 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:muxc1="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
-    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
+    xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract" 
+    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
+    xmlns:behaviors="using:CommunityToolkit.WinUI.Behaviors"
     x:Name="ShellRootElement"
     Loaded="Shell_OnLoaded"
     mc:Ignorable="d"
     d:DataContext="{d:DesignInstance Type=viewmodels:ShellViewModel}"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
+    <!--muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"-->
+    
     <Grid>
 
         <ContentControl x:Name="AppContent" 
@@ -23,7 +25,7 @@
                         Margin="10,30,10,10"/>
 
         <!--  Custom title bar  -->
-        <Border Height="30"
+        <!--<Border Height="30"
                 Margin="0,0,0,0"
                 Padding="20,5,0,0"
                 x:Name="TitleBarBorder"
@@ -35,18 +37,23 @@
                        Height="20"
                        Source="ms-appx:///assets/logo.png" />
             </StackPanel>
-        </Border>
+        </Border>-->
 
-        <muxc1:InAppNotification x:Name="InAppNotification" 
+        <!--<muxc1:InAppNotification x:Name="InAppNotification" 
                                  StackMode="StackInFront">
             <muxc1:InAppNotification.ContentTemplate>
                 <DataTemplate>
                     <StackPanel>
-                        <!--<TextBlock Text="{Binding Type}" Margin="0,0,0,8" />-->
+                        --><!--<TextBlock Text="{Binding Type}" Margin="0,0,0,8" />--><!--
                         <TextBlock Text="{Binding Message}" Style="{ThemeResource CaptionTextBlockStyle}" Opacity="0.8" />
                     </StackPanel>
                 </DataTemplate>
             </muxc1:InAppNotification.ContentTemplate>
-        </muxc1:InAppNotification>
+        </muxc1:InAppNotification>-->
+        <muxc:InfoBar>
+            <interactivity:Interaction.Behaviors>
+                <behaviors:StackedNotificationsBehavior x:Name="InAppNotification" />
+            </interactivity:Interaction.Behaviors>
+        </muxc:InfoBar>
     </Grid>
 </abstract:ViewBase>

@@ -9,7 +9,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -21,7 +21,7 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
 	{
         this.Logger = logger;
         WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-        ViewResourceLoader = ResourceLoader.GetForCurrentView();
+        ViewResourceLoader = new();// new ResourceLoader();
     }
 
     #region Properties

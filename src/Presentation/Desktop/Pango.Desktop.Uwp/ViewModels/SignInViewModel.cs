@@ -16,7 +16,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.System;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -180,7 +179,7 @@ public class SignInViewModel : ViewModelBase
                 return;
             }
 
-            DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
             dispatcherQueue.TryEnqueue(() =>
             {
                 Users.Clear();

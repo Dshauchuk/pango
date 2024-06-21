@@ -5,9 +5,9 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -156,7 +156,7 @@ public sealed class ValidationPasswordBox : ContentControl
 
         Clipboard.SetContent(dataPackage);
 
-        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ResourceLoader.GetForCurrentView().GetString("PasswordCopiedToClipboard")));
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(new ResourceLoader().GetString("PasswordCopiedToClipboard")));
     }
 
     private void RevealButton_Unchecked(object sender, RoutedEventArgs e)

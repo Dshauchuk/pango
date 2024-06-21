@@ -1,9 +1,9 @@
+using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Models;
 using System;
 using System.Collections.Generic;
 using Windows.UI.Core;
-using Windows.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 

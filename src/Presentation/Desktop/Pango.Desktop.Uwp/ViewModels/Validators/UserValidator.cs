@@ -9,7 +9,7 @@ public class UserValidator : ObservableValidator
     private string _passwordConfirmation;
     private string _password;
     private string _userName;
-    private static ResourceLoader _viewResourceLoader = ResourceLoader.GetForCurrentView();
+    private static ResourceLoader _viewResourceLoader = new ResourceLoader();
 
     public UserValidator()
     {

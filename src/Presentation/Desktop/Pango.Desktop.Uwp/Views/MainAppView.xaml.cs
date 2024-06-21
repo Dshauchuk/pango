@@ -11,8 +11,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
+using Microsoft.Extensions.DependencyInjection;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -30,7 +31,7 @@ public sealed partial class MainAppView : ViewBase
     public MainAppView(Type initialView = null)
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<MainAppViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<MainAppViewModel>();
         _initialView = initialView;
 
         Loaded += MainAppView_Loaded;
@@ -42,10 +43,10 @@ public sealed partial class MainAppView : ViewBase
             new NavigationEntry(UserItem, typeof(UserView))
         };
 
-        _viewResourceLoader = ResourceLoader.GetForCurrentView();
+        _viewResourceLoader = new ResourceLoader();
     }
 
-    private async void MainAppView_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         if (ViewModel != null)
             await ViewModel.OnNavigatedToAsync(null);

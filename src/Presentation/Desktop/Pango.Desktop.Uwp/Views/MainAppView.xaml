@@ -7,11 +7,12 @@
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
-    muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"
     mc:Ignorable="d"
     d:DesignHeight="300"
     d:DesignWidth="400">
 
+    <!--muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"-->
+    
     <Grid>
         <!--  Navigation view  -->
         <muxc:NavigationView

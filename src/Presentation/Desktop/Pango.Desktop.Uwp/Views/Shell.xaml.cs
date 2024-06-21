@@ -1,5 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
@@ -14,9 +17,6 @@ using System.Linq;
 using System.Security.Principal;
 using System.Threading;
 using System.Threading.Tasks;
-using Windows.UI.Core;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -37,13 +37,13 @@ public sealed partial class Shell : ViewBase
     public Shell()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<ShellViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();//App.Host.Services.GetRequiredService<ShellViewModel>();
 
         AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
         
-        Window.Current.Activated += Current_Activated;
+        //Window.Current.Activated += Current_Activated;
         
-        SetTitleBar();
+        //SetTitleBar();
 
         NavigateInitialPage();
 
@@ -114,7 +114,7 @@ public sealed partial class Shell : ViewBase
     private void SetTitleBar()
     {
         // Set the custom title bar to act as a draggable region
-        Window.Current.SetTitleBar(TitleBarBorder);
+        //Window.Current.SetTitleBar(TitleBarBorder);
     }
 
     private void SignInViewModel_SignInSuceeded(string userId)
@@ -141,9 +141,9 @@ public sealed partial class Shell : ViewBase
         //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
     }
 
-    private void Current_Activated(object sender, Windows.UI.Core.WindowActivatedEventArgs e)
+    private void Current_Activated(object sender, WindowActivatedEventArgs e)
     {
-        _isWindowActive = e.WindowActivationState != CoreWindowActivationState.Deactivated;
+        _isWindowActive = e.WindowActivationState != WindowActivationState.Deactivated;
     }
 
     // Select the introduction item when the shell is loaded
@@ -158,7 +158,7 @@ public sealed partial class Shell : ViewBase
 
         // XamlRoot must be set in the case of a ContentDialog running in a Desktop app
         dialog.XamlRoot = this.XamlRoot;
-        dialog.Style = Windows.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style;
+        dialog.Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style;
         dialog.Title = "Save your work?";
         dialog.PrimaryButtonText = "Save";
         dialog.SecondaryButtonText = "Don't Save";

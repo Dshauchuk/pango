@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+п»їusing System.Collections.Generic;
 
 namespace Pango.Desktop.Uwp.Models;
 
@@ -12,7 +12,8 @@ public class AppLanguage
         return new AppLanguage[]
         {
             new AppLanguage { Name = "English", Locale = "en-US" },
-            new AppLanguage { Name = "Беларуская", Locale = "be-BY" }
+            new AppLanguage { Name = "Р‘РµР»Р°СЂСѓСЃРєР°СЏ", Locale = "be-BY" },
+            new AppLanguage { Name = "French", Locale = "fr-FR" }
         };
     }
 }

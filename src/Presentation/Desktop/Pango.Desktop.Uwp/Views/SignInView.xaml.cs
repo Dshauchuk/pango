@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -11,10 +12,10 @@ public sealed partial class SignInView : ViewBase
     public SignInView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<SignInViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<SignInViewModel>();
     }
 
-    private async void PasscodePasswordBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private async void PasscodePasswordBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Enter)
         {

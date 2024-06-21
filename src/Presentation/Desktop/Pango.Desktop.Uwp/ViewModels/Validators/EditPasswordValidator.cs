@@ -18,7 +18,7 @@ public class EditPasswordValidator : ObservableValidator
 
     public EditPasswordValidator()
     {
-        _viewResourceLoader = ResourceLoader.GetForCurrentView();
+        _viewResourceLoader = new ResourceLoader();
     }
 
     public Guid? Id

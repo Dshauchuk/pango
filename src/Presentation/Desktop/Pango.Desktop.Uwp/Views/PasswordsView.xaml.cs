@@ -6,7 +6,8 @@ using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -16,12 +17,12 @@ public sealed partial class PasswordsView : PageBase
     public PasswordsView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<PasswordsViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<PasswordsViewModel>();
 
         PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
     }
 
-    private void PasswordsTreeView_ItemInvoked(Windows.UI.Xaml.Controls.TreeView sender, Windows.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    private void PasswordsTreeView_ItemInvoked(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
 
@@ -51,33 +52,33 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
-    private void EditContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void EditContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
         viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
     }
 
-    private void DeleteContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void DeleteContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
         viewModel?.DeleteCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
     }
 
-    private void AddPassword_CatalogContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void AddPassword_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
         viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
         viewModel?.CreatePasswordCommand.Execute(null);
     }
 
-    private void AddCatalog_CatalogContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void AddCatalog_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
         viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
         viewModel?.CreateCatalogCommand.Execute(null);
     }
 
-    private void CopyPassword_PasswordContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void CopyPassword_PasswordContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
         viewModel?.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);

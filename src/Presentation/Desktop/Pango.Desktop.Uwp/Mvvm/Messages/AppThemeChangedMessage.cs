@@ -1,5 +1,5 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
-using Windows.UI.Xaml;
+using Microsoft.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.Mvvm.Messages;
 

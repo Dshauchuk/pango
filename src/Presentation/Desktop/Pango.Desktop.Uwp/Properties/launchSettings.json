@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Pango.Desktop.Uwp (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Pango.Desktop.Uwp (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}

@@ -4,8 +4,8 @@ using Pango.Desktop.Uwp.Dialogs.Views;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Dialogs;
 
@@ -24,7 +24,7 @@ public class DialogService : IDialogService
     /// <returns></returns>
     public async Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText)
     {
-        var viewResourceLoader = ResourceLoader.GetForCurrentView();
+        var viewResourceLoader = new ResourceLoader();
         ContentDialog subscribeDialog = new()
         {
             Title = confirmationTitle,
@@ -41,12 +41,12 @@ public class DialogService : IDialogService
 
     private async Task ShowAsync(IContentDialog dialogContent)
     {
-        var viewResourceLoader = ResourceLoader.GetForCurrentView();
+        var viewResourceLoader = new ResourceLoader();
 
         ContentDialog dialog = new()
         {
             XamlRoot = Window.Current.Content.XamlRoot,
-            Style = Windows.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+            Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             Title = dialogContent.Title,
             PrimaryButtonText = viewResourceLoader.GetString("Save"),
             CloseButtonText = viewResourceLoader.GetString("Cancel"),

@@ -4,8 +4,6 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:behaviors="using:Microsoft.Toolkit.Uwp.UI.Behaviors"
-    xmlns:interactivity="using:Microsoft.Xaml.Interactivity"
     xmlns:enums="using:Pango.Desktop.Uwp.Core.Enums"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
@@ -140,9 +138,9 @@
                                  KeyDown="PasscodePasswordBox_KeyDown"
                                  Password="{Binding Passcode, Mode=TwoWay}"
                                  PlaceholderText="{loc:StringResource Key=EnterMastercode}">
-                        <interactivity:Interaction.Behaviors>
+                        <!--<interactivity:Interaction.Behaviors>
                             <behaviors:AutoFocusBehavior />
-                        </interactivity:Interaction.Behaviors>
+                        </interactivity:Interaction.Behaviors>-->
                     </PasswordBox>
 
                     <Grid Grid.Row="2"
