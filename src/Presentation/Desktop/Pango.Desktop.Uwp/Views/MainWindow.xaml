@@ -7,8 +7,11 @@
     x:Class="Pango.Desktop.Uwp.Views.MainWindow"
     mc:Ignorable="d">
     
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
-          RowDefinitions="32,*">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+    
+    <Grid RowDefinitions="32,*">
         <!--  Custom title bar  -->
         <Border Height="30"
                 Margin="0,0,0,0"
