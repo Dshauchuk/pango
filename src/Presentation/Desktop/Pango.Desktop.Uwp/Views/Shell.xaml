@@ -50,7 +50,7 @@
                 </DataTemplate>
             </muxc1:InAppNotification.ContentTemplate>
         </muxc1:InAppNotification>-->
-        <muxc:InfoBar>
+        <muxc:InfoBar VerticalAlignment="Bottom">
             <interactivity:Interaction.Behaviors>
                 <behaviors:StackedNotificationsBehavior x:Name="InAppNotification" />
             </interactivity:Interaction.Behaviors>

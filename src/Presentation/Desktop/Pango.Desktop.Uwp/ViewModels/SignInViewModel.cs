@@ -103,10 +103,11 @@ public class SignInViewModel : ViewModelBase
         }
         else
         {
+            Thread.CurrentPrincipal = null;
+
             ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(Thread.CurrentPrincipal.Identity.Name));
             if (previouslySelectedUser.IsError)
             {
-                Thread.CurrentPrincipal = null;
                 await OnNavigatedToAsync(parameter);
                 return;
             }

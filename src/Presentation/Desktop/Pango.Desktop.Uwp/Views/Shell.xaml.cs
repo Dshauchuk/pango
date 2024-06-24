@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -41,7 +40,7 @@ public sealed partial class Shell : ViewBase
 
         AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
         
-        //Window.Current.Activated += Current_Activated;
+        //App.Current.CurrentWindow.Activated += Current_Activated;
         
         //SetTitleBar();
 
@@ -94,7 +93,7 @@ public sealed partial class Shell : ViewBase
         //    InAppNotification.Show(inAppNotificationWithButtonsTemplate as DataTemplate,);
         //}
 
-        InAppNotification.Show(message, 3000);
+        InAppNotification.Show(message.Message, 3000);
     }
 
     private async void NavigateInitialPage()
@@ -114,7 +113,7 @@ public sealed partial class Shell : ViewBase
     private void SetTitleBar()
     {
         // Set the custom title bar to act as a draggable region
-        //Window.Current.SetTitleBar(TitleBarBorder);
+        //App.Current.CurrentWindow.SetTitleBar(TitleBarBorder);
     }
 
     private void SignInViewModel_SignInSuceeded(string userId)
@@ -132,13 +131,21 @@ public sealed partial class Shell : ViewBase
 
     private void SetThreadPrincipal(string userId)
     {
+        //IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
         IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
 
         // Stores current user's principal
         Thread.CurrentPrincipal = principal;
         // Stores application level principal, can be set only once
         // Uncomment if needed
-        //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
+        try
+        {
+            //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
+        }
+        catch(Exception ex)
+        {
+
+        }
     }
 
     private void Current_Activated(object sender, WindowActivatedEventArgs e)

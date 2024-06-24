@@ -7,6 +7,6 @@ public class AppUserProvider : IAppUserProvider
 {
     public string GetUserId()
     {
-        return Thread.CurrentPrincipal.Identity.Name;
+        return Thread.CurrentPrincipal?.Identity.Name;
     }
 }

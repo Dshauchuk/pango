@@ -27,6 +27,7 @@ public class DialogService : IDialogService
         var viewResourceLoader = new ResourceLoader();
         ContentDialog subscribeDialog = new()
         {
+            XamlRoot = App.Current.CurrentWindow.Content.XamlRoot,
             Title = confirmationTitle,
             Content = confirmationText,
             CloseButtonText = viewResourceLoader.GetString("Cancel"),
@@ -45,7 +46,7 @@ public class DialogService : IDialogService
 
         ContentDialog dialog = new()
         {
-            XamlRoot = Window.Current.Content.XamlRoot,
+            XamlRoot = App.Current.CurrentWindow.Content.XamlRoot,
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             Title = dialogContent.Title,
             PrimaryButtonText = viewResourceLoader.GetString("Save"),

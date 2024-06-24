@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
@@ -17,7 +16,8 @@ namespace Pango.Desktop.Uwp;
 /// </summary>
 sealed partial class App : ApplicationBase
 {
-    private Window? _window;
+    public MainWindow? CurrentWindow { get; private set; }
+
     public static new App Current => (App)ApplicationBase.Current;
     
     /// <summary>
@@ -99,15 +99,15 @@ sealed partial class App : ApplicationBase
     /// <param name="e">Details about the launch request and process.</param>
     protected override void OnLaunched(LaunchActivatedEventArgs e)
     {
-        this._window = Host.Services.GetRequiredService<MainWindow>();
-        this._window.Activate();
+        CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
+        CurrentWindow.Activate();
 
         //// Ensure the UI is initialized
-        //if (Window.Current.Content is null)
+        //if (App.Current.CurrentWindow.Content is null)
         //{
         //    AddDependencyInjection();
 
-        //    Window.Current.Content = new Shell();
+        //    App.Current.CurrentWindow.Content = new Shell();
 
         //    AppThemeHelper.Initialize();
         //    TitleBarHelper.StyleTitleBar();
@@ -119,7 +119,7 @@ sealed partial class App : ApplicationBase
         ////{
         ////    CoreApplication.EnablePrelaunch(true);
 
-        ////    Window.Current.Activate();
+        ////    App.Current.CurrentWindow.Activate();
         ////}
 
         //var sb = new StringBuilder();

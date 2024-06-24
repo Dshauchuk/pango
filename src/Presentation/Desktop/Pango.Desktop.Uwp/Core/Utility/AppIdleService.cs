@@ -1,9 +1,9 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Input;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Models;
 using System;
 using System.Collections.Generic;
-using Windows.UI.Core;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
@@ -26,8 +26,8 @@ public class AppIdleService : IAppIdleService
 
         if (_timerActions.Count == 1)
         {
-            Window.Current.CoreWindow.PointerMoved += OnCoreWindowPointerMoved;
-            Window.Current.CoreWindow.KeyDown += OnCoreWindowKeyDown;
+            App.Current.CurrentWindow.PointerMoved += OnWindowPointerMoved;
+            App.Current.CurrentWindow.KeyDown += OnWindowKeyDown;
         }
 
         return appIdleId;
@@ -45,8 +45,8 @@ public class AppIdleService : IAppIdleService
 
         if (_timerActions.Count == 1)
         {
-            Window.Current.CoreWindow.PointerMoved -= OnCoreWindowPointerMoved;
-            Window.Current.CoreWindow.KeyDown -= OnCoreWindowKeyDown;
+            App.Current.CurrentWindow.PointerMoved -= OnWindowPointerMoved;
+            App.Current.CurrentWindow.KeyDown -= OnWindowKeyDown;
         }
 
         _timerActions.Remove(appIdleId);
@@ -64,12 +64,12 @@ public class AppIdleService : IAppIdleService
         }
     }
 
-    private void OnCoreWindowPointerMoved(CoreWindow sender, PointerEventArgs args)
+    private void OnWindowPointerMoved(object sender, PointerRoutedEventArgs args)
     {
         RestartAllTimers();
     }
 
-    private void OnCoreWindowKeyDown(CoreWindow sender, KeyEventArgs args)
+    private void OnWindowKeyDown(object sender, KeyRoutedEventArgs args)
     {
         RestartAllTimers();
     }

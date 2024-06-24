@@ -20,7 +20,7 @@ public static class AppLanguageHelper
     public static AppLanguage GetAppliedAppLanguage()
     {
         IEnumerable<AppLanguage> appLanguages = AppLanguage.GetAppLanguageCollection();
-        string selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string;
+        string selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string ?? "en-US";
 
         return appLanguages.FirstOrDefault(l => l.Locale.Equals(selectedLanguageLocale, StringComparison.OrdinalIgnoreCase));
     }
