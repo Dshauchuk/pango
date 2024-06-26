@@ -6,7 +6,7 @@ namespace Pango.Persistence;
 
 public class UserRepository : IUserRepository
 {
-    private const string CredentialsStore = "Pango.Desktop.Uwp";
+    private const string CredentialsStore = "Pango.Desktop.Uwp.Users";
 
     private readonly IPasswordVault _passwordVault;
 

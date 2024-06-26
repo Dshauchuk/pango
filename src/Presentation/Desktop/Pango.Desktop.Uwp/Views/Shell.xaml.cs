@@ -9,12 +9,11 @@ using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Linq;
-using System.Security.Principal;
-using System.Threading;
 using System.Threading.Tasks;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -132,20 +131,15 @@ public sealed partial class Shell : ViewBase
     private void SetThreadPrincipal(string userId)
     {
         //IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
-        IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
+        //IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
 
         // Stores current user's principal
-        Thread.CurrentPrincipal = principal;
+        //Thread.CurrentPrincipal = principal;
         // Stores application level principal, can be set only once
         // Uncomment if needed
-        try
-        {
-            //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
-        }
-        catch(Exception ex)
-        {
+        //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
 
-        }
+        SecureUserSession.SaveUser(userId);
     }
 
     private void Current_Activated(object sender, WindowActivatedEventArgs e)

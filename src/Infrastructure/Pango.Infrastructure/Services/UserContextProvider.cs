@@ -2,18 +2,19 @@
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
-using System.Security.Claims;
-using System.Security.Principal;
+using Pango.Persistence;
 
 namespace Pango.Infrastructure.Services;
 
 public class UserContextProvider : IUserContextProvider
 {
     private readonly IUserRepository _userRepository;
+    private readonly IAppUserProvider _appUserProvider;
 
-    public UserContextProvider(IUserRepository userRepository)
+    public UserContextProvider(IUserRepository userRepository, IAppUserProvider appUserProvider)
     {
         _userRepository = userRepository;
+        _appUserProvider = appUserProvider;
     }
 
     /// <summary>
@@ -34,12 +35,14 @@ public class UserContextProvider : IUserContextProvider
     /// <exception cref="UnauthorizedException">Thrown if there is no aurhorized user</exception>
     public string GetUserName()
     {
-        if (Thread.CurrentPrincipal is not GenericPrincipal principal)
+        string userId = _appUserProvider.GetUserId();
+
+        if (string.IsNullOrEmpty(userId))
         {
             throw new UnauthorizedException();
         }
 
-        return principal.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value ?? "Unknown";
+        return userId;
     }
 
     public async Task<string> GetKeyAsync()

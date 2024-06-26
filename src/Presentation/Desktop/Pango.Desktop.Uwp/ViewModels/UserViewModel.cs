@@ -10,6 +10,7 @@ using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Desktop.Uwp.Security;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,7 +64,7 @@ public class UserViewModel : ViewModelBase
     private void OnSignOut()
     {
         _logger.LogDebug($"User \"{_currentUserName}\" logged out");
-        Thread.CurrentPrincipal = null;
+        SecureUserSession.ClearUser();
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
     }
 
@@ -84,8 +85,7 @@ public class UserViewModel : ViewModelBase
         if (!result.IsError && result.Value)
         {
             _logger.LogDebug($"User \"{_currentUserName}\" successfully deleted");
-            Thread.CurrentPrincipal = null;
-            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(AppView.SignIn)));
+            OnSignOut();
         }
         else
         {

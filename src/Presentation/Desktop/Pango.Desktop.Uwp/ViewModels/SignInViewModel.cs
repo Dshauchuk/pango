@@ -10,6 +10,7 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Desktop.Uwp.Security;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -96,16 +97,16 @@ public class SignInViewModel : ViewModelBase
 
     public override async Task OnNavigatedToAsync(object parameter)
     {
-        if (Thread.CurrentPrincipal is null || string.IsNullOrEmpty(Thread.CurrentPrincipal.Identity?.Name))
+        var currentUser = SecureUserSession.GetUser();
+        if (currentUser is null)
         {
             GoToUserSelection();
             await LoadUsersAsync();
         }
         else
         {
-            Thread.CurrentPrincipal = null;
-
-            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(Thread.CurrentPrincipal.Identity.Name));
+            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(currentUser.UserName));
+            SecureUserSession.ClearUser();
             if (previouslySelectedUser.IsError)
             {
                 await OnNavigatedToAsync(parameter);
