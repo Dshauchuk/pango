@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
@@ -155,6 +156,7 @@ public class EditPasswordViewModel : ViewModelBase
                 else
                 {
                     Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully created");
+                    WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
             else
@@ -168,6 +170,7 @@ public class EditPasswordViewModel : ViewModelBase
                 else
                 {
                     Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully updated");
+                    WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
             

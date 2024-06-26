@@ -1,13 +1,12 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -41,15 +40,19 @@ public sealed partial class PasswordsView : PageBase
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
     {
-        switch(message.Value.NavigatedView)
+        Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        dispatcherQueue.TryEnqueue(() =>
         {
-            case Core.Enums.AppView.EditPassword:
-                PasswordsIndex_Pivot.SelectedIndex = 1;
-                break;
-            case Core.Enums.AppView.PasswordsIndex:
-                PasswordsIndex_Pivot.SelectedIndex = 0;
-                break;
-        }
+            switch (message.Value.NavigatedView)
+            {
+                case Core.Enums.AppView.EditPassword:
+                    PasswordsIndex_Pivot.SelectedIndex = 1;
+                    break;
+                case Core.Enums.AppView.PasswordsIndex:
+                    PasswordsIndex_Pivot.SelectedIndex = 0;
+                    break;
+            }
+        });
     }
 
     private void EditContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

@@ -47,8 +47,8 @@ public static class AppLanguageHelper
             Thread.CurrentThread.CurrentCulture = ci;
             Thread.CurrentThread.CurrentUICulture = ci;
             ApplicationLanguages.PrimaryLanguageOverride = newLanguage.Locale;
-            Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().Reset();
-            Windows.ApplicationModel.Resources.Core.ResourceContext.GetForViewIndependentUse().Reset();
+            //Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().Reset();
+            //Windows.ApplicationModel.Resources.Core.ResourceContext.GetForViewIndependentUse().Reset();
 
             // save new language to the local app settings
             ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] = newLanguage.Locale;
