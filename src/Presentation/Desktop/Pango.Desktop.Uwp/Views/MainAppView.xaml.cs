@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
@@ -11,14 +13,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Windows.ApplicationModel.Resources;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
-using Microsoft.Extensions.DependencyInjection;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Pango.Desktop.Uwp.Views;
 
+[AppView(AppView.MainAppView)]
 public sealed partial class MainAppView : ViewBase
 {
     /// <summary>
@@ -62,7 +62,7 @@ public sealed partial class MainAppView : ViewBase
         if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
             NavigationFrame.Navigate(pageType);
-            appView = pageType.GetCustomAttribute<AppViewAttribute>().View;
+            appView = pageType.GetCustomAttribute<AppViewAttribute>()?.View ?? throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
         }
         else if (args.IsSettingsInvoked)
         {
@@ -70,7 +70,7 @@ public sealed partial class MainAppView : ViewBase
             appView = AppView.Settings;
         }
 
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView, AppView.MainAppView)));
     }
 
     private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)

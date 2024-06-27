@@ -11,8 +11,6 @@ using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
-using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -54,18 +52,22 @@ public class UserViewModel : ViewModelBase
 
     #endregion
 
-    public override Task OnNavigatedToAsync(object parameter)
-    {
-        CurrentUserName = _userContext.GetUserName();
+    #region Overrides
 
-        return Task.CompletedTask;
+    public override async Task OnNavigatedToAsync(object parameter)
+    {
+        await base.OnNavigatedToAsync(parameter);
+
+        CurrentUserName = _userContext.GetUserName();
     }
+
+    #endregion
 
     private void OnSignOut()
     {
         _logger.LogDebug($"User \"{_currentUserName}\" logged out");
         SecureUserSession.ClearUser();
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
     }
 
     private async void OnDeleteUser()

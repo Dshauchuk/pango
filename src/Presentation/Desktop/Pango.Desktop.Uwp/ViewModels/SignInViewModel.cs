@@ -100,6 +100,8 @@ public class SignInViewModel : ViewModelBase
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {
+        await base.OnNavigatedToAsync(parameter);
+
         var currentUser = SecureUserSession.GetUser();
         if (currentUser is null)
         {
@@ -112,7 +114,9 @@ public class SignInViewModel : ViewModelBase
             SecureUserSession.ClearUser();
             if (previouslySelectedUser.IsError)
             {
-                await OnNavigatedToAsync(parameter);
+                GoToUserSelection();
+                await LoadUsersAsync();
+
                 return;
             }
 
@@ -159,7 +163,7 @@ public class SignInViewModel : ViewModelBase
     private void GoToUserCreation()
     {
         SignInStepIndex = (int)SignInStep.CreateUser;
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditUser)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditUser, AppView.SignIn)));
     }
 
     private void GoToCodeEnteringForm()

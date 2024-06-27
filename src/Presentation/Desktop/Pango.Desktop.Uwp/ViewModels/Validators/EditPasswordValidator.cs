@@ -10,7 +10,7 @@ public class EditPasswordValidator : ObservableValidator
     private string _login;
     private string _password;
     private string _title;
-    private string _selectedCatalog;
+    private string? _selectedCatalog;
     private string _notes;
     private Guid? _id;
 
@@ -52,7 +52,7 @@ public class EditPasswordValidator : ObservableValidator
         set => SetProperty(ref _notes, value);
     }
 
-    public string SelectedCatalog
+    public string? SelectedCatalog
     {
         get => _selectedCatalog;
         set => SetProperty(ref _selectedCatalog, value);

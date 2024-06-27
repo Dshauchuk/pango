@@ -1,6 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using Pango.Desktop.Uwp.Core;
 using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
@@ -22,25 +22,35 @@ public sealed class MainAppViewModel : ViewModelBase
     public MainAppViewModel(IAppIdleService appIdleService, ILogger<MainAppViewModel> logger) : base(logger)
     {
         _appIdleService = appIdleService;
+    }
+
+    #region Overrides
+
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
         WeakReferenceMessenger.Default.Register<AutolockIdleChangedMessage>(this, OnAutolockIdleChanged);
     }
 
-    public override Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
+        await base.OnNavigatedToAsync(parameter);
+
         int? blockAppAfterIdleMinutes = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.BlockAppAfterIdleMinutes];
 
         if (blockAppAfterIdleMinutes.HasValue)
         {
             _lockAppIdleId = _appIdleService.StartAppIdle(TimeSpan.FromMinutes(blockAppAfterIdleMinutes.Value), OnLockIdleTimerElapsed);
         }
-        return Task.CompletedTask;
     }
 
-    public override Task OnNavigatedFromAsync(object parameter)
+    public override async Task OnNavigatedFromAsync(object? parameter)
     {
+        await base.OnNavigatedFromAsync(parameter);
         StopLockAppIdle();
-        return Task.CompletedTask;
     }
+
+    #endregion
 
     /// <summary>
     /// Handles lock app idle time changing. Stops current lock app idle timer if <see cref="AutolockIdleChangedMessage"/>.Value is null, 
@@ -73,6 +83,6 @@ public sealed class MainAppViewModel : ViewModelBase
     private void OnLockIdleTimerElapsed()
     {
         StopLockAppIdle();
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.MainAppView)));
     }
 }

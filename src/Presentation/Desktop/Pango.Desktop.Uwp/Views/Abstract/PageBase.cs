@@ -1,23 +1,22 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.ViewModels;
+using System.Diagnostics;
 
 namespace Pango.Desktop.Uwp.Views.Abstract;
 
-public abstract class PageBase : Page
+public abstract class PageBase(ILogger logger) : Page
 {
-    public PageBase(ILogger logger)
-    {
-        Logger = logger;
-    }
-
     public IViewModel ViewModel => (IViewModel)DataContext;
 
-    protected ILogger Logger { get; }
+    protected ILogger Logger { get; } = logger;
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        Debug.WriteLine($"Navigated to {this.GetType().Name}");
+
         RegisterMessages();
 
         base.OnNavigatedTo(e);
@@ -25,6 +24,8 @@ public abstract class PageBase : Page
 
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        Debug.WriteLine($"Navigated from {this.GetType().Name}");
+
         UnregisterMessages();
 
         base.OnNavigatedFrom(e);
@@ -37,11 +38,6 @@ public abstract class PageBase : Page
 
     protected virtual void UnregisterMessages()
     {
-
-    }
-
-    ~PageBase() 
-    { 
-        
+        WeakReferenceMessenger.Default.UnregisterAll(this);
     }
 }

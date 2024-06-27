@@ -53,9 +53,6 @@ public sealed class PasswordsViewModel : ViewModelBase
         EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPasswordAsync, CanEdit);
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
-
-        WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
-        WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
     }
 
     #region Commands
@@ -107,8 +104,18 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    protected override void RegisterMessages()
     {
+        base.RegisterMessages();
+
+        WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
+        WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
+    }
+
+    public override async Task OnNavigatedToAsync(object? parameter)
+    {
+        await base.OnNavigatedToAsync(parameter);
+
         if(!Passwords.Any())
         {
             await ResetViewAsync();
@@ -205,13 +212,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
         else
         {
-            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
+            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
         }
     }
 
     private void OnCreatePassword()
     {
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
     }
 
     private async void OnCreateCatalogAsync()

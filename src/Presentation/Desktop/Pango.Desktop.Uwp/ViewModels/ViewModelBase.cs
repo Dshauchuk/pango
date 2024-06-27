@@ -1,28 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
-using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
-using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
-public abstract class ViewModelBase : ObservableObject, IViewModel
+public abstract class ViewModelBase(ILogger logger) : ObservableObject, IViewModel
 {
     private bool _isBusy;
-
-	public ViewModelBase(ILogger logger)
-	{
-        this.Logger = logger;
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-        ViewResourceLoader = new();// new ResourceLoader();
-    }
 
     #region Properties
 
@@ -32,11 +23,11 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
         set => SetProperty(ref _isBusy, value);
     }
 
-    protected ResourceLoader ViewResourceLoader { get; }
+    protected ResourceLoader ViewResourceLoader { get; } = new();// new ResourceLoader();
 
     protected AppView? View => this.GetType().GetCustomAttribute<AppViewAttribute>()?.View;
 
-    protected ILogger Logger { get; }   
+    protected ILogger Logger { get; } = logger;
     #endregion
 
     #region Methods
@@ -76,26 +67,31 @@ public abstract class ViewModelBase : ObservableObject, IViewModel
         }
     }
 
-    private async void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        if (message.Value.NavigatedView == View)
-        {
-            await OnNavigatedToAsync(message.Value);
-        }
-    }
-
-    public virtual Task OnNavigatedToAsync(object parameter)
-    {
-        Debug.WriteLine($"Navigated to {this.GetType().Name}");
+    public virtual Task OnNavigatedToAsync(object? parameter)
+    {     
+        RegisterMessages();
 
         return Task.CompletedTask;
     }
 
-    public virtual Task OnNavigatedFromAsync(object parameter)
+    public virtual Task OnNavigatedFromAsync(object? parameter)
     {
-        Debug.WriteLine($"Navigated from {this.GetType().Name}");
+        UnregisterMessages();
 
         return Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Cleans all subscriptions and then adds new registrations. Makes sure this method is called before adding new registrations
+    /// </summary>
+    protected virtual void RegisterMessages()
+    {
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
+
+    protected virtual void UnregisterMessages()
+    {
+        WeakReferenceMessenger.Default.UnregisterAll(this);
     }
 
     #endregion

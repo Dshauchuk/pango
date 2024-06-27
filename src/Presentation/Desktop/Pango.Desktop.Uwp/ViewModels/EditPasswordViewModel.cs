@@ -79,13 +79,15 @@ public class EditPasswordViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
+        await base.OnNavigatedToAsync(parameter);
+
         Clear();
 
-        NavigationParameters navigationParameters = parameter as NavigationParameters;
+        NavigationParameters? navigationParameters = parameter as NavigationParameters;
 
-        if (navigationParameters.Value is not EditPasswordParameters parameters)
+        if (navigationParameters?.Parameter is not EditPasswordParameters parameters)
         {
             IsNew = true;
             PasswordValidator.SelectedCatalog = null;
@@ -183,7 +185,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     private void OnOpenIndexView()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.PasswordsIndex)));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.PasswordsIndex, AppView.EditPassword)));
     }
 
     #endregion
