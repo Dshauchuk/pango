@@ -33,7 +33,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private readonly ISender _sender;
     private readonly IDialogService _dialogService;
     private bool _hasPasswords;
-    private PasswordExplorerItem _selectedItem;
+    private PasswordExplorerItem? _selectedItem;
     private ObservableCollection<PasswordExplorerItem> _originalList;
     private string _searchText;
 
@@ -74,7 +74,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     public ObservableCollection<PasswordExplorerItem> Passwords { get; private set; }
 
-    public PasswordExplorerItem SelectedItem
+    public PasswordExplorerItem? SelectedItem
     {
         get => _selectedItem;
         set

@@ -15,7 +15,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -25,11 +24,11 @@ public class SignInViewModel : ViewModelBase
 {
     #region Fields
 
-    private PangoUserDto _selectedUser;
+    private PangoUserDto? _selectedUser;
     private readonly ISender _sender;
     private int _signInStepIndex;
     private bool _hasUsers;
-    private string _passcode;
+    private string? _passcode;
 
     #endregion
 
@@ -46,7 +45,7 @@ public class SignInViewModel : ViewModelBase
 
     #region Events
 
-    public event Action<string> SignInSuceeded;
+    public event Action<string>? SignInSuceeded;
     public event Action<PangoUserDto> UserSelected;
 
     #endregion
@@ -63,17 +62,21 @@ public class SignInViewModel : ViewModelBase
 
     public ObservableCollection<PangoUserDto> Users { get; private set; }
 
-    public PangoUserDto SelectedUser
+    public PangoUserDto? SelectedUser
     {
         get => _selectedUser;
         set
         {
             SetProperty(ref _selectedUser, value);
-            UserSelected?.Invoke(value);
+
+            if(value is not null)
+            {
+                UserSelected?.Invoke(value);
+            }
         }
     }
 
-    public string Passcode
+    public string? Passcode
     {
         get => _passcode;
         set => SetProperty(ref _passcode, value);
@@ -95,7 +98,7 @@ public class SignInViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
         var currentUser = SecureUserSession.GetUser();
         if (currentUser is null)
@@ -125,7 +128,7 @@ public class SignInViewModel : ViewModelBase
     {
         SignInStep step = (SignInStep)stepIndex;
 
-        Logger.LogInformation($"Navigating to {step.ToString()}");
+        Logger.LogInformation($"Navigating to {step}");
 
         switch (step)
         {
@@ -195,6 +198,12 @@ public class SignInViewModel : ViewModelBase
 
     private async Task OnSignIn()
     {
+        if(string.IsNullOrEmpty(SelectedUser?.UserName) || string.IsNullOrEmpty(Passcode))
+        {
+            Logger.LogDebug($"Login failed: empty username or passcode");
+            return;
+        }
+
         var auth = await _sender.Send(new SignInCommand(SelectedUser.UserName, Passcode));
 
         if (auth.IsError)

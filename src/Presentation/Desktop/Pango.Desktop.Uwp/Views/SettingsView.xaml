@@ -98,7 +98,7 @@
                                    Text="{Binding Version}" />
                         <toolkit:SettingsExpander.Items>
                             <toolkit:SettingsCard x:Name="bugRequestCard"
-                                                  Click="bugRequestCard_Click"
+                                                  Click="BugRequestCard_Click"
                                                   Header="File a bug or request new sample"
                                                   IsClickEnabled="True">
                                 <toolkit:SettingsCard.ActionIcon>

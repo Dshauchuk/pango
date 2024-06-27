@@ -26,22 +26,12 @@ namespace Pango.Desktop.Uwp.Views;
 [AppView(AppView.Shell)]
 public sealed partial class Shell : ViewBase
 {
-    #region Fields
-
-    private bool _isWindowActive;
-
-    #endregion
-
     public Shell()
     {
         this.InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();//App.Host.Services.GetRequiredService<ShellViewModel>();
 
         AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
-        
-        //App.Current.CurrentWindow.Activated += Current_Activated;
-        
-        //SetTitleBar();
 
         NavigateInitialPage();
 
@@ -84,42 +74,28 @@ public sealed partial class Shell : ViewBase
 
     private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
     {
-        //object inAppNotificationWithButtonsTemplate;
-        //bool isTemplatePresent = Resources.TryGetValue("InAppNotificationTemplate", out inAppNotificationWithButtonsTemplate);
-
-        //if (isTemplatePresent && inAppNotificationWithButtonsTemplate is DataTemplate)
-        //{
-        //    InAppNotification.Show(inAppNotificationWithButtonsTemplate as DataTemplate,);
-        //}
-
         InAppNotification.Show(message.Message, 3000);
     }
 
     private async void NavigateInitialPage()
     {
         SignInView signInView = new();
-        SignInViewModel signInViewModel = signInView.DataContext as SignInViewModel;
 
-        if (signInView != null)
+        if (signInView.DataContext is SignInViewModel signInViewModel)
         {
             signInViewModel.SignInSuceeded += SignInViewModel_SignInSuceeded;
+
+            AppContent.Content = signInView;
+            await signInViewModel.OnNavigatedToAsync(null);
         }
-
-        AppContent.Content = signInView;
-        await signInViewModel.OnNavigatedToAsync(null);
-    }
-
-    private void SetTitleBar()
-    {
-        // Set the custom title bar to act as a draggable region
-        //App.Current.CurrentWindow.SetTitleBar(TitleBarBorder);
     }
 
     private void SignInViewModel_SignInSuceeded(string userId)
     {
-        SetThreadPrincipal(userId);
+        SetupSession(userId);
+
         // Unsibscribe from the event to prevent memory leak
-        SignInViewModel signInViewModel = (AppContent.Content as SignInView)?.DataContext as SignInViewModel;
+        SignInViewModel? signInViewModel = (AppContent.Content as SignInView)?.DataContext as SignInViewModel;
         if (signInViewModel is not null)
         {
             signInViewModel.SignInSuceeded -= SignInViewModel_SignInSuceeded;
@@ -128,23 +104,9 @@ public sealed partial class Shell : ViewBase
         AppContent.Content = new MainAppView();
     }
 
-    private void SetThreadPrincipal(string userId)
+    private static void SetupSession(string userId)
     {
-        //IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
-        //IPrincipal principal = new GenericPrincipal(new GenericIdentity(userId, "Passport"), new string[] { });
-
-        // Stores current user's principal
-        //Thread.CurrentPrincipal = principal;
-        // Stores application level principal, can be set only once
-        // Uncomment if needed
-        //AppDomain.CurrentDomain.SetThreadPrincipal(principal);
-
         SecureUserSession.SaveUser(userId);
-    }
-
-    private void Current_Activated(object sender, WindowActivatedEventArgs e)
-    {
-        _isWindowActive = e.WindowActivationState != WindowActivationState.Deactivated;
     }
 
     // Select the introduction item when the shell is loaded
@@ -155,17 +117,18 @@ public sealed partial class Shell : ViewBase
 
     public async Task ShowContentDialogAsync(IContentDialog contentDialog)
     {
-        ContentDialog dialog = new();
-
-        // XamlRoot must be set in the case of a ContentDialog running in a Desktop app
-        dialog.XamlRoot = this.XamlRoot;
-        dialog.Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style;
-        dialog.Title = "Save your work?";
-        dialog.PrimaryButtonText = "Save";
-        dialog.SecondaryButtonText = "Don't Save";
-        dialog.CloseButtonText = "Cancel";
-        dialog.DefaultButton = ContentDialogButton.Primary;
-        dialog.Content = contentDialog;
+        ContentDialog dialog = new()
+        {
+            // XamlRoot must be set in the case of a ContentDialog running in a Desktop app
+            XamlRoot = this.XamlRoot,
+            Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+            Title = "Save your work?",
+            PrimaryButtonText = "Save",
+            SecondaryButtonText = "Don't Save",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Primary,
+            Content = contentDialog
+        };
 
         var result = await dialog.ShowAsync();
 

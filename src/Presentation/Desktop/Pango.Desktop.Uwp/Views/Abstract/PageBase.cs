@@ -1,33 +1,47 @@
-﻿using Pango.Desktop.Uwp.ViewModels;
+﻿using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Pango.Desktop.Uwp.ViewModels;
 
 namespace Pango.Desktop.Uwp.Views.Abstract;
 
 public abstract class PageBase : Page
 {
-    public PageBase()
+    public PageBase(ILogger logger)
     {
-        RegisterMessages();
+        Logger = logger;
     }
 
     public IViewModel ViewModel => (IViewModel)DataContext;
 
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
+    protected ILogger Logger { get; }
 
-        //if (ViewModel != null)
-        //    await ViewModel.OnNavigatedToAsync(e.Parameter);
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        RegisterMessages();
+
+        base.OnNavigatedTo(e);
     }
 
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        UnregisterMessages();
+
         base.OnNavigatedFrom(e);
     }
 
     protected virtual void RegisterMessages()
     {
 
+    }
+
+    protected virtual void UnregisterMessages()
+    {
+
+    }
+
+    ~PageBase() 
+    { 
+        
     }
 }
