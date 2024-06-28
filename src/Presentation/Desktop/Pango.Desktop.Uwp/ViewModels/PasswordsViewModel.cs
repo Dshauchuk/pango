@@ -35,7 +35,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private bool _hasPasswords;
     private PasswordExplorerItem? _selectedItem;
     private ObservableCollection<PasswordExplorerItem> _originalList;
-    private string _searchText;
+    private string _searchText = string.Empty;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
@@ -126,7 +126,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Event&Command Handlers
 
-    private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private void Passwords_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
         HasPasswords = Passwords.Any(p => p.IsVisible);
@@ -142,8 +142,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
-    private async void OnCopyPasswordToClipboard(PasswordExplorerItem dto)
+    private async void OnCopyPasswordToClipboard(PasswordExplorerItem? dto)
     {
+        if(dto is null)
+        {
+            return;
+        }
+
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
 
         if (!passwordResult.IsError)
@@ -160,8 +165,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnDeleteAsync(PasswordExplorerItem dto)
+    private async void OnDeleteAsync(PasswordExplorerItem? dto)
     {
+        if (dto is null)
+        {
+            return;
+        }
+
         string confirmationTitle = ViewResourceLoader.GetString("Confirm_PasswordDeletion");
         string confirmationDescription;
 
@@ -197,7 +207,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnEditPasswordAsync(PasswordExplorerItem selected)
+    private async void OnEditPasswordAsync(PasswordExplorerItem? selected)
     {
         if(selected is null)
         {
@@ -240,7 +250,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// Handles the command to filter passwords content
     /// </summary>
     /// <param name="searchText"></param>
-    private void OnFilterAsync(string searchText)
+    private void OnFilterAsync(string? searchText)
     {
         Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
         foreach(PasswordExplorerItem password in Passwords)
@@ -257,7 +267,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="node"></param>
     /// <param name="searchPredicate"></param>
     /// <returns></returns>
-    private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
+    private static bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
     {
         if(node is null)
         {
@@ -292,7 +302,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    private bool CanDelete(PasswordExplorerItem item)
+    private bool CanDelete(PasswordExplorerItem? item)
     {
         return item != null;
     }
@@ -302,7 +312,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    private bool CanEdit(PasswordExplorerItem item)
+    private bool CanEdit(PasswordExplorerItem? item)
     {
         return item != null;
     }
@@ -333,12 +343,12 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (queryResult.IsError)
         {
-            Logger.LogError($"Loaded passwords failed: {queryResult.FirstError}");
+            Logger.LogError("Loaded passwords failed: {FirstError}", queryResult.FirstError);
             return [];
         }
         else
         {
-            Logger.LogDebug($"Loaded {queryResult.Value.Count(p => !p.IsCatalog)} passwords");
+            Logger.LogDebug("Loaded {count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
             return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
         }
     }
@@ -382,7 +392,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="password"></param>
     /// <param name="catalogs"></param>
     /// <returns></returns>
-    private bool AddPassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password, Queue<string> catalogs)
+    private bool AddPassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password, Queue<string>? catalogs)
     {
         if(catalogs is null || catalogs.Count == 0)
         {
@@ -391,7 +401,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
 
         string catalogName = catalogs.Dequeue();
-        PasswordExplorerItem catalog = passwords.FirstOrDefault(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder && p.Name == catalogName);
+        PasswordExplorerItem? catalog = passwords.FirstOrDefault(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder && p.Name == catalogName);
 
         if (catalog is null)
         {
@@ -415,7 +425,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="sortedPasswordsList">already sorted collection of passwords</param>
     /// <param name="passwordToInsert">a password to add into the <paramref name="sortedPasswordsList"/></param>
-    private void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
+    private static void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
     {
         if (!sortedPasswordsList.Any())
         {
@@ -468,7 +478,7 @@ public sealed class PasswordsViewModel : ViewModelBase
             return false;
         }
 
-        PasswordExplorerItem passwordToRemove = passwords.FirstOrDefault(p => p.Id == password.Id);
+        PasswordExplorerItem? passwordToRemove = passwords.FirstOrDefault(p => p.Id == password.Id);
 
         if(passwordToRemove is not null)
         {
@@ -542,7 +552,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (catalogs.Any())
         {
-            catalogs.Insert(0, "");
+            catalogs.Insert(0, string.Empty);
         }
 
         return catalogs;
@@ -553,7 +563,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <returns></returns>
     private string GetPathToSelectedFolder()
-        => SelectedItem == null ? null :
+        => SelectedItem == null ? string.Empty :
             SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ?
             SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
             SelectedItem.CatalogPath;

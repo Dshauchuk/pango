@@ -1,24 +1,20 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.ComponentModel.DataAnnotations;
-using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.ViewModels.Validators;
 
 public class EditPasswordValidator : ObservableValidator
 {
-    private string _login;
-    private string _password;
-    private string _title;
+    private string _login = string.Empty;
+    private string _password = string.Empty;
+    private string _title = string.Empty;
     private string? _selectedCatalog;
-    private string _notes;
+    private string _notes = string.Empty;
     private Guid? _id;
-
-    private ResourceLoader _viewResourceLoader;
 
     public EditPasswordValidator()
     {
-        _viewResourceLoader = new ResourceLoader();
     }
 
     public Guid? Id

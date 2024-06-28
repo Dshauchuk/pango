@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -12,7 +13,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Windows.Storage;
-using Microsoft.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -32,18 +32,20 @@ public class SettingsViewModel : ViewModelBase
     {
         Languages = new ObservableCollection<AppLanguage>(AppLanguage.GetAppLanguageCollection());
         AppThemes = new ObservableCollection<AppTheme>(Enum.GetValues(typeof(ElementTheme)).Cast<ElementTheme>().Select(e => new AppTheme { Name = ViewResourceLoader.GetString($"AppTheme_{e}"), Value = (int)e }));
+        
         string localizedMinutes = ViewResourceLoader.GetString("Minute(-s)");
         LockOnIdleInMinutesItems = new ObservableCollection<KeyValuePair<int, string>>(new List<KeyValuePair<int, string>>
         {
-            new KeyValuePair<int, string>(1, $"1 {localizedMinutes}"),
-            new KeyValuePair<int, string>(3, $"3 {localizedMinutes}"),
-            new KeyValuePair<int, string>(5, $"5 {localizedMinutes}"),
-            new KeyValuePair<int, string>(10, $"10 {localizedMinutes}"),
-            new KeyValuePair<int, string>(15, $"15 {localizedMinutes}"),
-            new KeyValuePair<int, string>(30, $"30 {localizedMinutes}")
+            new(1, $"1 {localizedMinutes}"),
+            new(3, $"3 {localizedMinutes}"),
+            new(5, $"5 {localizedMinutes}"),
+            new(10, $"10 {localizedMinutes}"),
+            new(15, $"15 {localizedMinutes}"),
+            new(30, $"30 {localizedMinutes}")
         });
 
-        _selectedLanguage = Languages.FirstOrDefault(e => e.Locale == AppLanguageHelper.GetAppliedAppLanguage().Locale) ?? Languages.First();
+        string appliedLocale = AppLanguageHelper.GetAppliedAppLanguage().Locale;
+        _selectedLanguage = Languages.FirstOrDefault(e => e.Locale == appliedLocale) ?? Languages.First();
         _selectedAppTheme = AppThemes.First(e => e.Value == (int)AppThemeHelper.Theme);
 
         int? blockAppAfterIdleMinutes = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.BlockAppAfterIdleMinutes];
@@ -61,12 +63,12 @@ public class SettingsViewModel : ViewModelBase
 
     #region Properties
 
-    public string Version
+    public static string Version
     {
         get
         {
-            var version = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
-            return string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
+            var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+            return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
         }
     }
 
@@ -80,8 +82,8 @@ public class SettingsViewModel : ViewModelBase
             if (value is not null)
             {
                 AppLanguageHelper.ChangeAppLanguage(value, typeof(SettingsView));
+                SetProperty(ref _selectedLanguage, value);
             }
-            SetProperty(ref _selectedLanguage, value);
         }
     }
 
@@ -92,12 +94,15 @@ public class SettingsViewModel : ViewModelBase
         get => _selectedAppTheme;
         set
         {
-            ElementTheme? elementTheme = (ElementTheme)value?.Value;
-            if (elementTheme.HasValue && elementTheme.Value != AppThemeHelper.Theme)
+            if(value != null)
             {
-                AppThemeHelper.SetTheme(elementTheme.Value);
+                ElementTheme? elementTheme = (ElementTheme)value.Value;
+                if (elementTheme.HasValue && elementTheme.Value != AppThemeHelper.Theme)
+                {
+                    AppThemeHelper.SetTheme(elementTheme.Value);
+                }
+                SetProperty(ref _selectedAppTheme, value);
             }
-            SetProperty(ref _selectedAppTheme, value);
         }
     }
 

@@ -25,25 +25,11 @@ public sealed partial class Shell : ViewBase
     public Shell()
     {
         this.InitializeComponent();
-        DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();//App.Host.Services.GetRequiredService<ShellViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();
 
-        AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
-
+        SetApplicationLanguage();
         NavigateInitialPage();
         RegisterMessages();
-    }
-
-    private void OnAppThemeChanged(object recipient, AppThemeChangedMessage message)
-    {
-        ShellRootElement.RequestedTheme = message.Value;
-    }
-
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        if(message.Value.NavigatedView == AppView.SignIn)
-        {
-            NavigateInitialPage();
-        }
     }
 
     #region Overrides
@@ -61,6 +47,19 @@ public sealed partial class Shell : ViewBase
     #endregion
 
     #region Event Handlers
+
+    private void OnAppThemeChanged(object recipient, AppThemeChangedMessage message)
+    {
+        ShellRootElement.RequestedTheme = message.Value;
+    }
+
+    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    {
+        if (message.Value.NavigatedView == AppView.SignIn)
+        {
+            NavigateInitialPage();
+        }
+    }
 
     private void OnAppLanguageChanged(object recipient, AppLanguageChangedMessage message)
     {
@@ -93,6 +92,11 @@ public sealed partial class Shell : ViewBase
     #endregion
 
     #region Private Methods
+
+    private void SetApplicationLanguage()
+    {
+        AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
+    }
 
     private async void NavigateInitialPage()
     {

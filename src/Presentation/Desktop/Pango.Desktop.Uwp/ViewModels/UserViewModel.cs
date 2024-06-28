@@ -22,7 +22,7 @@ public class UserViewModel : ViewModelBase
     private readonly IUserContextProvider _userContext;
     private readonly ILogger<UserViewModel> _logger;
     private readonly IDialogService _dialogService;
-    private string _currentUserName;
+    private string _currentUserName = string.Empty;
 
     public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService) : base(logger)
     {
@@ -54,7 +54,7 @@ public class UserViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
 
@@ -65,7 +65,7 @@ public class UserViewModel : ViewModelBase
 
     private void OnSignOut()
     {
-        _logger.LogDebug($"User \"{_currentUserName}\" logged out");
+        _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
         SecureUserSession.ClearUser();
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
     }
@@ -86,12 +86,12 @@ public class UserViewModel : ViewModelBase
 
         if (!result.IsError && result.Value)
         {
-            _logger.LogDebug($"User \"{_currentUserName}\" successfully deleted");
+            _logger.LogDebug("User \"{currentUserName}\" successfully deleted", _currentUserName);
             OnSignOut();
         }
         else
         {
-            _logger.LogWarning($"User deletion failed: {result.FirstError}");
+            _logger.LogWarning("User deletion failed: {FirstError}", result.FirstError);
         }
     }
 }

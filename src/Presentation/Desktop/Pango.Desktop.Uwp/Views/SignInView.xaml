@@ -138,9 +138,6 @@
                                  KeyDown="PasscodePasswordBox_KeyDown"
                                  Password="{Binding Passcode, Mode=TwoWay}"
                                  PlaceholderText="{loc:StringResource Key=EnterMastercode}">
-                        <!--<interactivity:Interaction.Behaviors>
-                            <behaviors:AutoFocusBehavior />
-                        </interactivity:Interaction.Behaviors>-->
                     </PasswordBox>
 
                     <Grid Grid.Row="2"
@@ -148,8 +145,7 @@
                                 VerticalAlignment="Center"
                                 HorizontalAlignment="Stretch">
 
-                        <Button Margin="5" 
-                                HorizontalAlignment="Left"
+                        <Button HorizontalAlignment="Left"
                                 Command="{Binding Path=NavigateToStepCommand}"
                                 Content="{loc:StringResource Key=ChangeUser}">
                             <Button.CommandParameter>
@@ -157,8 +153,7 @@
                             </Button.CommandParameter>
                         </Button>
 
-                        <Button Margin="5" 
-                                HorizontalAlignment="Right"
+                        <Button HorizontalAlignment="Right"
                                 Command="{Binding Path=SignInCommand}" 
                                 Content="{loc:StringResource Key=SignIn}"
                                 Style="{StaticResource AccentButtonStyle}"/>

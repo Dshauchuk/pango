@@ -204,7 +204,7 @@ public class SignInViewModel : ViewModelBase
     {
         if(string.IsNullOrEmpty(SelectedUser?.UserName) || string.IsNullOrEmpty(Passcode))
         {
-            Logger.LogDebug($"Login failed: empty username or passcode");
+            Logger.LogDebug("Login failed: empty username or passcode");
             return;
         }
 
@@ -213,7 +213,7 @@ public class SignInViewModel : ViewModelBase
         if (auth.IsError)
         {
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
-            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": {auth.FirstError.Code}. {auth.FirstError.Description}");
+            Logger.LogDebug("Login failed for user \"{UserName}\": {Code}. {Description}", SelectedUser.UserName, auth.FirstError.Code, auth.FirstError.Description);
 
             return;
         }
@@ -222,13 +222,13 @@ public class SignInViewModel : ViewModelBase
         {
             // show error
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
-            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": User name or password is wrong");
+            Logger.LogDebug("Login failed for user \"{UserName}\": User name or password is wrong", SelectedUser.UserName);
 
             return;
         }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
-        Logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
+        Logger.LogDebug("User \"{UserName}\" successfully signed in", SelectedUser.UserName);
     }
 
     #endregion

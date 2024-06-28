@@ -28,9 +28,8 @@ public class EditPasswordViewModel : ViewModelBase
 
     private readonly ISender _sender;
     private bool _isNew;
-    private List<string> _availableCatalogs;
-
-    private EditPasswordValidator _passwordValidator;
+    private List<string>? _availableCatalogs;
+    private EditPasswordValidator? _passwordValidator;
 
     #endregion
 
@@ -44,7 +43,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     #region Properties
 
-    public EditPasswordValidator PasswordValidator
+    public EditPasswordValidator? PasswordValidator
     {
         get => _passwordValidator;
         set => SetProperty(ref _passwordValidator, value);
@@ -56,7 +55,7 @@ public class EditPasswordViewModel : ViewModelBase
         set => SetProperty(ref _isNew, value);
     }
 
-    public List<string> AvailableCatalogs
+    public List<string>? AvailableCatalogs
     {
         get => _availableCatalogs;
         set
@@ -90,7 +89,7 @@ public class EditPasswordViewModel : ViewModelBase
         if (navigationParameters?.Parameter is not EditPasswordParameters parameters)
         {
             IsNew = true;
-            PasswordValidator.SelectedCatalog = null;
+            PasswordValidator!.SelectedCatalog = null;
 
             return;
         }
@@ -120,7 +119,7 @@ public class EditPasswordViewModel : ViewModelBase
             }
             else
             {
-                PasswordValidator.SelectedCatalog = parameters.Catalog;
+                PasswordValidator!.SelectedCatalog = parameters.Catalog;
             }
         }
     }
@@ -136,24 +135,28 @@ public class EditPasswordViewModel : ViewModelBase
 
     private async void OnSavePassword()
     {
-        PasswordValidator.Validate();
+        PasswordValidator!.Validate();
 
         if (!PasswordValidator.HasErrors)
         {
-            Dictionary<string, string> props = new()
-            {
-                { PasswordProperties.Notes, PasswordValidator.Notes }
-            };
-
             ErrorOr.ErrorOr<PangoPasswordDto> result;
 
             if (IsNew)
             {
-                result = await _sender.Send(new NewPasswordCommand(PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
+                result = 
+                    await _sender.Send(
+                        new NewPasswordCommand(
+                            PasswordValidator.Title, 
+                            PasswordValidator.Login, 
+                            PasswordValidator.Password, 
+                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes }}) 
+                        { 
+                            CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
+                        });
 
                 if(result.IsError)
                 {
-                    Logger.LogError($"Creating password \"{PasswordValidator.Title}\" failed: {result.FirstError}");
+                    Logger.LogError("Creating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
                 }
                 else
                 {
@@ -163,15 +166,25 @@ public class EditPasswordViewModel : ViewModelBase
             }
             else
             {
-                result = await _sender.Send(new UpdatePasswordCommand(PasswordValidator.Id.Value, PasswordValidator.Title, PasswordValidator.Login, PasswordValidator.Password, props) { CatalogPath = PasswordValidator.SelectedCatalog });
+                result = 
+                    await _sender.Send(
+                        new UpdatePasswordCommand(
+                            PasswordValidator.Id!.Value, 
+                            PasswordValidator.Title, 
+                            PasswordValidator.Login, 
+                            PasswordValidator.Password, 
+                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } }) 
+                        { 
+                            CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
+                        });
 
                 if (result.IsError)
                 {
-                    Logger.LogError($"Updating password \"{PasswordValidator.Title}\" failed: {result.FirstError}");
+                    Logger.LogError("Updating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
                 }
                 else
                 {
-                    Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully updated");
+                    Logger.LogDebug("Password \"{Title}\" successfully updated", PasswordValidator.Title);
                     WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }

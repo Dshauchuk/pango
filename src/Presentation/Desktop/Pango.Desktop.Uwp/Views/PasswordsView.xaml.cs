@@ -24,15 +24,7 @@ public sealed partial class PasswordsView : PageBase
         PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
     }
 
-    private void PasswordsTreeView_ItemInvoked(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
-    {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-
-        if (viewModel is not null)
-        {
-            viewModel.SelectedItem = args.InvokedItem as PasswordExplorerItem;
-        }
-    }
+    #region Overrides
 
     protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
@@ -66,6 +58,20 @@ public sealed partial class PasswordsView : PageBase
     {
         base.UnregisterMessages();
         WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void PasswordsTreeView_ItemInvoked(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+
+        if (viewModel is not null)
+        {
+            viewModel.SelectedItem = args.InvokedItem as PasswordExplorerItem;
+        }
     }
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
@@ -128,4 +134,6 @@ public sealed partial class PasswordsView : PageBase
             viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
         }
     }
+
+    #endregion
 }

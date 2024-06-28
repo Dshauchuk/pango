@@ -26,8 +26,8 @@ public class AppIdleService : IAppIdleService
 
         if (_timerActions.Count == 1)
         {
-            App.Current.CurrentWindow.PointerMoved += OnWindowPointerMoved;
-            App.Current.CurrentWindow.KeyDown += OnWindowKeyDown;
+            App.Current.CurrentWindow!.PointerMoved += OnWindowPointerMoved;
+            App.Current.CurrentWindow!.KeyDown += OnWindowKeyDown;
         }
 
         return appIdleId;
@@ -45,8 +45,8 @@ public class AppIdleService : IAppIdleService
 
         if (_timerActions.Count == 1)
         {
-            App.Current.CurrentWindow.PointerMoved -= OnWindowPointerMoved;
-            App.Current.CurrentWindow.KeyDown -= OnWindowKeyDown;
+            App.Current.CurrentWindow!.PointerMoved -= OnWindowPointerMoved;
+            App.Current.CurrentWindow!.KeyDown -= OnWindowKeyDown;
         }
 
         _timerActions.Remove(appIdleId);
@@ -64,12 +64,12 @@ public class AppIdleService : IAppIdleService
         }
     }
 
-    private void OnWindowPointerMoved(object sender, PointerRoutedEventArgs args)
+    private void OnWindowPointerMoved(object? sender, PointerRoutedEventArgs args)
     {
         RestartAllTimers();
     }
 
-    private void OnWindowKeyDown(object sender, KeyRoutedEventArgs args)
+    private void OnWindowKeyDown(object? sender, KeyRoutedEventArgs args)
     {
         RestartAllTimers();
     }

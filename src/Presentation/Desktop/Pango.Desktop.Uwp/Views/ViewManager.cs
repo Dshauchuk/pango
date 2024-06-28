@@ -50,7 +50,7 @@ namespace Pango.Desktop.Uwp.Views
                 
             if(appView == AppView.MainAppView || appView == AppView.SignIn)
             {
-                _logger.LogDebug($"{appView} view should not be registered");
+                _logger.LogDebug("{appView} view should not be registered", appView);
                 return;
             }
 

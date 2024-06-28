@@ -23,7 +23,7 @@ public abstract class ViewModelBase(ILogger logger) : ObservableObject, IViewMod
         set => SetProperty(ref _isBusy, value);
     }
 
-    protected ResourceLoader ViewResourceLoader { get; } = new();// new ResourceLoader();
+    protected ResourceLoader ViewResourceLoader { get; } = new();
 
     protected AppView? View => this.GetType().GetCustomAttribute<AppViewAttribute>()?.View;
 

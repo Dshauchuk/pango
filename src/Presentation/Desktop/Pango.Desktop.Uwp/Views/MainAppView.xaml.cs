@@ -24,27 +24,29 @@ public sealed partial class MainAppView : ViewBase
     /// <summary>
     /// Contains Type of a view to which User should be redirected, when the View will be loaded
     /// </summary>
-    private Type _initialView;
+    private Type? _initialView;
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
     private ResourceLoader _viewResourceLoader;
 
-    public MainAppView(Type initialView = null)
+    public MainAppView(Type? initialView = null)
     {
         this.InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<MainAppViewModel>();
+
         _initialView = initialView;
+        _viewResourceLoader = new ResourceLoader();
 
         Loaded += MainAppView_Loaded;
 
-        NavigationItems = new[]
-        {
+        NavigationItems =
+        [
             new NavigationEntry(HomeItem, typeof(HomeView)),
             new NavigationEntry(PasswordsItem, typeof(PasswordsView)),
             new NavigationEntry(UserItem, typeof(UserView))
-        };
-
-        _viewResourceLoader = new ResourceLoader();
+        ];
     }
+
+    #region Event Handlers
 
     private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
@@ -87,6 +89,8 @@ public sealed partial class MainAppView : ViewBase
             NavigationFrame.GoBack();
         }
     }
+
+    #endregion
 
     /// <summary>
     /// Navigates the User to the <see cref="_initialView"/> page if it specified. If <see cref="_initialView"/> does not specified or incorrect - navigates to the default initial page

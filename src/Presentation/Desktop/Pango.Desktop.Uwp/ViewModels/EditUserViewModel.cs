@@ -24,6 +24,7 @@ public sealed class EditUserViewModel : ViewModelBase
     public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger): base(logger)
     {
         _sender = sender;
+        _userValidator = new();
 
         OpenSignInViewCommand = new RelayCommand(OnOpenSignInView);
         SaveUserComand = new RelayCommand(OnSaveUser);

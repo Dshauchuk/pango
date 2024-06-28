@@ -50,7 +50,7 @@ public sealed partial class MainWindow : Window
     // see https://github.com/microsoft/microsoft-ui-xaml/issues/2945
 
     internal delegate IntPtr WinProc(IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam);
-    internal WinProc newWndProc = null;
+    internal WinProc? newWndProc = null;
     internal IntPtr oldWndProc = IntPtr.Zero;
     [DllImport("user32")]
     private static extern IntPtr SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc);
