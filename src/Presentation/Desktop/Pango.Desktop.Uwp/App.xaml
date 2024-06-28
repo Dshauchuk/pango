@@ -14,6 +14,7 @@
                         <ResourceDictionary Source="Resources/Styles/Text.xaml" />
                         <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/TextBlockStyles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/TextBoxStyles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/ToggleSwitchStyles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/TreeViewStyles.xaml" />
                         

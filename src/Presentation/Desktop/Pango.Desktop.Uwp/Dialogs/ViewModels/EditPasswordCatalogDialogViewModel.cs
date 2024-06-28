@@ -21,11 +21,11 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
 {
     private readonly ISender _sender;
-    private string _newCatalogName;
-    private string _initialCatalog;
-    private List<string> _availableCatalogs;
-    private List<string> _existingCatalogs;
-    private PasswordExplorerItem _selectedCatalog;
+    private string _newCatalogName = string.Empty;
+    private string _initialCatalog = string.Empty;
+    private List<string>? _availableCatalogs;
+    private List<string>? _existingCatalogs;
+    private PasswordExplorerItem? _selectedCatalog;
 
     public RelayCommand SaveCommand { get; }
 
@@ -59,7 +59,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
         }
     }
 
-    public List<string> AvailableCatalogs
+    public List<string>? AvailableCatalogs
     {
         get => _availableCatalogs;
         set
@@ -81,12 +81,12 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public bool CanSave()
     {
-        return !string.IsNullOrWhiteSpace(NewCatalogName) && !_existingCatalogs.Contains(NewCatalogName);
+        return !string.IsNullOrWhiteSpace(NewCatalogName) && (_existingCatalogs != null && !_existingCatalogs.Contains(NewCatalogName));
     }
 
     public void Initialize(EditCatalogParameters editCatalogParameters)
     {
-        editCatalogParameters ??= new([], null, null, []);
+        editCatalogParameters ??= new([], string.Empty, null, []);
 
         _selectedCatalog = editCatalogParameters.SelectedCatalog;
         _existingCatalogs = editCatalogParameters.ExistingCatalogs;
@@ -95,7 +95,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
         NewCatalogName = editCatalogParameters.SelectedCatalog?.Name ?? string.Empty;
         InitialCatalog = editCatalogParameters.SelectedCatalog?.CatalogPath ?? editCatalogParameters?.DefaultCatalog ?? string.Empty;
 
-        IsNew = editCatalogParameters.SelectedCatalog is null;
+        IsNew = editCatalogParameters!.SelectedCatalog is null;
     }
 
     public Task OnCancelAsync()
@@ -111,7 +111,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
             if (result.IsError)
             {
-                Logger.LogError($"Creating catalog \"{NewCatalogName}\" failed: {result.FirstError}");
+                Logger.LogError("Creating catalog \"{NewCatalogName}\" failed: {FirstError}", NewCatalogName, result.FirstError);
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogCreationFailed_Format"), NewCatalogName), Core.Enums.AppNotificationType.Warning));
             }
             else
@@ -119,16 +119,16 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
                 var entity = result.Value.Adapt<PangoPasswordListItemDto>();
                 WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogCreated_Format"), NewCatalogName)));
-                Logger.LogDebug($"Catalog \"{NewCatalogName}\" successfully created");
+                Logger.LogDebug("Catalog \"{NewCatalogName}\" successfully created", NewCatalogName);
             }
         }
         else
         {
-            ErrorOr.ErrorOr<PangoPasswordDto> result = await _sender.Send(new UpdatePasswordCommand(_selectedCatalog.Id, NewCatalogName, null, null) { IsCatalogHolder = true, CatalogPath = InitialCatalog });
+            ErrorOr.ErrorOr<PangoPasswordDto> result = await _sender.Send(new UpdatePasswordCommand(_selectedCatalog!.Id, NewCatalogName, string.Empty, string.Empty) { IsCatalogHolder = true, CatalogPath = InitialCatalog });
 
             if (result.IsError)
             {
-                Logger.LogError($"Updating catalog \"{NewCatalogName}\" failed: {result.FirstError}");
+                Logger.LogError("Updating catalog \"{NewCatalogName}\" failed: {FirstError}", NewCatalogName, result.FirstError);
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogUpdateFailed_Format"), NewCatalogName), Core.Enums.AppNotificationType.Warning));
             }
             else
@@ -137,7 +137,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
                 WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("CatalogUpdated_Format"), NewCatalogName)));
 
-                Logger.LogDebug($"Catalog \"{NewCatalogName}\" successfully updated");
+                Logger.LogDebug("Catalog \"{NewCatalogName}\" successfully updated", NewCatalogName);
             }
         }
     }

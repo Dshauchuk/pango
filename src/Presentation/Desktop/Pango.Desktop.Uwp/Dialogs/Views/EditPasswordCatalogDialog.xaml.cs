@@ -37,5 +37,5 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
 
     public string Title { get; private set; }
 
-    public IDialogViewModel ViewModel => DataContext as EditPasswordCatalogDialogViewModel;
+    public IDialogViewModel? ViewModel => DataContext as EditPasswordCatalogDialogViewModel;
 }

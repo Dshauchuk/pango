@@ -1,11 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.Views;
 using System;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Dialogs;
 
@@ -27,7 +27,7 @@ public class DialogService : IDialogService
         var viewResourceLoader = new ResourceLoader();
         ContentDialog subscribeDialog = new()
         {
-            XamlRoot = App.Current.CurrentWindow.Content.XamlRoot,
+            XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
             Title = confirmationTitle,
             Content = confirmationText,
             CloseButtonText = viewResourceLoader.GetString("Cancel"),
@@ -46,7 +46,7 @@ public class DialogService : IDialogService
 
         ContentDialog dialog = new()
         {
-            XamlRoot = App.Current.CurrentWindow.Content.XamlRoot,
+            XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             Title = dialogContent.Title,
             PrimaryButtonText = viewResourceLoader.GetString("Save"),
@@ -61,7 +61,7 @@ public class DialogService : IDialogService
 
         // register a handler for any change of the dialog content
         dialogContent.ViewModel.DialogContext.OnContentChanged += DialogContext_OnContentChanged;
-        void DialogContext_OnContentChanged(object sender, EventArgs e)
+        void DialogContext_OnContentChanged(object? sender, EventArgs e)
         {
             dialog.IsPrimaryButtonEnabled = dialogContent.ViewModel.CanSave();
         }

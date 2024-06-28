@@ -117,4 +117,12 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Resources\Styles\TextBoxStyles.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Resources\Styles\TextBoxStyles.xaml">
+	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  </Page>
+	</ItemGroup>
 </Project>
