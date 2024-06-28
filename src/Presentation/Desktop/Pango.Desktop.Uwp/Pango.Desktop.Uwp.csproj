@@ -23,6 +23,7 @@
 		<AppxBundle>Never</AppxBundle>
 		<AppInstallerUri>D:\Projects\Pango\pango\src\Presentation\Desktop\Pango.Desktop.Uwp\AppPackages\Installer</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 	
 	<ItemGroup>

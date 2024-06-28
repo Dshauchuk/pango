@@ -24,6 +24,12 @@ public sealed partial class MainWindow : Window
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(this.TitleBarBorder);
 
+#if DEBUG
+        Title = "Pango Debug";
+#else
+        Title = "Pango";
+#endif
+
         // track user's activity for IDLE
         RootGrid.PointerMoved += RootGrid_PointerMoved;
         RootGrid.KeyDown += RootGrid_KeyDown;
