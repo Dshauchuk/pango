@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -107,6 +107,24 @@ public sealed class ValidationPasswordBox : ContentControl
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
+        nameof(IsReadOnly),
+        typeof(bool),
+        typeof(ValidationPasswordBox),
+        new PropertyMetadata(default(bool)));
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool IsReadOnly
+    {
+        get => (bool)GetValue(IsReadOnlyProperty);
+        set => SetValue(IsReadOnlyProperty, value);
+    }
+
+    /// <summary>
     /// The <see cref="DependencyProperty"/> backing <see cref="PlaceholderText"/>.
     /// </summary>
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(
@@ -156,7 +174,7 @@ public sealed class ValidationPasswordBox : ContentControl
 
         Clipboard.SetContent(dataPackage);
 
-        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ResourceLoader.GetForCurrentView().GetString("PasswordCopiedToClipboard")));
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(new ResourceLoader().GetString("PasswordCopiedToClipboard")));
     }
 
     private void RevealButton_Unchecked(object sender, RoutedEventArgs e)

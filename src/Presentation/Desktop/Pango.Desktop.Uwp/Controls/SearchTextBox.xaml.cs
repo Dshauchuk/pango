@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
-using Windows.UI.Xaml;
-using Windows.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -100,7 +100,7 @@ public sealed class SearchTextBox : ContentControl
 
     #region Handlers
 
-    private void TextBox_KeyUp(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void TextBox_KeyUp(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
         if(e.Key == Windows.System.VirtualKey.Enter)
         {

@@ -10,8 +10,7 @@ using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using System;
-using System.Threading;
+using Pango.Desktop.Uwp.Security;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -23,7 +22,7 @@ public class UserViewModel : ViewModelBase
     private readonly IUserContextProvider _userContext;
     private readonly ILogger<UserViewModel> _logger;
     private readonly IDialogService _dialogService;
-    private string _currentUserName;
+    private string _currentUserName = string.Empty;
 
     public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService) : base(logger)
     {
@@ -53,18 +52,22 @@ public class UserViewModel : ViewModelBase
 
     #endregion
 
-    public override Task OnNavigatedToAsync(object parameter)
-    {
-        CurrentUserName = _userContext.GetUserName();
+    #region Overrides
 
-        return Task.CompletedTask;
+    public override async Task OnNavigatedToAsync(object? parameter)
+    {
+        await base.OnNavigatedToAsync(parameter);
+
+        CurrentUserName = _userContext.GetUserName();
     }
+
+    #endregion
 
     private void OnSignOut()
     {
-        _logger.LogDebug($"User \"{_currentUserName}\" logged out");
-        Thread.CurrentPrincipal = null;
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn)));
+        _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
+        SecureUserSession.ClearUser();
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
     }
 
     private async void OnDeleteUser()
@@ -83,13 +86,12 @@ public class UserViewModel : ViewModelBase
 
         if (!result.IsError && result.Value)
         {
-            _logger.LogDebug($"User \"{_currentUserName}\" successfully deleted");
-            Thread.CurrentPrincipal = null;
-            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(AppView.SignIn)));
+            _logger.LogDebug("User \"{currentUserName}\" successfully deleted", _currentUserName);
+            OnSignOut();
         }
         else
         {
-            _logger.LogWarning($"User deletion failed: {result.FirstError}");
+            _logger.LogWarning("User deletion failed: {FirstError}", result.FirstError);
         }
     }
 }

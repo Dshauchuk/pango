@@ -5,7 +5,9 @@ namespace Pango.Desktop.Uwp.Dialogs;
 
 public interface IDialogService
 {
-    Task ShowNewCatalogDialog(EditCatalogParameters catalogParameters);
+    Task ShowNewCatalogDialogAsync(EditCatalogParameters catalogParameters);
+
+    Task ShowPasswordDetailsAsync(PasswordDetailsParameters passwordDetailsParameters);
 
     Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText);
 }

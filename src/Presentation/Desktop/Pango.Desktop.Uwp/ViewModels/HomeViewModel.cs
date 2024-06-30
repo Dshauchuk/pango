@@ -12,12 +12,12 @@ public sealed class HomeViewModel : ObservableRecipient, IViewModel
     {
     }
 
-    public Task OnNavigatedToAsync(object parameter)
+    public Task OnNavigatedToAsync(object? parameter)
     {
         return Task.CompletedTask;
     }
 
-    public Task OnNavigatedFromAsync(object parameter)
+    public Task OnNavigatedFromAsync(object? parameter)
     { 
         return Task.CompletedTask; 
     }

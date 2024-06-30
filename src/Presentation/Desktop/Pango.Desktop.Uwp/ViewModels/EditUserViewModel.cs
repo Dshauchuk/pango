@@ -24,6 +24,7 @@ public sealed class EditUserViewModel : ViewModelBase
     public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger): base(logger)
     {
         _sender = sender;
+        _userValidator = new();
 
         OpenSignInViewCommand = new RelayCommand(OnOpenSignInView);
         SaveUserComand = new RelayCommand(OnSaveUser);
@@ -48,11 +49,11 @@ public sealed class EditUserViewModel : ViewModelBase
 
     #region Overrides
 
-    public override Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
-        Clear();
+        await base.OnNavigatedToAsync(parameter);
 
-        return Task.CompletedTask;
+        Clear();
     }
 
     #endregion
@@ -77,7 +78,7 @@ public sealed class EditUserViewModel : ViewModelBase
 
     private void OnOpenSignInView()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn)));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn, AppView.EditUser)));
     }
 
     #endregion

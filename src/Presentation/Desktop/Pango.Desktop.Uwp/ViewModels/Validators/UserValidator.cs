@@ -6,13 +6,14 @@ namespace Pango.Desktop.Uwp.ViewModels.Validators;
 
 public class UserValidator : ObservableValidator
 {
-    private string _passwordConfirmation;
-    private string _password;
-    private string _userName;
-    private static ResourceLoader _viewResourceLoader = ResourceLoader.GetForCurrentView();
+    private string _passwordConfirmation = string.Empty;
+    private string _password = string.Empty;
+    private string _userName = string.Empty;
+    private static readonly ResourceLoader _viewResourceLoader = new();
 
     public UserValidator()
     {
+
     }
 
     [Required()]
@@ -47,7 +48,7 @@ public class UserValidator : ObservableValidator
         ValidateAllProperties();
     }
 
-    public static ValidationResult ValidatePassword(string confirmation, ValidationContext context)
+    public static ValidationResult? ValidatePassword(string confirmation, ValidationContext context)
     {
         UserValidator validator = (UserValidator)context.ObjectInstance;
         bool isValid = validator.Password == confirmation;
