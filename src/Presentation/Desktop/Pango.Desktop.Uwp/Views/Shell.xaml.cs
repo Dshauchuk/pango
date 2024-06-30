@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -51,6 +52,16 @@ public sealed partial class Shell : ViewBase
     private void OnAppThemeChanged(object recipient, AppThemeChangedMessage message)
     {
         ShellRootElement.RequestedTheme = message.Value;
+
+        if(message.Value == ElementTheme.Dark)
+        {
+            TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, Colors.Black);
+        }
+        else
+        {
+            TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, Colors.White);
+        }
+
     }
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)

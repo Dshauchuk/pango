@@ -144,7 +144,13 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Dialogs\Views\PasswordDetailsDialog.xaml" />
+	  <None Remove="Package.Dev.appxmanifest" />
 	  <None Remove="Resources\Styles\TextBoxStyles.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <AppxManifest Include="Package.Dev.appxmanifest">
+	    <SubType>Designer</SubType>
+	  </AppxManifest>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\PasswordDetailsDialog.xaml">
