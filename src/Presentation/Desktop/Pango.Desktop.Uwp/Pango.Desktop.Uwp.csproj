@@ -15,7 +15,7 @@
 		<Nullable>enable</Nullable>
 		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateThumbprint>14E3DA5E7F30632B54FE49362D830FE8131B47EA</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>4E9F427E9883A716B016C9FE10F5E0D9D69C8FD9</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
@@ -136,6 +136,15 @@
 		<ProjectCapability Include="Msix" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+			<SubType>Designer</SubType>
+		</AppxManifest>
+		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
+			<SubType>Designer</SubType>
+		</AppxManifest>
+	</ItemGroup>
+	
 	<!-- Embed all "Resources.resw" files in the "Strings" folder to the output folder. -->
 	<ItemGroup>
 		<Content Include="Strings\**\*.resw">
@@ -146,11 +155,6 @@
 	  <None Remove="Dialogs\Views\PasswordDetailsDialog.xaml" />
 	  <None Remove="Package.Dev.appxmanifest" />
 	  <None Remove="Resources\Styles\TextBoxStyles.xaml" />
-	</ItemGroup>
-	<ItemGroup>
-	  <AppxManifest Include="Package.Dev.appxmanifest">
-	    <SubType>Designer</SubType>
-	  </AppxManifest>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\PasswordDetailsDialog.xaml">

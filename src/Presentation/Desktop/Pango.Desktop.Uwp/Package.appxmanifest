@@ -15,7 +15,7 @@
   <mp:PhoneIdentity PhoneProductId="58b534bb-d8d7-44ea-9a45-4bf1765be36b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
   <Properties>
-    <DisplayName>Pango Debug</DisplayName>
+    <DisplayName>Pango</DisplayName>
     <PublisherDisplayName>DShauchuk</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
   </Properties>
