@@ -28,6 +28,7 @@
                     <converters:NullOrEmptyToCollapsedConverter x:Key="NullOrEmptyToCollapsedConverter"/>
                     <converters:BoolToVisibilityConvereter x:Key="BoolToVisibilityConvereter"/>
                     <converters:EmptyStringToRootFolderNameConverter x:Key="EmptyStringToRootFolderNameConverter"/>
+                    <converters:BoolReverseConverter x:Key="BoolReverseConverter"/>
                     
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>

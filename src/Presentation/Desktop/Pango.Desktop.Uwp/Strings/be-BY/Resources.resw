@@ -358,4 +358,13 @@
   <data name="UpdatePasswordList" xml:space="preserve">
     <value>Аднавіць</value>
   </data>
+  <data name="PasswordDetails" xml:space="preserve">
+    <value>Дэталі Пароля</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ок</value>
+  </data>
+  <data name="SeePassword" xml:space="preserve">
+    <value>Паказаць Пароль</value>
+  </data>
 </root>

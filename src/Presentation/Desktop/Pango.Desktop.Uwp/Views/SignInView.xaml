@@ -141,9 +141,9 @@
                     </PasswordBox>
 
                     <Grid Grid.Row="2"
-                                Margin="0,10"
-                                VerticalAlignment="Center"
-                                HorizontalAlignment="Stretch">
+                          Margin="2,10"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch">
 
                         <Button HorizontalAlignment="Left"
                                 Command="{Binding Path=NavigateToStepCommand}"

@@ -15,6 +15,7 @@
                             Name="PART_TextBox"
                             HorizontalAlignment="Stretch"
                             Header="{TemplateBinding HeaderText}"
+                            IsReadOnly="{TemplateBinding IsReadOnly}"
                             IsSpellCheckEnabled="False"
                             PlaceholderText="{TemplateBinding PlaceholderText}"
                             Text="{TemplateBinding Text}" />

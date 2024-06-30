@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -104,6 +104,24 @@ public sealed class ValidationPasswordBox : ContentControl
     {
         get => (string)GetValue(PlaceholderTextProperty);
         set => SetValue(PlaceholderTextProperty, value);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
+        nameof(IsReadOnly),
+        typeof(bool),
+        typeof(ValidationPasswordBox),
+        new PropertyMetadata(default(bool)));
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool IsReadOnly
+    {
+        get => (bool)GetValue(IsReadOnlyProperty);
+        set => SetValue(IsReadOnlyProperty, value);
     }
 
     /// <summary>

@@ -52,6 +52,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
         EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPasswordAsync, CanEdit);
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
+        SeePasswordCommand = new RelayCommand<PasswordExplorerItem>(OnSeePasswordCommand);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
     }
 
@@ -63,6 +64,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     public RelayCommand<string> SearchCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
+    public RelayCommand<PasswordExplorerItem> SeePasswordCommand { get; }
     public RelayCommand UpdateListCommand { get; }
 
     #endregion
@@ -125,6 +127,14 @@ public sealed class PasswordsViewModel : ViewModelBase
     #endregion
 
     #region Event&Command Handlers
+
+    private async void OnSeePasswordCommand(PasswordExplorerItem? item)
+    {
+        if (item != null)
+        {
+            await ShowPasswordDetailsAsync(item);
+        }
+    }
 
     private void Passwords_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -217,7 +227,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         if(selected.Type == PasswordExplorerItem.ExplorerItemType.Folder)
         {
             await _dialogService
-                .ShowNewCatalogDialog(
+                .ShowNewCatalogDialogAsync(
                     new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected, (selected?.Parent?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
         }
         else
@@ -234,7 +244,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     private async void OnCreateCatalogAsync()
     {
         await _dialogService
-            .ShowNewCatalogDialog(
+            .ShowNewCatalogDialogAsync(
                 new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
     }
 
@@ -242,6 +252,15 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         await ResetViewAsync();
     }
+    #endregion
+
+    #region Public Methods
+
+    public async Task ShowPasswordDetailsAsync(PasswordExplorerItem selectedPassword)
+    {
+        await _dialogService.ShowPasswordDetailsAsync(new PasswordDetailsParameters(selectedPassword.Id, GetAvailableCatalogs()));
+    }
+
     #endregion
 
     #region Private Methods

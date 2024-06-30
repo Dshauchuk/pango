@@ -360,4 +360,13 @@
   <data name="UpdatePasswordList" xml:space="preserve">
     <value>Refresh</value>
   </data>
+  <data name="PasswordDetails" xml:space="preserve">
+    <value>Password Details</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ok</value>
+  </data>
+  <data name="SeePassword" xml:space="preserve">
+    <value>Show Password</value>
+  </data>
 </root>

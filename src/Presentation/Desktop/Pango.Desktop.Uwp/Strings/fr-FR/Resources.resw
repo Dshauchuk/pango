@@ -273,6 +273,9 @@
   <data name="NoPasswordsYet" xml:space="preserve">
     <value>You have no passwords yet(FR)</value>
   </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ок(FR)</value>
+  </data>
   <data name="Or" xml:space="preserve">
     <value>Or(FR)</value>
   </data>
@@ -303,6 +306,9 @@
   <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
     <value>Failed to delete password "{0}"(FR)</value>
   </data>
+  <data name="PasswordDetails" xml:space="preserve">
+    <value>Password Details(FR)</value>
+  </data>
   <data name="PasswordModified" xml:space="preserve">
     <value>Password "{0}" has been successfully updated(FR)</value>
   </data>
@@ -323,6 +329,9 @@
   </data>
   <data name="Security" xml:space="preserve">
     <value>Security(FR)</value>
+  </data>
+  <data name="SeePassword" xml:space="preserve">
+    <value>Show Password(FR)</value>
   </data>
   <data name="SelectUser" xml:space="preserve">
     <value>Select a User(FR)</value>

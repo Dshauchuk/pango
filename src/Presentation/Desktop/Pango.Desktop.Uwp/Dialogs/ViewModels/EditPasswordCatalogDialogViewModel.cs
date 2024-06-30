@@ -73,8 +73,6 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
 
-    
-
     #endregion
 
     #region Private Methods

@@ -35,6 +35,13 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
         NewCatalogNameTextBlock.Focus(FocusState.Programmatic);
     }
 
+    public object? GetDialogParameter()
+    {
+        return null;
+    }
+
+    public string? PrimaryButtonText { get; private set; }   
+    public string? CancelButtonText { get; private set; }
     public string Title { get; private set; }
 
     public IDialogViewModel? ViewModel => DataContext as EditPasswordCatalogDialogViewModel;

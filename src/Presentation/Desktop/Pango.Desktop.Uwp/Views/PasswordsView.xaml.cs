@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -97,6 +98,13 @@ public sealed partial class PasswordsView : PageBase
         viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
     }
 
+    private void SeeContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        viewModel?.SeePasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+    }
+
+
     private void DeleteContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
@@ -136,4 +144,11 @@ public sealed partial class PasswordsView : PageBase
     }
 
     #endregion
+
+    private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        var item = (e.OriginalSource as FrameworkElement).DataContext as PasswordExplorerItem;
+
+        await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+    }
 }

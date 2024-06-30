@@ -1,8 +1,8 @@
-﻿using System.ComponentModel;
+﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -71,6 +71,24 @@ public sealed class ValidationTextBox : ContentControl
     {
         get => (string)GetValue(HeaderTextProperty);
         set => SetValue(HeaderTextProperty, value);
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
+        nameof(IsReadOnly),
+        typeof(bool),
+        typeof(ValidationTextBox),
+        new PropertyMetadata(default(bool)));
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool IsReadOnly
+    {
+        get => (bool)GetValue(IsReadOnlyProperty);
+        set => SetValue(IsReadOnlyProperty, value);
     }
 
     /// <summary>
