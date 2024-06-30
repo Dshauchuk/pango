@@ -33,9 +33,9 @@ public sealed class PasswordsViewModel : ViewModelBase
     private readonly ISender _sender;
     private readonly IDialogService _dialogService;
     private bool _hasPasswords;
-    private PasswordExplorerItem _selectedItem;
+    private PasswordExplorerItem? _selectedItem;
     private ObservableCollection<PasswordExplorerItem> _originalList;
-    private string _searchText;
+    private string _searchText = string.Empty;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
@@ -52,9 +52,8 @@ public sealed class PasswordsViewModel : ViewModelBase
         DeleteCommand = new RelayCommand<PasswordExplorerItem>(OnDeleteAsync, CanDelete);
         EditPasswordCommand = new RelayCommand<PasswordExplorerItem>(OnEditPasswordAsync, CanEdit);
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
-
-        WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
-        WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
+        SeePasswordCommand = new RelayCommand<PasswordExplorerItem>(OnSeePasswordCommand);
+        UpdateListCommand = new RelayCommand(OnUpdateListAsync);
     }
 
     #region Commands
@@ -65,6 +64,8 @@ public sealed class PasswordsViewModel : ViewModelBase
     public RelayCommand<string> SearchCommand { get; }
     public RelayCommand<PasswordExplorerItem> EditPasswordCommand { get; }
     public RelayCommand<PasswordExplorerItem> CopyPasswordToClipboardCommand { get; }
+    public RelayCommand<PasswordExplorerItem> SeePasswordCommand { get; }
+    public RelayCommand UpdateListCommand { get; }
 
     #endregion
 
@@ -72,7 +73,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     public ObservableCollection<PasswordExplorerItem> Passwords { get; private set; }
 
-    public PasswordExplorerItem SelectedItem
+    public PasswordExplorerItem? SelectedItem
     {
         get => _selectedItem;
         set
@@ -105,16 +106,37 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    protected override void RegisterMessages()
     {
-        await ResetViewAsync();
+        base.RegisterMessages();
+
+        WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
+        WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
+    }
+
+    public override async Task OnNavigatedToAsync(object? parameter)
+    {
+        await base.OnNavigatedToAsync(parameter);
+
+        if(!Passwords.Any())
+        {
+            await ResetViewAsync();
+        }
     }
 
     #endregion
 
     #region Event&Command Handlers
 
-    private void Passwords_CollectionChanged(object sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    private async void OnSeePasswordCommand(PasswordExplorerItem? item)
+    {
+        if (item != null)
+        {
+            await ShowPasswordDetailsAsync(item);
+        }
+    }
+
+    private void Passwords_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         SelectedItem = null;
         HasPasswords = Passwords.Any(p => p.IsVisible);
@@ -130,8 +152,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
-    private async void OnCopyPasswordToClipboard(PasswordExplorerItem dto)
+    private async void OnCopyPasswordToClipboard(PasswordExplorerItem? dto)
     {
+        if(dto is null)
+        {
+            return;
+        }
+
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
 
         if (!passwordResult.IsError)
@@ -148,8 +175,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnDeleteAsync(PasswordExplorerItem dto)
+    private async void OnDeleteAsync(PasswordExplorerItem? dto)
     {
+        if (dto is null)
+        {
+            return;
+        }
+
         string confirmationTitle = ViewResourceLoader.GetString("Confirm_PasswordDeletion");
         string confirmationDescription;
 
@@ -185,7 +217,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
     }
 
-    private async void OnEditPasswordAsync(PasswordExplorerItem selected)
+    private async void OnEditPasswordAsync(PasswordExplorerItem? selected)
     {
         if(selected is null)
         {
@@ -195,25 +227,38 @@ public sealed class PasswordsViewModel : ViewModelBase
         if(selected.Type == PasswordExplorerItem.ExplorerItemType.Folder)
         {
             await _dialogService
-                .ShowNewCatalogDialog(
+                .ShowNewCatalogDialogAsync(
                     new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected, (selected?.Parent?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
         }
         else
         {
-            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
+            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
         }
     }
 
     private void OnCreatePassword()
     {
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
     }
 
     private async void OnCreateCatalogAsync()
     {
         await _dialogService
-            .ShowNewCatalogDialog(
+            .ShowNewCatalogDialogAsync(
                 new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
+    }
+
+    private async void OnUpdateListAsync()
+    {
+        await ResetViewAsync();
+    }
+    #endregion
+
+    #region Public Methods
+
+    public async Task ShowPasswordDetailsAsync(PasswordExplorerItem selectedPassword)
+    {
+        await _dialogService.ShowPasswordDetailsAsync(new PasswordDetailsParameters(selectedPassword.Id, GetAvailableCatalogs()));
     }
 
     #endregion
@@ -224,7 +269,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// Handles the command to filter passwords content
     /// </summary>
     /// <param name="searchText"></param>
-    private void OnFilterAsync(string searchText)
+    private void OnFilterAsync(string? searchText)
     {
         Func<PasswordExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText) ? (i) => true : (i) => i.Name.Contains(searchText);
         foreach(PasswordExplorerItem password in Passwords)
@@ -241,7 +286,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="node"></param>
     /// <param name="searchPredicate"></param>
     /// <returns></returns>
-    private bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
+    private static bool Filter(PasswordExplorerItem node, Func<PasswordExplorerItem, bool> searchPredicate)
     {
         if(node is null)
         {
@@ -276,7 +321,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    private bool CanDelete(PasswordExplorerItem item)
+    private bool CanDelete(PasswordExplorerItem? item)
     {
         return item != null;
     }
@@ -286,7 +331,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="item"></param>
     /// <returns></returns>
-    private bool CanEdit(PasswordExplorerItem item)
+    private bool CanEdit(PasswordExplorerItem? item)
     {
         return item != null;
     }
@@ -317,12 +362,12 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (queryResult.IsError)
         {
-            Logger.LogError($"Loaded passwords failed: {queryResult.FirstError}");
+            Logger.LogError("Loaded passwords failed: {FirstError}", queryResult.FirstError);
             return [];
         }
         else
         {
-            Logger.LogDebug($"Loaded {queryResult.Value.Count(p => !p.IsCatalog)} passwords");
+            Logger.LogDebug("Loaded {count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
             return queryResult.Value.Adapt<IEnumerable<PasswordExplorerItem>>().OrderBy(i => i.NestingLevel);
         }
     }
@@ -366,7 +411,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="password"></param>
     /// <param name="catalogs"></param>
     /// <returns></returns>
-    private bool AddPassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password, Queue<string> catalogs)
+    private bool AddPassword(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem password, Queue<string>? catalogs)
     {
         if(catalogs is null || catalogs.Count == 0)
         {
@@ -375,7 +420,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         }
 
         string catalogName = catalogs.Dequeue();
-        PasswordExplorerItem catalog = passwords.FirstOrDefault(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder && p.Name == catalogName);
+        PasswordExplorerItem? catalog = passwords.FirstOrDefault(p => p.Type == PasswordExplorerItem.ExplorerItemType.Folder && p.Name == catalogName);
 
         if (catalog is null)
         {
@@ -399,7 +444,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="sortedPasswordsList">already sorted collection of passwords</param>
     /// <param name="passwordToInsert">a password to add into the <paramref name="sortedPasswordsList"/></param>
-    private void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
+    private static void Insert(ObservableCollection<PasswordExplorerItem> sortedPasswordsList, PasswordExplorerItem passwordToInsert)
     {
         if (!sortedPasswordsList.Any())
         {
@@ -452,7 +497,7 @@ public sealed class PasswordsViewModel : ViewModelBase
             return false;
         }
 
-        PasswordExplorerItem passwordToRemove = passwords.FirstOrDefault(p => p.Id == password.Id);
+        PasswordExplorerItem? passwordToRemove = passwords.FirstOrDefault(p => p.Id == password.Id);
 
         if(passwordToRemove is not null)
         {
@@ -526,7 +571,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (catalogs.Any())
         {
-            catalogs.Insert(0, "");
+            catalogs.Insert(0, string.Empty);
         }
 
         return catalogs;
@@ -537,7 +582,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <returns></returns>
     private string GetPathToSelectedFolder()
-        => SelectedItem == null ? null :
+        => SelectedItem == null ? string.Empty :
             SelectedItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ?
             SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
             SelectedItem.CatalogPath;

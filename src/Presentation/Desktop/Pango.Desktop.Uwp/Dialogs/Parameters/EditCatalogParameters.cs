@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Pango.Desktop.Uwp.Dialogs.Parameters;
 
 public class EditCatalogParameters(List<string> allAvailableCatalogs, string defaultCatalog,
-    PasswordExplorerItem selectedCatalog, List<string> existingCatalogs) 
+    PasswordExplorerItem? selectedCatalog, List<string> existingCatalogs) 
     : IDialogParameter
 {
     /// <summary>
@@ -20,7 +20,7 @@ public class EditCatalogParameters(List<string> allAvailableCatalogs, string def
     /// <summary>
     /// Selected catalog to update
     /// </summary>
-    public PasswordExplorerItem SelectedCatalog { get; } = selectedCatalog;
+    public PasswordExplorerItem? SelectedCatalog { get; } = selectedCatalog;
 
     /// <summary>
     /// Existing catalogs

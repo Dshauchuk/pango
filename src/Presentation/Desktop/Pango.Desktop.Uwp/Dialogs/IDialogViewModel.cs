@@ -11,7 +11,7 @@ public interface IDialogContext
 
 public class DialogContext : IDialogContext
 {
-    public event EventHandler OnContentChanged;
+    public event EventHandler? OnContentChanged;
 
     public void RaiseDialogContentChanged(object? sender = null)
     {

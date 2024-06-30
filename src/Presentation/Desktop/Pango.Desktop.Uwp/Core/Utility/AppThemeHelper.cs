@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
 using Windows.Storage;
-using Windows.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
@@ -29,7 +29,7 @@ internal static class AppThemeHelper
     public static void Initialize()
     {
         _theme = LoadThemeFromSettings();
-        SetRequestedTheme();
+        SetRequestedTheme(_theme);
     }
 
     /// <summary>
@@ -41,12 +41,17 @@ internal static class AppThemeHelper
     {
         _theme = theme;
 
-        SetRequestedTheme();
+        SetRequestedTheme(theme);
         SaveThemeInSettings(Theme);
     }
 
-    private static void SetRequestedTheme()
+    private static void SetRequestedTheme(ElementTheme theme)
     {
+        if (App.Current.CurrentWindow.Content is FrameworkElement rootElement)
+        {
+            rootElement.RequestedTheme = theme;
+        }
+
         WeakReferenceMessenger.Default.Send(new AppThemeChangedMessage(_theme));
     }
 

@@ -1,8 +1,9 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Controls;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -19,8 +20,8 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
     {
         this.InitializeComponent();
 
-        _viewResourceLoader = ResourceLoader.GetForCurrentView();
-        DataContext = Ioc.Default.GetRequiredService<EditPasswordCatalogDialogViewModel>();
+        _viewResourceLoader = new ResourceLoader();
+        DataContext = App.Host.Services.GetRequiredService<EditPasswordCatalogDialogViewModel>();
 
         ((EditPasswordCatalogDialogViewModel)DataContext).Initialize(editCatalogParameters);
 
@@ -29,7 +30,19 @@ public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
             _viewResourceLoader.GetString("EditCatalogDialogTitle");
     }
 
+    public void DialogOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
+    {
+        NewCatalogNameTextBlock.Focus(FocusState.Programmatic);
+    }
+
+    public object? GetDialogParameter()
+    {
+        return null;
+    }
+
+    public string? PrimaryButtonText { get; private set; }   
+    public string? CancelButtonText { get; private set; }
     public string Title { get; private set; }
 
-    public IDialogViewModel ViewModel => DataContext as EditPasswordCatalogDialogViewModel;
+    public IDialogViewModel? ViewModel => DataContext as EditPasswordCatalogDialogViewModel;
 }

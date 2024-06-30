@@ -1,4 +1,6 @@
-﻿using Windows.ApplicationModel.Core;
+﻿using Microsoft.UI;
+using Microsoft.UI.Xaml;
+using Windows.ApplicationModel.Core;
 using Windows.UI;
 using Windows.UI.ViewManagement;
 
@@ -35,5 +37,30 @@ public static class TitleBarHelper
     {
         CoreApplicationViewTitleBar coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
         coreTitleBar.ExtendViewIntoTitleBar = true;
+    }
+
+    public static void SetCaptionButtonColors(Window window, Windows.UI.Color color)
+    {
+        var res = App.Current.Resources;
+        res["WindowCaptionForeground"] = color;
+        window.AppWindow.TitleBar.ButtonForegroundColor = color;
+    }
+
+    public static void SetCaptionButtonBackgroundColors(Window window, Windows.UI.Color? color)
+    {
+        var titleBar = window.AppWindow.TitleBar;
+        titleBar.ButtonBackgroundColor = color;
+    }
+
+    public static void SetForegroundColor(Window window, Windows.UI.Color? color)
+    {
+        var titleBar = window.AppWindow.TitleBar;
+        titleBar.ForegroundColor = color;
+    }
+
+    public static void SetBackgroundColor(Window window, Windows.UI.Color? color)
+    {
+        var titleBar = window.AppWindow.TitleBar;
+        titleBar.BackgroundColor = color;
     }
 }

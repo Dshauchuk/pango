@@ -18,24 +18,6 @@ using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
 
-//public class TmpLogger : ILogger
-//{
-//    public IDisposable BeginScope<TState>(TState state) where TState : notnull
-//    {
-//        return null;
-//    }
-
-//    public bool IsEnabled(LogLevel logLevel)
-//    {
-//        return true;
-//    }
-
-//    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-//    {
-
-//    }
-//}
-
 public class AppOptions : IAppOptions
 {
     public IFileOptions FileOptions { get; set; }
@@ -69,6 +51,7 @@ public static class DependencyInjection
             .AddSingleton<PasswordsViewModel>()
             .AddSingleton<SignInViewModel>()
             .AddSingleton<EditPasswordCatalogDialogViewModel>()
+            .AddSingleton<PasswordDetailsDialogViewModel>()
             .AddSingleton<UserViewModel>();
 
         return services;

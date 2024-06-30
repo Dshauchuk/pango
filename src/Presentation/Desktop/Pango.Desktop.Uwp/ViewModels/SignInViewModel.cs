@@ -10,13 +10,12 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Desktop.Uwp.Security;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
-using Windows.System;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -25,11 +24,11 @@ public class SignInViewModel : ViewModelBase
 {
     #region Fields
 
-    private PangoUserDto _selectedUser;
+    private PangoUserDto? _selectedUser;
     private readonly ISender _sender;
     private int _signInStepIndex;
     private bool _hasUsers;
-    private string _passcode;
+    private string? _passcode;
 
     #endregion
 
@@ -46,7 +45,7 @@ public class SignInViewModel : ViewModelBase
 
     #region Events
 
-    public event Action<string> SignInSuceeded;
+    public event Action<string>? SignInSuceeded;
     public event Action<PangoUserDto> UserSelected;
 
     #endregion
@@ -63,17 +62,21 @@ public class SignInViewModel : ViewModelBase
 
     public ObservableCollection<PangoUserDto> Users { get; private set; }
 
-    public PangoUserDto SelectedUser
+    public PangoUserDto? SelectedUser
     {
         get => _selectedUser;
         set
         {
             SetProperty(ref _selectedUser, value);
-            UserSelected?.Invoke(value);
+
+            if(value is not null)
+            {
+                UserSelected?.Invoke(value);
+            }
         }
     }
 
-    public string Passcode
+    public string? Passcode
     {
         get => _passcode;
         set => SetProperty(ref _passcode, value);
@@ -95,20 +98,25 @@ public class SignInViewModel : ViewModelBase
 
     #region Overrides
 
-    public override async Task OnNavigatedToAsync(object parameter)
+    public override async Task OnNavigatedToAsync(object? parameter)
     {
-        if (Thread.CurrentPrincipal is null || string.IsNullOrEmpty(Thread.CurrentPrincipal.Identity?.Name))
+        await base.OnNavigatedToAsync(parameter);
+
+        var currentUser = SecureUserSession.GetUser();
+        if (currentUser is null)
         {
             GoToUserSelection();
             await LoadUsersAsync();
         }
         else
         {
-            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(Thread.CurrentPrincipal.Identity.Name));
+            ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(currentUser.UserName));
+            SecureUserSession.ClearUser();
             if (previouslySelectedUser.IsError)
             {
-                Thread.CurrentPrincipal = null;
-                await OnNavigatedToAsync(parameter);
+                GoToUserSelection();
+                await LoadUsersAsync();
+
                 return;
             }
 
@@ -124,7 +132,7 @@ public class SignInViewModel : ViewModelBase
     {
         SignInStep step = (SignInStep)stepIndex;
 
-        Logger.LogInformation($"Navigating to {step.ToString()}");
+        Logger.LogInformation($"Navigating to {step}");
 
         switch (step)
         {
@@ -155,7 +163,7 @@ public class SignInViewModel : ViewModelBase
     private void GoToUserCreation()
     {
         SignInStepIndex = (int)SignInStep.CreateUser;
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditUser)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditUser, AppView.SignIn)));
     }
 
     private void GoToCodeEnteringForm()
@@ -180,7 +188,7 @@ public class SignInViewModel : ViewModelBase
                 return;
             }
 
-            DispatcherQueue dispatcherQueue = DispatcherQueue.GetForCurrentThread();
+            Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
             dispatcherQueue.TryEnqueue(() =>
             {
                 Users.Clear();
@@ -194,12 +202,18 @@ public class SignInViewModel : ViewModelBase
 
     private async Task OnSignIn()
     {
+        if(string.IsNullOrEmpty(SelectedUser?.UserName) || string.IsNullOrEmpty(Passcode))
+        {
+            Logger.LogDebug("Login failed: empty username or passcode");
+            return;
+        }
+
         var auth = await _sender.Send(new SignInCommand(SelectedUser.UserName, Passcode));
 
         if (auth.IsError)
         {
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
-            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": {auth.FirstError.Code}. {auth.FirstError.Description}");
+            Logger.LogDebug("Login failed for user \"{UserName}\": {Code}. {Description}", SelectedUser.UserName, auth.FirstError.Code, auth.FirstError.Description);
 
             return;
         }
@@ -208,13 +222,13 @@ public class SignInViewModel : ViewModelBase
         {
             // show error
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
-            Logger.LogDebug($"Login failed for user \"{SelectedUser.UserName}\": User name or password is wrong");
+            Logger.LogDebug("Login failed for user \"{UserName}\": User name or password is wrong", SelectedUser.UserName);
 
             return;
         }
 
         SignInSuceeded?.Invoke(SelectedUser.UserName);
-        Logger.LogDebug($"User \"{SelectedUser.UserName}\" successfully signed in");
+        Logger.LogDebug("User \"{UserName}\" successfully signed in", SelectedUser.UserName);
     }
 
     #endregion

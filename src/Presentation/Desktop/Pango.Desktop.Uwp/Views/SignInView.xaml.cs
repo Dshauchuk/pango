@@ -1,4 +1,7 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
+using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -6,15 +9,23 @@ using Pango.Desktop.Uwp.Views.Abstract;
 
 namespace Pango.Desktop.Uwp.Views;
 
+[AppView(AppView.SignIn)]
 public sealed partial class SignInView : ViewBase
 {
     public SignInView()
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<SignInViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<SignInViewModel>();
+
+        Loaded += SignInView_Loaded;
     }
 
-    private async void PasscodePasswordBox_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
+    private void SignInView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        PasscodePasswordBox.Focus(FocusState.Programmatic);
+    }
+
+    private async void PasscodePasswordBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Enter)
         {

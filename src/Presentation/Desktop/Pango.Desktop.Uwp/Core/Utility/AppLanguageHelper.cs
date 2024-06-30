@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -13,15 +14,17 @@ namespace Pango.Desktop.Uwp.Core.Utility;
 
 public static class AppLanguageHelper
 {
+    private const string DefaultCulture = "en-US";
+
     /// <summary>
     /// Returns currently applied to the application language. Null if no information is stored about applied language
     /// </summary>
     public static AppLanguage GetAppliedAppLanguage()
     {
         IEnumerable<AppLanguage> appLanguages = AppLanguage.GetAppLanguageCollection();
-        string selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string;
+        string selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string ?? DefaultCulture;
 
-        return appLanguages.FirstOrDefault(l => l.Locale.Equals(selectedLanguageLocale, StringComparison.OrdinalIgnoreCase));
+        return appLanguages.FirstOrDefault(l => l.Locale.Equals(selectedLanguageLocale, StringComparison.OrdinalIgnoreCase)) ?? appLanguages.First();
     }
 
     /// <summary>
@@ -32,26 +35,37 @@ public static class AppLanguageHelper
     /// <returns>True if app language was changed to the <paramref name="newLanguage"/>. False if <paramref name="newLanguage"/> is invalid or already applied to the app</returns>
     public static bool ApplyApplicationLanguage(AppLanguage newLanguage)
     {
-        string selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string;
-
-        if (string.IsNullOrEmpty(newLanguage?.Locale) || (!string.IsNullOrEmpty(selectedLanguageLocale) && selectedLanguageLocale.Equals(newLanguage.Locale, StringComparison.OrdinalIgnoreCase)))
+        if(newLanguage is null)
         {
+            Log.Logger.Error("Cannot apply language: value is null");
             return false;
         }
 
-        // apply new language
-        CultureInfo ci = new(newLanguage.Locale);
-        Thread.CurrentThread.CurrentCulture = ci;
-        Thread.CurrentThread.CurrentUICulture = ci;
-        ApplicationLanguages.PrimaryLanguageOverride = newLanguage.Locale;
-        Windows.ApplicationModel.Resources.Core.ResourceContext.GetForCurrentView().Reset();
-        Windows.ApplicationModel.Resources.Core.ResourceContext.GetForViewIndependentUse().Reset();
+        try
+        {
+            string? selectedLanguageLocale = ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] as string;
 
-        // save new language to the local app settings
-        ApplicationDataContainer localSettings = ApplicationData.Current.LocalSettings;
-        localSettings.Values[Constants.Settings.AppLanguage] = newLanguage.Locale;
+            if (string.IsNullOrEmpty(newLanguage?.Locale) || (!string.IsNullOrEmpty(selectedLanguageLocale) && selectedLanguageLocale.Equals(newLanguage.Locale, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
 
-        return true;
+            // apply new language
+            CultureInfo ci = new(newLanguage.Locale);
+            Thread.CurrentThread.CurrentCulture = ci;
+            Thread.CurrentThread.CurrentUICulture = ci;
+            ApplicationLanguages.PrimaryLanguageOverride = newLanguage.Locale;
+
+            // save new language to the local app settings
+            ApplicationData.Current.LocalSettings.Values[Constants.Settings.AppLanguage] = newLanguage.Locale;
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Logger.Error($"An error occurred while changing language: {ex.Message}", ex);
+            return false;
+        }
     }
 
     /// <summary>

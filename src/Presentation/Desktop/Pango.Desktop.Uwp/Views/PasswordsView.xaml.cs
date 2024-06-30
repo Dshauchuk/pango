@@ -1,12 +1,15 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using Windows.UI.Xaml.Controls;
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -14,16 +17,57 @@ namespace Pango.Desktop.Uwp.Views;
 public sealed partial class PasswordsView : PageBase
 {
     public PasswordsView()
+        : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<PasswordsViewModel>();
 
+        DataContext = App.Host.Services.GetRequiredService<PasswordsViewModel>();
         PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
     }
 
-    private void PasswordsTreeView_ItemInvoked(Windows.UI.Xaml.Controls.TreeView sender, Windows.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    #region Overrides
+
+    protected override async void OnNavigatedTo(NavigationEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
+        base.OnNavigatedTo(e);
+
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        if (viewModel is not null)
+        {
+           await viewModel.OnNavigatedToAsync(e);
+        }
+    }
+
+    protected override async void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        if (viewModel is not null)
+        {
+            await viewModel.OnNavigatedFromAsync(e);
+        }
+    }
+
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+    }
+
+    protected override void UnregisterMessages()
+    {
+        base.UnregisterMessages();
+        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void PasswordsTreeView_ItemInvoked(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
 
         if (viewModel is not null)
         {
@@ -31,55 +75,80 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    }
-
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
     {
-        switch(message.Value.NavigatedView)
+        Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
+        dispatcherQueue.TryEnqueue(() =>
         {
-            case Core.Enums.AppView.EditPassword:
-                PasswordsIndex_Pivot.SelectedIndex = 1;
-                break;
-            case Core.Enums.AppView.PasswordsIndex:
-                PasswordsIndex_Pivot.SelectedIndex = 0;
-                break;
-        }
+            switch (message.Value.NavigatedView)
+            {
+                case Core.Enums.AppView.EditPassword:
+                    PasswordsIndex_Pivot.SelectedIndex = 1;
+                    break;
+                case Core.Enums.AppView.PasswordsIndex:
+                    PasswordsIndex_Pivot.SelectedIndex = 0;
+                    break;
+            }
+        });
     }
 
-    private void EditContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void EditContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
         viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
     }
 
-    private void DeleteContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void SeeContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        viewModel?.SeePasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+    }
+
+
+    private void DeleteContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
         viewModel?.DeleteCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
     }
 
-    private void AddPassword_CatalogContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void AddPassword_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
-        viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
-        viewModel?.CreatePasswordCommand.Execute(null);
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+
+        if(viewModel is not null)
+        {
+            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
+            viewModel.CreatePasswordCommand.Execute(null);
+        }
     }
 
-    private void AddCatalog_CatalogContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void AddCatalog_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
-        viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
-        viewModel?.CreateCatalogCommand.Execute(null);
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        
+        if(viewModel is not null)
+        {
+            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
+            viewModel.CreateCatalogCommand.Execute(null);
+        }
     }
 
-    private void CopyPassword_PasswordContextMenuItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    private void CopyPassword_PasswordContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PasswordsViewModel viewModel = DataContext as PasswordsViewModel;
-        viewModel?.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+
+        if(viewModel is not null)
+        {
+            viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+        }
+    }
+
+    #endregion
+
+    private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    {
+        var item = (e.OriginalSource as FrameworkElement).DataContext as PasswordExplorerItem;
+
+        await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
     }
 }

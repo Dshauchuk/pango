@@ -355,7 +355,16 @@
   <data name="Confirm_UserDeletion" xml:space="preserve">
     <value>Карыстальнік {0} і ўсе яго паролі будуць выдалены. Вы хочаце працягнуць?</value>
   </data>
-  <data name="String1" xml:space="preserve">
-    <value />
+  <data name="UpdatePasswordList" xml:space="preserve">
+    <value>Аднавіць</value>
+  </data>
+  <data name="PasswordDetails" xml:space="preserve">
+    <value>Дэталі Пароля</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>Ок</value>
+  </data>
+  <data name="SeePassword" xml:space="preserve">
+    <value>Паказаць Пароль</value>
   </data>
 </root>

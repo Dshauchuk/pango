@@ -1,5 +1,7 @@
-﻿using CommunityToolkit.Mvvm.DependencyInjection;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
@@ -11,41 +13,42 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Windows.ApplicationModel.Resources;
-using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Navigation;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
 namespace Pango.Desktop.Uwp.Views;
 
+[AppView(AppView.MainAppView)]
 public sealed partial class MainAppView : ViewBase
 {
     /// <summary>
     /// Contains Type of a view to which User should be redirected, when the View will be loaded
     /// </summary>
-    private Type _initialView;
+    private Type? _initialView;
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
     private ResourceLoader _viewResourceLoader;
 
-    public MainAppView(Type initialView = null)
+    public MainAppView(Type? initialView = null)
     {
         this.InitializeComponent();
-        DataContext = Ioc.Default.GetRequiredService<MainAppViewModel>();
+        DataContext = App.Host.Services.GetRequiredService<MainAppViewModel>();
+
         _initialView = initialView;
+        _viewResourceLoader = new ResourceLoader();
 
         Loaded += MainAppView_Loaded;
 
-        NavigationItems = new[]
-        {
+        NavigationItems =
+        [
             new NavigationEntry(HomeItem, typeof(HomeView)),
             new NavigationEntry(PasswordsItem, typeof(PasswordsView)),
             new NavigationEntry(UserItem, typeof(UserView))
-        };
-
-        _viewResourceLoader = ResourceLoader.GetForCurrentView();
+        ];
     }
 
-    private async void MainAppView_Loaded(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+    #region Event Handlers
+
+    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         if (ViewModel != null)
             await ViewModel.OnNavigatedToAsync(null);
@@ -61,7 +64,7 @@ public sealed partial class MainAppView : ViewBase
         if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
             NavigationFrame.Navigate(pageType);
-            appView = pageType.GetCustomAttribute<AppViewAttribute>().View;
+            appView = pageType.GetCustomAttribute<AppViewAttribute>()?.View ?? throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
         }
         else if (args.IsSettingsInvoked)
         {
@@ -69,7 +72,7 @@ public sealed partial class MainAppView : ViewBase
             appView = AppView.Settings;
         }
 
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView)));
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView, AppView.MainAppView)));
     }
 
     private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)
@@ -86,6 +89,8 @@ public sealed partial class MainAppView : ViewBase
             NavigationFrame.GoBack();
         }
     }
+
+    #endregion
 
     /// <summary>
     /// Navigates the User to the <see cref="_initialView"/> page if it specified. If <see cref="_initialView"/> does not specified or incorrect - navigates to the default initial page
