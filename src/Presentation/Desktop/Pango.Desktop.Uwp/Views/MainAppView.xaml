@@ -18,6 +18,7 @@
                              BackRequested="NavigationView_BackRequested"
                              IsBackButtonVisible="Collapsed"
                              IsBackEnabled="False"
+                             OpenPaneLength="200"
                              IsSettingsVisible="True"
                              IsTitleBarAutoPaddingEnabled="False"
                              ItemInvoked="NavigationView_ItemInvoked">
