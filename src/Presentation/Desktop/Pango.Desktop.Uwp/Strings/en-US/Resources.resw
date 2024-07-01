@@ -151,7 +151,7 @@
     <value>Edit password</value>
   </data>
   <data name="EnterMasterCode" xml:space="preserve">
-    <value>Enter mastercode</value>
+    <value>Enter password</value>
   </data>
   <data name="Greeting.Text" xml:space="preserve">
     <value>Hello</value>
