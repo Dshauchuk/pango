@@ -191,7 +191,8 @@ public class EditPasswordViewModel : ViewModelBase
             
             OnOpenIndexView();
 
-            string message = IsNew ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title) : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
+            string message = result.IsError ? ViewResourceLoader.GetString("CannotSavePassword") 
+                : IsNew ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title) : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message));
         }
     }

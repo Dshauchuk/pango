@@ -54,6 +54,8 @@ public sealed class PasswordsViewModel : ViewModelBase
         CopyPasswordToClipboardCommand = new RelayCommand<PasswordExplorerItem>(OnCopyPasswordToClipboard);
         SeePasswordCommand = new RelayCommand<PasswordExplorerItem>(OnSeePasswordCommand);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
+
+        App.Current.LoginSucceeded += Current_LoginSucceeded;
     }
 
     #region Commands
@@ -127,6 +129,11 @@ public sealed class PasswordsViewModel : ViewModelBase
     #endregion
 
     #region Event&Command Handlers
+
+    private async void Current_LoginSucceeded(string userId)
+    {
+        await ResetViewAsync();
+    }
 
     private async void OnSeePasswordCommand(PasswordExplorerItem? item)
     {
