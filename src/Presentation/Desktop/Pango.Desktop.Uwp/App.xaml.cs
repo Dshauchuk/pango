@@ -6,6 +6,7 @@ using Pango.Application;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Serilog;
+using System;
 using ApplicationBase = Microsoft.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
@@ -30,6 +31,7 @@ sealed partial class App : ApplicationBase
         this.UnhandledException += App_UnhandledException;
     }
 
+    public event Action<string>? LoginSucceeded;
 
     public static IHost Host { get; } = BuildHost();
 
@@ -57,23 +59,7 @@ sealed partial class App : ApplicationBase
                     .AddInfrastructureServices()
                     .AddAppServices()
                     .RegisterUIMappings()
-                    .AddSingleton<MainWindow>()
-                    //.AddSingleton<ILocalizer>(factory =>
-                    //{
-                    //    return new LocalizerBuilder()
-                    //        .AddStringResourcesFolderForLanguageDictionaries(StringsFolderPath)
-                    //        .SetLogger(Host.Services
-                    //            .GetRequiredService<ILoggerFactory>()
-                    //            .CreateLogger<Localizer>())
-                    //        .SetOptions(options =>
-                    //        {
-                    //            options.DefaultLanguage = "ja";
-                    //        })
-                    //        .Build()
-                    //        .GetAwaiter()
-                    //        .GetResult();
-                    //})
-                    ;
+                    .AddSingleton<MainWindow>();
             })
             .Build();
     }
@@ -87,5 +73,10 @@ sealed partial class App : ApplicationBase
     {
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
         CurrentWindow.Activate();
+    }
+
+    public void RaiseLoginSucceeded(string userName)
+    {
+        LoginSucceeded?.Invoke(userName);
     }
 }

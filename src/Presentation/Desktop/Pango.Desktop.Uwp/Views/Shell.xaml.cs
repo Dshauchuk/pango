@@ -88,14 +88,7 @@ public sealed partial class Shell : ViewBase
 
     private void SignInViewModel_SignInSuceeded(string userId)
     {
-        SetupSession(userId);
-
-        // Unsibscribe from the event to prevent memory leak
-        SignInViewModel? signInViewModel = (AppContent.Content as SignInView)?.DataContext as SignInViewModel;
-        if (signInViewModel is not null)
-        {
-            signInViewModel.SignInSuceeded -= SignInViewModel_SignInSuceeded;
-        }
+        App.Current.LoginSucceeded -= SignInViewModel_SignInSuceeded;
 
         AppContent.Content = new MainAppView();
     }
@@ -115,16 +108,11 @@ public sealed partial class Shell : ViewBase
 
         if (signInView.DataContext is SignInViewModel signInViewModel)
         {
-            signInViewModel.SignInSuceeded += SignInViewModel_SignInSuceeded;
+            App.Current.LoginSucceeded += SignInViewModel_SignInSuceeded;
 
             AppContent.Content = signInView;
             await signInViewModel.OnNavigatedToAsync(null);
         }
-    }
-
-    private static void SetupSession(string userId)
-    {
-        SecureUserSession.SaveUser(userId);
     }
 
     // Select the introduction item when the shell is loaded

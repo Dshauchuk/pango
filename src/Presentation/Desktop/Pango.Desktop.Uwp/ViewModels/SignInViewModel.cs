@@ -45,7 +45,6 @@ public class SignInViewModel : ViewModelBase
 
     #region Events
 
-    public event Action<string>? SignInSuceeded;
     public event Action<PangoUserDto> UserSelected;
 
     #endregion
@@ -227,7 +226,9 @@ public class SignInViewModel : ViewModelBase
             return;
         }
 
-        SignInSuceeded?.Invoke(SelectedUser.UserName);
+        SecureUserSession.SaveUser(SelectedUser.UserName);
+        App.Current.RaiseLoginSucceeded(SelectedUser.UserName);
+
         Logger.LogDebug("User \"{UserName}\" successfully signed in", SelectedUser.UserName);
     }
 
