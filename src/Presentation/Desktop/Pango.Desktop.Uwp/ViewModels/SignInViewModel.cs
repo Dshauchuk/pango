@@ -102,11 +102,12 @@ public class SignInViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
+        await LoadUsersAsync();
+
         var currentUser = SecureUserSession.GetUser();
         if (currentUser is null)
         {
             GoToUserSelection();
-            await LoadUsersAsync();
         }
         else
         {
@@ -115,7 +116,6 @@ public class SignInViewModel : ViewModelBase
             if (previouslySelectedUser.IsError)
             {
                 GoToUserSelection();
-                await LoadUsersAsync();
 
                 return;
             }
