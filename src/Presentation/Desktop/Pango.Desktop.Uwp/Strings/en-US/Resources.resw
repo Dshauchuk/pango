@@ -321,7 +321,7 @@
     <value>Edit Catalog</value>
   </data>
   <data name="RemoveCatalog_Message" xml:space="preserve">
-    <value>The catalog containing 5 passwords will be removed. Do you want to continue?</value>
+    <value>The catalog "{0}" containing {1} passwords will be removed. Do you want to continue?</value>
   </data>
   <data name="AutolockAfterMinutes" xml:space="preserve">
     <value>Lock after minutes</value>

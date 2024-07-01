@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Models;
@@ -26,28 +25,6 @@ public sealed partial class PasswordsView : PageBase
     }
 
     #region Overrides
-
-    protected override async void OnNavigatedTo(NavigationEventArgs e)
-    {
-        base.OnNavigatedTo(e);
-
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        if (viewModel is not null)
-        {
-           await viewModel.OnNavigatedToAsync(e);
-        }
-    }
-
-    protected override async void OnNavigatedFrom(NavigationEventArgs e)
-    {
-        base.OnNavigatedFrom(e);
-
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        if (viewModel is not null)
-        {
-            await viewModel.OnNavigatedFromAsync(e);
-        }
-    }
 
     protected override void RegisterMessages()
     {

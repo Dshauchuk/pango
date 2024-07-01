@@ -319,7 +319,7 @@
     <value>Рэдагаваць Каталог</value>
   </data>
   <data name="RemoveCatalog_Message" xml:space="preserve">
-    <value>Каталог "{0}", які змяшчае "{1}" пароляў, будзе выдалены. Працягнуць?</value>
+    <value>Каталог "{0}", які змяшчае {1} пароляў, будзе выдалены. Працягнуць?</value>
   </data>
   <data name="AutolockAfterMinutes" xml:space="preserve">
     <value>Заблакіраваць праз хвіліны</value>

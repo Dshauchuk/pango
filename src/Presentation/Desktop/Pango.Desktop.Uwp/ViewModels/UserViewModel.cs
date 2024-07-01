@@ -87,11 +87,11 @@ public class UserViewModel : ViewModelBase
         if (!result.IsError && result.Value)
         {
             _logger.LogDebug("User \"{currentUserName}\" successfully deleted", _currentUserName);
-            OnSignOut();
         }
         else
         {
             _logger.LogWarning("User deletion failed: {FirstError}", result.FirstError);
         }
+        OnSignOut();
     }
 }
