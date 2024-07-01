@@ -2,6 +2,8 @@
 
 public static class Constants
 {
+    public const int InAppNotificationDuration = 3000;
+
     public static class Settings
     {
         /// <summary>

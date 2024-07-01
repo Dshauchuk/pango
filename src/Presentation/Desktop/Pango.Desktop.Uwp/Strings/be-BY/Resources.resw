@@ -367,4 +367,19 @@
   <data name="SeePassword" xml:space="preserve">
     <value>Паказаць Пароль</value>
   </data>
+  <data name="Message_LoginEmpty" xml:space="preserve">
+    <value>Памылка ўваходу для карыстальніка "{0}": імя карыстальніка або пароль пустыя</value>
+  </data>
+  <data name="Message_LoginError" xml:space="preserve">
+    <value>Памылка ўваходу для карыстальніка "{0}": {1}. {2}</value>
+  </data>
+  <data name="Message_LoginFailed" xml:space="preserve">
+    <value>Памылка ўваходу для карыстальніка "{0}": імя карыстальніка або пароль няправільныя</value>
+  </data>
+  <data name="Message_LoginSuccess" xml:space="preserve">
+    <value>Аўтэнтыфікацыя прайшла паспяхова</value>
+  </data>
+  <data name="CannotSavePassword" xml:space="preserve">
+    <value>Немагчыма захаваць пароль</value>
+  </data>
 </root>

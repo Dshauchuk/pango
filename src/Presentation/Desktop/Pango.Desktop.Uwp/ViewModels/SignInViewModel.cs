@@ -204,6 +204,8 @@ public class SignInViewModel : ViewModelBase
         if(string.IsNullOrEmpty(SelectedUser?.UserName) || string.IsNullOrEmpty(Passcode))
         {
             Logger.LogDebug("Login failed: empty username or passcode");
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("Message_LoginEmpty"), SelectedUser.UserName), AppNotificationType.Warning));
+
             return;
         }
 
@@ -211,7 +213,7 @@ public class SignInViewModel : ViewModelBase
 
         if (auth.IsError)
         {
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"{auth.FirstError.Code}. {auth.FirstError.Description}", AppNotificationType.Error));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("Message_LoginError"), SelectedUser.UserName, auth.FirstError.Code, auth.FirstError.Description), AppNotificationType.Error));
             Logger.LogDebug("Login failed for user \"{UserName}\": {Code}. {Description}", SelectedUser.UserName, auth.FirstError.Code, auth.FirstError.Description);
 
             return;
@@ -220,7 +222,7 @@ public class SignInViewModel : ViewModelBase
         if (!auth.Value)
         {
             // show error
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("User name or password is wrong", AppNotificationType.Error));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("Message_LoginFailed"), SelectedUser.UserName), AppNotificationType.Warning));
             Logger.LogDebug("Login failed for user \"{UserName}\": User name or password is wrong", SelectedUser.UserName);
 
             return;
@@ -228,6 +230,7 @@ public class SignInViewModel : ViewModelBase
 
         SecureUserSession.SaveUser(SelectedUser.UserName);
         App.Current.RaiseLoginSucceeded(SelectedUser.UserName);
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("Message_LoginSuccess"), AppNotificationType.Success));
 
         Logger.LogDebug("User \"{UserName}\" successfully signed in", SelectedUser.UserName);
     }
