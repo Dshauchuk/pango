@@ -137,13 +137,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AppxManifest Include="Package.Dev.appxmanifest" />
-		<!--<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
 			<SubType>Designer</SubType>
 		</AppxManifest>
 		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
 			<SubType>Designer</SubType>
-		</AppxManifest>-->
+		</AppxManifest>
 	</ItemGroup>
 	
 	<!-- Embed all "Resources.resw" files in the "Strings" folder to the output folder. -->
