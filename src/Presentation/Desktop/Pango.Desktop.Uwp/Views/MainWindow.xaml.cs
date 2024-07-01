@@ -25,9 +25,9 @@ public sealed partial class MainWindow : Window
         SetTitleBar(this.TitleBarBorder);
 
 #if DEBUG
-        Title = "Pango Debug";
+        WindowTitle.Text = Title = "Pango Debug";
 #else
-        Title = "Pango";
+        WindowTitle.Text = Title = "Pango";
 #endif
 
         // track user's activity for IDLE

@@ -26,6 +26,10 @@
                 <Image Width="20"
                        Height="20"
                        Source="ms-appx:///assets/logo.png" />
+
+                <TextBlock x:Name="WindowTitle"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource CaptionTextBlockStyle}"/>
             </StackPanel>
         </Border>
         
