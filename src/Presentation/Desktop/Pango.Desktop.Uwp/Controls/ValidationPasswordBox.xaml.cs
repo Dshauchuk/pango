@@ -59,6 +59,8 @@ public sealed class ValidationPasswordBox : ContentControl
         _copyButton.Click += CopyBtn_Click;
 
         _passwordBox.PasswordChanged += PasswordBox_TextChanged;
+
+        this.GotFocus += ValidationPasswordBox_GotFocus;
     }
 
     /// <summary>
@@ -234,6 +236,11 @@ public sealed class ValidationPasswordBox : ContentControl
     {
         Password = ((PasswordBox)sender).Password;
         TriggerActionButtonsVisibility();
+    }
+
+    private void ValidationPasswordBox_GotFocus(object sender, RoutedEventArgs e)
+    {
+        _passwordBox.Focus(FocusState.Programmatic);
     }
 
     /// <summary>

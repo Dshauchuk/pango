@@ -17,6 +17,7 @@
                         <ResourceDictionary Source="Resources/Styles/TextBoxStyles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/ToggleSwitchStyles.xaml" />
                         <ResourceDictionary Source="Resources/Styles/TreeViewStyles.xaml" />
+                        <ResourceDictionary Source="Resources/Styles/PivotStyles.xaml" />
                         
                         <ResourceDictionary Source="Controls/ValidationTextBox.xaml" />
                         <ResourceDictionary Source="Controls/ValidationPasswordBox.xaml" />

@@ -11,43 +11,41 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
-    <!--muxc:BackdropMaterial.ApplyToRootOrPageBackground="True"-->
-    
-    <Grid>
+    <Grid IsTabStop="False">
         <!--  Navigation view  -->
-        <muxc:NavigationView
-                    x:Name="NavigationView"
-                    BackRequested="NavigationView_BackRequested"
-                    IsBackButtonVisible="Collapsed"
-                    IsBackEnabled="False"
-                    IsSettingsVisible="True"
-                    IsTitleBarAutoPaddingEnabled="False"
-                    ItemInvoked="NavigationView_ItemInvoked">
+        <muxc:NavigationView x:Name="NavigationView"
+                             IsTabStop="False"
+                             BackRequested="NavigationView_BackRequested"
+                             IsBackButtonVisible="Collapsed"
+                             IsBackEnabled="False"
+                             IsSettingsVisible="True"
+                             IsTitleBarAutoPaddingEnabled="False"
+                             ItemInvoked="NavigationView_ItemInvoked">
             <muxc:NavigationView.Resources>
                 <Thickness x:Key="NavigationViewContentMargin">0,0,0,12</Thickness>
             </muxc:NavigationView.Resources>
             <muxc:NavigationView.MenuItems>
-                <muxc:NavigationViewItem
-                            x:Name="HomeItem"
-                            Content="{loc:StringResource Key=Home}"
-                            Icon="Home"
-                            ToolTipService.ToolTip="{loc:StringResource Key=Home}"/>
+                <muxc:NavigationViewItem x:Name="HomeItem"
+                                         IsTabStop="False"
+                                         Content="{loc:StringResource Key=Home}"
+                                         Icon="Home"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=Home}"/>
                 <muxc:NavigationViewItemSeparator />
-                <muxc:NavigationViewItem
-                            x:Name="PasswordsItem"
-                            Content="{loc:StringResource Key=Passwords}"
-                            Icon="Permissions"
-                            ToolTipService.ToolTip="{loc:StringResource Key=Passwords}" />
-                <muxc:NavigationViewItem
-                            x:Name="UserItem"
-                            Content="{loc:StringResource Key=User}"
-                            Icon="Contact" 
-                            ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
+                <muxc:NavigationViewItem x:Name="PasswordsItem"
+                                         Content="{loc:StringResource Key=Passwords}"
+                                         Icon="Permissions"
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=Passwords}" />
+                <muxc:NavigationViewItem x:Name="UserItem"
+                                         Content="{loc:StringResource Key=User}"
+                                         Icon="Contact" 
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
             </muxc:NavigationView.MenuItems>
             
             <muxc:NavigationView.Content>
                 <!--  Navigation frame  -->
-                <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" />
+                <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" IsTabStop="False"/>
             </muxc:NavigationView.Content>
 
         </muxc:NavigationView>

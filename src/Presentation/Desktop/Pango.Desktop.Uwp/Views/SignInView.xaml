@@ -13,9 +13,10 @@
     d:DataContext="{d:DesignInstance Type=viewmodels:SignInViewModel}"
     d:DesignHeight="800"
     d:DesignWidth="800">
-
-    <Grid>
-        <Pivot SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+    
+    <Grid IsTabStop="False">
+        <Pivot IsTabStop="False" 
+               SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
             <PivotItem>
                 <Grid HorizontalAlignment="Center"
@@ -167,11 +168,11 @@
             </PivotItem>
         </Pivot>
 
-        <Grid Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}}">
+        <!--<Grid Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}}">
             <TextBlock VerticalAlignment="Center" 
                        HorizontalAlignment="Center">
                 <Run Text="{loc:StringResource Key=Loading}"/><Run Text="..."/>
             </TextBlock>
-        </Grid>
+        </Grid>-->
     </Grid>
 </abstract:ViewBase>

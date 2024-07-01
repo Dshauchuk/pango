@@ -151,19 +151,4 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
-	<ItemGroup>
-	  <None Remove="Dialogs\Views\PasswordDetailsDialog.xaml" />
-	  <None Remove="Package.Dev.appxmanifest" />
-	  <None Remove="Resources\Styles\TextBoxStyles.xaml" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Page Update="Dialogs\Views\PasswordDetailsDialog.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </Page>
-	</ItemGroup>
-	<ItemGroup>
-	  <Page Update="Resources\Styles\TextBoxStyles.xaml">
-	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
-	  </Page>
-	</ItemGroup>
 </Project>

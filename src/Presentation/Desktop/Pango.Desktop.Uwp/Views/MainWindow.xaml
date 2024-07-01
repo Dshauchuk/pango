@@ -10,8 +10,9 @@
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
-    
-    <Grid x:Name="RootGrid" 
+
+    <Grid x:Name="RootGrid"  
+          IsTabStop="False"
           RowDefinitions="32,*">
         <!--  Custom title bar  -->
         <Border Height="30"

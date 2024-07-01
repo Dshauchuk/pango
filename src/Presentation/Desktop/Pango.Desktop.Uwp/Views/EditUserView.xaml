@@ -13,44 +13,54 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
-    <Grid>
+    <Grid IsTabStop="False">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         <TextBlock Text="{loc:StringResource Key='CreateUser'}"
+                   IsTabStop="False"
                    Style="{StaticResource HeaderTextBlockStyle}"/>
 
-        <ScrollViewer Grid.Row="1">
+        <ScrollViewer Grid.Row="1" 
+                      IsTabStop="False" 
+                      x:Name="ContentScrollViewer">
 
-            <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical"
+                        x:Name="ContentContainer">
                 <StackPanel Orientation="Vertical" 
+                            Margin="0,0,-10,0"
                             DataContext="{Binding UserValidator}">
                     <controls:ValidationTextBox Margin="10"
+                                                x:Name="UserName_TextBox"
                                                 PropertyName="UserName"
                                                 Text="{Binding Path=UserName, Mode=TwoWay}"
                                                 HeaderText="{loc:StringResource Key='UserName'}"  
                                                 PlaceholderText="{loc:StringResource Key='UserName'}" />
                     <controls:ValidationPasswordBox Margin="10" 
+                                                    x:Name="Password_PwdBox"
                                                     PropertyName="Password"
                                                     Password="{Binding Path=Password, Mode=TwoWay}"
                                                     HeaderText="{loc:StringResource Key='Password'}" 
                                                     PlaceholderText="{loc:StringResource Key='Password'}" />
                     <controls:ValidationPasswordBox Margin="10" 
+                                                    x:Name="PasswordConfirmation_PwdBox"
                                                     PropertyName="PasswordConfirmation"
                                                     Password="{Binding Path=PasswordConfirmation, Mode=TwoWay}"
                                                     HeaderText="{loc:StringResource Key='PasswordConfirmation'}" 
                                                     PlaceholderText="{loc:StringResource Key='PasswordConfirmation'}" />
                 </StackPanel>
 
-                <StackPanel Orientation="Horizontal"
+                <StackPanel Margin="20" Orientation="Horizontal"
                             HorizontalAlignment="Right">
                     <Button Margin="5" 
+                            x:Name="Save_Button"
                             Content="{loc:StringResource Key='Save'}"
                             Style="{StaticResource AccentButtonStyle}"
                             Command="{Binding Path=SaveUserComand}"/>
                     <Button Margin="5" 
+                            x:Name="Cancel_Button"
                             Content="{loc:StringResource Key='Cancel'}"
                             Command="{Binding Path=OpenSignInViewCommand}"/>
                 </StackPanel>
