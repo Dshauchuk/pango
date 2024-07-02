@@ -151,7 +151,7 @@
     <value>Edit password</value>
   </data>
   <data name="EnterMasterCode" xml:space="preserve">
-    <value>Enter mastercode</value>
+    <value>Enter password</value>
   </data>
   <data name="Greeting.Text" xml:space="preserve">
     <value>Hello</value>
@@ -321,7 +321,7 @@
     <value>Edit Catalog</value>
   </data>
   <data name="RemoveCatalog_Message" xml:space="preserve">
-    <value>The catalog containing 5 passwords will be removed. Do you want to continue?</value>
+    <value>The catalog "{0}" containing {1} passwords will be removed. Do you want to continue?</value>
   </data>
   <data name="AutolockAfterMinutes" xml:space="preserve">
     <value>Lock after minutes</value>
@@ -368,5 +368,20 @@
   </data>
   <data name="SeePassword" xml:space="preserve">
     <value>Show Password</value>
+  </data>
+  <data name="CannotSavePassword" xml:space="preserve">
+    <value>Cannot save password</value>
+  </data>
+  <data name="Message_LoginEmpty" xml:space="preserve">
+    <value>Login failed for user "{0}": User name or password is empty</value>
+  </data>
+  <data name="Message_LoginError" xml:space="preserve">
+    <value>Login failed for user "{0}": {1}. {2}</value>
+  </data>
+  <data name="Message_LoginFailed" xml:space="preserve">
+    <value>Login failed for user "{0}": User name or password is wrong</value>
+  </data>
+  <data name="Message_LoginSuccess" xml:space="preserve">
+    <value>Authentication succeeded</value>
   </data>
 </root>

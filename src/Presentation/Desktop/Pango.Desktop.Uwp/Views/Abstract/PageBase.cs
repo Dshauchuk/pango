@@ -13,20 +13,32 @@ public abstract class PageBase(ILogger logger) : Page
 
     protected ILogger Logger { get; } = logger;
 
-    protected override void OnNavigatedTo(NavigationEventArgs e)
+    protected async override void OnNavigatedTo(NavigationEventArgs e)
     {
         Debug.WriteLine($"Navigated to {this.GetType().Name}");
 
         RegisterMessages();
 
+        ViewModelBase? viewModel = DataContext as ViewModelBase;
+        if (viewModel is not null)
+        {
+            await viewModel.OnNavigatedToAsync(e);
+        }
+
         base.OnNavigatedTo(e);
     }
 
-    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    protected async override void OnNavigatedFrom(NavigationEventArgs e)
     {
         Debug.WriteLine($"Navigated from {this.GetType().Name}");
 
         UnregisterMessages();
+
+        ViewModelBase? viewModel = DataContext as ViewModelBase;
+        if (viewModel is not null)
+        {
+            await viewModel.OnNavigatedFromAsync(e);
+        }
 
         base.OnNavigatedFrom(e);
     }

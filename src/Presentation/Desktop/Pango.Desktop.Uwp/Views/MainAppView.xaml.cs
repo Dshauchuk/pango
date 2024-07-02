@@ -51,11 +51,14 @@ public sealed partial class MainAppView : ViewBase
     private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         if (ViewModel != null)
+        {
             await ViewModel.OnNavigatedToAsync(null);
+        }
 
         NavigateToInitialPage();
 
         ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).Content = _viewResourceLoader.GetString("Settings");
+        ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).IsTabStop = false;
     }
 
     private void NavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
