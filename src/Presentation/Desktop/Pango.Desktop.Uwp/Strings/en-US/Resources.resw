@@ -384,4 +384,7 @@
   <data name="Message_LoginSuccess" xml:space="preserve">
     <value>Authentication succeeded</value>
   </data>
+  <data name="CapsLockWarningText" xml:space="preserve">
+    <value>Having caps-lock turned on might result in incorrect password</value>
+  </data>
 </root>

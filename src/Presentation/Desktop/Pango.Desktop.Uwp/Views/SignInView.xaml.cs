@@ -18,11 +18,26 @@ public sealed partial class SignInView : ViewBase
         DataContext = App.Host.Services.GetRequiredService<SignInViewModel>();
 
         Loaded += SignInView_Loaded;
+        App.Current.KeyboardHook.CapsLockChanged += KeyboardHook_CapsLockChanged;
+    }
+
+    private void KeyboardHook_CapsLockChanged(object? sender, bool e)
+    {
+        HandleCapsLock();
+    }
+
+    private void HandleCapsLock()
+    {
+        Windows.UI.Core.CoreVirtualKeyStates capsLock =
+            Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.CapitalLock);
+
+        ((SignInViewModel)DataContext).IsCapLockWarningShown = capsLock.HasFlag(Windows.UI.Core.CoreVirtualKeyStates.Locked);
     }
 
     private void SignInView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasscodePasswordBox.Focus(FocusState.Programmatic);
+        HandleCapsLock();
     }
 
     private async void PasscodePasswordBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)

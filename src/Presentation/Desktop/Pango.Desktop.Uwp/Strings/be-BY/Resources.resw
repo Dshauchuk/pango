@@ -382,4 +382,7 @@
   <data name="CannotSavePassword" xml:space="preserve">
     <value>Немагчыма захаваць пароль</value>
   </data>
+  <data name="CapsLockWarningText" xml:space="preserve">
+    <value>Калі Caps Lock уключаны, пароль можа быць няправільным</value>
+  </data>
 </root>
