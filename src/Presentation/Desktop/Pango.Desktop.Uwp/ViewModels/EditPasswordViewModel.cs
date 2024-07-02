@@ -30,6 +30,7 @@ public class EditPasswordViewModel : ViewModelBase
     private bool _isNew;
     private List<string>? _availableCatalogs;
     private EditPasswordValidator? _passwordValidator;
+    private string _title;
 
     #endregion
 
@@ -43,6 +44,12 @@ public class EditPasswordViewModel : ViewModelBase
 
     #region Properties
 
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
+    }
+
     public EditPasswordValidator? PasswordValidator
     {
         get => _passwordValidator;
@@ -52,7 +59,18 @@ public class EditPasswordViewModel : ViewModelBase
     public bool IsNew
     {
         get => _isNew;
-        set => SetProperty(ref _isNew, value);
+        set
+        {
+            SetProperty(ref _isNew, value);
+            if (value)
+            {
+                Title = ViewResourceLoader.GetString("NewPassword");
+            }
+            else
+            {
+                Title = ViewResourceLoader.GetString("EditPassword"); 
+            }
+        }
     }
 
     public List<string>? AvailableCatalogs

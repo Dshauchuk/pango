@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Pango.Application;
+using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Serilog;
@@ -17,6 +18,7 @@ namespace Pango.Desktop.Uwp;
 sealed partial class App : ApplicationBase
 {
     public MainWindow? CurrentWindow { get; private set; }
+    public KeyboardHook? KeyboardHook { get; private set; }
 
     public static new App Current => (App)ApplicationBase.Current;
     
@@ -27,11 +29,13 @@ sealed partial class App : ApplicationBase
     public App()
     {
         this.InitializeComponent();
+        KeyboardHook = new KeyboardHook();
 
         this.UnhandledException += App_UnhandledException;
     }
 
     public event Action<string>? LoginSucceeded;
+    public event Action? SignedOut;
 
     public static IHost Host { get; } = BuildHost();
 
@@ -78,5 +82,10 @@ sealed partial class App : ApplicationBase
     public void RaiseLoginSucceeded(string userName)
     {
         LoginSucceeded?.Invoke(userName);
+    }
+
+    public void RaiseSignedOut()
+    {
+        SignedOut?.Invoke();
     }
 }

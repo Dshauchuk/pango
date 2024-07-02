@@ -67,6 +67,7 @@ public class UserViewModel : ViewModelBase
     {
         _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
         SecureUserSession.ClearUser();
+        App.Current.RaiseSignedOut();
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
     }
 

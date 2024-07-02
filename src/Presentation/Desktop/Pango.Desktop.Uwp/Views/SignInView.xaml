@@ -115,24 +115,43 @@
             <PivotItem>
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center"
-                      MinWidth="300">
+                      MinWidth="350">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="25"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <StackPanel Margin="10" 
+                    <StackPanel Margin="10,0" 
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center">
                         <SymbolIcon Margin="2" 
                                     Symbol="Contact2" />
                         <TextBlock Margin="2"
-                                   Text="{Binding SelectedUser.UserName}" />
+                                   Text="{Binding SelectedUser.UserName}"
+                                   Style="{StaticResource BodyStrongTextBlockStyle}"/>
                     </StackPanel>
 
+                    <StackPanel Grid.Row="1" 
+                                Margin="0,0,0,2"
+                                Orientation="Horizontal"
+                                Visibility="{Binding IsCapLockWarningShown}">
+                        <FontIcon VerticalAlignment="Center"
+                                  FontSize="16" 
+                                  IsTabStop="False"
+                                  Foreground="Orange"
+                                  Glyph="&#xE814;" />
+
+                        <TextBlock Margin="2" 
+                                   IsTabStop="False"
+                                   VerticalAlignment="Center"
+                                   Style="{StaticResource CaptionTextBlockStyle}"
+                                   Text="{loc:StringResource Key=CapsLockWarningText}"/>
+                    </StackPanel>
+                    
                     <PasswordBox Margin="2" 
-                                 Grid.Row="1"
+                                 Grid.Row="2"
                                  IsTapEnabled="True" 
                                  IsTabStop="True"
                                  x:Name="PasscodePasswordBox"
@@ -141,7 +160,7 @@
                                  PlaceholderText="{loc:StringResource Key=EnterMastercode}">
                     </PasswordBox>
 
-                    <Grid Grid.Row="2"
+                    <Grid Grid.Row="3"
                           Margin="2,10"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch">

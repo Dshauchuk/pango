@@ -29,6 +29,7 @@ public class SignInViewModel : ViewModelBase
     private int _signInStepIndex;
     private bool _hasUsers;
     private string? _passcode;
+    private bool _isCapLockWarningShown;
 
     #endregion
 
@@ -60,6 +61,12 @@ public class SignInViewModel : ViewModelBase
     #region Properties
 
     public ObservableCollection<PangoUserDto> Users { get; private set; }
+
+    public bool IsCapLockWarningShown
+    {
+        get => _isCapLockWarningShown;
+        set => SetProperty(ref _isCapLockWarningShown, value);
+    }
 
     public PangoUserDto? SelectedUser
     {
@@ -112,6 +119,7 @@ public class SignInViewModel : ViewModelBase
         {
             ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(currentUser.UserName));
             SecureUserSession.ClearUser();
+            App.Current.RaiseSignedOut();
             if (previouslySelectedUser.IsError)
             {
                 GoToUserSelection();
