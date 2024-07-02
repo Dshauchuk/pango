@@ -119,6 +119,7 @@ public class SignInViewModel : ViewModelBase
         {
             ErrorOr<PangoUserDto> previouslySelectedUser = await _sender.Send<ErrorOr<PangoUserDto>>(new FindUserQuery(currentUser.UserName));
             SecureUserSession.ClearUser();
+            App.Current.RaiseSignedOut();
             if (previouslySelectedUser.IsError)
             {
                 GoToUserSelection();

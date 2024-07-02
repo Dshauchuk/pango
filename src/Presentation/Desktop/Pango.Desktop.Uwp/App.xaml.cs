@@ -35,6 +35,7 @@ sealed partial class App : ApplicationBase
     }
 
     public event Action<string>? LoginSucceeded;
+    public event Action? SignedOut;
 
     public static IHost Host { get; } = BuildHost();
 
@@ -81,5 +82,10 @@ sealed partial class App : ApplicationBase
     public void RaiseLoginSucceeded(string userName)
     {
         LoginSucceeded?.Invoke(userName);
+    }
+
+    public void RaiseSignedOut()
+    {
+        SignedOut?.Invoke();
     }
 }
