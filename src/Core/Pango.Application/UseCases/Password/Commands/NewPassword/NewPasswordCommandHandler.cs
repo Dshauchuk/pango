@@ -1,7 +1,10 @@
 ﻿using ErrorOr;
 using Mapster;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Persistence;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 
 namespace Pango.Application.UseCases.Password.Commands.NewPassword;
@@ -10,27 +13,40 @@ public class NewPasswordCommandHandler
     : IRequestHandler<NewPasswordCommand, ErrorOr<PangoPasswordDto>>
 {
     private readonly IPasswordRepository _passwordRepository;
+    private readonly IUserContextProvider _userContextProvider;
+    private readonly ILogger<NewPasswordCommandHandler> _logger;
 
-    public NewPasswordCommandHandler(IPasswordRepository passwordRepository)
+    public NewPasswordCommandHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<NewPasswordCommandHandler> logger)
     {
         _passwordRepository = passwordRepository;
+        _userContextProvider = userContextProvider;
+        _logger = logger;
     }
 
     public async Task<ErrorOr<PangoPasswordDto>> Handle(NewPasswordCommand request, CancellationToken cancellationToken)
     {
-        Domain.Entities.PangoPassword entity = new()
+        try
         {
-            Login = request.Login,
-            Name = request.Name,
-            Properties = request.Properties,
-            Value = request.Value,
-            CreatedAt = DateTimeOffset.UtcNow,
-            CatalogPath = request.CatalogPath,
-            IsCatalog = request.IsCatalogHolder,
-        };
+            Domain.Entities.PangoPassword entity = new()
+            {
+                Login = request.Login,
+                Name = request.Name,
+                Properties = request.Properties,
+                UserName = _userContextProvider.GetUserName(),
+                Value = request.Value,
+                CreatedAt = DateTimeOffset.UtcNow,
+                CatalogPath = request.CatalogPath,
+                IsCatalog = request.IsCatalogHolder,
+            };
 
-        await _passwordRepository.CreateAsync(entity);
+            await _passwordRepository.CreateAsync(entity);
 
-        return entity.Adapt<PangoPasswordDto>();
+            return entity.Adapt<PangoPasswordDto>();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Password {PasswordName} cannot be created: {Message}", request.Name, ex.Message);
+            return Error.Failure(ApplicationErrors.Password.CreationFailed, $"Password {request.Name} cannot be created: {ex.Message}");
+        }
     }
 }

@@ -19,14 +19,14 @@ public interface IPasswordRepository
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<PangoPassword> FindAsync(Func<PangoPassword, bool> predicate);
+    Task<PangoPassword?> FindAsync(string userName, Func<PangoPassword, bool> predicate);
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate);
+    Task<IEnumerable<PangoPassword>> QueryAsync(string userName, Func<PangoPassword, bool> predicate);
 
     /// <summary>
     /// 

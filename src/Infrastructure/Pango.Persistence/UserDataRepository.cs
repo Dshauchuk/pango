@@ -15,11 +15,10 @@ public class UserDataRepository : FileRepositoryBase<PangoUser>, IUserDataReposi
     protected override string DirectoryName => "users";
 
     public UserDataRepository(IContentEncoder contentEncoder, 
-        IAppUserProvider appUserProvider, 
         IAppDomainProvider appDomainProvider,
         IAppOptions appOptions,
         ILogger<UserDataRepository> logger)
-        : base(contentEncoder, appUserProvider, appDomainProvider, appOptions, logger)
+        : base(contentEncoder, appDomainProvider, appOptions, logger)
     {
     }
 

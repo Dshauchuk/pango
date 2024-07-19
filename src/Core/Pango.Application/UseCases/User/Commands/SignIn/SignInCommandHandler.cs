@@ -1,5 +1,7 @@
 ﻿using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
@@ -10,11 +12,13 @@ public class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<bool>
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHashProvider _passwordHashProvider;
+    private readonly ILogger<SignInCommandHandler> _logger;
 
-    public SignInCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider)
+    public SignInCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<SignInCommandHandler> logger)
     {
         _userRepository = userRepository;
         _passwordHashProvider = passwordHashProvider;
+        _logger = logger;
     }
 
     public async Task<ErrorOr<bool>> Handle(SignInCommand request, CancellationToken cancellationToken)
@@ -30,7 +34,8 @@ public class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<bool>
         }
         catch(Exception ex)
         {
-            return Error.Failure("authentication_error", ex.Message);
+            _logger.LogError(ex, "Login failed for user {UserName}: {Message}", request.UserName, ex.Message);
+            return Error.Failure(ApplicationErrors.User.LoginFailed, ex.Message);
         }
     }
 }

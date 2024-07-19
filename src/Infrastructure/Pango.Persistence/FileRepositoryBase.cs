@@ -13,10 +13,9 @@ public abstract class FileRepositoryBase<T>
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppOptions _appOptions;
     private readonly ILogger _logger; 
-    private SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+    private SemaphoreSlim _semaphore = new(1);
 
     public FileRepositoryBase(IContentEncoder contentEncoder,
-        IAppUserProvider appUserProvider,
         IAppDomainProvider appDomainProvider, 
         IAppOptions appOptions, 
         ILogger logger)
@@ -25,22 +24,20 @@ public abstract class FileRepositoryBase<T>
         _appDomainProvider = appDomainProvider;
         _appOptions = appOptions;
         _logger = logger;
-        UserDataProvider = appUserProvider;
     }
 
     #region Properties
 
     protected abstract string DirectoryName { get; }
 
-    protected IAppUserProvider UserDataProvider { get; }
     #endregion
 
     #region Methods
 
-    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync()
+    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string userName)
     {
-        List<T> items = new();
-        IEnumerable<string> files = ListRepositoryFiles();
+        List<T> items = [];
+        IEnumerable<string> files = FileRepositoryBase<T>.ListRepositoryFiles(_appDomainProvider.GetUserFolderPath(userName));
 
         foreach (string file in files)
         {
@@ -57,22 +54,20 @@ public abstract class FileRepositoryBase<T>
         return items;
     }
 
-    protected async Task SaveItemsForUserAsync(IEnumerable<T> items)
+    protected async Task SaveItemsForUserAsync(IEnumerable<T> items, string userName)
     {
-        string userId = UserDataProvider.GetUserId();
-
-        IEnumerable<FileContentPackage> contentParts = PrepareContent(items);
+        IEnumerable<FileContentPackage> contentParts = PrepareContent(items, userName);
 
         int packageIndex = 1;
-        List<string> usedFiles = new();
+        List<string> usedFiles = [];
         foreach(FileContentPackage contentPart in contentParts)
         {
-            string filePath = BuildPath(userId, $"{contentPart.Id}_p{packageIndex++}{DefineFileExtension()}");
+            string filePath = _appDomainProvider.GetPath(userName, $"{contentPart.Id}_p{packageIndex++}{FileRepositoryBase<T>.DefineFileExtension()}");
             await WriteDataPackageAsync(contentPart, filePath);
             usedFiles.Add(filePath);
         }
 
-        IEnumerable<string> allFiles = ListRepositoryFiles();
+        IEnumerable<string> allFiles = FileRepositoryBase<T>.ListRepositoryFiles(_appDomainProvider.GetUserFolderPath(userName));
         IEnumerable<string> uselessFiles = allFiles.Except(usedFiles);
 
         foreach(string fileToRemove in uselessFiles)
@@ -110,7 +105,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Cannot read data package from \"{filePath}\"", ex);
+            _logger.LogError(ex, "Cannot read data package from \"{filePath}\"", filePath);
 
             return null;
         }
@@ -122,32 +117,30 @@ public abstract class FileRepositoryBase<T>
         await WriteFileContentAsync(filePath, content);
     }
 
-    private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items)
+    private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items, string userName)
     {
         List<FileContentPackage> fileContents = new(100);
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            FileContentPackage fileContent = new(UserDataProvider.GetUserId(), DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
+            FileContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 
         return fileContents;
     }
 
-    private IEnumerable<string> ListRepositoryFiles()
+    private static IEnumerable<string> ListRepositoryFiles(string folderPath)
     {
-        string directoryPath = BuildPath(UserDataProvider.GetUserId());
-
-        if (!Directory.Exists(directoryPath))
+        if (!Directory.Exists(folderPath))
         {
-            Directory.CreateDirectory(directoryPath);
-            return new List<string>();
+            Directory.CreateDirectory(folderPath);
+            return [];
         }
         else
         {
-            return Directory.GetFiles(directoryPath, $"*{DefineFileExtension()}");
+            return Directory.GetFiles(folderPath, $"*{FileRepositoryBase<T>.DefineFileExtension()}");
         }
     }
 
@@ -160,6 +153,11 @@ public abstract class FileRepositoryBase<T>
         };
     }
 
+    /// <summary>
+    /// Returns <see cref="ContentType"/> that is corresponding to <see cref="T"/>
+    /// </summary>
+    /// <returns></returns>
+    /// <exception cref="PangoException"></exception>
     private ContentType DefineContentType()
     {
         return typeof(T).Name switch
@@ -169,9 +167,14 @@ public abstract class FileRepositoryBase<T>
         };
     }
 
+    /// <summary>
+    /// Deletes all files in the folder assigned to <paramref name="userName"/>
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <returns></returns>
     protected Task DeleteUserDataAsync(string userName)
     {
-        DirectoryInfo directory = new(BuildUserFolderPath(userName));
+        DirectoryInfo directory = new(_appDomainProvider.GetUserFolderPath(userName));
 
         if (directory.Exists)
         {
@@ -182,19 +185,11 @@ public abstract class FileRepositoryBase<T>
         return Task.CompletedTask;
     }
 
-    private string DefineFileExtension()
-    {
-        return ".pngdat";
-    }
-
-    private string BuildUserFolderPath(string userName)
-        => Path.Combine(_appDomainProvider.GetAppDataFolderPath(), "users", userName);
-
-    private string BuildPath(string userName, string? fileName = null)
-        => string.IsNullOrWhiteSpace(fileName) ?
-            Path.Combine(BuildUserFolderPath(userName), DirectoryName) :
-            Path.Combine(BuildUserFolderPath(userName), DirectoryName, fileName);
-
+    /// <summary>
+    /// Returns file extension that's used by this repository
+    /// </summary>
+    /// <returns></returns>
+    private static string DefineFileExtension() => ".pngdat";
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {
