@@ -15,12 +15,18 @@ public class UpdatePasswordCommandHandler
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
     private readonly ILogger<UpdatePasswordCommandHandler> _logger;
 
-    public UpdatePasswordCommandHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<UpdatePasswordCommandHandler> logger)
+    public UpdatePasswordCommandHandler(
+        IPasswordRepository passwordRepository, 
+        IUserContextProvider userContextProvider,
+        IRepositoryContextFactory repositoryContextFactory,
+        ILogger<UpdatePasswordCommandHandler> logger)
     {
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
+        _repositoryContextFactory = repositoryContextFactory;
         _logger = logger;
     }
 
@@ -28,7 +34,9 @@ public class UpdatePasswordCommandHandler
     {
         try
         {
-            PangoPassword? password = await _passwordRepository.FindAsync(_userContextProvider.GetUserName(), p => p.Id == request.PasswordId);
+            IRepositoryActionContext context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
+
+            PangoPassword? password = await _passwordRepository.FindAsync(p => p.Id == request.PasswordId, context);
 
             if (password is null)
             {
@@ -38,7 +46,7 @@ public class UpdatePasswordCommandHandler
             if (password.IsCatalog)
             {
                 string oldCatalogPath = request.CatalogPath + (string.IsNullOrEmpty(request.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + password.Name;
-                var catalogPasswords = await _passwordRepository.QueryAsync(_userContextProvider.GetUserName(), p => p.CatalogPath == oldCatalogPath);
+                var catalogPasswords = await _passwordRepository.QueryAsync(p => p.CatalogPath == oldCatalogPath, context);
 
                 if (catalogPasswords.Any())
                 {
@@ -49,7 +57,7 @@ public class UpdatePasswordCommandHandler
                     foreach (var pwd in catalogPasswords)
                     {
                         pwd.CatalogPath = newCatalogPath;
-                        await _passwordRepository.UpdateAsync(pwd);
+                        await _passwordRepository.UpdateAsync(pwd, context);
                     }
                 }
             }
@@ -64,7 +72,7 @@ public class UpdatePasswordCommandHandler
             password.Name = request.Name;
             password.CatalogPath = request.CatalogPath;
 
-            PangoPassword updated = await _passwordRepository.UpdateAsync(password);
+            PangoPassword updated = await _passwordRepository.UpdateAsync(password, context);
 
             return updated.Adapt<PangoPasswordDto>();
         }

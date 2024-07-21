@@ -1,4 +1,4 @@
-﻿namespace Pango.Persistence;
+﻿namespace Pango.Persistence.File;
 
 public enum ContentType
 {

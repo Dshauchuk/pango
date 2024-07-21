@@ -4,24 +4,23 @@ using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Extensions;
 using Pango.Application.Common.Interfaces;
 using Pango.Domain.Entities;
+using Pango.Persistence.File;
 
 namespace Pango.Persistence;
 
 public abstract class FileRepositoryBase<T>
 {
     private readonly IContentEncoder _contentEncoder;
-    private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppOptions _appOptions;
     private readonly ILogger _logger; 
     private SemaphoreSlim _semaphore = new(1);
 
-    public FileRepositoryBase(IContentEncoder contentEncoder,
-        IAppDomainProvider appDomainProvider, 
-        IAppOptions appOptions, 
+    public FileRepositoryBase(
+        IContentEncoder contentEncoder,
+        IAppOptions appOptions,
         ILogger logger)
     {
         _contentEncoder = contentEncoder;
-        _appDomainProvider = appDomainProvider;
         _appOptions = appOptions;
         _logger = logger;
     }
@@ -34,16 +33,15 @@ public abstract class FileRepositoryBase<T>
 
     #region Methods
 
-    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string userName)
+    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(IEnumerable<string> filePaths, EncodingOptions encodingOptions)
     {
         List<T> items = [];
-        IEnumerable<string> files = FileRepositoryBase<T>.ListRepositoryFiles(_appDomainProvider.GetUserFolderPath(userName));
 
-        foreach (string file in files)
+        foreach (string file in filePaths)
         {
-            var package = await ReadDataPackageAsync(file);
-            
-            if(package is null)
+            var package = await ReadDataPackageAsync(file, encodingOptions.Key, encodingOptions.Salt);
+
+            if (package is null)
             {
                 continue;
             }
@@ -54,26 +52,51 @@ public abstract class FileRepositoryBase<T>
         return items;
     }
 
-    protected async Task SaveItemsForUserAsync(IEnumerable<T> items, string userName)
+    protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string directoryPath, EncodingOptions encodingOptions)
     {
-        IEnumerable<FileContentPackage> contentParts = PrepareContent(items, userName);
+        IEnumerable<string> filePaths = FileRepositoryBase<T>.ListRepositoryFiles(directoryPath);
+
+        return await ExtractAllItemsForUserAsync(filePaths, encodingOptions);
+    }
+
+    protected async Task SaveItemsForUserAsync(IEnumerable<T> items, string ownerName, string directoryPath, EncodingOptions encodingOptions)
+    {
+        IEnumerable<FileContentPackage> contentParts = PrepareContent(items, ownerName);
 
         int packageIndex = 1;
         List<string> usedFiles = [];
         foreach(FileContentPackage contentPart in contentParts)
         {
-            string filePath = _appDomainProvider.GetPath(userName, $"{contentPart.Id}_p{packageIndex++}{FileRepositoryBase<T>.DefineFileExtension()}");
-            await WriteDataPackageAsync(contentPart, filePath);
+            string filePath = Path.Combine(directoryPath, $"{contentPart.Id}_p{packageIndex++}{FileRepositoryBase<T>.DefineFileExtension()}");
+            await WriteDataPackageAsync(contentPart, filePath, encodingOptions.Key, encodingOptions.Salt);
             usedFiles.Add(filePath);
         }
 
-        IEnumerable<string> allFiles = FileRepositoryBase<T>.ListRepositoryFiles(_appDomainProvider.GetUserFolderPath(userName));
+        IEnumerable<string> allFiles = FileRepositoryBase<T>.ListRepositoryFiles(directoryPath);
         IEnumerable<string> uselessFiles = allFiles.Except(usedFiles);
 
         foreach(string fileToRemove in uselessFiles)
         {
-            File.Delete(fileToRemove);
+            System.IO.File.Delete(fileToRemove);
         }
+    }
+
+    /// <summary>
+    /// Deletes all files in the folder assigned to <paramref name="userName"/>
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <returns></returns>
+    protected Task DeleteDataAsync(string directoryPath)
+    {
+        DirectoryInfo directory = new(directoryPath);
+
+        if (directory.Exists)
+        {
+            // delete user's directory, all files and subdirectories
+            return Task.Run(() => directory.Delete(true));
+        }
+
+        return Task.CompletedTask;
     }
 
     #endregion
@@ -92,12 +115,12 @@ public abstract class FileRepositoryBase<T>
         return Task.FromResult(data);
     }
 
-    private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath)
+    private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath, string key, string salt)
     {
         try
         {
             byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
-            var package = await _contentEncoder.DecryptAsync<FileContentPackage>(encryptedFileContent);
+            var package = await _contentEncoder.DecryptAsync<FileContentPackage>(encryptedFileContent, key, salt);
 
             // todo: verify if the package id matches the file
 
@@ -111,9 +134,9 @@ public abstract class FileRepositoryBase<T>
         }
     }
 
-    private async Task WriteDataPackageAsync(FileContentPackage package, string filePath)
+    private async Task WriteDataPackageAsync(FileContentPackage package, string filePath, string key, string salt)
     {
-        byte[] content = await _contentEncoder.EncryptAsync(package);
+        byte[] content = await _contentEncoder.EncryptAsync(package, key, salt);
         await WriteFileContentAsync(filePath, content);
     }
 
@@ -144,6 +167,64 @@ public abstract class FileRepositoryBase<T>
         }
     }
 
+    private async Task<byte[]> ReadFileContentAsync(string filePath)
+    {
+        try
+        {
+            await _semaphore.WaitAsync();
+
+            if (!System.IO.File.Exists(filePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                System.IO.File.Create(filePath).Dispose();
+            }
+
+            byte[] result;
+            using (FileStream stream = System.IO.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                result = new byte[stream.Length];
+                await stream.ReadAsync(result, 0, (int)stream.Length);
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
+    private async Task WriteFileContentAsync(string filePath, byte[] content)
+    {
+        await _semaphore.WaitAsync();
+
+        try
+        {
+            if (!System.IO.File.Exists(filePath))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                System.IO.File.Create(filePath).Dispose();
+            }
+
+            using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
+            {
+                await sourceStream.WriteAsync(content, 0, content.Length);
+            };
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+        finally
+        {
+            _semaphore.Release();
+        }
+    }
+
     private int DefineCountOfItemsPerFile()
     {
         return DefineContentType() switch
@@ -168,86 +249,10 @@ public abstract class FileRepositoryBase<T>
     }
 
     /// <summary>
-    /// Deletes all files in the folder assigned to <paramref name="userName"/>
-    /// </summary>
-    /// <param name="userName"></param>
-    /// <returns></returns>
-    protected Task DeleteUserDataAsync(string userName)
-    {
-        DirectoryInfo directory = new(_appDomainProvider.GetUserFolderPath(userName));
-
-        if (directory.Exists)
-        {
-            // delete user's directory, all files and subdirectories
-            return Task.Run(() => directory.Delete(true));
-        }
-
-        return Task.CompletedTask;
-    }
-
-    /// <summary>
     /// Returns file extension that's used by this repository
     /// </summary>
     /// <returns></returns>
     private static string DefineFileExtension() => ".pngdat";
-
-    private async Task<byte[]> ReadFileContentAsync(string filePath)
-    {
-        try
-        {
-            await _semaphore.WaitAsync();
-
-            if (!File.Exists(filePath))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                File.Create(filePath).Dispose();
-            }
-
-            byte[] result;
-            using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                result = new byte[stream.Length];
-                await stream.ReadAsync(result, 0, (int)stream.Length);
-            }
-
-            return result;
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
-
-    private async Task WriteFileContentAsync(string filePath, byte[] content)
-    {
-        await _semaphore.WaitAsync();
-
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                File.Create(filePath).Dispose();
-            }
-
-            using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-            {
-                await sourceStream.WriteAsync(content, 0, content.Length);
-            };
-        }
-        catch (Exception ex)
-        {
-            throw;
-        }
-        finally
-        {
-            _semaphore.Release();
-        }
-    }
 
     #endregion
 }

@@ -17,6 +17,7 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
         Login = string.Empty;
         Properties = new();
         CatalogPath = string.Empty;
+        LocationPath = string.Empty;
     }
 
 	/// <summary>
@@ -58,4 +59,9 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
 	/// Indicated if the entity is intended for being a catalog owner
 	/// </summary>
 	public bool IsCatalog { get; set; }
+	
+	/// <summary>
+	/// Presents the path of the file where the password is located
+	/// </summary>
+	public string LocationPath { get; set; }
 }

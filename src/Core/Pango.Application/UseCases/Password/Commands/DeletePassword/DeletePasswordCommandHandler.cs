@@ -13,12 +13,18 @@ public class DeletePasswordCommandHandler
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
     private readonly ILogger<DeletePasswordCommandHandler> _logger;
 
-    public DeletePasswordCommandHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<DeletePasswordCommandHandler> logger)
+    public DeletePasswordCommandHandler(
+        IPasswordRepository passwordRepository, 
+        IUserContextProvider userContextProvider,  
+        IRepositoryContextFactory repositoryContextFactory,
+        ILogger<DeletePasswordCommandHandler> logger)
     {
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
+        _repositoryContextFactory = repositoryContextFactory;
         _logger = logger;
     }
 
@@ -26,7 +32,9 @@ public class DeletePasswordCommandHandler
     {
         try
         {
-            var password = await _passwordRepository.FindAsync(_userContextProvider.GetUserName(), pwd => pwd.Id == request.PasswordId);
+            IRepositoryActionContext context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
+
+            var password = await _passwordRepository.FindAsync(pwd => pwd.Id == request.PasswordId, context);
 
             if (password is null)
             {
@@ -38,7 +46,7 @@ public class DeletePasswordCommandHandler
             if (password.IsCatalog)
             {
                 string catalogPath = string.IsNullOrEmpty(password.CatalogPath) ? password.Name : $"{password.CatalogPath}{AppConstants.CatalogDelimeter}{password.Name}";
-                var internalPasswords = (await _passwordRepository.QueryAsync(_userContextProvider.GetUserName(), p => p.CatalogPath == catalogPath)).ToList();
+                var internalPasswords = (await _passwordRepository.QueryAsync(p => p.CatalogPath == catalogPath, context)).ToList();
 
                 if (internalPasswords.Any())
                 {
@@ -48,7 +56,7 @@ public class DeletePasswordCommandHandler
 
             foreach (var pwd in passwordsToRemove)
             {
-                await _passwordRepository.DeleteAsync(pwd);
+                await _passwordRepository.DeleteAsync(pwd, context);
             }
 
             return true;

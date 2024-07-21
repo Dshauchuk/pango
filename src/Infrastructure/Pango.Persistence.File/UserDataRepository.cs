@@ -18,11 +18,11 @@ public class UserDataRepository : FileRepositoryBase<PangoUser>, IUserDataReposi
         IAppDomainProvider appDomainProvider,
         IAppOptions appOptions,
         ILogger<UserDataRepository> logger)
-        : base(contentEncoder, appDomainProvider, appOptions, logger)
+        : base(contentEncoder, appOptions, logger)
     {
     }
 
     /// <inheritdoc/>
-    public Task DeleteAllUserDataAsync(string userName)
-        => DeleteUserDataAsync(userName);
+    public Task DeleteAllUserDataAsync(string userDirectoryPath)
+        => DeleteDataAsync(userDirectoryPath);
 }

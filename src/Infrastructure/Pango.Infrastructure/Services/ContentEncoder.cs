@@ -2,7 +2,6 @@
 using Newtonsoft.Json.Linq;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
-using Pango.Application.Common.Interfaces.Services;
 using Pango.Persistence;
 using System.Security.Cryptography;
 
@@ -10,18 +9,11 @@ namespace Pango.Infrastructure.Services;
 
 public class ContentEncoder : IContentEncoder
 {
-    private readonly IUserContextProvider _userContextProvider;
-
-    public ContentEncoder(IUserContextProvider userContextProvider)
-    {
-        _userContextProvider = userContextProvider;
-    }
-
-    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent)
+    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent, string key, string salt)
     {
         try
         {
-            string jsonContent = Decrypt(encryptedContent, await GetKeyAsync(), await GetVectorAsync());
+            string jsonContent = await Task.Run(() => Decrypt(encryptedContent, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
 
             var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
 
@@ -50,28 +42,18 @@ public class ContentEncoder : IContentEncoder
         }
     }
 
-    public async Task<byte[]> EncryptAsync<T>(T content)
+    public async Task<byte[]> EncryptAsync<T>(T content, string key, string salt)
     {
         try
         {
             string json = JsonConvert.SerializeObject(content);
 
-            return Encrypt(json, await GetKeyAsync(), await GetVectorAsync());
+            return await Task.Run(() => Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
         }
         catch (Exception ex)
         {
             throw new DataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
         }
-    }
-
-    private async Task<byte[]> GetKeyAsync()
-    {
-        return Convert.FromBase64String(await _userContextProvider.GetKeyAsync());
-    }
-
-    private async Task<byte[]> GetVectorAsync()
-    {
-        return Convert.FromBase64String(await _userContextProvider.GetSaltAsync());
     }
 
     private static byte[] Encrypt(string simpletext, byte[] key, byte[] iv)

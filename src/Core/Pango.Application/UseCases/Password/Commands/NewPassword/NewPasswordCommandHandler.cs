@@ -14,12 +14,18 @@ public class NewPasswordCommandHandler
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
     private readonly ILogger<NewPasswordCommandHandler> _logger;
 
-    public NewPasswordCommandHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<NewPasswordCommandHandler> logger)
+    public NewPasswordCommandHandler(
+        IPasswordRepository passwordRepository,
+        IUserContextProvider userContextProvider,
+        IRepositoryContextFactory repositoryContextFactory,
+        ILogger<NewPasswordCommandHandler> logger)
     {
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
+        _repositoryContextFactory = repositoryContextFactory;
         _logger = logger;
     }
 
@@ -39,7 +45,7 @@ public class NewPasswordCommandHandler
                 IsCatalog = request.IsCatalogHolder,
             };
 
-            await _passwordRepository.CreateAsync(entity);
+            await _passwordRepository.CreateAsync(entity, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
 
             return entity.Adapt<PangoPasswordDto>();
         }

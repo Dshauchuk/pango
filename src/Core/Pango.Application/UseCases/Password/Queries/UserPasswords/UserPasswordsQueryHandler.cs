@@ -14,12 +14,18 @@ public class UserPasswordsQueryHandler
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
     private readonly ILogger<UserPasswordsQueryHandler> _logger;
 
-    public UserPasswordsQueryHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<UserPasswordsQueryHandler> logger)
+    public UserPasswordsQueryHandler(
+        IPasswordRepository passwordRepository, 
+        IUserContextProvider userContextProvider, 
+        IRepositoryContextFactory repositoryContextFactory,
+        ILogger<UserPasswordsQueryHandler> logger)
     {
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
+        _repositoryContextFactory = repositoryContextFactory;
         _logger = logger;
     }
 
@@ -28,7 +34,7 @@ public class UserPasswordsQueryHandler
         try
         {
             IEnumerable<PangoPasswordListItemDto> passwords = 
-                (await _passwordRepository.QueryAsync(_userContextProvider.GetUserName(), p => true))
+                (await _passwordRepository.QueryAsync(p => true, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync())))
                 .Select(p => p.Adapt<PangoPasswordListItemDto>());
 
             return passwords.ToList();

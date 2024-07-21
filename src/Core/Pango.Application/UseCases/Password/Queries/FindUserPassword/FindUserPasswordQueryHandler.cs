@@ -11,24 +11,30 @@ using Pango.Domain.Entities;
 namespace Pango.Application.UseCases.Password.Queries.FindUserPassword;
 
 public class FindUserPasswordQueryHandler
-    : IRequestHandler<FindUserPasswordQuery, ErrorOr<Models.PangoPasswordDto>>
+    : IRequestHandler<FindUserPasswordQuery, ErrorOr<PangoPasswordDto>>
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
     private readonly ILogger<FindUserPasswordQueryHandler> _logger;
 
-    public FindUserPasswordQueryHandler(IPasswordRepository passwordRepository, IUserContextProvider userContextProvider, ILogger<FindUserPasswordQueryHandler> logger)
+    public FindUserPasswordQueryHandler(
+        IPasswordRepository passwordRepository, 
+        IUserContextProvider userContextProvider, 
+        IRepositoryContextFactory repositoryContextFactory,
+        ILogger<FindUserPasswordQueryHandler> logger)
     {
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
         _logger = logger;
+        _repositoryContextFactory = repositoryContextFactory;
     }
 
     public async Task<ErrorOr<PangoPasswordDto>> Handle(FindUserPasswordQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            PangoPassword? password = await _passwordRepository.FindAsync(_userContextProvider.GetUserName(), pwd => pwd.Id == request.PasswordId);
+            PangoPassword? password = await _passwordRepository.FindAsync(pwd => pwd.Id == request.PasswordId, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
 
             if (password is null)
             {
