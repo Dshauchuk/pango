@@ -3,7 +3,7 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
 
-namespace Pango.Persistence;
+namespace Pango.Persistence.File;
 
 /// <summary>
 /// <see cref="UserRepository"/> is a password vault repository and doesn't interact with the file system directly.

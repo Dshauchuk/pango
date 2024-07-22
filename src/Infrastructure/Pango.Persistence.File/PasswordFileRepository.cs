@@ -3,16 +3,15 @@ using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
-using Pango.Persistence.File;
 
-namespace Pango.Persistence;
+namespace Pango.Persistence.File;
 
-public class PasswordRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
+public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
 {
     protected override string DirectoryName => "passwords";
     
-    public PasswordRepository(IContentEncoder contentEncoder,
-        ILogger<PasswordRepository> logger,
+    public PasswordFileRepository(IContentEncoder contentEncoder,
+        ILogger<PasswordFileRepository> logger,
         IAppOptions appOptions)
         : base(contentEncoder, appOptions, logger)
     { }

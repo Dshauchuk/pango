@@ -6,10 +6,12 @@ public static class ApplicationErrors
     {
         public const string EncryptionError = "Data.EncryptionError";
         public const string CannotDefineContentType = "Data.CannotDefineContentType";
+        public const string UnkownError = "Data.UnkownError";
     }
 
     public static class User 
     {
+        public const string UnkownError = "User.UnkownError";
         public const string LoginFailed = "User.LoginFailed";
         public const string DeletionFailed = "User.DeletionFailed";
         public const string RegistrationFailed = "User.RegistrationFailed";

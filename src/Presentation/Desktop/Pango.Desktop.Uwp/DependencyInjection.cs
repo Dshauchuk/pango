@@ -1,7 +1,6 @@
 ﻿using Mapster;
 using Microsoft.Extensions.DependencyInjection;
 using Pango.Application.Common.Interfaces;
-using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
@@ -13,22 +12,11 @@ using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
 using Pango.Persistence;
-using Pango.Persistence.File;
 using Serilog;
 using System.IO;
 using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
-
-public class AppOptions : IAppOptions
-{
-    public IFileOptions FileOptions { get; set; }
-}
-
-public class FileOptions : IFileOptions
-{
-    public int PasswordsPerFile { get; set; }
-}
 
 public static class DependencyInjection
 {
@@ -74,7 +62,6 @@ public static class DependencyInjection
         services.AddScoped<IAppDomainProvider, AppDomainProvider>();
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
-        services.AddScoped<IRepositoryContextFactory, FileRepositoryContextFactory>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
         services.AddLogging(loggingBuilder =>
@@ -84,7 +71,7 @@ public static class DependencyInjection
 
         // DS
         // TODO: move to the config file
-        services.AddSingleton<IAppOptions>((s) => new AppOptions() { FileOptions = new FileOptions() { PasswordsPerFile = 2 } });
+        services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 2 }));
 
         return services;
     }

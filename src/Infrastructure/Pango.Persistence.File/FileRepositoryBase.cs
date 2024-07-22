@@ -4,9 +4,8 @@ using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Extensions;
 using Pango.Application.Common.Interfaces;
 using Pango.Domain.Entities;
-using Pango.Persistence.File;
 
-namespace Pango.Persistence;
+namespace Pango.Persistence.File;
 
 public abstract class FileRepositoryBase<T>
 {
@@ -147,7 +146,7 @@ public abstract class FileRepositoryBase<T>
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            FileContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName, chunk.Count, chunk, now);
+            FileContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 
@@ -175,7 +174,7 @@ public abstract class FileRepositoryBase<T>
 
             if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
                 System.IO.File.Create(filePath).Dispose();
             }
 
@@ -190,6 +189,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while reading data: {Message}", ex.Message);
             throw;
         }
         finally
@@ -206,7 +206,7 @@ public abstract class FileRepositoryBase<T>
         {
             if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while saving data: directory \"{filePath}\" cannot be created because of invalid path"));
                 System.IO.File.Create(filePath).Dispose();
             }
 
@@ -217,6 +217,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "An error occurred while writing data: {Message}", ex.Message);
             throw;
         }
         finally

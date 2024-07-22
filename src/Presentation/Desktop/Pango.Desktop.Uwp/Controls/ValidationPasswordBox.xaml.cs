@@ -21,21 +21,21 @@ public sealed class ValidationPasswordBox : ContentControl
     /// <summary>
     /// The <see cref="PasswordBox"/> instance in use.
     /// </summary>
-    private PasswordBox _passwordBox;
+    private PasswordBox? _passwordBox;
 
     /// <summary>
     /// The <see cref="MarkdownTextBlock"/> instance in use.
     /// </summary>
-    private FontIcon _warningIcon;
+    private FontIcon? _warningIcon;
 
-    private ToggleButton _revealButton;
+    private ToggleButton? _revealButton;
 
-    private Button _copyButton;
+    private Button? _copyButton;
 
     /// <summary>
     /// The previous data context in use.
     /// </summary>
-    private INotifyDataErrorInfo oldDataContext;
+    private INotifyDataErrorInfo? _oldDataContext;
 
     public ValidationPasswordBox()
     {
@@ -53,10 +53,16 @@ public sealed class ValidationPasswordBox : ContentControl
         _copyButton = GetTemplateChild("CopyButton") as Button;
         _revealButton = GetTemplateChild("RevealButton") as ToggleButton;
 
-        _revealButton.Checked += RevealButton_Checked;
-        _revealButton.Unchecked += RevealButton_Unchecked;
+        if (_revealButton is not null)
+        {
+            _revealButton.Checked += RevealButton_Checked;
+            _revealButton.Unchecked += RevealButton_Unchecked;
+        }
 
-        _copyButton.Click += CopyBtn_Click;
+        if(_copyButton is not null)
+        {
+            _copyButton.Click += CopyBtn_Click;
+        }
 
         _passwordBox.PasswordChanged += PasswordBox_TextChanged;
 
@@ -181,12 +187,18 @@ public sealed class ValidationPasswordBox : ContentControl
 
     private void RevealButton_Unchecked(object sender, RoutedEventArgs e)
     {
-        _passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;
+        if(_passwordBox != null)
+        {
+            _passwordBox.PasswordRevealMode = PasswordRevealMode.Hidden;
+        }
     }
 
     private void RevealButton_Checked(object sender, RoutedEventArgs e)
     {
-        _passwordBox.PasswordRevealMode = PasswordRevealMode.Visible;
+        if (_passwordBox != null)
+        {
+            _passwordBox.PasswordRevealMode = PasswordRevealMode.Visible;
+        }
     }
 
     /// <summary>
@@ -194,15 +206,15 @@ public sealed class ValidationPasswordBox : ContentControl
     /// </summary>
     private void ValidationPasswordBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        if (oldDataContext is not null)
+        if (_oldDataContext is not null)
         {
-            oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
+            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
         }
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
         {
-            oldDataContext = dataContext;
-            oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
+            _oldDataContext = dataContext;
+            _oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
         }
 
         RefreshErrors();
@@ -211,7 +223,7 @@ public sealed class ValidationPasswordBox : ContentControl
     /// <summary>
     /// Invokes <see cref="RefreshErrors"/> whenever the data context requires it.
     /// </summary>
-    private void DataContext_ErrorsChanged(object sender, DataErrorsChangedEventArgs e)
+    private void DataContext_ErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
     {
         RefreshErrors();
     }
@@ -240,7 +252,7 @@ public sealed class ValidationPasswordBox : ContentControl
 
     private void ValidationPasswordBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        _passwordBox.Focus(FocusState.Programmatic);
+        _passwordBox?.Focus(FocusState.Programmatic);
     }
 
     /// <summary>
@@ -255,7 +267,7 @@ public sealed class ValidationPasswordBox : ContentControl
             return;
         }
 
-        ValidationResult result = dataContext.GetErrors(propertyName).OfType<ValidationResult>().FirstOrDefault();
+        ValidationResult? result = dataContext.GetErrors(propertyName).OfType<ValidationResult>().FirstOrDefault();
 
         warningIcon.Visibility = result is not null ? Visibility.Visible : Visibility.Collapsed;
 

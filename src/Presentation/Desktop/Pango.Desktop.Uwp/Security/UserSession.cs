@@ -13,12 +13,12 @@ public class SecureUserSession
         vault.Add(new PasswordCredential(ResourceName, username, username));
     }
 
-    public static PasswordCredential GetUser()
+    public static PasswordCredential? GetUser()
     {
         var vault = new PasswordVault();
         try
         {
-            var credential = vault.FindAllByResource(ResourceName).FirstOrDefault();
+            PasswordCredential? credential = vault.FindAllByResource(ResourceName).FirstOrDefault();
             if (credential != null)
             {
                 credential.RetrievePassword();

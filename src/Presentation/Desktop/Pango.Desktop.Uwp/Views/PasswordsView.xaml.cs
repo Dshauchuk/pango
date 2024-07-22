@@ -124,8 +124,9 @@ public sealed partial class PasswordsView : PageBase
 
     private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
     {
-        var item = (e.OriginalSource as FrameworkElement).DataContext as PasswordExplorerItem;
-
-        await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+        if (e.OriginalSource is FrameworkElement { DataContext: PasswordExplorerItem item })
+        {
+            await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+        }
     }
 }

@@ -16,17 +16,17 @@ public sealed class ValidationTextBox : ContentControl
     /// <summary>
     /// The <see cref="TextBox"/> instance in use.
     /// </summary>
-    private TextBox textBox;
+    private TextBox? _textBox;
 
     /// <summary>
     /// The <see cref="MarkdownTextBlock"/> instance in use.
     /// </summary>
-    private FontIcon warningIcon;
+    private FontIcon? _warningIcon;
 
     /// <summary>
     /// The previous data context in use.
     /// </summary>
-    private INotifyDataErrorInfo oldDataContext;
+    private INotifyDataErrorInfo? _oldDataContext;
 
     public ValidationTextBox()
     {
@@ -38,10 +38,10 @@ public sealed class ValidationTextBox : ContentControl
     {
         base.OnApplyTemplate();
 
-        textBox = (TextBox)GetTemplateChild("PART_TextBox");
-        warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
+        _textBox = (TextBox)GetTemplateChild("PART_TextBox");
+        _warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
 
-        textBox.TextChanged += TextBox_TextChanged;
+        _textBox.TextChanged += TextBox_TextChanged;
 
         this.GotFocus += ValidationTextBox_GotFocus;
     }
@@ -154,16 +154,16 @@ public sealed class ValidationTextBox : ContentControl
     /// </summary>
     private void ValidationTextBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        if (oldDataContext is not null)
+        if (_oldDataContext is not null)
         {
-            oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
+            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
         }
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
         {
-            oldDataContext = dataContext;
+            _oldDataContext = dataContext;
 
-            oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
+            _oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
         }
 
         RefreshErrors();
@@ -172,14 +172,14 @@ public sealed class ValidationTextBox : ContentControl
     /// <summary>
     /// Invokes <see cref="RefreshErrors"/> whenever the data context requires it.
     /// </summary>
-    private void DataContext_ErrorsChanged(object sender, DataErrorsChangedEventArgs e)
+    private void DataContext_ErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
     {
         RefreshErrors();
     }
 
     private void ValidationTextBox_GotFocus(object sender, RoutedEventArgs e)
     {
-        textBox.Focus(FocusState.Programmatic);
+        _textBox?.Focus(FocusState.Programmatic);
     }
 
     /// <summary>
@@ -195,14 +195,14 @@ public sealed class ValidationTextBox : ContentControl
     /// </summary>
     private void RefreshErrors()
     {
-        if (this.warningIcon is not FontIcon warningIcon ||
+        if (this._warningIcon is not FontIcon warningIcon ||
             PropertyName is not string propertyName ||
             DataContext is not INotifyDataErrorInfo dataContext)
         {
             return;
         }
 
-        ValidationResult result = dataContext.GetErrors(propertyName).OfType<ValidationResult>().FirstOrDefault();
+        ValidationResult? result = dataContext.GetErrors(propertyName).OfType<ValidationResult>().FirstOrDefault();
 
         warningIcon.Visibility = result is not null ? Visibility.Visible : Visibility.Collapsed;
 

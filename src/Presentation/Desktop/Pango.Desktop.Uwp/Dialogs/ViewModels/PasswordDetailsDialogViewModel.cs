@@ -16,7 +16,7 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
 {
     private readonly ISender _sender;
-    private PasswordDetailsParameters _parameters;
+    private PasswordDetailsParameters? _parameters;
 
     public PasswordDetailsDialogViewModel(ISender sender, ILogger<PasswordDetailsDialogViewModel> logger) : base(logger)
     {
@@ -28,41 +28,40 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
 
     public Guid PasswordId { get; private set; }
 
-    private string _name;
+    private string _name = string.Empty;
     public string Name
     { 
         get => _name;
         set => SetProperty(ref _name, value); 
     }
 
-    private string _login;
+    private string _login = string.Empty;
     public string Login
     {
         get => _login;
         set => SetProperty(ref _login, value);
     }
 
-    private string _password;
+    private string _password = string.Empty;
     public string Password
     {
         get => _password;
         set => SetProperty(ref _password, value);
     }
 
-    private string _catalog;
+    private string _catalog = string.Empty;
     public string Catalog
     {
         get => _catalog;
         set => SetProperty(ref _catalog, value);
     }
 
-    private string _notes;
+    private string _notes = string.Empty;
     public string Notes
     {
         get => _notes;
         set => SetProperty(ref _notes, value);
     }
-
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {

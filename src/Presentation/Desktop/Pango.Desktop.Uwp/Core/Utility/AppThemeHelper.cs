@@ -47,7 +47,7 @@ internal static class AppThemeHelper
 
     private static void SetRequestedTheme(ElementTheme theme)
     {
-        if (App.Current.CurrentWindow.Content is FrameworkElement rootElement)
+        if (App.Current.CurrentWindow?.Content is FrameworkElement rootElement)
         {
             rootElement.RequestedTheme = theme;
         }

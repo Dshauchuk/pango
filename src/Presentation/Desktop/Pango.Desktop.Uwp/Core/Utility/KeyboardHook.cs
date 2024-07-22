@@ -10,10 +10,10 @@ namespace Pango.Desktop.Uwp.Core.Utility
         private const int WM_KEYDOWN = 0x0100;
         private const int WM_KEYUP = 0x0101;
 
-        private LowLevelKeyboardProc _proc;
-        private IntPtr _hookID = IntPtr.Zero;
+        private readonly LowLevelKeyboardProc _proc;
+        private readonly IntPtr _hookID = IntPtr.Zero;
 
-        public event EventHandler<bool> CapsLockChanged;
+        public event EventHandler<bool>? CapsLockChanged;
 
         public KeyboardHook()
         {
@@ -28,11 +28,9 @@ namespace Pango.Desktop.Uwp.Core.Utility
 
         private IntPtr SetHook(LowLevelKeyboardProc proc)
         {
-            using (var curProcess = Process.GetCurrentProcess())
-            using (var curModule = curProcess.MainModule)
-            {
-                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
-            }
+            using var curProcess = Process.GetCurrentProcess();
+            using var curModule = curProcess.MainModule;
+            return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule?.ModuleName ?? string.Empty), 0);
         }
 
         private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
