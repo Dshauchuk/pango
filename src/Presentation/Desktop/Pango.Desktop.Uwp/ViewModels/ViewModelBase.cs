@@ -58,7 +58,7 @@ public abstract class ViewModelBase(ILogger logger) : ObservableObject, IViewMod
         }
         catch (Exception ex)
         {
-            // TODO: handle the error
+            Logger.LogError(ex, "An error occurred: {Message}", ex.Message);
             throw;
         }
         finally

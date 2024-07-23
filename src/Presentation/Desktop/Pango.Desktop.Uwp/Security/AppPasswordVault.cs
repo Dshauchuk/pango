@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Pango.Application.Common;
+using Pango.Application.Common.Exceptions;
 using Pango.Persistence;
 using System;
 using System.Collections.Generic;
@@ -50,9 +51,13 @@ public class AppPasswordVault : IPasswordVault
                 {
                     credential.RetrievePassword();
 
-                    Dictionary<string, object> securedContent = JsonConvert.DeserializeObject<Dictionary<string, object>>(credential.Password);
+                    Dictionary<string, object> securedContent = 
+                        JsonConvert.DeserializeObject<Dictionary<string, object>>(credential.Password) ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password for user \"{userName}\"");
 
-                    return new AppCredentials(credential.UserName, securedContent[UserProperties.Password].ToString(), securedContent[UserProperties.PasswordSalt].ToString());
+                    return new AppCredentials(
+                        credential.UserName, 
+                        securedContent[UserProperties.Password].ToString() ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password for user \"{userName}\""), 
+                        securedContent[UserProperties.PasswordSalt].ToString() ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password salt for user \"{userName}\""));
                 }
             }
         }
@@ -63,7 +68,7 @@ public class AppPasswordVault : IPasswordVault
     public async Task<IEnumerable<string>> ListUsersAsync(string resource)
     {
         PasswordVault vault = new();
-        List<string> users = new();
+        List<string> users = [];
 
         IReadOnlyList<PasswordCredential>? credentialList = null;
 
@@ -92,7 +97,7 @@ public class AppPasswordVault : IPasswordVault
     {
         PasswordVault vault = new();
 
-        PasswordCredential existentCredentials =
+        PasswordCredential? existentCredentials =
             vault
             .FindAllByResource(resource)
             .FirstOrDefault(c => c.UserName == userName);

@@ -199,7 +199,7 @@ public class SignInViewModel : ViewModelBase
             dispatcherQueue.TryEnqueue(() =>
             {
                 Users.Clear();
-                foreach (var user in queryResult.Value)
+                foreach (var user in queryResult.Value!)
                 {
                     Users.Add(user);
                 }
@@ -212,7 +212,7 @@ public class SignInViewModel : ViewModelBase
         if(string.IsNullOrEmpty(SelectedUser?.UserName) || string.IsNullOrEmpty(Passcode))
         {
             Logger.LogDebug("Login failed: empty username or passcode");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("Message_LoginEmpty"), SelectedUser.UserName), AppNotificationType.Warning));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("Message_LoginEmpty"), SelectedUser?.UserName ?? string.Empty), AppNotificationType.Warning));
 
             return;
         }

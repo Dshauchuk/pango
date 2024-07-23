@@ -1,7 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
-using System.Windows.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System.Windows.Input;
 
 namespace Pango.Desktop.Uwp.Controls;
 
@@ -16,9 +16,9 @@ public sealed class SearchTextBox : ContentControl
     /// <summary>
     /// The <see cref="TextBox"/> instance in use.
     /// </summary>
-    private TextBox _textBox;
-    private Button _deleteButton;
-    private Button _searchButton;
+    private TextBox? _textBox;
+    private Button? _deleteButton;
+    private Button? _searchButton;
 
     public SearchTextBox()
     {
@@ -115,12 +115,19 @@ public sealed class SearchTextBox : ContentControl
     {
         Text = ((TextBox)sender).Text;
 
-        _deleteButton.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
+        if(_deleteButton is not null)
+        {
+            _deleteButton.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
-        _textBox.Text = string.Empty;
+        if(_textBox is not null)
+        {
+            _textBox.Text = string.Empty;
+        }
+
         Text = string.Empty;
 
         TriggerSearch();

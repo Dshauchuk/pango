@@ -127,7 +127,6 @@
 		<ProjectReference Include="..\..\..\Core\Pango.Application\Pango.Application.csproj" />
 		<ProjectReference Include="..\..\..\Core\Pango.Domain\Pango.Domain.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Infrastructure\Pango.Infrastructure.csproj" />
-		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence\Pango.Persistence.csproj" />
 	</ItemGroup>
 
 	<!-- Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging Tools extension 

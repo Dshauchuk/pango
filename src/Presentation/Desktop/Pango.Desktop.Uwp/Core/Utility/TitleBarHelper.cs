@@ -39,8 +39,13 @@ public static class TitleBarHelper
         coreTitleBar.ExtendViewIntoTitleBar = true;
     }
 
-    public static void SetCaptionButtonColors(Window window, Windows.UI.Color color)
+    public static void SetCaptionButtonColors(Window? window, Windows.UI.Color color)
     {
+        if(window is null)
+        {
+            return;
+        }
+
         var res = App.Current.Resources;
         res["WindowCaptionForeground"] = color;
         window.AppWindow.TitleBar.ButtonForegroundColor = color;

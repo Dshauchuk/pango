@@ -4,10 +4,10 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Pango.Desktop.Uwp.Models;
-using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
@@ -17,16 +17,6 @@ using System.IO;
 using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
-
-public class AppOptions : IAppOptions
-{
-    public IFileOptions FileOptions { get; set; }
-}
-
-public class FileOptions : IFileOptions
-{
-    public int PasswordsPerFile { get; set; }
-}
 
 public static class DependencyInjection
 {
@@ -81,7 +71,7 @@ public static class DependencyInjection
 
         // DS
         // TODO: move to the config file
-        services.AddSingleton<IAppOptions>((s) => new AppOptions() { FileOptions = new FileOptions() { PasswordsPerFile = 2 } });
+        services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 2 }));
 
         return services;
     }

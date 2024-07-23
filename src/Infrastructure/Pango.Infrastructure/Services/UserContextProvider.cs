@@ -1,4 +1,5 @@
-﻿using Pango.Application.Common.Exceptions;
+﻿using Pango.Application.Common;
+using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
@@ -50,5 +51,10 @@ public class UserContextProvider : IUserContextProvider
         PangoUser? user = await _userRepository.FindAsync(GetUserName());
 
         return user?.MasterPasswordHash ?? string.Empty;
+    }
+
+    public async Task<EncodingOptions> GetEncodingOptionsAsync()
+    {
+        return new EncodingOptions(await GetKeyAsync(), await GetSaltAsync());
     }
 }

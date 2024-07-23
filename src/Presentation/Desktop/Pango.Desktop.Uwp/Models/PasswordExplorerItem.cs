@@ -15,10 +15,10 @@ public class PasswordExplorerItem : ObservableObject
     #region Fields
 
     private bool _isExpanded;
-    private string _catalogPath;
+    private string _catalogPath = string.Empty;
     private bool _isVisible = true;
 
-    private ObservableCollection<PasswordExplorerItem> _children;
+    private ObservableCollection<PasswordExplorerItem> _children = [];
 
     #endregion
 
@@ -40,7 +40,7 @@ public class PasswordExplorerItem : ObservableObject
 
     public Guid Id { get; set; }
 
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
 
     public int NestingLevel { get; private set; } 
 
@@ -56,7 +56,7 @@ public class PasswordExplorerItem : ObservableObject
 
     public ExplorerItemType Type { get; set; }
 
-    public PasswordExplorerItem Parent { get; set; }
+    public PasswordExplorerItem? Parent { get; set; }
 
     public ObservableCollection<PasswordExplorerItem> Children
     {

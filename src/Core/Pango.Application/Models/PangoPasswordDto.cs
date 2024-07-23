@@ -14,6 +14,7 @@ public class PangoPasswordDto : DtoBase
         Login = string.Empty;
         Properties = new();
         CatalogPath = string.Empty;
+        LocationPath = string.Empty;
     }
 
     /// <summary>
@@ -65,4 +66,9 @@ public class PangoPasswordDto : DtoBase
     /// Path of the catalog, e.g. folder1/folder1_1
     /// </summary>
     public string CatalogPath { get; set; }
+
+    /// <summary>
+    /// Presents the path of the file where the password is located
+    /// </summary>
+    public string LocationPath { get; set; }
 }

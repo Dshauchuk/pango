@@ -11,7 +11,8 @@ public class PangoUser : BaseEntity
 	{
 		UserName = string.Empty;
 		MasterPasswordHash = string.Empty;
-	}
+        PasswordSalt = string.Empty;
+    }
 
 	/// <summary>
 	/// 
@@ -23,11 +24,13 @@ public class PangoUser : BaseEntity
 	{
 		UserName = username;
 		MasterPasswordHash = string.Empty;
-	}
+        PasswordSalt = string.Empty;
+
+    }
 
 	public string UserName { get; set; }
 
 	public string MasterPasswordHash { get; set; }
 
-	public string? PasswordSalt { get; set; }
+	public string PasswordSalt { get; set; }
 }
