@@ -387,4 +387,10 @@
   <data name="CapsLockWarningText" xml:space="preserve">
     <value>Having caps-lock turned on might result in incorrect password</value>
   </data>
+  <data name="Notes_Label" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Notes_Placeholder" xml:space="preserve">
+    <value>Any notes like secret questions, references, etc.</value>
+  </data>
 </root>
