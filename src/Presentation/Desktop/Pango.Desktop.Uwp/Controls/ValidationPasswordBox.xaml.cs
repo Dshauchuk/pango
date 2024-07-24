@@ -67,6 +67,8 @@ public sealed class ValidationPasswordBox : ContentControl
         _passwordBox.PasswordChanged += PasswordBox_TextChanged;
 
         this.GotFocus += ValidationPasswordBox_GotFocus;
+
+        TriggerActionButtonsVisibility();
     }
 
     /// <summary>
@@ -106,15 +108,6 @@ public sealed class ValidationPasswordBox : ContentControl
         new PropertyMetadata(default(string)));
 
     /// <summary>
-    /// Gets or sets the <see cref="string"/> representing the placeholder text to display.
-    /// </summary>
-    public string PlaceholderText
-    {
-        get => (string)GetValue(PlaceholderTextProperty);
-        set => SetValue(PlaceholderTextProperty, value);
-    }
-
-    /// <summary>
     /// 
     /// </summary>
     public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
@@ -133,6 +126,24 @@ public sealed class ValidationPasswordBox : ContentControl
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    public static readonly DependencyProperty HideCopyButtonProperty = DependencyProperty.Register(
+        nameof(HideCopyButton),
+        typeof(bool),
+        typeof(ValidationPasswordBox),
+        new PropertyMetadata(default(bool), OnHideCopyButtonChanged));
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool HideCopyButton
+    {
+        get => (bool)GetValue(HideCopyButtonProperty);
+        set => SetValue(HideCopyButtonProperty, value);
+    }
+
+    /// <summary>
     /// The <see cref="DependencyProperty"/> backing <see cref="PlaceholderText"/>.
     /// </summary>
     public static readonly DependencyProperty PlaceholderTextProperty = DependencyProperty.Register(
@@ -140,6 +151,15 @@ public sealed class ValidationPasswordBox : ContentControl
         typeof(string),
         typeof(ValidationPasswordBox),
         new PropertyMetadata(default(string)));
+
+    /// <summary>
+    /// Gets or sets the <see cref="string"/> representing the placeholder text to display.
+    /// </summary>
+    public string PlaceholderText
+    {
+        get => (string)GetValue(PlaceholderTextProperty);
+        set => SetValue(PlaceholderTextProperty, value);
+    }
 
     /// <summary>
     /// Gets or sets the <see cref="string"/> representing the text to display.
@@ -158,6 +178,14 @@ public sealed class ValidationPasswordBox : ContentControl
         typeof(string),
         typeof(ValidationPasswordBox),
         new PropertyMetadata(PropertyNameProperty, OnPropertyNamePropertyChanged));
+
+    private static void OnHideCopyButtonChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
+    {
+        if (((ValidationPasswordBox)sender!)._copyButton is not null)
+        {
+            ((ValidationPasswordBox)sender!)._copyButton!.Visibility = (bool)e.NewValue ? Visibility.Collapsed : Visibility.Visible;
+        }
+    }
 
     /// <summary>
     /// Invokes <see cref="RefreshErrors"/> whenever <see cref="PropertyName"/> changes.
@@ -237,7 +265,7 @@ public sealed class ValidationPasswordBox : ContentControl
 
         if (_copyButton != null)
         {
-            _copyButton.Visibility = string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
+            _copyButton.Visibility = HideCopyButton || string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 
