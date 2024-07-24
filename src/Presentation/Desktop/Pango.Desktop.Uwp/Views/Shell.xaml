@@ -23,7 +23,7 @@
                         HorizontalContentAlignment="Stretch"
                         Margin="10,30,10,10"/>
         
-        <muxc:InfoBar VerticalAlignment="Bottom" Background="Black" Opacity="0.75" IsTabStop="False">
+        <muxc:InfoBar VerticalAlignment="Bottom" HorizontalAlignment="Right" MaxWidth="350" Margin="5" IsTabStop="False">
             <interactivity:Interaction.Behaviors>
                 <behaviors:StackedNotificationsBehavior x:Name="InAppNotification" />
             </interactivity:Interaction.Behaviors>
