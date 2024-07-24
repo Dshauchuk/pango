@@ -8,6 +8,7 @@ using Pango.Application.UseCases.User.Commands.Delete;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
@@ -33,12 +34,16 @@ public class UserViewModel : ViewModelBase
 
         DeleteUserCommand = new(OnDeleteUser);
         SignOutCommand = new(OnSignOut);
+        ChangePasswordCommand = new(OnChangePassword);
+        OpenChangePasswordDialogCommand = new(OnOpenChangePasswordDialog);
     }
 
     #region Commands
 
     public RelayCommand DeleteUserCommand { get; }
     public RelayCommand SignOutCommand { get; }
+    public RelayCommand ChangePasswordCommand { get; }
+    public RelayCommand OpenChangePasswordDialogCommand { get; }
 
     #endregion
 
@@ -62,6 +67,16 @@ public class UserViewModel : ViewModelBase
     }
 
     #endregion
+
+    private void OnChangePassword()
+    {
+
+    }
+
+    private void OnOpenChangePasswordDialog()
+    {
+        _dialogService.ShowPasswordChangeDialog(new EmptyDialogParameter()); 
+    }
 
     private void OnSignOut()
     {

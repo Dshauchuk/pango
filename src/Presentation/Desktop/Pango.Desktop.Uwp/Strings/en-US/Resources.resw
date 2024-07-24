@@ -393,4 +393,22 @@
   <data name="Notes_Placeholder" xml:space="preserve">
     <value>Any notes like secret questions, references, etc.</value>
   </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="ChangePasswordDialogTitle" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="ChangePassword_Label" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="Confirmation_Label" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="CurrentPassword_Label" xml:space="preserve">
+    <value>Current Password</value>
+  </data>
+  <data name="NewPassword_Label" xml:space="preserve">
+    <value>New Password</value>
+  </data>
 </root>

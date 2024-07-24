@@ -391,4 +391,22 @@
   <data name="Notes_Placeholder" xml:space="preserve">
     <value>Любыя нататкі, такія як сакрэтныя пытанні, спасылкі і г.д.</value>
   </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="ChangePasswordDialogTitle" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="ChangePassword_Label" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="Confirmation_Label" xml:space="preserve">
+    <value>Пацверджанне</value>
+  </data>
+  <data name="CurrentPassword_Label" xml:space="preserve">
+    <value>Бягучы пароль</value>
+  </data>
+  <data name="NewPassword_Label" xml:space="preserve">
+    <value>Новы пароль</value>
+  </data>
 </root>

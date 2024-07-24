@@ -60,5 +60,4 @@ public class UserValidator : ObservableValidator
 
         return new(_viewResourceLoader.GetString("PasswordConfirmationDoesNotMatch"));
     }
-
 }

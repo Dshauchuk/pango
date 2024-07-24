@@ -150,4 +150,12 @@
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Dialogs\Views\ChangePasswordDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
 </Project>
