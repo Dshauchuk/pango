@@ -73,7 +73,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     #region Properties
 
-    public ObservableCollection<PasswordExplorerItem> Passwords { get; private set; }
+    public ObservableCollection<PasswordExplorerItem> Passwords { get; set; }
 
     public PasswordExplorerItem? SelectedItem
     {

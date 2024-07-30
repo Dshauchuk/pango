@@ -9,12 +9,19 @@ using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace Pango.Desktop.Uwp.Views;
 
 [AppView(AppView.PasswordsIndex)]
 public sealed partial class PasswordsView : PageBase
 {
+    private IEnumerable<PasswordExplorerItem> _passwordsTreeBeforeDragAndDrop;
+
     public PasswordsView()
         : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
@@ -120,12 +127,71 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
-    #endregion
-
     private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
     {
         var item = (e.OriginalSource as FrameworkElement).DataContext as PasswordExplorerItem;
 
         await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+    }
+
+    private void TreeViewItem_DropCompleted(UIElement sender, DropCompletedEventArgs args)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+        PasswordExplorerItem? item = ((TreeViewItem)sender).DataContext as PasswordExplorerItem;
+
+        if (viewModel is not null && !ValidatePasswordItemInTree(viewModel.Passwords, item))
+        {
+            viewModel.Passwords = new ObservableCollection<PasswordExplorerItem>(_passwordsTreeBeforeDragAndDrop);
+        }
+    }
+
+    private void TreeViewItem_DragStarting(UIElement sender, DragStartingEventArgs args)
+    {
+        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
+
+        if (viewModel is not null)
+        {
+            _passwordsTreeBeforeDragAndDrop = viewModel.Passwords;
+        }
+    }
+
+    #endregion
+
+    private bool ValidatePasswordItemInTree(IEnumerable<PasswordExplorerItem> itemsSource, PasswordExplorerItem itemToValidate)
+    {
+        PasswordExplorerItem? parentItem = FindParentItemInTree(itemsSource, itemToValidate.Id);
+
+        // valid if Parent is null and item is on the first level of the tree
+        if (parentItem is null)
+        {
+            return itemsSource.Any(s => s.Id == itemToValidate.Id);
+        }
+
+        return parentItem.Type != PasswordExplorerItem.ExplorerItemType.File;
+    }
+
+    private PasswordExplorerItem? FindParentItemInTree(IEnumerable<PasswordExplorerItem> itemsSource, Guid itemIdToFindParent)
+    {
+        if (itemsSource is null)
+            return null;
+
+        foreach (PasswordExplorerItem item in itemsSource)
+        {
+            if (item.Id == itemIdToFindParent)
+            {
+                return item;
+            }
+            PasswordExplorerItem? foundItem = null;
+            if (item.Children?.Any() == true)
+            {
+                foundItem = FindParentItemInTree(item.Children, itemIdToFindParent);
+                if (foundItem is not null)
+                {
+                    return item;
+                }
+            }
+        }
+
+        return null;
     }
 }
