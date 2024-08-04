@@ -7,6 +7,7 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
@@ -142,6 +143,7 @@ public sealed partial class PasswordsView : PageBase
         if (viewModel is not null && !ValidatePasswordItemInTree(viewModel.Passwords, item))
         {
             viewModel.Passwords = new ObservableCollection<PasswordExplorerItem>(_passwordsTreeBeforeDragAndDrop);
+            WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(null));
         }
     }
 
@@ -151,7 +153,7 @@ public sealed partial class PasswordsView : PageBase
 
         if (viewModel is not null)
         {
-            _passwordsTreeBeforeDragAndDrop = viewModel.Passwords;
+            _passwordsTreeBeforeDragAndDrop = new List<PasswordExplorerItem>(viewModel.Passwords);
         }
     }
 
@@ -159,7 +161,7 @@ public sealed partial class PasswordsView : PageBase
 
     private bool ValidatePasswordItemInTree(IEnumerable<PasswordExplorerItem> itemsSource, PasswordExplorerItem itemToValidate)
     {
-        PasswordExplorerItem? parentItem = FindParentItemInTree(itemsSource, itemToValidate.Id);
+        PasswordExplorerItem? parentItem = FindParentItemInTree(itemsSource, itemToValidate.Id, null);
 
         // valid if Parent is null and item is on the first level of the tree
         if (parentItem is null)
@@ -170,7 +172,7 @@ public sealed partial class PasswordsView : PageBase
         return parentItem.Type != PasswordExplorerItem.ExplorerItemType.File;
     }
 
-    private PasswordExplorerItem? FindParentItemInTree(IEnumerable<PasswordExplorerItem> itemsSource, Guid itemIdToFindParent)
+    private PasswordExplorerItem? FindParentItemInTree(IEnumerable<PasswordExplorerItem> itemsSource, Guid itemIdToFindParent, PasswordExplorerItem? parentItem)
     {
         if (itemsSource is null)
             return null;
@@ -179,15 +181,15 @@ public sealed partial class PasswordsView : PageBase
         {
             if (item.Id == itemIdToFindParent)
             {
-                return item;
+                return parentItem;
             }
-            PasswordExplorerItem? foundItem = null;
+            PasswordExplorerItem? foundParentItem = null;
             if (item.Children?.Any() == true)
             {
-                foundItem = FindParentItemInTree(item.Children, itemIdToFindParent);
-                if (foundItem is not null)
+                foundParentItem = FindParentItemInTree(item.Children, itemIdToFindParent, item);
+                if (foundParentItem is not null)
                 {
-                    return item;
+                    return foundParentItem;
                 }
             }
         }
