@@ -11,9 +11,10 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
     protected override string DirectoryName => "passwords";
     
     public PasswordFileRepository(IContentEncoder contentEncoder,
+        IAppDomainProvider appDomainProvider,
         ILogger<PasswordFileRepository> logger,
         IAppOptions appOptions)
-        : base(contentEncoder, appOptions, logger)
+        : base(contentEncoder, appDomainProvider, appOptions, logger)
     { }
 
     public async Task CreateAsync(PangoPassword password, IRepositoryActionContext context)
@@ -27,6 +28,25 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
         passwordList.Add(password);
 
         await SaveItemsForUserAsync(passwordList, password.UserName, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+    }
+
+    public async Task CreateAsync(IEnumerable<PangoPassword> passwords, IRepositoryActionContext context)
+    {
+        if (context is not FileRepositoryActionContext ctx)
+        {
+            throw new ArgumentException($"Invalid type of context. It must be {typeof(FileRepositoryActionContext).FullName}", nameof(context));
+        }
+
+        var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
+
+        foreach(var newPassword in passwords)
+        {
+            newPassword.UserName = ctx.UserId;
+            passwordList.Add(newPassword);
+
+        }
+
+        await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
     }
 
     public async Task<PangoPassword> UpdateAsync(PangoPassword password, IRepositoryActionContext context)

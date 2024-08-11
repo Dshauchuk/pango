@@ -10,16 +10,19 @@ namespace Pango.Persistence.File;
 public abstract class FileRepositoryBase<T>
 {
     private readonly IContentEncoder _contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppOptions _appOptions;
     private readonly ILogger _logger; 
     private SemaphoreSlim _semaphore = new(1);
 
     public FileRepositoryBase(
         IContentEncoder contentEncoder,
+        IAppDomainProvider appDomainProvider,
         IAppOptions appOptions,
         ILogger logger)
     {
         _contentEncoder = contentEncoder;
+        _appDomainProvider = appDomainProvider;
         _appOptions = appOptions;
         _logger = logger;
     }
@@ -85,9 +88,10 @@ public abstract class FileRepositoryBase<T>
     /// </summary>
     /// <param name="userName"></param>
     /// <returns></returns>
-    protected Task DeleteDataAsync(string directoryPath)
+    protected Task DeleteDataAsync(string userId)
     {
-        DirectoryInfo directory = new(directoryPath);
+        string userFolderPath = _appDomainProvider.GetUserFolderPath(userId);
+        DirectoryInfo directory = new(userFolderPath);
 
         if (directory.Exists)
         {

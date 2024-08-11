@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.User.Commands.Delete;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -23,18 +24,19 @@ public class UserViewModel : ViewModelBase
     private readonly IUserContextProvider _userContext;
     private readonly ILogger<UserViewModel> _logger;
     private readonly IDialogService _dialogService;
+    private readonly IUserStorageManager _storageManager;
     private string _currentUserName = string.Empty;
 
-    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService) : base(logger)
+    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService, IUserStorageManager storageManager) : base(logger)
     {
         _sender = sender;
         _userContext = userContext;
         _logger = logger;
         _dialogService = dialogService;
+        _storageManager = storageManager;
 
         DeleteUserCommand = new(OnDeleteUser);
         SignOutCommand = new(OnSignOut);
-        ChangePasswordCommand = new(OnChangePassword);
         OpenChangePasswordDialogCommand = new(OnOpenChangePasswordDialog);
     }
 
@@ -42,7 +44,6 @@ public class UserViewModel : ViewModelBase
 
     public RelayCommand DeleteUserCommand { get; }
     public RelayCommand SignOutCommand { get; }
-    public RelayCommand ChangePasswordCommand { get; }
     public RelayCommand OpenChangePasswordDialogCommand { get; }
 
     #endregion
@@ -67,11 +68,6 @@ public class UserViewModel : ViewModelBase
     }
 
     #endregion
-
-    private void OnChangePassword()
-    {
-
-    }
 
     private void OnOpenChangePasswordDialog()
     {
