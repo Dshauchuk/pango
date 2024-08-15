@@ -43,28 +43,37 @@ public class UserFileStorageManager: IUserStorageManager
 
     public async Task EncryptDataWithAsync(string userId, EncodingOptions encodingOptions)
     {
+        _logger.LogDebug("Encrypting data of {UserId}...", userId);
+
         // read data
         var all = await _passwordRepository.QueryAsync((a) => true, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
 
         // 1. save data for temp user
         string tmpUser = $"{userId}_{Guid.NewGuid()}_tmp";
+        string newFolderPath = _appDomainProvider.GetUserFolderPath(tmpUser);
         await _passwordRepository.CreateAsync(all, _repositoryContextFactory.Create(tmpUser, new EncodingOptions(encodingOptions.Key, encodingOptions.Salt)));
+        _logger.LogDebug("Copied data to a temp user {user} folder...", $"{userId}_{Guid.NewGuid()}_tmp");
 
         // 2. rename existing directory using timestamp
-        string newFolderPath = _appDomainProvider.GetUserFolderPath(tmpUser);
         string currentUserDirectoryPath = _appDomainProvider.GetUserFolderPath(userId);
         string copyUser = $"{userId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         string tmpUserDirectoryPath = currentUserDirectoryPath.Replace(userId, copyUser);
         Directory.Move(currentUserDirectoryPath, tmpUserDirectoryPath);
+        _logger.LogDebug("Moved data from {userFolder} folder to {tmpFolder}", currentUserDirectoryPath, tmpUserDirectoryPath);
 
         // 3. rename the newly created & encrypted folder as actual 
         Directory.Move(newFolderPath, currentUserDirectoryPath);
+        _logger.LogDebug("Moved the just encrypted data from temp folder {tmpFolder} to the user folder {userFolder}", newFolderPath, currentUserDirectoryPath);
 
         // 4. remove tmp user data
         await DeleteAllUserDataAsync(tmpUser);
+        _logger.LogDebug("Deleted the folder of temp user {tmpUser}", tmpUser);
 
         // 5. remove the copy
         await DeleteAllUserDataAsync(copyUser);
+        _logger.LogDebug("Deleted the folder of the user copy {copyUser}", copyUser);
+
+        _logger.LogDebug("Encryption of {UserId} user's data completed", userId);
     }
 
     /// <summary>

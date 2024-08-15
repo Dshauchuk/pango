@@ -411,4 +411,10 @@
   <data name="NewPassword_Label" xml:space="preserve">
     <value>New Password</value>
   </data>
+  <data name="PasswordHasBeenChanged" xml:space="preserve">
+    <value>Password has been changed</value>
+  </data>
+  <data name="PasswordIsNotCorrect" xml:space="preserve">
+    <value>Password is not correct</value>
+  </data>
 </root>

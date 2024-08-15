@@ -35,11 +35,16 @@ public class ChangePasswordCommandHandler
 
         try
         {
+            _logger.LogDebug("Hashing the new password...");
             string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
             EncodingOptions encoding = new(passwordHash, Convert.ToBase64String(salt));
-
+            _logger.LogDebug("Hashing completed");
+            
+            _logger.LogDebug("Encrypting data with new password...");
             await _userStorageManager.EncryptDataWithAsync(request.UserId, encoding);
+            _logger.LogDebug("New password applied");
 
+            _logger.LogDebug("Updating user's credentials...");
             PangoUser? currentUser = await _userRepository.FindAsync(request.UserId);
             if ((currentUser is null))
             {
@@ -50,6 +55,7 @@ public class ChangePasswordCommandHandler
             currentUser.MasterPasswordHash = passwordHash;
             currentUser.PasswordSalt = Convert.ToBase64String(salt);
             await _userRepository.CreateAsync(currentUser);
+            _logger.LogDebug("User's credentials updated");
 
             return true;
         }

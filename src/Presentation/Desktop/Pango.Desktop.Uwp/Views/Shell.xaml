@@ -22,8 +22,8 @@
                         VerticalContentAlignment="Stretch"
                         HorizontalContentAlignment="Stretch"
                         Margin="10,30,10,10"/>
-        
-        <muxc:InfoBar VerticalAlignment="Bottom" HorizontalAlignment="Right" MaxWidth="350" Margin="5" IsTabStop="False">
+
+        <muxc:InfoBar VerticalAlignment="Bottom" HorizontalAlignment="Right" MaxWidth="350" Margin="5" IsTabStop="False" Background="Transparent">
             <interactivity:Interaction.Behaviors>
                 <behaviors:StackedNotificationsBehavior x:Name="InAppNotification" />
             </interactivity:Interaction.Behaviors>

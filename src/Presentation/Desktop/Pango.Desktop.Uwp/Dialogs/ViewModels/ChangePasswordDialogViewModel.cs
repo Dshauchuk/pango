@@ -173,17 +173,22 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
             if(!_passwordHashProvider.VerifyPassword(Validator.CurrentPassword, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt)))
             {
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("Password is not correct", Core.Enums.AppNotificationType.Warning));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), Core.Enums.AppNotificationType.Warning));
                 return;
             }
 
             ErrorOr<bool> result = await _sender.Send(new ChangePasswordCommand(_userContextProvider.GetUserName(), Validator.NewPassword, Guid.NewGuid().ToString("N")));
 
-            if (!result.IsError)
+            if (result.IsError)
+            {
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), Core.Enums.AppNotificationType.Warning));
+            }
+            else
             {
                 SecureUserSession.ClearUser();
                 App.Current.RaiseSignedOut();
                 WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), Core.Enums.AppNotificationType.Success));
             }
         }
     }

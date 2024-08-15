@@ -409,4 +409,10 @@
   <data name="NewPassword_Label" xml:space="preserve">
     <value>Новы пароль</value>
   </data>
+  <data name="PasswordHasBeenChanged" xml:space="preserve">
+    <value>Пароль быў зменены</value>
+  </data>
+  <data name="PasswordIsNotCorrect" xml:space="preserve">
+    <value>Пароль няправільны</value>
+  </data>
 </root>
