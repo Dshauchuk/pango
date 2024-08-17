@@ -15,6 +15,7 @@ public static class ApplicationErrors
         public const string LoginFailed = "User.LoginFailed";
         public const string DeletionFailed = "User.DeletionFailed";
         public const string RegistrationFailed = "User.RegistrationFailed";
+        public const string NotFound = "User.NotFound";
     }
 
     public static class Password

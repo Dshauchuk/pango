@@ -17,6 +17,14 @@ public interface IPasswordRepository
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="passwords"></param>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    Task CreateAsync(IEnumerable<PangoPassword> passwords, IRepositoryActionContext context);
+
+    /// <summary>
+    /// 
+    /// </summary>
     /// <param name="predicate"></param>
     /// <returns></returns>
     Task<PangoPassword?> FindAsync(Func<PangoPassword, bool> predicate, IRepositoryActionContext context);

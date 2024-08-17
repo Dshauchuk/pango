@@ -13,7 +13,6 @@ public class AppLanguage
         [
             new AppLanguage { Name = "English", Locale = "en-US" },
             new AppLanguage { Name = "Беларуская", Locale = "be-BY" },
-            new AppLanguage { Name = "French", Locale = "fr-FR" }
         ];
     }
 }

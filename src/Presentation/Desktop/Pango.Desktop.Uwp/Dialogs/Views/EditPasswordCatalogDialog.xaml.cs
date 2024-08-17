@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
-using Windows.ApplicationModel.Resources;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -12,37 +11,21 @@ namespace Pango.Desktop.Uwp.Dialogs.Views;
 /// <summary>
 /// An empty page that can be used on its own or navigated to within a Frame.
 /// </summary>
-public sealed partial class EditPasswordCatalogDialog : Page, IContentDialog
+public sealed partial class EditPasswordCatalogDialog : DialogPage
 {
-    private readonly ResourceLoader _viewResourceLoader;
-
-    public EditPasswordCatalogDialog(EditCatalogParameters editCatalogParameters)
+    public EditPasswordCatalogDialog(EditCatalogParameters editCatalogParameters) 
+        : base(editCatalogParameters)
     {
         this.InitializeComponent();
+        this.SetViewModel(App.Host.Services.GetRequiredService<EditPasswordCatalogDialogViewModel>());
 
-        _viewResourceLoader = new ResourceLoader();
-        DataContext = App.Host.Services.GetRequiredService<EditPasswordCatalogDialogViewModel>();
-
-        ((EditPasswordCatalogDialogViewModel)DataContext).Initialize(editCatalogParameters);
-
-        Title = ((EditPasswordCatalogDialogViewModel)DataContext).IsNew ? 
-            _viewResourceLoader.GetString("NewCatalogDialogTitle") : 
-            _viewResourceLoader.GetString("EditCatalogDialogTitle");
+        ((EditPasswordCatalogDialogViewModel)ViewModel!).Initialize(editCatalogParameters);
     }
 
-    public void DialogOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
+    public override void DialogOpened(ContentDialog sender, ContentDialogOpenedEventArgs args)
     {
         NewCatalogNameTextBlock.Focus(FocusState.Programmatic);
     }
 
-    public object? GetDialogParameter()
-    {
-        return null;
-    }
-
-    public string? PrimaryButtonText { get; private set; }   
-    public string? CancelButtonText { get; private set; }
-    public string Title { get; private set; }
-
-    public IDialogViewModel? ViewModel => DataContext as EditPasswordCatalogDialogViewModel;
+    public override string Title => ((EditPasswordCatalogDialogViewModel)DataContext).IsNew ? ViewResourceLoader.GetString("NewCatalogDialogTitle") : ViewResourceLoader.GetString("EditCatalogDialogTitle");
 }

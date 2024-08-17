@@ -127,6 +127,7 @@
 		<ProjectReference Include="..\..\..\Core\Pango.Application\Pango.Application.csproj" />
 		<ProjectReference Include="..\..\..\Core\Pango.Domain\Pango.Domain.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Infrastructure\Pango.Infrastructure.csproj" />
+		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence.File\Pango.Persistence.File.csproj" />
 	</ItemGroup>
 
 	<!-- Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging Tools extension 
@@ -149,5 +150,13 @@
 		<Content Include="Strings\**\*.resw">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Dialogs\Views\ChangePasswordDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 </Project>

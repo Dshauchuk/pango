@@ -22,6 +22,11 @@ public class DialogService : IDialogService
         return ShowAsync(new PasswordDetailsDialog(passwordDetailsParameters));
     }
 
+    public Task ShowPasswordChangeDialog(EmptyDialogParameter dialogParameter)
+    {
+        return ShowAsync(new ChangePasswordDialog(dialogParameter));
+    }
+
     /// <summary>
     /// Raises a simple confirmation dialog, returns true if user clicked on the primary button, otherwise - false
     /// </summary>

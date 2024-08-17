@@ -16,6 +16,6 @@ public class FileRepositoryContextFactory : IRepositoryContextFactory
     {
         string workingDirectoryPath = _appDomainProvider.GetUserFolderPath(userName);
 
-        return new FileRepositoryActionContext(encodingOptions, workingDirectoryPath);
+        return new FileRepositoryActionContext(encodingOptions, userName, workingDirectoryPath);
     }
 }

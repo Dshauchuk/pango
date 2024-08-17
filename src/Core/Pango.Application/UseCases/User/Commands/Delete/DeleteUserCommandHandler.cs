@@ -11,10 +11,10 @@ public class DeleteUserCommandHandler
     : IRequestHandler<DeleteUserCommand, ErrorOr<bool>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IUserDataRepository _userDataRepository;
+    private readonly IUserStorageManager _userDataRepository;
     private readonly ILogger<DeleteUserCommandHandler> _logger;
 
-    public DeleteUserCommandHandler(IUserRepository userRepository, IUserDataRepository userDataRepository, ILogger<DeleteUserCommandHandler> logger)
+    public DeleteUserCommandHandler(IUserRepository userRepository, IUserStorageManager userDataRepository, ILogger<DeleteUserCommandHandler> logger)
     {
         _userRepository = userRepository;
         _userDataRepository = userDataRepository;

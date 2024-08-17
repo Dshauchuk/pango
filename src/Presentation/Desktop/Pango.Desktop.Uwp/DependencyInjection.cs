@@ -1,6 +1,7 @@
 ﻿using Mapster;
 using Microsoft.Extensions.DependencyInjection;
 using Pango.Application.Common.Interfaces;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Utility;
@@ -12,6 +13,7 @@ using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Infrastructure.Services;
 using Pango.Persistence;
+using Pango.Persistence.File;
 using Serilog;
 using System.IO;
 using Windows.Storage;
@@ -42,6 +44,7 @@ public static class DependencyInjection
             .AddSingleton<SignInViewModel>()
             .AddSingleton<EditPasswordCatalogDialogViewModel>()
             .AddSingleton<PasswordDetailsDialogViewModel>()
+            .AddSingleton<ChangePasswordDialogViewModel>()
             .AddSingleton<UserViewModel>();
 
         return services;
@@ -62,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IAppDomainProvider, AppDomainProvider>();
         services.AddScoped<IPasswordHashProvider, PasswordHashProvider>();
         services.AddScoped<IUserContextProvider, UserContextProvider>();
+        services.AddScoped<IUserStorageManager, UserFileStorageManager>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
         services.AddLogging(loggingBuilder =>

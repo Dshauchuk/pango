@@ -385,4 +385,34 @@
   <data name="CapsLockWarningText" xml:space="preserve">
     <value>Калі Caps Lock уключаны, пароль можа быць няправільным</value>
   </data>
+  <data name="Notes_Label" xml:space="preserve">
+    <value>Нататкі</value>
+  </data>
+  <data name="Notes_Placeholder" xml:space="preserve">
+    <value>Любыя нататкі, такія як сакрэтныя пытанні, спасылкі і г.д.</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="ChangePasswordDialogTitle" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="ChangePassword_Label" xml:space="preserve">
+    <value>Змяніць пароль</value>
+  </data>
+  <data name="Confirmation_Label" xml:space="preserve">
+    <value>Пацверджанне</value>
+  </data>
+  <data name="CurrentPassword_Label" xml:space="preserve">
+    <value>Бягучы пароль</value>
+  </data>
+  <data name="NewPassword_Label" xml:space="preserve">
+    <value>Новы пароль</value>
+  </data>
+  <data name="PasswordHasBeenChanged" xml:space="preserve">
+    <value>Пароль быў зменены</value>
+  </data>
+  <data name="PasswordIsNotCorrect" xml:space="preserve">
+    <value>Пароль няправільны</value>
+  </data>
 </root>

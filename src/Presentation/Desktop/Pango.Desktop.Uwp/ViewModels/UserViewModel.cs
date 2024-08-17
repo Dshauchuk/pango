@@ -3,11 +3,13 @@ using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.User.Commands.Delete;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
@@ -22,23 +24,27 @@ public class UserViewModel : ViewModelBase
     private readonly IUserContextProvider _userContext;
     private readonly ILogger<UserViewModel> _logger;
     private readonly IDialogService _dialogService;
+    private readonly IUserStorageManager _storageManager;
     private string _currentUserName = string.Empty;
 
-    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService) : base(logger)
+    public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService, IUserStorageManager storageManager) : base(logger)
     {
         _sender = sender;
         _userContext = userContext;
         _logger = logger;
         _dialogService = dialogService;
+        _storageManager = storageManager;
 
         DeleteUserCommand = new(OnDeleteUser);
         SignOutCommand = new(OnSignOut);
+        OpenChangePasswordDialogCommand = new(OnOpenChangePasswordDialog);
     }
 
     #region Commands
 
     public RelayCommand DeleteUserCommand { get; }
     public RelayCommand SignOutCommand { get; }
+    public RelayCommand OpenChangePasswordDialogCommand { get; }
 
     #endregion
 
@@ -62,6 +68,11 @@ public class UserViewModel : ViewModelBase
     }
 
     #endregion
+
+    private void OnOpenChangePasswordDialog()
+    {
+        _dialogService.ShowPasswordChangeDialog(new EmptyDialogParameter()); 
+    }
 
     private void OnSignOut()
     {
