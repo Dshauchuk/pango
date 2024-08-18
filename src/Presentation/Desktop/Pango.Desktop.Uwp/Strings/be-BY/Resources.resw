@@ -415,4 +415,10 @@
   <data name="PasswordIsNotCorrect" xml:space="preserve">
     <value>Пароль няправільны</value>
   </data>
+  <data name="ExportAndImport" xml:space="preserve">
+    <value>Экспарт і імпарт</value>
+  </data>
+  <data name="ExportAndImportTooltip" xml:space="preserve">
+    <value>Экспарт і імпарт дадзеных</value>
+  </data>
 </root>

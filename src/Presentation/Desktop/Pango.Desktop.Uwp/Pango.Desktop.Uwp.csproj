@@ -153,6 +153,12 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
+	  <None Remove="Views\ExportImportView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\ExportImportView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\ChangePasswordDialog.xaml">

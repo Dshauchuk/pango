@@ -417,4 +417,10 @@
   <data name="PasswordIsNotCorrect" xml:space="preserve">
     <value>Password is not correct</value>
   </data>
+  <data name="ExportAndImport" xml:space="preserve">
+    <value>Export and Import</value>
+  </data>
+  <data name="ExportAndImportTooltip" xml:space="preserve">
+    <value>Export and import of data</value>
+  </data>
 </root>
