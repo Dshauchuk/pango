@@ -4,19 +4,137 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:Pango.Desktop.Uwp.Controls"
-    xmlns:attachedprops="using:Pango.Desktop.Uwp.Controls.AttachedProperties"
-    xmlns:templateselectors="using:Pango.Desktop.Uwp.Controls.TemplateSelectors"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
-    xmlns:views="using:Pango.Desktop.Uwp.Views"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     mc:Ignorable="d"
-    d:DataContext="{d:DesignInstance Type=viewmodels:PasswordsViewModel}"
+    d:DataContext="{d:DesignInstance Type=viewmodels:ExportImportViewModel}"
     d:DesignHeight="300"
     d:DesignWidth="400">
 
     <Grid>
+        <Grid x:Name="RootGrid">
 
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0"
+                  Margin="{StaticResource PageContentContainerMargin}">
+                <TextBlock Margin="0" 
+                           Text="{loc:StringResource Key=ExportAndImportTooltip}"
+                           Style="{StaticResource HeaderTextBlockStyle}"/>
+            </Grid>
+
+            <Pivot Grid.Row="1"
+                   x:Name="ExportImport_Pivot"
+                   SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
+                <Pivot.HeaderTemplate>
+                    <DataTemplate>
+                        <StackPanel Width="0"
+                                Height="0">
+                            <TextBlock Text="{Binding}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </Pivot.HeaderTemplate>
+
+                <PivotItem>
+                    <Grid HorizontalAlignment="Center"
+                          VerticalAlignment="Center">
+                        <StackPanel Orientation="Vertical"
+                                    VerticalAlignment="Center"
+                                    HorizontalAlignment="Center"
+                                    MaxWidth="400">
+                            <TextBlock Text="{loc:StringResource Key=ExportAndImportDescriptionLabel}"
+                                       TextWrapping="WrapWholeWords"
+                                       HorizontalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Center">
+                                <Button Margin="10" 
+                                        Content="{loc:StringResource Key=ExportDataButtonContent}"
+                                        HorizontalAlignment="Center"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Command="{Binding Path=NavigateToOptionCommand}">
+                                    <Button.CommandParameter>
+                                        <x:Int32>1</x:Int32>
+                                    </Button.CommandParameter>
+                                </Button>
+
+                                <TextBlock Margin="5"
+                                           VerticalAlignment="Center"
+                                           Text="{loc:StringResource Key=Or}"/>
+
+                                <Button Margin="10" 
+                                        Content="{loc:StringResource Key=ImportDataButtonContent}"
+                                        HorizontalAlignment="Center"
+                                        Style="{StaticResource AccentButtonStyle}"
+                                        Command="{Binding Path=NavigateToOptionCommand}">
+                                    <Button.CommandParameter>
+                                        <x:Int32>2</x:Int32>
+                                    </Button.CommandParameter>                                
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </PivotItem>
+
+                <PivotItem>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Margin="0" 
+                                   Text="{loc:StringResource Key=ExportTitle}"
+                                   Style="{StaticResource HeaderTextBlockStyle}"/>
+
+                        <Grid Grid.Row="1">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{loc:StringResource Key=ExportDataButtonContent}"
+                                        Command="{Binding ExportDataCommand}"/>
+
+                                <Button Content="Back"
+                                        Command="{Binding NavigateToOptionCommand}">
+                                    <Button.CommandParameter>
+                                        <x:Int32>0</x:Int32>
+                                    </Button.CommandParameter>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                    </Grid>
+                </PivotItem>
+
+                <PivotItem>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Margin="0" 
+                                   Text="{loc:StringResource Key=ImportTitle}"
+                                   Style="{StaticResource HeaderTextBlockStyle}"/>
+
+                        <Grid Grid.Row="1">
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="{loc:StringResource Key=ImportDataButtonContent}"
+                                        Command="{Binding ImportDataCommand}"/>
+
+                                <Button Content="Back" 
+                                        Command="{Binding NavigateToOptionCommand}">
+                                    <Button.CommandParameter>
+                                        <x:Int32>0</x:Int32>
+                                    </Button.CommandParameter>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                    </Grid>
+                </PivotItem>
+            </Pivot>
+        </Grid>
     </Grid>
 </abstract:PageBase>

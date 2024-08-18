@@ -420,7 +420,22 @@
   <data name="ExportAndImport" xml:space="preserve">
     <value>Export and Import</value>
   </data>
+  <data name="ExportAndImportDescriptionLabel" xml:space="preserve">
+    <value>You can prepare and export some passwords to share with other devices and users, or you can import already exported data</value>
+  </data>
   <data name="ExportAndImportTooltip" xml:space="preserve">
     <value>Export and import of data</value>
+  </data>
+  <data name="ExportDataButtonContent" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ImportDataButtonContent" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Import</value>
   </data>
 </root>

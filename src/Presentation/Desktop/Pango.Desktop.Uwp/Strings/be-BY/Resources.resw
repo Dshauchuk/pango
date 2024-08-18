@@ -418,7 +418,22 @@
   <data name="ExportAndImport" xml:space="preserve">
     <value>Экспарт і імпарт</value>
   </data>
+  <data name="ExportAndImportDescriptionLabel" xml:space="preserve">
+    <value>Вы можаце падрыхтаваць і экспартаваць некаторыя паролі, каб падзяліцца імі з іншымі прыладамі і карыстальнікамі, або вы можаце імпартаваць ужо экспартаваныя дадзеныя</value>
+  </data>
   <data name="ExportAndImportTooltip" xml:space="preserve">
     <value>Экспарт і імпарт дадзеных</value>
+  </data>
+  <data name="ExportDataButtonContent" xml:space="preserve">
+    <value>Экспарт</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Экспарт</value>
+  </data>
+  <data name="ImportDataButtonContent" xml:space="preserve">
+    <value>Імпарт</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Імпарт</value>
   </data>
 </root>
