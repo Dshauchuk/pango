@@ -1,5 +1,8 @@
 ﻿namespace Pango.Application.Common.Exceptions;
 
+/// <summary>
+/// Thrown if an error occurred while exporting data
+/// </summary>
 [Serializable]
 public class PangoExportException : PangoException
 {

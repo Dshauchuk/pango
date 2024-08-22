@@ -8,6 +8,7 @@ public static class ApplicationErrors
         public const string CannotDefineContentType = "Data.CannotDefineContentType";
         public const string UnkownError = "Data.UnkownError";
         public const string ExportError = "Data.ExportFailed";
+        public const string ImportError = "Data.ImportFailed";
     }
 
     public static class User 

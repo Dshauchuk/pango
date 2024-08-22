@@ -24,6 +24,9 @@ public class PangoFileDataExporter : IDataExporter
 
     public async Task<string> ExportAsync(IEnumerable<IContentPackage> contentPackages, IExportOptions exportOptions)
     {
+        // todo: retry
+
+
         string filePath = Path.Combine(_appDomainProvider.GetTempFolderPath(), $"{DateTimeOffset.Now.ToUnixTimeMilliseconds()}{PackageFileExtension}");
 
         _logger.LogDebug(
@@ -53,6 +56,8 @@ public class PangoFileDataExporter : IDataExporter
                     partIndex++;
                 }
             }
+
+            _logger.LogDebug("Export completed");
 
             return filePath;
         }
