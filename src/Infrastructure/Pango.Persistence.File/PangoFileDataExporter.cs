@@ -13,7 +13,10 @@ public class PangoFileDataExporter : IDataExporter
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly ILogger _logger;
 
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private const string PackageFileExtension = ".pngx";
+    private const int MaxRetries = 3;
+    private const int DelayMiliseconds = 1000;
 
     public PangoFileDataExporter(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider, ILogger<PangoFileDataExporter> logger)
     {
@@ -24,8 +27,7 @@ public class PangoFileDataExporter : IDataExporter
 
     public async Task<string> ExportAsync(IEnumerable<IContentPackage> contentPackages, IExportOptions exportOptions)
     {
-        // todo: retry
-
+        await _semaphore.WaitAsync();
 
         string filePath = Path.Combine(_appDomainProvider.GetTempFolderPath(), $"{DateTimeOffset.Now.ToUnixTimeMilliseconds()}{PackageFileExtension}");
 
@@ -35,36 +37,58 @@ public class PangoFileDataExporter : IDataExporter
 
         try
         {
-            using (Package package = Package.Open(filePath, FileMode.Create))
+            for(int attempt = 0; attempt < MaxRetries; attempt++)
             {
-                int partIndex = 0;
-                foreach (IContentPackage data in contentPackages)
+                try
                 {
-                    string partUriString = $"/part{partIndex}.pngdat";
-                    Uri partUri = new(partUriString, UriKind.Relative);
-                    PackagePart part = package.CreatePart(partUri, "application/octet-stream", CompressionOption.Maximum);
-
-                    // Encrypt the object data
-                    byte[] encryptedData = await _contentEncoder.EncryptAsync(data, exportOptions.EncodingOptions.Key, exportOptions.EncodingOptions.Salt);
-
-                    // Write the encrypted data to the package part
-                    using (Stream partStream = part.GetStream())
+                    using Package package = Package.Open(filePath, FileMode.Create);
+                    int partIndex = 0;
+                    foreach (IContentPackage data in contentPackages)
                     {
-                        partStream.Write(encryptedData, 0, encryptedData.Length);
+                        string partUriString = $"/part{partIndex}.pngdat";
+                        Uri partUri = new(partUriString, UriKind.Relative);
+                        PackagePart part = package.CreatePart(partUri, "application/octet-stream", CompressionOption.Maximum);
+
+                        // Encrypt the object data
+                        byte[] encryptedData = await _contentEncoder.EncryptAsync(data, exportOptions.EncodingOptions.Key, exportOptions.EncodingOptions.Salt);
+
+                        // Write the encrypted data to the package part
+                        using (Stream partStream = part.GetStream())
+                        {
+                            partStream.Write(encryptedData, 0, encryptedData.Length);
+                        }
+
+                        partIndex++;
                     }
 
-                    partIndex++;
+                    // If successful, break out of the loop
+                    break;
+                }
+                catch (IOException e)
+                {
+                    _logger.LogError("An error occurred while exporting date from {filePath}: {message}. Attempt {attempt}/{maxRetries}", filePath, e.Message, attempt + 1, MaxRetries);
+
+                    await Task.Delay(DelayMiliseconds);
+
+                    if (attempt == MaxRetries - 1)
+                    {
+                        throw;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "An error occurred while exporting data into file {filePath}", filePath);
+                    throw new PangoExportException("An error occurred while exporting data", ex);
                 }
             }
-
-            _logger.LogDebug("Export completed");
-
-            return filePath;
         }
-        catch (Exception ex)
+        finally
         {
-            _logger.LogError(ex, "An error occurred while exporting data into file {filePath}", filePath);
-            throw new PangoExportException("An error occurred while exporting data", ex);
+            _logger.LogDebug("Export completed");
+            _semaphore.Release();
         }
+
+
+        return filePath;
     }
 }
