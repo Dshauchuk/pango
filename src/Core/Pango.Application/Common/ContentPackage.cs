@@ -1,18 +1,16 @@
-﻿namespace Pango.Persistence.File;
+﻿using Pango.Application.Common.Interfaces.Persistence;
+using Pango.Domain.Enums;
 
-public enum ContentType
-{
-    Passwords
-}
+namespace Pango.Application.Common;
 
-public class FileContentPackage : IHaveEncodedData
+public class ContentPackage : IContentPackage
 {
-    public FileContentPackage()
+    public ContentPackage()
     {
         Id = Guid.NewGuid();
     }
 
-    public FileContentPackage(string user, ContentType contentType, string dataType, int itemsCount, object data, DateTimeOffset lastModifiedAt)
+    public ContentPackage(string user, ContentType contentType, string dataType, int itemsCount, object data, DateTimeOffset lastModifiedAt)
         : this()
     {
         Owner = user;

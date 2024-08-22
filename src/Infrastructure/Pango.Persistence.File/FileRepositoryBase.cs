@@ -4,6 +4,8 @@ using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Extensions;
 using Pango.Application.Common.Interfaces;
 using Pango.Domain.Entities;
+using Pango.Domain.Enums;
+
 
 namespace Pango.Persistence.File;
 
@@ -63,11 +65,11 @@ public abstract class FileRepositoryBase<T>
 
     protected async Task SaveItemsForUserAsync(IEnumerable<T> items, string ownerName, string directoryPath, EncodingOptions encodingOptions)
     {
-        IEnumerable<FileContentPackage> contentParts = PrepareContent(items, ownerName);
+        IEnumerable<ContentPackage> contentParts = PrepareContent(items, ownerName);
 
         int packageIndex = 1;
         List<string> usedFiles = [];
-        foreach(FileContentPackage contentPart in contentParts)
+        foreach(ContentPackage contentPart in contentParts)
         {
             string filePath = Path.Combine(directoryPath, $"{contentPart.Id}_p{packageIndex++}{FileRepositoryBase<T>.DefineFileExtension()}");
             await WriteDataPackageAsync(contentPart, filePath, encodingOptions.Key, encodingOptions.Salt);
@@ -106,7 +108,7 @@ public abstract class FileRepositoryBase<T>
 
     #region Private Methods
 
-    private Task<IEnumerable<T>> ProcessDataPackageAsync(FileContentPackage fileContent)
+    private Task<IEnumerable<T>> ProcessDataPackageAsync(ContentPackage fileContent)
     {
         if(fileContent is null)
         {
@@ -118,12 +120,12 @@ public abstract class FileRepositoryBase<T>
         return Task.FromResult(data);
     }
 
-    private async Task<FileContentPackage?> ReadDataPackageAsync(string filePath, string key, string salt)
+    private async Task<ContentPackage?> ReadDataPackageAsync(string filePath, string key, string salt)
     {
         try
         {
             byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
-            var package = await _contentEncoder.DecryptAsync<FileContentPackage>(encryptedFileContent, key, salt);
+            var package = await _contentEncoder.DecryptAsync<ContentPackage>(encryptedFileContent, key, salt);
 
             // todo: verify if the package id matches the file
 
@@ -137,20 +139,20 @@ public abstract class FileRepositoryBase<T>
         }
     }
 
-    private async Task WriteDataPackageAsync(FileContentPackage package, string filePath, string key, string salt)
+    private async Task WriteDataPackageAsync(ContentPackage package, string filePath, string key, string salt)
     {
         byte[] content = await _contentEncoder.EncryptAsync(package, key, salt);
         await WriteFileContentAsync(filePath, content);
     }
 
-    private IEnumerable<FileContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items, string userName)
+    private IEnumerable<ContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items, string userName)
     {
-        List<FileContentPackage> fileContents = new(100);
+        List<ContentPackage> fileContents = new(100);
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            FileContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
+            ContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 

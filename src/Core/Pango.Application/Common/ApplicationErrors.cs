@@ -7,6 +7,7 @@ public static class ApplicationErrors
         public const string EncryptionError = "Data.EncryptionError";
         public const string CannotDefineContentType = "Data.CannotDefineContentType";
         public const string UnkownError = "Data.UnkownError";
+        public const string ExportError = "Data.ExportFailed";
     }
 
     public static class User 

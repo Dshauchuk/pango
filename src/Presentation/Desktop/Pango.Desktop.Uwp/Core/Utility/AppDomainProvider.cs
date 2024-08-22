@@ -11,6 +11,13 @@ public class AppDomainProvider : IAppDomainProvider
         return ApplicationData.Current.RoamingFolder.Path;
     }
 
+    public string GetTempFolderPath()
+    {
+        // Get the path to the temporary folder
+        StorageFolder tempFolder = ApplicationData.Current.TemporaryFolder;
+        return tempFolder.Path;
+    }
+
     public string GetPath(string userName, params string[] pathElements)
     {
         if(pathElements.Length == 0)

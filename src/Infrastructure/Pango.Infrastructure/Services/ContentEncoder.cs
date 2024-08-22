@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Persistence;
 using System.Security.Cryptography;
 

@@ -69,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IUserStorageManager, UserFileStorageManager>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
+        services.AddTransient<IDataExporter, PangoFileDataExporter>();
         services.AddLogging(loggingBuilder =>
                 loggingBuilder.AddSerilog(dispose: true));
 
