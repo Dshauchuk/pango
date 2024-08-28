@@ -24,9 +24,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection RegisterUIMappings(this IServiceCollection services)
     {
-        TypeAdapterConfig<PangoPasswordListItemDto, PasswordExplorerItem>
+        TypeAdapterConfig<PangoPasswordListItemDto, PangoExplorerItem>
         .NewConfig()
-        .Map(dest => dest.Type, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File);
 
         return services;
     }

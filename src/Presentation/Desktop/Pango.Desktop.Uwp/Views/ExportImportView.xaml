@@ -4,7 +4,9 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:templateselectors="using:Pango.Desktop.Uwp.Controls.TemplateSelectors"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    xmlns:local="using:Pango.Desktop.Uwp.Models"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     mc:Ignorable="d"
@@ -12,23 +14,274 @@
     d:DesignHeight="300"
     d:DesignWidth="400">
 
+    <Page.Resources>
+        <Style TargetType="TreeViewItem"
+               BasedOn="{StaticResource ListViewItemRevealStyle}"
+               x:Name="MUX_MultiSelectTreeViewItemStyle">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="{ThemeResource TreeViewItemBackground}"/>
+            <Setter Property="BorderBrush" Value="{ThemeResource TreeViewItemBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="{ThemeResource TreeViewItemBorderThemeThickness}"/>
+            <Setter Property="GlyphBrush" Value="{ThemeResource TreeViewItemForeground}"/>
+            <Setter Property="MinHeight" Value="{ThemeResource TreeViewItemMinHeight}"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TreeViewItem">
+                        <Grid x:Name="ContentPresenterGrid" Margin="0,0,0,0" 
+                              Background="{TemplateBinding Background}" 
+                              BorderBrush="{TemplateBinding BorderBrush}"
+                              BorderThickness="{TemplateBinding BorderThickness}"
+                              CornerRadius="{TemplateBinding CornerRadius}">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CommonStates">
+                                    <VisualState x:Name="Normal"/>
+                                    <VisualState x:Name="PointerOver">
+                                        <VisualState.Setters>
+                                            <!--<Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver" />-->
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundPointerOver}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundPointerOver}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushPointerOver}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Pressed">
+                                        <VisualState.Setters>
+                                            <!--<Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed" />-->
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundPressed}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundPressed}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushPressed}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundSelected}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundSelected}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushSelected}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Disabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundDisabled}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundDisabled}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushDisabled}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PointerOverSelected">
+                                        <VisualState.Setters>
+                                            <!--<Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="PointerOver" />-->
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundSelectedPointerOver}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundSelectedPointerOver}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushSelectedPointerOver}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="PressedSelected">
+                                        <VisualState.Setters>
+                                            <!--<Setter Target="ContentPresenterGrid.(RevealBrush.State)" Value="Pressed" />-->
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundSelectedPressed}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundSelectedPressed}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushSelectedPressed}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="SelectedDisabled">
+                                        <VisualState.Setters>
+                                            <Setter Target="ContentPresenterGrid.Background" Value="{ThemeResource TreeViewItemBackgroundSelectedDisabled}" />
+                                            <Setter Target="ContentPresenter.Foreground" Value="{ThemeResource TreeViewItemForegroundSelectedDisabled}" />
+                                            <Setter Target="ContentPresenterGrid.BorderBrush" Value="{ThemeResource TreeViewItemBorderBrushSelectedDisabled}" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="ReorderedPlaceholder">
+                                        <Storyboard>
+                                            <FadeOutThemeAnimation TargetName="MultiSelectGrid" />
+                                        </Storyboard>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="TreeViewMultiSelectStates">
+                                    <VisualState x:Name="TreeViewMultiSelectDisabled"/>
+                                    <VisualState x:Name="TreeViewMultiSelectEnabledUnselected">
+                                        <VisualState.Setters>
+                                            <Setter Target="MultiSelectCheckBox.Visibility" Value="Visible" />
+                                            <Setter Target="ExpandCollapseChevron.Padding" Value="0,0,12,0" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="TreeViewMultiSelectEnabledSelected">
+                                        <VisualState.Setters>
+                                            <Setter Target="MultiSelectCheckBox.Visibility" Value="Visible" />
+                                            <Setter Target="MultiSelectGrid.Background" Value="{ThemeResource TreeViewItemBackgroundSelected}" />
+                                            <Setter Target="ExpandCollapseChevron.Padding" Value="0,0,12,0" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                                <VisualStateGroup x:Name="DragStates">
+                                    <VisualState x:Name="NotDragging" />
+                                    <VisualState x:Name="MultipleDraggingPrimary">
+                                        <VisualState.Setters>
+                                            <Setter Target="MultiSelectCheckBox.Opacity" Value="0" />
+                                            <Setter Target="MultiArrangeOverlayTextBorder.Visibility" Value="Visible" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Grid x:Name="MultiSelectGrid" Padding="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TreeViewItemTemplateSettings.Indentation}">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+
+                                <Grid Grid.Column="0">
+                                    <CheckBox x:Name="MultiSelectCheckBox"
+                                              Width="32"
+                                              MinWidth="32"
+                                              Margin="12,0,0,0"
+                                              VerticalAlignment="Center"
+                                              Visibility="Collapsed"
+                                              IsTabStop="False"
+                                              AutomationProperties.AccessibilityView="Raw" />
+                                    <Border x:Name="MultiArrangeOverlayTextBorder"
+                                            Visibility="Collapsed"
+                                            IsHitTestVisible="False"
+                                            MinWidth="20"
+                                            Height="20"
+                                            VerticalAlignment="Center"
+                                            HorizontalAlignment="Center"
+                                            Background="{ThemeResource SystemControlBackgroundAccentBrush}"
+                                            BorderThickness="1"
+                                            BorderBrush="{ThemeResource SystemControlBackgroundChromeWhiteBrush}">
+                                        <TextBlock x:Name="MultiArrangeOverlayText"
+                                                   Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TreeViewItemTemplateSettings.DragItemsCount}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource SystemControlForegroundChromeWhiteBrush}"
+                                                   IsHitTestVisible="False"
+                                                   VerticalAlignment="Center"
+                                                   HorizontalAlignment="Center"
+                                                   AutomationProperties.AccessibilityView="Raw" />
+                                    </Border>
+                                </Grid>
+
+                                <Grid x:Name="ExpandCollapseChevron"
+                                      Grid.Column="1"
+                                      Padding="12,0,12,0"
+                                      Width="Auto"
+                                      Opacity="{TemplateBinding GlyphOpacity}"
+                                      Background="Transparent">
+                                    <TextBlock Foreground="{TemplateBinding GlyphBrush}"
+                                               Width="12" Height="12"
+                                               Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TreeViewItemTemplateSettings.CollapsedGlyphVisibility}" 
+                                               FontSize="{TemplateBinding GlyphSize}" Text="{TemplateBinding CollapsedGlyph}"
+                                               FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.AccessibilityView="Raw"/>
+                                    <TextBlock Foreground="{TemplateBinding GlyphBrush}"
+                                               Width="12" Height="12"
+                                               Visibility="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=TreeViewItemTemplateSettings.ExpandedGlyphVisibility}" 
+                                               FontSize="{TemplateBinding GlyphSize}"
+                                               Text="{TemplateBinding ExpandedGlyph}"
+                                               FontFamily="{StaticResource SymbolThemeFontFamily}"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.AccessibilityView="Raw"/>
+                                </Grid>
+
+                                <ContentPresenter x:Name="ContentPresenter"
+                                                  Grid.Column="2"
+                                                  ContentTransitions="{TemplateBinding ContentTransitions}"
+                                                  ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                  Content="{TemplateBinding Content}"
+                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                                  Margin="{TemplateBinding Padding}" />
+                            </Grid>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <DataTemplate x:Name="FolderTemplate"
+                      x:DataType="local:PangoExplorerItem">
+            <TreeViewItem AutomationProperties.Name="{Binding Name}"
+                          ItemsSource="{Binding Children}" 
+                          IsExpanded="False" 
+                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
+                <!--<TreeViewItem.ContextFlyout>
+                    <MenuFlyout>
+                        <MenuFlyoutItem x:Name="Edit_CatalogContextMenuItem" Text="{loc:StringResource Key=Edit}" Icon="Edit" Click="EditContextMenuItem_Click"/>
+                        <MenuFlyoutItem x:Name="Delete_CatalogContextMenuItem" Text="{loc:StringResource Key=Delete}" Icon="Delete" Click="DeleteContextMenuItem_Click"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem x:Name="AddPassword_CatalogContextMenuItem" Text="{loc:StringResource Key=AddPassword}" Icon="Add" Click="AddPassword_CatalogContextMenuItem_Click"/>
+                        <MenuFlyoutItem x:Name="AddCatalog_CatalogContextMenuItem" Text="{loc:StringResource Key=AddNewCatalog}" Icon="NewFolder" Click="AddCatalog_CatalogContextMenuItem_Click"/>
+                    </MenuFlyout>
+                </TreeViewItem.ContextFlyout>-->
+                <StackPanel Orientation="Horizontal">
+                    <Image Width="20"
+                       Source="../Assets/folder.png"/>
+                    <TextBlock Margin="0,0,10,0"/>
+                    <TextBlock Text="{Binding Name}" />
+                </StackPanel>
+            </TreeViewItem>
+        </DataTemplate>
+
+        <DataTemplate x:Name="FileTemplate"
+                      x:DataType="local:PangoExplorerItem">
+            <TreeViewItem HorizontalAlignment="Stretch"
+                          Padding="0 0 10 0"
+                          HorizontalContentAlignment="Stretch"
+                          AutomationProperties.Name="{Binding Name}"
+                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
+
+                <!--<TreeViewItem.ContextFlyout>
+                    <MenuFlyout >
+                        <MenuFlyoutItem x:Name="SeePassword_PasswordContextMenuItem" Text="{loc:StringResource Key=SeePassword}" Click="SeeContextMenuItem_Click">
+                            <MenuFlyoutItem.Icon>
+                                <FontIcon Glyph="&#xE7B3;"/>
+                            </MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutItem x:Name="EditPassword_PasswordContextMenuItem" Text="{loc:StringResource Key=Edit}" Icon="Edit" Click="EditContextMenuItem_Click"/>
+                        <MenuFlyoutItem x:Name="DeletePassword_PasswordContextMenuItem" Text="{loc:StringResource Key=Delete}" Icon="Delete" Click="DeleteContextMenuItem_Click"/>
+                        <MenuFlyoutSeparator/>
+                        <MenuFlyoutItem x:Name="CopyPassword_PasswordContextMenuItem" Text="{loc:StringResource Key=CopyPassword}" Icon="Copy" Click="CopyPassword_PasswordContextMenuItem_Click"/>
+                    </MenuFlyout>
+                </TreeViewItem.ContextFlyout>-->
+                <Grid HorizontalAlignment="Stretch">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Glyph="&#xE8D7;"
+                          Margin="5,2"
+                          FontSize="{StaticResource FontIconSize}"/>
+
+                    <TextBlock Grid.Column="1" 
+                           Text="{Binding Name}"
+                           VerticalAlignment="Center"/>
+                </Grid>
+            </TreeViewItem>
+        </DataTemplate>
+
+        <templateselectors:PasswordExplorerItemTemplateSelector x:Name="PasswordExplorerItemTemplateSelector"
+                                                                FolderTemplate="{StaticResource FolderTemplate}"
+                                                                FileTemplate="{StaticResource FileTemplate}" />
+    </Page.Resources>
+
     <Grid>
-        <Grid x:Name="RootGrid">
+        <Grid x:Name="RootGrid"
+              Margin="{StaticResource PageContentContainerMargin}">
 
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0"
-                  Margin="{StaticResource PageContentContainerMargin}">
+            <Grid Grid.Row="0">
                 <TextBlock Margin="0" 
-                           Text="{loc:StringResource Key=ExportAndImportTooltip}"
+                           Text="{Binding TitleText}"
                            Style="{StaticResource HeaderTextBlockStyle}"/>
             </Grid>
 
             <Pivot Grid.Row="1"
                    x:Name="ExportImport_Pivot"
+                   Margin="0"
                    SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
                 <Pivot.HeaderTemplate>
                     <DataTemplate>
@@ -39,7 +292,7 @@
                     </DataTemplate>
                 </Pivot.HeaderTemplate>
 
-                <PivotItem>
+                <PivotItem Margin="0">
                     <Grid HorizontalAlignment="Center"
                           VerticalAlignment="Center">
                         <StackPanel Orientation="Vertical"
@@ -79,31 +332,44 @@
                     </Grid>
                 </PivotItem>
 
-                <PivotItem>
+                <PivotItem Margin="0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Margin="0" 
-                                   Text="{loc:StringResource Key=ExportTitle}"
-                                   Style="{StaticResource HeaderTextBlockStyle}"/>
+                                   Text="Select items to export"
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                         <Grid Grid.Row="1">
-                            <StackPanel Orientation="Horizontal">
-                                <Button Content="{loc:StringResource Key=ExportDataButtonContent}"
-                                        Command="{Binding ExportDataCommand}"/>
-
-                                <Button Content="Back"
-                                        Command="{Binding NavigateToOptionCommand}">
-                                    <Button.CommandParameter>
-                                        <x:Int32>0</x:Int32>
-                                    </Button.CommandParameter>
-                                </Button>
-                            </StackPanel>
+                            <TreeView x:Name="PasswordsTreeView" 
+                                      Margin="10 "
+                                      SelectionMode="Multiple"
+                                      ItemsSource="{Binding Path=Passwords}"                                      
+                                      ItemContainerStyle="{StaticResource MUX_MultiSelectTreeViewItemStyle}"
+                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}">
+                            </TreeView>
                         </Grid>
-
+                        
+                        <StackPanel Grid.Row="2" 
+                                    Margin="10" 
+                                    Orientation="Horizontal"
+                                    HorizontalAlignment="Right">
+                            <Button Margin="5" 
+                                    Content="{loc:StringResource Key='ExportDataButtonContent'}"
+                                    Style="{StaticResource AccentButtonStyle}"
+                                    Command="{Binding Path=ExportDataCommand}"/>
+                            <Button Margin="5" 
+                                    Content="{loc:StringResource Key='Cancel'}"
+                                    Command="{Binding Path=NavigateToOptionCommand}">
+                                <Button.CommandParameter>
+                                    <x:Int32>0</x:Int32>
+                                </Button.CommandParameter>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </PivotItem>
 
@@ -120,10 +386,13 @@
 
                         <Grid Grid.Row="1">
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="{loc:StringResource Key=ImportDataButtonContent}"
+                                <Button Margin="5" 
+                                        Content="{loc:StringResource Key='ImportDataButtonContent'}"
+                                        Style="{StaticResource AccentButtonStyle}"
                                         Command="{Binding ImportDataCommand}"/>
 
-                                <Button Content="Back" 
+                                <Button Margin="5"
+                                        Content="{loc:StringResource Key='Cancel'}"
                                         Command="{Binding NavigateToOptionCommand}">
                                     <Button.CommandParameter>
                                         <x:Int32>0</x:Int32>

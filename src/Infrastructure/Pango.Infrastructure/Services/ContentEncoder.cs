@@ -47,7 +47,7 @@ public class ContentEncoder : IContentEncoder
     {
         try
         {
-            string json = JsonConvert.SerializeObject(content);
+            string json = JsonConvert.SerializeObject(content, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
             return await Task.Run(() => Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
         }

@@ -6,13 +6,13 @@ namespace Pango.Application.UseCases.Data.Commands.Export;
 
 public class ExportDataCommand : IRequest<ErrorOr<ExportResult>>
 {
-    public ExportDataCommand(List<IContentPackage> contents, IExportOptions exportOptions)
+    public ExportDataCommand(List<ExportItem> exportItems, IExportOptions exportOptions)
     {
-        Contents = contents;
         ExportOptions = exportOptions;
+        ExportItems = exportItems;
     }
 
-    public List<IContentPackage> Contents { get; }
+    public List<ExportItem> ExportItems { get; }
 
     public IExportOptions ExportOptions { get; }
 

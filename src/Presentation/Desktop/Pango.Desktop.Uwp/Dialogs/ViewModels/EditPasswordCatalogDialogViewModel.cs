@@ -25,7 +25,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
     private string _initialCatalog = string.Empty;
     private List<string>? _availableCatalogs;
     private List<string>? _existingCatalogs;
-    private PasswordExplorerItem? _selectedCatalog;
+    private PangoExplorerItem? _selectedCatalog;
 
     public RelayCommand SaveCommand { get; }
 
