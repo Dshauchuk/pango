@@ -71,7 +71,7 @@ public class UserViewModel : ViewModelBase
 
     private void OnOpenChangePasswordDialog()
     {
-        _dialogService.ShowPasswordChangeDialog(new EmptyDialogParameter()); 
+        _dialogService.ShowPasswordChangeDialogAsync(new EmptyDialogParameter()); 
     }
 
     private void OnSignOut()

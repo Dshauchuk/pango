@@ -45,6 +45,7 @@ public static class DependencyInjection
             .AddSingleton<EditPasswordCatalogDialogViewModel>()
             .AddSingleton<PasswordDetailsDialogViewModel>()
             .AddSingleton<ChangePasswordDialogViewModel>()
+            .AddSingleton<ExportDialogViewModel>()
             .AddSingleton<ExportImportViewModel>()
             .AddSingleton<UserViewModel>();
 

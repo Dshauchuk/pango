@@ -22,9 +22,14 @@ public class DialogService : IDialogService
         return ShowAsync(new PasswordDetailsDialog(passwordDetailsParameters));
     }
 
-    public Task ShowPasswordChangeDialog(EmptyDialogParameter dialogParameter)
+    public Task ShowPasswordChangeDialogAsync(EmptyDialogParameter dialogParameter)
     {
         return ShowAsync(new ChangePasswordDialog(dialogParameter));
+    }
+
+    public Task ShowDataExportDialogAsync(EmptyDialogParameter dialogParameter)
+    {
+        return ShowAsync(new ExportDialog(dialogParameter));
     }
 
     /// <summary>
