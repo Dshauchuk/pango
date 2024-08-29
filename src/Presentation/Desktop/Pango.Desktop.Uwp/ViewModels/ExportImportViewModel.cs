@@ -3,17 +3,16 @@ using ErrorOr;
 using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Data.Commands.Export;
-using Pango.Application.UseCases.Data.Commands.Import;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Extensions;
+using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models;
-using Pango.Persistence.File;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -29,19 +28,26 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     private readonly ISender _sender;
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IDialogService _dialogService;
     private int _selectedOption;
-    private string _titleText;
+    private string _titleText = string.Empty;
 
     #endregion
 
-    public ExportImportViewModel(ILogger<ExportImportViewModel> logger, ISender sender, IUserContextProvider userContextProvider) : base(logger)
+    public ExportImportViewModel(
+        ILogger<ExportImportViewModel> logger, 
+        ISender sender, 
+        IUserContextProvider userContextProvider, 
+        IDialogService dialogService) 
+        : base(logger)
     {
-        ExportDataCommand = new RelayCommand(OnExportDataAsync);
+        ExportDataCommand = new RelayCommand(OnExportAsync);
         ImportDataCommand = new RelayCommand(OnImportDataAsync);
         NavigateToOptionCommand = new RelayCommand<int>(OnNavigateToOption);
 
         _sender = sender;
         _userContextProvider = userContextProvider;
+        _dialogService = dialogService;
 
         Passwords = [];
         TitleText = ViewResourceLoader.GetString("ExportAndImportTooltip");
@@ -105,20 +111,21 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     }
 
-    private async void OnExportDataAsync()
+    private async void OnExportAsync()
     {
-        var t = await _userContextProvider.GetEncodingOptionsAsync();
+        await _dialogService.ShowDataExportDialogAsync(new ExportDataParameters(PrepareContent()));
+        //var t = await _userContextProvider.GetEncodingOptionsAsync();
 
-        var a = Convert.FromBase64String(t.Key);
-        var b = a[..16];
+        //var a = Convert.FromBase64String(t.Key);
+        //var b = a[..16];
 
-        string tmpUser = "tmp";
-        var encoding = new EncodingOptions(t.Key, Convert.ToBase64String(b));
+        //string tmpUser = "tmp";
+        //var encoding = new EncodingOptions(t.Key, Convert.ToBase64String(b));
 
-        ErrorOr<ExportResult> result = 
-            await _sender.Send(new ExportDataCommand(PrepareContent(), new ExportOptions(tmpUser, encoding)));
+        //ErrorOr<ExportResult> result = 
+        //    await _sender.Send(new ExportDataCommand(PrepareContent(), new ExportOptions(tmpUser, encoding)));
 
-        var t2 = await _sender.Send(new ImportDataCommand(result.Value.Path, new ImportOptions(encoding)));
+        //var t2 = await _sender.Send(new ImportDataCommand(result.Value.Path, new ImportOptions(encoding)));
     }
 
     private List<ExportItem> PrepareContent()

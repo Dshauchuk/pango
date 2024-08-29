@@ -12,7 +12,7 @@ namespace Pango.Desktop.Uwp.Dialogs.Views;
 /// </summary>
 public sealed partial class ExportDialog : DialogPage
 {
-    public ExportDialog(EmptyDialogParameter parameter) : base(parameter)
+    public ExportDialog(ExportDataParameters parameter) : base(parameter)
     {
         this.InitializeComponent();
         this.SetViewModel(App.Host.Services.GetRequiredService<ExportDialogViewModel>());

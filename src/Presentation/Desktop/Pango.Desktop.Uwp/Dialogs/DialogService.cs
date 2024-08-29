@@ -27,7 +27,7 @@ public class DialogService : IDialogService
         return ShowAsync(new ChangePasswordDialog(dialogParameter));
     }
 
-    public Task ShowDataExportDialogAsync(EmptyDialogParameter dialogParameter)
+    public Task ShowDataExportDialogAsync(ExportDataParameters dialogParameter)
     {
         return ShowAsync(new ExportDialog(dialogParameter));
     }
