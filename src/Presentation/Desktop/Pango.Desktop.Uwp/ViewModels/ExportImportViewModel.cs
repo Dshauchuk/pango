@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using Mapster;
 using MediatR;
@@ -13,6 +14,7 @@ using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -43,7 +45,7 @@ public sealed class ExportImportViewModel : ViewModelBase
     {
         ExportDataCommand = new RelayCommand(OnExportAsync);
         ImportDataCommand = new RelayCommand(OnImportDataAsync);
-        NavigateToOptionCommand = new RelayCommand<int>(OnNavigateToOption);
+        NavigateToOptionCommand = new RelayCommand<int>(async(e) => await OnNavigateToOptionAsync(e));
 
         _sender = sender;
         _userContextProvider = userContextProvider;
@@ -90,6 +92,8 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     #endregion
 
+    #region Overrides
+
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
@@ -97,7 +101,20 @@ public sealed class ExportImportViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+        WeakReferenceMessenger.Default.Register<ExportCompletedMessage>(this, OnExportCompleted);
+    }
+
+    #endregion
+
     #region Private Methods
+
+    private void OnExportCompleted(object recipient, ExportCompletedMessage message)
+    {
+        // todo: show dialog with exported package data
+    }
 
     private async Task ResetViewAsync()
     {
@@ -114,18 +131,6 @@ public sealed class ExportImportViewModel : ViewModelBase
     private async void OnExportAsync()
     {
         await _dialogService.ShowDataExportDialogAsync(new ExportDataParameters(PrepareContent()));
-        //var t = await _userContextProvider.GetEncodingOptionsAsync();
-
-        //var a = Convert.FromBase64String(t.Key);
-        //var b = a[..16];
-
-        //string tmpUser = "tmp";
-        //var encoding = new EncodingOptions(t.Key, Convert.ToBase64String(b));
-
-        //ErrorOr<ExportResult> result = 
-        //    await _sender.Send(new ExportDataCommand(PrepareContent(), new ExportOptions(tmpUser, encoding)));
-
-        //var t2 = await _sender.Send(new ImportDataCommand(result.Value.Path, new ImportOptions(encoding)));
     }
 
     private List<ExportItem> PrepareContent()
@@ -168,15 +173,27 @@ public sealed class ExportImportViewModel : ViewModelBase
         return result;
     }
 
-    private void OnNavigateToOption(int option)
+    private async Task OnNavigateToOptionAsync(int option)
     {
-        SelectedOption = option switch
+        switch(option)
         {
-            0 => 0,
-            1 => 1,
-            2 => 2,
-            _ => throw new InvalidOperationException($"Option {option} cannot be navigated")
-        };
+            case 0:
+                SelectedOption = 0;
+                await OnNavigatedToGeneralAsync();
+                break;
+
+            case 1:
+                SelectedOption = 1;
+                await OnNavigatedToExportAsync();
+                break;
+
+            case 2:
+                SelectedOption = 2;
+                await OnNavigatedToImportAsync();
+                break;
+            default:
+                break;
+        }
     }
 
     /// <summary>
@@ -294,6 +311,21 @@ public sealed class ExportImportViewModel : ViewModelBase
         sortedPasswordsList.Insert(index, passwordToInsert);
     }
 
+    private Task OnNavigatedToGeneralAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    private async Task OnNavigatedToExportAsync()
+    {
+        IEnumerable<PangoExplorerItem> passwords = await LoadPasswordsAsync();
+        DisplayPasswordsInTree(passwords);
+    }
+
+    private Task OnNavigatedToImportAsync()
+    {
+        return Task.CompletedTask;
+    }
     #endregion
 
 }

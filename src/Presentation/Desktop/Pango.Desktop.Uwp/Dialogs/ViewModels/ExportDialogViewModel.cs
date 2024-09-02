@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,8 @@ using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.Data.Commands.Export;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
+using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
@@ -16,8 +19,16 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public class ExportDataValidator : ObservableValidator
 {
-    private string _owner = string.Empty;
-    private string _masterPassword = string.Empty;
+    private string _owner;
+    private string _masterPassword;
+
+    public ExportDataValidator()
+    {
+        _owner = string.Empty;
+        _masterPassword = string.Empty;
+
+        ValidateAllProperties();
+    }
 
     [Required]
     [MinLength(3)]
@@ -25,7 +36,11 @@ public class ExportDataValidator : ObservableValidator
     public string Owner
     {
         get => _owner;
-        set => SetProperty(ref _owner, value);
+        set
+        {
+            SetProperty(ref _owner, value);
+            ValidateProperty(value, nameof(Owner));
+        }
     }
 
     [Required]
@@ -33,7 +48,11 @@ public class ExportDataValidator : ObservableValidator
     public string MasterPassword
     {
         get => _masterPassword;
-        set => SetProperty(ref _masterPassword, value);
+        set
+        {
+            SetProperty(ref _masterPassword, value);
+            ValidateProperty(value, nameof(MasterPassword));
+        }
     }
 }
 
@@ -61,9 +80,11 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         DialogContext = new DialogContext();
 
         _sender = sender;
-        _validator = new();
         _userContextProvider = userContextProvider;
         _passwordHashProvider = passwordHashProvider;
+
+        _validator = new();
+        _validator.ErrorsChanged += Validator_ErrorsChanged;
     }
 
     #region Properties
@@ -86,7 +107,7 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public bool CanSave()
     {
-        return true;
+        return !Validator.HasErrors;
     }
 
     public Task OnCancelAsync()
@@ -106,9 +127,17 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         //var b = a[..16];
         //var encoding = new EncodingOptions(t.Key, Convert.ToBase64String(b));
 
-        string tmpUser = "tmp";
         ErrorOr<ExportResult> result =
-            await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(tmpUser, encoding)));
+            await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(Validator.Owner, encoding)));
+
+        if(result.IsError)
+        {
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Export failed: {result.FirstError}", Core.Enums.AppNotificationType.Error));
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Send<ExportCompletedMessage>(new ExportCompletedMessage(result.Value));            
+        }
     }
 
     public override async Task OnNavigatedToAsync(object? parameter)
@@ -133,7 +162,18 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private void ResetDialog()
     {
+        if(Validator != null)
+        {
+            Validator.ErrorsChanged -= Validator_ErrorsChanged;
+        }
+
         Validator = new();
+        Validator.ErrorsChanged += Validator_ErrorsChanged;
+    }
+
+    private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e)
+    {
+        DialogContext.RaiseDialogContentChanged(e);
     }
 
     #endregion

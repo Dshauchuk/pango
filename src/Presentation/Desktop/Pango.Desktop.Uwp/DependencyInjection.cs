@@ -70,6 +70,7 @@ public static class DependencyInjection
         services.AddScoped<IUserStorageManager, UserFileStorageManager>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
+        services.AddScoped<IAppMetaService, AppMetaService>();
         services.AddLogging(loggingBuilder =>
                 loggingBuilder.AddSerilog(dispose: true));
 

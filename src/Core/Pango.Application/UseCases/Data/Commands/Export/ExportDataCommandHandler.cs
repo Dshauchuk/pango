@@ -16,21 +16,24 @@ public class ExportDataCommandHandler
     private readonly ILogger _logger; 
     private readonly IDataExporter _dataExporter;
     private readonly IPasswordRepository _passwordRepository;
+    private readonly IAppMetaService _appMetaService;
     private readonly IUserContextProvider _userContextProvider;
     private readonly IRepositoryContextFactory _repositoryContextFactory;
 
     public ExportDataCommandHandler(
         ILogger<ExportDataCommandHandler> logger,
-        IDataExporter dataExporter, 
-        IPasswordRepository passwordRepository, 
-        IRepositoryContextFactory repositoryContextFactory, 
-        IUserContextProvider userContextProvider)
+        IDataExporter dataExporter,
+        IPasswordRepository passwordRepository,
+        IRepositoryContextFactory repositoryContextFactory,
+        IUserContextProvider userContextProvider,
+        IAppMetaService appMetaService)
     {
         _logger = logger;
         _dataExporter = dataExporter;
         _passwordRepository = passwordRepository;
         _userContextProvider = userContextProvider;
         _repositoryContextFactory = repositoryContextFactory;
+        _appMetaService = appMetaService;
     }
 
     public async Task<ErrorOr<ExportResult>> Handle(ExportDataCommand request, CancellationToken cancellationToken)
@@ -43,7 +46,11 @@ public class ExportDataCommandHandler
             List<PangoPassword> passwords = (await _passwordRepository.QueryAsync(p => ids.Contains(p.Id), context)).ToList();
             string path = await _dataExporter.ExportAsync(ExportDataCommandHandler.AsContent(passwords, request.ExportOptions.Owner), request.ExportOptions);
         
-            return new ExportResult(path);
+            return new ExportResult(
+                path, 
+                new Dictionary<Domain.Enums.ContentType, int> { { Domain.Enums.ContentType.Passwords, passwords.Where(p => !p.IsCatalog).Count() } }, 
+                DateTime.Now, 
+                _appMetaService.GetAppVersion());
         }
         catch(PangoExportException pEx)
         {
