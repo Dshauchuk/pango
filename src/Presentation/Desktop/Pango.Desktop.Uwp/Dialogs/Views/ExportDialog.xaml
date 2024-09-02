@@ -4,6 +4,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:Pango.Desktop.Uwp.Controls"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:dialogviewmodels="using:Pango.Desktop.Uwp.Dialogs.ViewModels"
     xmlns:views="using:Pango.Desktop.Uwp.Dialogs.Views"
     d:DataContext="{d:DesignInstance Type=dialogviewmodels:ExportDialogViewModel}"
@@ -11,5 +13,25 @@
 
     <Grid>
 
+        <Grid DataContext="{Binding Path=Validator}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <controls:ValidationTextBox Grid.Row="0" 
+                            Margin="10"
+                            PropertyName="Owner"
+                            Text="{Binding Path=Owner, Mode=TwoWay}"
+                            HeaderText="{loc:StringResource Key='User'}"
+                            PlaceholderText="User Name"/>
+
+            <controls:ValidationPasswordBox Grid.Row="1"
+                                Margin="10"
+                                PropertyName="MasterPassword"
+                                Password="{Binding Path=MasterPassword, Mode=TwoWay}"
+                                HeaderText="{loc:StringResource Key='Password'}"
+                                PlaceholderText="{loc:StringResource Key='Password'}"/>
+        </Grid>
     </Grid>
 </views:DialogPage>
