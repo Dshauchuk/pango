@@ -107,13 +107,19 @@ public sealed class ExportImportViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Register<ExportCompletedMessage>(this, OnExportCompleted);
     }
 
+    protected override void UnregisterMessages()
+    {
+        base.UnregisterMessages();
+        WeakReferenceMessenger.Default.Unregister<ExportCompletedMessage>(this);
+    }
+
     #endregion
 
     #region Private Methods
 
-    private void OnExportCompleted(object recipient, ExportCompletedMessage message)
+    private async void OnExportCompleted(object recipient, ExportCompletedMessage message)
     {
-        // todo: show dialog with exported package data
+         await _dialogService.ShowExportResultDialogAsync(new ExportResultParameters(message.Value));
     }
 
     private async Task ResetViewAsync()

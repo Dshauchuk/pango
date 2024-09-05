@@ -438,4 +438,7 @@
   <data name="ImportTitle" xml:space="preserve">
     <value>Import</value>
   </data>
+  <data name="ExportResultTitle" xml:space="preserve">
+    <value>Export Results</value>
+  </data>
 </root>

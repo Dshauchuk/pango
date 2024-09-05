@@ -436,4 +436,7 @@
   <data name="ImportTitle" xml:space="preserve">
     <value>Імпарт</value>
   </data>
+  <data name="ExportResultTitle" xml:space="preserve">
+    <value>Вынікі Экспарту</value>
+  </data>
 </root>

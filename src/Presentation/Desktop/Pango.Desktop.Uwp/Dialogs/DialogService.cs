@@ -32,6 +32,11 @@ public class DialogService : IDialogService
         return ShowAsync(new ExportDialog(dialogParameter));
     }
 
+    public Task ShowExportResultDialogAsync(ExportResultParameters dialogParameter)
+    {
+        return ShowAsync(new ExportCompletedDialog(dialogParameter));
+    }
+
     /// <summary>
     /// Raises a simple confirmation dialog, returns true if user clicked on the primary button, otherwise - false
     /// </summary>
