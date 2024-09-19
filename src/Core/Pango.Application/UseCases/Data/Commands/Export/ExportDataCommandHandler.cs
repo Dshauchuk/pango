@@ -7,6 +7,7 @@ using Pango.Application.Common.Extensions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
+using Pango.Domain.Enums;
 
 namespace Pango.Application.UseCases.Data.Commands.Export;
 
@@ -44,7 +45,16 @@ public class ExportDataCommandHandler
             IRepositoryActionContext context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
 
             List<PangoPassword> passwords = (await _passwordRepository.QueryAsync(p => ids.Contains(p.Id), context)).ToList();
-            string path = await _dataExporter.ExportAsync(ExportDataCommandHandler.AsContent(passwords, request.ExportOptions.Owner), request.ExportOptions);
+
+            var manifest = 
+                new PangoPackageManifest(
+                    _userContextProvider.GetUserName(), 
+                    DateTime.UtcNow.ToString("G"), 
+                    request.ExportOptions.Description, 
+                    new Dictionary<Domain.Enums.ContentType, int>() { { ContentType.Passwords, passwords.Count(p => !p.IsCatalog)} }
+                    );
+
+            string path = await _dataExporter.ExportAsync(manifest, ExportDataCommandHandler.AsContent(passwords, request.ExportOptions.Description), request.ExportOptions);
         
             return new ExportResult(
                 path, 

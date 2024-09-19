@@ -25,7 +25,7 @@ public class PangoFileDataExporter : IDataExporter
         _logger = logger;
     }
 
-    public async Task<string> ExportAsync(IEnumerable<IContentPackage> contentPackages, IExportOptions exportOptions)
+    public async Task<string> ExportAsync(PangoPackageManifest manifest, IEnumerable<IContentPackage> contentPackages, IExportOptions exportOptions)
     {
         await _semaphore.WaitAsync();
 
@@ -42,7 +42,16 @@ public class PangoFileDataExporter : IDataExporter
                 try
                 {
                     using Package package = Package.Open(filePath, FileMode.Create);
-                    int partIndex = 0;
+
+                    var manifestPartUri = new Uri($"/part0.pngdat", UriKind.Relative);
+                    PackagePart manifestPart = package.CreatePart(manifestPartUri, "application/octet-stream", CompressionOption.Maximum);
+                    byte[] encryptedManifestData = await _contentEncoder.EncryptAsync(manifest, exportOptions.EncodingOptions.Key, exportOptions.EncodingOptions.Salt);
+                    using (Stream partStream = manifestPart.GetStream())
+                    {
+                        partStream.Write(encryptedManifestData, 0, encryptedManifestData.Length);
+                    }
+
+                    int partIndex = 1;
                     foreach (IContentPackage data in contentPackages)
                     {
                         string partUriString = $"/part{partIndex}.pngdat";

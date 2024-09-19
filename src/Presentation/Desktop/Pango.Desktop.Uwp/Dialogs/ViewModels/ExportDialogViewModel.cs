@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.Data.Commands.Export;
+using Pango.Application.UseCases.Data.Commands.Import;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -122,13 +123,16 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
         var encoding = new EncodingOptions(passwordHash, salt);
 
-        //var t = await _userContextProvider.GetEncodingOptionsAsync();
-        //var a = Convert.FromBase64String(t.Key);
-        //var b = a[..16];
-        //var encoding = new EncodingOptions(t.Key, Convert.ToBase64String(b));
+        var t = await _userContextProvider.GetEncodingOptionsAsync();
+        var a = Convert.FromBase64String(t.Key);
+        var b = a[..16];
+        var encoding2 = new EncodingOptions(t.Key, Convert.ToBase64String(b));
 
         ErrorOr<ExportResult> result =
             await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(Validator.Owner, encoding)));
+
+
+        var t2 = await _sender.Send(new ImportDataCommand(result.Value.Path, new ImportOptions(encoding2)));
 
         if(result.IsError)
         {

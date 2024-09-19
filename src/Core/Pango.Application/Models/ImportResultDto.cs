@@ -1,14 +1,14 @@
 ﻿using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 
-namespace Pango.Application.UseCases.Data.Commands.Import;
+namespace Pango.Application.Models;
 
-public class ImportResult
+public record ImportResultDto
 {
-    public ImportResult(PangoPackageManifest manifest, List<IContentPackage> contentPackages)
+    public ImportResultDto(PangoPackageManifest manifest, List<IContentPackage> contentPackages)
     {
-        ContentPackages = contentPackages;
         Manifest = manifest;
+        ContentPackages = contentPackages;
     }
 
     public PangoPackageManifest Manifest { get; init; }

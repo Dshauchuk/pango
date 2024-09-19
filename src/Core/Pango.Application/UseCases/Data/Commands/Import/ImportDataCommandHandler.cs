@@ -2,8 +2,8 @@
 using MediatR;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
-using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 
 namespace Pango.Application.UseCases.Data.Commands.Import;
 
@@ -21,9 +21,14 @@ public class ImportDataCommandHandler
     {
         try
         {
-            List<IContentPackage> importedPackages = await _dataImporter.ImportAsync(request.SourcePath, request.Options);
+            ImportResultDto result = await _dataImporter.ImportAsync(request.SourcePath, request.Options);
 
-            return new ImportResult(importedPackages);
+            if(result is null)
+            {
+
+            }
+
+            return new ImportResult(result.Manifest, result.ContentPackages);
         }
         catch (PangoImportException pEx)
         {

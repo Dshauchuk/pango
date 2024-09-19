@@ -2,6 +2,6 @@
 
 public interface IExportOptions
 {
-    public string Owner { get; }
+    public string Description { get; }
     public EncodingOptions EncodingOptions { get; }
 }

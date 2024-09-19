@@ -8,9 +8,9 @@ public class ExportOptions : IExportOptions
     public ExportOptions(string owner, EncodingOptions encodingOptions)
     {
         EncodingOptions = encodingOptions;
-        Owner = owner;
+        Description = owner;
     }
 
     public EncodingOptions EncodingOptions { get; }
-    public string Owner { get; }
+    public string Description { get; }
 }

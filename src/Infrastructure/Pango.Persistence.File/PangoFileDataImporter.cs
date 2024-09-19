@@ -3,6 +3,7 @@ using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using System.IO.Packaging;
 
 namespace Pango.Persistence.File;
@@ -25,9 +26,10 @@ public class PangoFileDataImporter : IDataImporter
         _logger = logger;
     }
 
-    public async Task<List<IContentPackage>> ImportAsync(string filePath, IImportOptions importOptions)
+    public async Task<ImportResultDto> ImportAsync(string filePath, IImportOptions importOptions)
     {
         List<IContentPackage> importedPackages = [];
+        PangoPackageManifest? manifest = null;
 
         await _semaphore.WaitAsync();
 
@@ -51,15 +53,26 @@ public class PangoFileDataImporter : IDataImporter
                         partStream.Read(encryptedData, 0, encryptedData.Length);
 
                         // Decrypt the data
-                        IContentPackage? data = await _contentEncoder.DecryptAsync<ContentPackage>(encryptedData, importOptions.EncodingOptions.Key, importOptions.EncodingOptions.Salt);
-
-                        if (data is null)
+                        if (manifest is null)
                         {
-                            _logger.LogWarning("Got an empty package while importing data from {filePath}", filePath);
+                            manifest = await _contentEncoder.DecryptAsync<PangoPackageManifest>(encryptedData, importOptions.EncodingOptions.Key, importOptions.EncodingOptions.Salt);
+                            if(manifest is null)
+                            {
+
+                            }
                         }
                         else
                         {
-                            importedPackages.Add(data);
+                            IContentPackage? data = await _contentEncoder.DecryptAsync<ContentPackage>(encryptedData, importOptions.EncodingOptions.Key, importOptions.EncodingOptions.Salt);
+
+                            if (data is null)
+                            {
+                                _logger.LogWarning("Got an empty package while importing data from {filePath}", filePath);
+                            }
+                            else
+                            {
+                                importedPackages.Add(data);
+                            }
                         }
                     }
 
@@ -85,7 +98,7 @@ public class PangoFileDataImporter : IDataImporter
             _semaphore.Release();
         }
 
-        return importedPackages;
+        return new ImportResultDto(manifest!.Value, importedPackages);
     }
 
     /// <summary>
