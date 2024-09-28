@@ -1,5 +1,5 @@
 <views:DialogPage
-    x:Class="Pango.Desktop.Uwp.Dialogs.Views.ExportDialog"
+    x:Class="Pango.Desktop.Uwp.Dialogs.Views.ImportDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -8,7 +8,7 @@
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:dialogviewmodels="using:Pango.Desktop.Uwp.Dialogs.ViewModels"
     xmlns:views="using:Pango.Desktop.Uwp.Dialogs.Views"
-    d:DataContext="{d:DesignInstance Type=dialogviewmodels:ExportDialogViewModel}"
+    d:DataContext="{d:DesignInstance Type=dialogviewmodels:ImportDialogViewModel}"
     mc:Ignorable="d">
 
     <Grid>
@@ -18,19 +18,12 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <controls:ValidationTextBox Grid.Row="0" 
-                            Margin="10"
-                            PropertyName="Description"
-                            Text="{Binding Path=Description, Mode=TwoWay}"
-                            HeaderText="{loc:StringResource Key='User'}"
-                            PlaceholderText="User Name"/>
-
             <controls:ValidationPasswordBox Grid.Row="1"
-                                Margin="10"
-                                PropertyName="MasterPassword"
-                                Password="{Binding Path=MasterPassword, Mode=TwoWay}"
-                                HeaderText="{loc:StringResource Key='Password'}"
-                                PlaceholderText="{loc:StringResource Key='Password'}"/>
+                        Margin="10"
+                        PropertyName="MasterPassword"
+                        Password="{Binding Path=MasterPassword, Mode=TwoWay}"
+                        HeaderText="{loc:StringResource Key='Password'}"
+                        PlaceholderText="{loc:StringResource Key='Password'}"/>
         </Grid>
     </Grid>
 </views:DialogPage>

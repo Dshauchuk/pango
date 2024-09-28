@@ -6,7 +6,6 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.Data.Commands.Export;
-using Pango.Application.UseCases.Data.Commands.Import;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -14,18 +13,19 @@ using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public class ExportDataValidator : ObservableValidator
 {
-    private string _owner;
+    private string _description;
     private string _masterPassword;
 
     public ExportDataValidator()
     {
-        _owner = string.Empty;
+        _description = string.Empty;
         _masterPassword = string.Empty;
 
         ValidateAllProperties();
@@ -34,13 +34,13 @@ public class ExportDataValidator : ObservableValidator
     [Required]
     [MinLength(3)]
     [MaxLength(20)]
-    public string Owner
+    public string Description
     {
-        get => _owner;
+        get => _description;
         set
         {
-            SetProperty(ref _owner, value);
-            ValidateProperty(value, nameof(Owner));
+            SetProperty(ref _description, value);
+            ValidateProperty(value, nameof(Description));
         }
     }
 
@@ -118,21 +118,14 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public async Task OnSaveAsync()
     {
-        string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, out var saltBytes);
-        string salt = Convert.ToBase64String(saltBytes);
+        var saltBytes = Encoding.UTF8.GetBytes(Validator.MasterPassword);
+        Array.Resize(ref saltBytes, 16);
 
-        var encoding = new EncodingOptions(passwordHash, salt);
-
-        var t = await _userContextProvider.GetEncodingOptionsAsync();
-        var a = Convert.FromBase64String(t.Key);
-        var b = a[..16];
-        var encoding2 = new EncodingOptions(t.Key, Convert.ToBase64String(b));
+        string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, saltBytes);
+        var encoding = new EncodingOptions(passwordHash, Convert.ToBase64String(saltBytes));
 
         ErrorOr<ExportResult> result =
-            await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(Validator.Owner, encoding)));
-
-
-        var t2 = await _sender.Send(new ImportDataCommand(result.Value.Path, new ImportOptions(encoding2)));
+            await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(Validator.Description, encoding)));
 
         if(result.IsError)
         {

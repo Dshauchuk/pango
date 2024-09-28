@@ -13,6 +13,8 @@ public interface IDialogService
     
     Task ShowDataExportDialogAsync(ExportDataParameters dialogParameter);
 
+    Task ShowDataImportDialogAsync(ImportDataParameters dialogParameter);
+
     Task ShowExportResultDialogAsync(ExportResultParameters dialogParameter);
 
     Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText);

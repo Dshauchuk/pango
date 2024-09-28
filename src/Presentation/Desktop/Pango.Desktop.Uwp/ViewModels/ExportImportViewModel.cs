@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using Mapster;
@@ -23,6 +24,12 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
+public class ImportDataValidator : ObservableValidator
+{
+
+}
+
+
 [AppView(AppView.ExportImport)]
 public sealed class ExportImportViewModel : ViewModelBase
 {
@@ -33,6 +40,7 @@ public sealed class ExportImportViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private int _selectedOption;
     private string _titleText = string.Empty;
+    private string _importFilePath = string.Empty;
 
     #endregion
 
@@ -67,6 +75,12 @@ public sealed class ExportImportViewModel : ViewModelBase
     #region Properties
 
     public ObservableCollection<PangoExplorerItem> Passwords { get; private set; }
+
+    public string ImportFilePath
+    {
+        get => _importFilePath;
+        set => SetProperty(ref _importFilePath, value);
+    }
 
     public string TitleText
     {
@@ -130,8 +144,7 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     private async void OnImportDataAsync()
     {
-        
-
+        await _dialogService.ShowDataImportDialogAsync(new ImportDataParameters(ImportFilePath));
     }
 
     private async void OnExportAsync()

@@ -14,7 +14,6 @@ public abstract class FileRepositoryBase<T>
     private readonly IContentEncoder _contentEncoder;
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppOptions _appOptions;
-    private readonly ILogger _logger; 
     private SemaphoreSlim _semaphore = new(1);
 
     public FileRepositoryBase(
@@ -26,11 +25,12 @@ public abstract class FileRepositoryBase<T>
         _contentEncoder = contentEncoder;
         _appDomainProvider = appDomainProvider;
         _appOptions = appOptions;
-        _logger = logger;
+        Logger = logger;
     }
 
     #region Properties
 
+    protected ILogger Logger { get; init; }
     protected abstract string DirectoryName { get; }
 
     #endregion
@@ -133,7 +133,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Cannot read data package from \"{filePath}\"", filePath);
+            Logger.LogError(ex, "Cannot read data package from \"{filePath}\"", filePath);
 
             return null;
         }
@@ -195,7 +195,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while reading data: {Message}", ex.Message);
+            Logger.LogError(ex, "An error occurred while reading data: {Message}", ex.Message);
             throw;
         }
         finally
@@ -223,7 +223,7 @@ public abstract class FileRepositoryBase<T>
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An error occurred while writing data: {Message}", ex.Message);
+            Logger.LogError(ex, "An error occurred while writing data: {Message}", ex.Message);
             throw;
         }
         finally

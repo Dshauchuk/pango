@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using ErrorOr;
+using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
@@ -25,6 +27,13 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
         }
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
+
+        if (password.IsCatalog && passwordList.Any(p => p.Name.Equals(password.CatalogPath) && p.CatalogPath.Equals(password.CatalogPath)))
+        {
+            Logger.LogInformation("Catalog {catalog} cannot be created: there is already a catalog with the same name.", password.Name);
+            return;
+        }
+
         passwordList.Add(password);
 
         await SaveItemsForUserAsync(passwordList, password.UserName, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
@@ -41,9 +50,14 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
 
         foreach(var newPassword in passwords)
         {
+            if(newPassword.IsCatalog && passwordList.Any(p => p.Name.Equals(newPassword.Name) && p.CatalogPath.Equals(newPassword.CatalogPath)))
+            {
+                Logger.LogInformation("Catalog {catalog} cannot be created: there is already a catalog with the same name.", newPassword.Name);
+                continue;
+            }
+
             newPassword.UserName = ctx.UserId;
             passwordList.Add(newPassword);
-
         }
 
         await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);

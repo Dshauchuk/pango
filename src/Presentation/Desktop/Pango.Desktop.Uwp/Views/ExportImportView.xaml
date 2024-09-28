@@ -377,14 +377,25 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Margin="0" 
-                                   Text="{loc:StringResource Key=ImportTitle}"
-                                   Style="{StaticResource HeaderTextBlockStyle}"/>
+                                   Text="Select the file..."
+                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                        <Grid Grid.Row="1">
+                        <StackPanel Grid.Row="1" 
+                                    Margin="5"
+                                    VerticalAlignment="Top" Orientation="Horizontal">
+                            <Button x:Name="PickPngxFileButton" Content="Select"
+                                    Click="PickPngxFileButton_Click" Margin="0,0,0,10"/>
+                            <TextBlock x:Name="PickPngxFileOutputTextBlock" 
+                                       TextWrapping="Wrap" 
+                                       Padding="20,5,0,0"/>
+                        </StackPanel>
+
+                        <Grid Grid.Row="2">
                             <StackPanel Orientation="Horizontal">
                                 <Button Margin="5" 
                                         Content="{loc:StringResource Key='ImportDataButtonContent'}"

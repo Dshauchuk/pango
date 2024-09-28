@@ -32,6 +32,11 @@ public class DialogService : IDialogService
         return ShowAsync(new ExportDialog(dialogParameter));
     }
 
+    public Task ShowDataImportDialogAsync(ImportDataParameters dialogParameter)
+    {
+        return ShowAsync(new ImportDialog(dialogParameter));
+    }
+
     public Task ShowExportResultDialogAsync(ExportResultParameters dialogParameter)
     {
         return ShowAsync(new ExportCompletedDialog(dialogParameter));
