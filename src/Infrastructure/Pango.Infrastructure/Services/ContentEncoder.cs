@@ -39,7 +39,7 @@ public class ContentEncoder : IContentEncoder
         }
         catch(Exception ex)
         {
-            throw new DataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot decrypt data of type {typeof(T).Name}", ex);
+            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot decrypt data of type {typeof(T).Name}", ex);
         }
     }
 
@@ -53,7 +53,7 @@ public class ContentEncoder : IContentEncoder
         }
         catch (Exception ex)
         {
-            throw new DataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
+            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
         }
     }
 
@@ -90,22 +90,22 @@ public class ContentEncoder : IContentEncoder
         Ensure.AreEqual(iv.Length, 16, nameof(key));
 
         string simpletext = String.Empty;
-        using (Aes aes = Aes.Create())
+        try
         {
+            using Aes aes = Aes.Create();
             aes.Padding = PaddingMode.PKCS7;
 
             ICryptoTransform decryptor = aes.CreateDecryptor(key, iv);
-            using (MemoryStream memoryStream = new(cipheredText))
-            {
-                using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                {
-                    using (StreamReader streamReader = new(cryptoStream))
-                    {
-                        simpletext = streamReader.ReadToEnd();
-                    }
-                }
-            }
+            using MemoryStream memoryStream = new(cipheredText);
+            using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+            using StreamReader streamReader = new(cryptoStream);
+            simpletext = streamReader.ReadToEnd();
         }
+        catch(Exception ex)
+        {
+            throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Data decryption failed: probably the key is wrong", ex);
+        }
+
         return simpletext;
     }
 }

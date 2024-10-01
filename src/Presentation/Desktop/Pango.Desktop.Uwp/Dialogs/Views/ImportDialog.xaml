@@ -18,6 +18,8 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
+            <TextBlock Text="{loc:StringResource Key='ImportMasterKey_Label'}"/>
+
             <controls:ValidationPasswordBox Grid.Row="1"
                         Margin="10"
                         PropertyName="MasterPassword"

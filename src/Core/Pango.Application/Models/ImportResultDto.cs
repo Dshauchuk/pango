@@ -1,5 +1,5 @@
-﻿using Pango.Application.Common.Interfaces.Persistence;
-using Pango.Application.Common.Interfaces.Services;
+﻿using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Persistence;
 
 namespace Pango.Application.Models;
 

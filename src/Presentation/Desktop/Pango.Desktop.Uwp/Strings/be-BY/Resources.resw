@@ -439,4 +439,22 @@
   <data name="ExportResultTitle" xml:space="preserve">
     <value>Вынікі Экспарту</value>
   </data>
+  <data name="ImportSingleCompleted_Message" xml:space="preserve">
+    <value>Імпарт завершаны: 1 пароль быў паспяхова імпартаваны.</value>
+  </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Імпарт завершаны: {0} пароляў былі паспяхова імпартаваны.</value>
+  </data>
+  <data name="SelectFile_Title" xml:space="preserve">
+    <value>Выберыце файл...</value>
+  </data>
+  <data name="SelectFile_Hint" xml:space="preserve">
+    <value>Выберыце файл, які змяшчае дадзеныя pango (файл .pngx)</value>
+  </data>
+  <data name="Select_Button" xml:space="preserve">
+    <value>Выбраць</value>
+  </data>
+  <data name="ImportMasterKey_Label" xml:space="preserve">
+    <value>Архіў зашыфраваны - калі ласка, увядзіце ключ</value>
+  </data>
 </root>

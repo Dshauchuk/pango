@@ -379,24 +379,46 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
                         <TextBlock Margin="0" 
-                                   Text="Select the file..."
+                                   Text="{loc:StringResource Key='SelectFile_Title'}"
                                    Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                        <StackPanel Grid.Row="1" 
-                                    Margin="5"
-                                    VerticalAlignment="Top" Orientation="Horizontal">
-                            <Button x:Name="PickPngxFileButton" Content="Select"
-                                    Click="PickPngxFileButton_Click" Margin="0,0,0,10"/>
+                        <TextBlock Grid.Row="1" 
+                                   Margin="0" 
+                                   Text="{loc:StringResource Key='SelectFile_Hint'}"
+                                   Style="{StaticResource BodyTextBlockStyle}"/>
+
+                        <StackPanel Grid.Row="2" 
+                                    Margin="10, 20, 0, 0"
+                                    VerticalAlignment="Top" 
+                                    Orientation="Horizontal">
+                            <Button x:Name="PickPngxFileButton" 
+                                    Content="{loc:StringResource Key='Select_Button'}"
+                                    Click="PickPngxFileButton_Click" 
+                                    VerticalAlignment="Center"
+                                    Margin="5"/>
+
+                            <FontIcon Glyph="&#xE8E5;"
+                                      Margin="10,2,0,2"
+                                      VerticalAlignment="Center"
+                                      FontSize="{StaticResource FontIconSize}"
+                                      Visibility="{Binding Text, ElementName=PickPngxFileOutputTextBlock, Converter={StaticResource NullOrEmptyToCollapsedConverter}}"/>
+
                             <TextBlock x:Name="PickPngxFileOutputTextBlock" 
                                        TextWrapping="Wrap" 
-                                       Padding="20,5,0,0"/>
+                                       Text="{Binding ImportFilePath}"
+                                       VerticalAlignment="Center"
+                                       Padding="0"
+                                       Margin="5"/>
                         </StackPanel>
 
-                        <Grid Grid.Row="2">
-                            <StackPanel Orientation="Horizontal">
+                        <Grid Grid.Row="3"
+                              Margin="0, 10">
+                            <StackPanel Orientation="Horizontal"
+                                        HorizontalAlignment="Right">
                                 <Button Margin="5" 
                                         Content="{loc:StringResource Key='ImportDataButtonContent'}"
                                         Style="{StaticResource AccentButtonStyle}"

@@ -1,10 +1,13 @@
-﻿using ErrorOr;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.Data.Commands.Import;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
+using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
@@ -67,9 +70,23 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
         Array.Resize(ref saltBytes, 16);
 
         string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, saltBytes);
-        EncodingOptions encoding = new EncodingOptions(passwordHash, Convert.ToBase64String(saltBytes));
+        EncodingOptions encoding = new (passwordHash, Convert.ToBase64String(saltBytes));
 
         ErrorOr<ImportResult> result = await _sender.Send(new ImportDataCommand(_parameters.FilePath, new ImportOptions(encoding)));
+
+        if (result.IsError)
+        {
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Import failed: {result.FirstError}", Core.Enums.AppNotificationType.Error));
+        }
+        else
+        {
+            int count = result.Value.Manifest.Contents[Domain.Enums.ContentType.Passwords];
+            string message = count == 1 ? ViewResourceLoader.GetString("ImportSingleCompleted_Message")
+                : string.Format(ViewResourceLoader.GetString("ImportCompleted_Message"), count);
+
+            WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(message));
+            WeakReferenceMessenger.Default.Send<ImportCompletedMessage>(new ImportCompletedMessage(result.Value));
+        }
     }
 
     #region Private Methods

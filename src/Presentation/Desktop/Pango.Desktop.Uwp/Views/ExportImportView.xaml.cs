@@ -63,7 +63,12 @@ public sealed partial class ExportImportView : PageBase
 
     private async void PickPngxFileButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        PickPngxFileOutputTextBlock.Text = string.Empty;
+        if (ViewModel is not ExportImportViewModel viewModel)
+        {
+            return;
+        }
+
+        viewModel.ImportFilePath = string.Empty;
 
         // Create a file picker
         var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
@@ -86,12 +91,11 @@ public sealed partial class ExportImportView : PageBase
         var file = await openPicker.PickSingleFileAsync();
         if (file != null)
         {
-            PickPngxFileOutputTextBlock.Text = file.Name;
-            ((ExportImportViewModel)ViewModel).ImportFilePath = file.Path;
+            viewModel.ImportFilePath = file.Path;
         }
         else
         {
-            PickPngxFileOutputTextBlock.Text = string.Empty;
+            viewModel.ImportFilePath = string.Empty;
         }
     }
 }

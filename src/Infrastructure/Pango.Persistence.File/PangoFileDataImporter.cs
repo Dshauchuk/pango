@@ -58,7 +58,7 @@ public class PangoFileDataImporter : IDataImporter
                             manifest = await _contentEncoder.DecryptAsync<PangoPackageManifest>(encryptedData, importOptions.EncodingOptions.Key, importOptions.EncodingOptions.Salt);
                             if(manifest is null)
                             {
-
+                                throw new PangoImportException("Import failed: Manifest is not found");
                             }
                         }
                         else

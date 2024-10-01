@@ -33,7 +33,7 @@ public class ImportDataCommandHandler
 
             if(result is null)
             {
-                // todo
+                return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");   
             }
             else
             {
@@ -61,14 +61,15 @@ public class ImportDataCommandHandler
                 }
             }
 
-            return new ImportResult(result.Manifest, result.ContentPackages);
-        }
-        catch (PangoImportException pEx)
-        {
-            return Error.Failure(pEx.Code, pEx.Message);
+            return new ImportResult(result.Manifest);
         }
         catch (Exception ex)
         {
+            if(ex is PangoException pEx)
+            {
+                return Error.Failure(pEx.Code, pEx.Message);
+            }
+
             return Error.Failure(ApplicationErrors.Data.ImportError, $"Import failed: {ex.Message}");
         }
     }

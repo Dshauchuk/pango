@@ -441,4 +441,22 @@
   <data name="ExportResultTitle" xml:space="preserve">
     <value>Export Results</value>
   </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Import completed: {0} passwords were imported successfully.</value>
+  </data>
+  <data name="ImportSingleCompleted_Message" xml:space="preserve">
+    <value>Import completed: 1 password was imported successfully.</value>
+  </data>
+  <data name="SelectFile_Title" xml:space="preserve">
+    <value>Select a file...</value>
+  </data>
+  <data name="SelectFile_Hint" xml:space="preserve">
+    <value>Select a file that contains pango data (.pngx file)</value>
+  </data>
+  <data name="Select_Button" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="ImportMasterKey_Label" xml:space="preserve">
+    <value>The archive is encrypted - please enter the key</value>
+  </data>
 </root>

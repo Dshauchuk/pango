@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;

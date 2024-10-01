@@ -52,7 +52,7 @@ public sealed class ExportImportViewModel : ViewModelBase
         : base(logger)
     {
         ExportDataCommand = new RelayCommand(OnExportAsync);
-        ImportDataCommand = new RelayCommand(OnImportDataAsync);
+        ImportDataCommand = new RelayCommand(OnImportDataAsync, CanImport);
         NavigateToOptionCommand = new RelayCommand<int>(async(e) => await OnNavigateToOptionAsync(e));
 
         _sender = sender;
@@ -79,7 +79,11 @@ public sealed class ExportImportViewModel : ViewModelBase
     public string ImportFilePath
     {
         get => _importFilePath;
-        set => SetProperty(ref _importFilePath, value);
+        set
+        {
+            SetProperty(ref _importFilePath, value);
+            OnPropertyChanged(nameof(ImportDataCommand));
+        }
     }
 
     public string TitleText
@@ -119,17 +123,29 @@ public sealed class ExportImportViewModel : ViewModelBase
     {
         base.RegisterMessages();
         WeakReferenceMessenger.Default.Register<ExportCompletedMessage>(this, OnExportCompleted);
+        WeakReferenceMessenger.Default.Register<ImportCompletedMessage>(this, OnImportCompleted);
     }
 
     protected override void UnregisterMessages()
     {
         base.UnregisterMessages();
         WeakReferenceMessenger.Default.Unregister<ExportCompletedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<ImportCompletedMessage>(this);
     }
 
     #endregion
 
     #region Private Methods
+
+    private bool CanImport()
+    {
+        return !string.IsNullOrWhiteSpace(ImportFilePath);
+    }
+
+    private async void OnImportCompleted(object recipient, ImportCompletedMessage message)
+    {
+        await ResetViewAsync();
+    }
 
     private async void OnExportCompleted(object recipient, ExportCompletedMessage message)
     {
@@ -138,6 +154,7 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     private async Task ResetViewAsync()
     {
+        await OnNavigateToOptionAsync(0);
         IEnumerable<PangoExplorerItem> passwords = await LoadPasswordsAsync();
         DisplayPasswordsInTree(passwords);
     }
@@ -343,6 +360,8 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     private Task OnNavigatedToImportAsync()
     {
+        ImportFilePath = string.Empty;
+
         return Task.CompletedTask;
     }
     #endregion
