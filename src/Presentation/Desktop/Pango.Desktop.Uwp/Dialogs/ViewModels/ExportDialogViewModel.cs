@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -7,55 +6,16 @@ using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.Data.Commands.Export;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
+using Pango.Desktop.Uwp.Dialogs.Validators;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
-
-public class ExportDataValidator : ObservableValidator
-{
-    private string _description;
-    private string _masterPassword;
-
-    public ExportDataValidator()
-    {
-        _description = string.Empty;
-        _masterPassword = string.Empty;
-
-        ValidateAllProperties();
-    }
-
-    [Required]
-    [MinLength(3)]
-    [MaxLength(20)]
-    public string Description
-    {
-        get => _description;
-        set
-        {
-            SetProperty(ref _description, value);
-            ValidateProperty(value, nameof(Description));
-        }
-    }
-
-    [Required]
-    [MinLength(3)]
-    public string MasterPassword
-    {
-        get => _masterPassword;
-        set
-        {
-            SetProperty(ref _masterPassword, value);
-            ValidateProperty(value, nameof(MasterPassword));
-        }
-    }
-}
 
 public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 {
@@ -102,9 +62,11 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         set => SetProperty(ref _validator, value);
     }
 
+    public IDialogContext DialogContext { get; }
+
     #endregion
 
-    public IDialogContext DialogContext { get; }
+    #region Public Methods
 
     public bool CanSave()
     {
@@ -137,6 +99,10 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         }
     }
 
+    #endregion
+
+    #region Overrides
+
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
@@ -154,6 +120,7 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         ExportingItemsInfo = $"{_parameters.Items.Count} passwords";
     }
 
+    #endregion
 
     #region Private Methods
 

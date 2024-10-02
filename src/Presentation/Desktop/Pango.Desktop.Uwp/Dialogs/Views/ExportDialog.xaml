@@ -22,8 +22,8 @@
                             Margin="10"
                             PropertyName="Description"
                             Text="{Binding Path=Description, Mode=TwoWay}"
-                            HeaderText="{loc:StringResource Key='User'}"
-                            PlaceholderText="User Name"/>
+                            HeaderText="{loc:StringResource Key='Description'}"
+                            PlaceholderText="{loc:StringResource Key='AskForDescription_Label'}"/>
 
             <controls:ValidationPasswordBox Grid.Row="1"
                                 Margin="10"

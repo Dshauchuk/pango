@@ -466,4 +466,10 @@
   <data name="CatalogDeleted_FormattedMessage" xml:space="preserve">
     <value>Каталог "{0}" быў паспяхова выдалены</value>
   </data>
+  <data name="Description" xml:space="preserve">
+    <value>Апісанне</value>
+  </data>
+  <data name="AskForDescription_Label" xml:space="preserve">
+    <value>Дайце нейкае апісанне</value>
+  </data>
 </root>

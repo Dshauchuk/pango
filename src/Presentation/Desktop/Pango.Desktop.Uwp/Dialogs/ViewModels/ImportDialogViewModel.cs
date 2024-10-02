@@ -19,10 +19,14 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 {
+    #region Fields
+
     private readonly ISender _sender;
     private ImportDataValidator _validator;
     private ImportDataParameters? _parameters;
     private readonly IPasswordHashProvider _passwordHashProvider;
+
+    #endregion
 
     public ImportDialogViewModel(ISender sender, IPasswordHashProvider passwordHashProvider, ILogger<ImportDialogViewModel> logger) : base(logger)
     {
@@ -34,6 +38,8 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
         _passwordHashProvider = passwordHashProvider;
     }
 
+    #region Properties
+
     public IDialogContext DialogContext { get; }
 
     public ImportDataValidator Validator 
@@ -41,6 +47,10 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
         get => _validator;
         set => SetProperty(ref _validator, value);
     }
+
+    #endregion
+
+    #region Overrides
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {
@@ -53,6 +63,10 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
             _parameters = dialogParameters;
         }
     }
+
+    #endregion
+
+    #region Public Methods
 
     public bool CanSave()
     {
@@ -88,6 +102,8 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
             WeakReferenceMessenger.Default.Send<ImportCompletedMessage>(new ImportCompletedMessage(result.Value));
         }
     }
+
+    #endregion
 
     #region Private Methods
 

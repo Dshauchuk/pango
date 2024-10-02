@@ -64,10 +64,12 @@ public class ExportDataCommandHandler
         }
         catch(PangoExportException pEx)
         {
+            _logger.LogError(pEx, "Data export failed: {message}", pEx.Message);
             return Error.Failure(pEx.Code, pEx.Message);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Data export failed: {message}", ex.Message);
             return Error.Failure(ApplicationErrors.Data.ExportError, $"Export failed: {ex.Message}");
         }
     }

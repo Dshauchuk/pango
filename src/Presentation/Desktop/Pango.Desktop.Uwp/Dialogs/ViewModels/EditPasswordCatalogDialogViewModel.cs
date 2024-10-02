@@ -20,6 +20,8 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewModel
 {
+    #region Fields
+
     private readonly ISender _sender;
     private string _newCatalogName = string.Empty;
     private string _initialCatalog = string.Empty;
@@ -27,7 +29,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
     private List<string>? _existingCatalogs;
     private PangoExplorerItem? _selectedCatalog;
 
-    public RelayCommand SaveCommand { get; }
+    #endregion
 
     public EditPasswordCatalogDialogViewModel(ISender sender, ILogger<EditPasswordCatalogDialogViewModel> logger): base(logger)
     {
@@ -35,6 +37,12 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
         DialogContext = new DialogContext();
         SaveCommand = new RelayCommand(async () => await OnSaveAsync(), CanSave);
     }
+
+    #region Commands
+
+    public RelayCommand SaveCommand { get; }
+
+    #endregion
 
     #region Properties
 
@@ -71,7 +79,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public bool IsNew { get; private set; }
 
-    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
+    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Count != 0;
 
     #endregion
 

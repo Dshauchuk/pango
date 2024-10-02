@@ -468,4 +468,10 @@
   <data name="CatalogDeleted_FormattedMessage" xml:space="preserve">
     <value>Catalog "{0}" has been successfully deleted</value>
   </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="AskForDescription_Label" xml:space="preserve">
+    <value>Provide some description here</value>
+  </data>
 </root>

@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
@@ -15,10 +16,17 @@ public class ImportDataCommandHandler
     private readonly IDataImporter _dataImporter;
     private readonly IPasswordRepository _passwordRepository;
     private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private IUserContextProvider _userContextProvider;
+    private readonly IUserContextProvider _userContextProvider;
+    private readonly ILogger _logger;
 
-    public ImportDataCommandHandler(IDataImporter dataImporter, IPasswordRepository passwordRepository, IRepositoryContextFactory repositoryContextFactory, IUserContextProvider userContextProvider)
+    public ImportDataCommandHandler(
+        IDataImporter dataImporter, 
+        IPasswordRepository passwordRepository, 
+        IRepositoryContextFactory repositoryContextFactory, 
+        IUserContextProvider userContextProvider,
+        ILogger<ImportDataCommandHandler> logger)
     {
+        _logger = logger;
         _dataImporter = dataImporter;
         _passwordRepository = passwordRepository;
         _repositoryContextFactory = repositoryContextFactory;
@@ -65,6 +73,8 @@ public class ImportDataCommandHandler
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Data import failed: {message}", ex.Message);
+
             if(ex is PangoException pEx)
             {
                 return Error.Failure(pEx.Code, pEx.Message);

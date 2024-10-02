@@ -60,6 +60,7 @@ public class ExportCompletedDialogViewModel : ViewModelBase, IDialogViewModel
 
     #endregion
 
+    #region Overrides
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {
@@ -77,6 +78,10 @@ public class ExportCompletedDialogViewModel : ViewModelBase, IDialogViewModel
         GeneratedAt = exportResultParameters.ExportResult.GeneratedAt.ToString("G");
     }
 
+    #endregion
+
+    #region Public Methods
+
     public bool CanSave()
     {
         return true;
@@ -91,4 +96,6 @@ public class ExportCompletedDialogViewModel : ViewModelBase, IDialogViewModel
     {
         return Task.CompletedTask;
     }
+
+    #endregion
 }

@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Messaging;
+﻿using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -7,89 +6,16 @@ using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.UseCases.User.Commands.ChangePassword;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Dialogs.Validators;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Domain.Entities;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
-
-public class ChangePasswordValidator : ObservableValidator
-{
-    #region Fields
-
-    private string _currentPassword = string.Empty;
-    private string _newPassword = string.Empty;
-    private string _confirmation = string.Empty;
-    private static readonly ResourceLoader _viewResourceLoader = new();
-
-    #endregion
-
-    #region Properties
-
-    public Action? OnDataChanged;
-
-    [Required()]
-    public string CurrentPassword
-    {
-        get => _currentPassword;
-        set
-        {
-            SetProperty(ref _currentPassword, value);
-            OnDataChanged?.Invoke();
-        }
-    }
-
-    [Required()]
-    public string NewPassword
-    {
-        get => _newPassword;
-        set
-        {
-            SetProperty(ref _newPassword, value);
-            OnPropertyChanged(nameof(NewPassword));
-            OnPropertyChanged(nameof(Confirmation));
-            OnDataChanged?.Invoke();
-        }
-    }
-
-    [Required()]
-    [CustomValidation(typeof(ChangePasswordValidator), nameof(ValidatePassword))]
-    public string Confirmation
-    {
-        get => _confirmation;
-        set
-        {
-            SetProperty(ref _confirmation, value);
-            OnDataChanged?.Invoke();
-        }
-    }
-
-    #endregion
-
-    public void Validate()
-    {
-        ValidateAllProperties();
-    }
-
-    public static ValidationResult? ValidatePassword(string confirmation, ValidationContext context)
-    {
-        ChangePasswordValidator validator = (ChangePasswordValidator)context.ObjectInstance;
-        bool isValid = validator.NewPassword == confirmation;
-
-        if (isValid)
-        {
-            return ValidationResult.Success;
-        }
-
-        return new(_viewResourceLoader.GetString("PasswordConfirmationDoesNotMatch"));
-    }
-}
 
 public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 {
