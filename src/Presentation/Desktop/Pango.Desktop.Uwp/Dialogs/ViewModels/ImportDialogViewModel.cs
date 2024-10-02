@@ -100,6 +100,9 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
         Validator = new();
         Validator.ErrorsChanged += Validator_ErrorsChanged;
+
+        // raise this to make sure that the command "can execute" predicate is triggerred too
+        DialogContext.RaiseDialogContentChanged();
     }
 
     private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e)

@@ -42,9 +42,9 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock VerticalAlignment="Center"
-                               Text="{loc:StringResource Key='CreationDate'}"/>
+                               Text="{loc:StringResource Key='Content'}"/>
                     <TextBlock Grid.Column="1"
-                               Text="NEED TO IMPLEMENT"
+                               Text="{Binding UserContentInfo}"
                                VerticalAlignment="Center"/>
                 </Grid>
 

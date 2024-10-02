@@ -120,10 +120,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
-        if(!Passwords.Any())
-        {
-            await ResetViewAsync();
-        }
+        await ResetViewAsync();
     }
 
     #endregion
@@ -191,14 +188,17 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         string confirmationTitle = ViewResourceLoader.GetString("Confirm_PasswordDeletion");
         string confirmationDescription;
+        string completionMessage;
 
         if (dto.Type == PangoExplorerItem.ExplorerItemType.Folder)
         {
             confirmationDescription = string.Format(ViewResourceLoader.GetString("RemoveCatalog_Message"), dto.Name, dto.Children?.Count ?? 0);
+            completionMessage = string.Format(ViewResourceLoader.GetString("CatalogDeleted_FormattedMessage"), dto.Name);
         }
         else
         {
             confirmationDescription = ViewResourceLoader.GetString("Confirm_PasswordDeletionDetails");
+            completionMessage = string.Format(ViewResourceLoader.GetString("PasswordDeleted_Format"), dto.Name);
         }
 
         bool deletionConfirmed = await _dialogService.ConfirmAsync(confirmationTitle, confirmationDescription);
@@ -213,14 +213,14 @@ public sealed class PasswordsViewModel : ViewModelBase
         if(result.IsError)
         {
             Logger.LogError($"Deleting {(dto.Type == PangoExplorerItem.ExplorerItemType.File ? "password" : "catalog")} \"{dto.Name}\" failed: {result.FirstError}");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("PasswordDeletetionFailed_Format"), dto.Name)));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
         }
         else
         {
             RemovePassword(Passwords, dto);
 
             Logger.LogDebug($"{(dto.Type == PangoExplorerItem.ExplorerItemType.File ? "Password" : "Catalog")} \"{dto.Name}\" has been successfully deleted");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("PasswordDeleted_Format"), dto.Name)));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
         }
     }
 

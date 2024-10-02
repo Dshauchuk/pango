@@ -1,5 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
+﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using Mapster;
@@ -23,12 +22,6 @@ using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
-
-public class ImportDataValidator : ObservableValidator
-{
-
-}
-
 
 [AppView(AppView.ExportImport)]
 public sealed class ExportImportViewModel : ViewModelBase
@@ -76,6 +69,9 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     public ObservableCollection<PangoExplorerItem> Passwords { get; private set; }
 
+    /// <summary>
+    /// Path to the pango archive that's gonna be imported
+    /// </summary>
     public string ImportFilePath
     {
         get => _importFilePath;
@@ -86,12 +82,18 @@ public sealed class ExportImportViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// The view title
+    /// </summary>
     public string TitleText
     {
         get => _titleText;
         set => SetProperty(ref _titleText, value);
     }
 
+    /// <summary>
+    /// Selected view tab: general, import or export
+    /// </summary>
     public int SelectedOption
     {
         get => _selectedOption;
@@ -152,6 +154,10 @@ public sealed class ExportImportViewModel : ViewModelBase
          await _dialogService.ShowExportResultDialogAsync(new ExportResultParameters(message.Value));
     }
 
+    /// <summary>
+    /// Resets the entire view
+    /// </summary>
+    /// <returns></returns>
     private async Task ResetViewAsync()
     {
         await OnNavigateToOptionAsync(0);
@@ -159,16 +165,26 @@ public sealed class ExportImportViewModel : ViewModelBase
         DisplayPasswordsInTree(passwords);
     }
 
+    /// <summary>
+    /// Opens a dialog to import items from selected archive, located at <see cref="ImportFilePath"/>
+    /// </summary>
     private async void OnImportDataAsync()
     {
         await _dialogService.ShowDataImportDialogAsync(new ImportDataParameters(ImportFilePath));
     }
 
+    /// <summary>
+    /// Opens a dialog to export selected items
+    /// </summary>
     private async void OnExportAsync()
     {
         await _dialogService.ShowDataExportDialogAsync(new ExportDataParameters(PrepareContent()));
     }
 
+    /// <summary>
+    /// Converts all selected <see cref="PangoExplorerItem"/> from <see cref="Passwords"/> into a list of <see cref="ExportItem"/>
+    /// </summary>
+    /// <returns></returns>
     private List<ExportItem> PrepareContent()
     {
         var selected = FindAll([.. Passwords], p => p.IsSelected || p.Children.Any(c => c.IsSelected));
@@ -182,6 +198,12 @@ public sealed class ExportImportViewModel : ViewModelBase
         return items;
     }
 
+    /// <summary>
+    /// Finds all <see cref="PangoExplorerItem"/> in <paramref name="sourceList"/> that fit <paramref name="predicate"/>
+    /// </summary>
+    /// <param name="sourceList"></param>
+    /// <param name="predicate"></param>
+    /// <returns></returns>
     private List<PangoExplorerItem> FindAll(List<PangoExplorerItem> sourceList, Func<PangoExplorerItem, bool> predicate)
     {
         List<PangoExplorerItem> result = [];
@@ -209,6 +231,11 @@ public sealed class ExportImportViewModel : ViewModelBase
         return result;
     }
 
+    /// <summary>
+    /// Handles navigation between views
+    /// </summary>
+    /// <param name="option">the view number: 0 - general, 1 - export, 2 - import</param>
+    /// <returns></returns>
     private async Task OnNavigateToOptionAsync(int option)
     {
         switch(option)
@@ -365,5 +392,4 @@ public sealed class ExportImportViewModel : ViewModelBase
         return Task.CompletedTask;
     }
     #endregion
-
 }

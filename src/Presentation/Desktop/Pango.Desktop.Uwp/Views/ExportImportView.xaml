@@ -282,6 +282,7 @@
             <Pivot Grid.Row="1"
                    x:Name="ExportImport_Pivot"
                    Margin="0"
+                   IsLocked="True"
                    SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
                 <Pivot.HeaderTemplate>
                     <DataTemplate>

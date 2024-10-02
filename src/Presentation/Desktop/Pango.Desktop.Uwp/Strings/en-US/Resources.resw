@@ -459,4 +459,13 @@
   <data name="ImportMasterKey_Label" xml:space="preserve">
     <value>The archive is encrypted - please enter the key</value>
   </data>
+  <data name="Content" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="Content_FormattedValueLabel" xml:space="preserve">
+    <value>{0} passwords</value>
+  </data>
+  <data name="CatalogDeleted_FormattedMessage" xml:space="preserve">
+    <value>Catalog "{0}" has been successfully deleted</value>
+  </data>
 </root>
