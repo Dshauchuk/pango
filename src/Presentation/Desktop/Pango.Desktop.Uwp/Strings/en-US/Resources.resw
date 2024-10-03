@@ -474,4 +474,25 @@
   <data name="AskForDescription_Label" xml:space="preserve">
     <value>Provide some description here</value>
   </data>
+  <data name="ExportCompletedContent_FormattedLabel" xml:space="preserve">
+    <value>{0} passwords exported</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="PackageDetails_Label" xml:space="preserve">
+    <value>Package Details</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="GeneratingTimestamp_Label" xml:space="preserve">
+    <value>Generated at</value>
+  </data>
+  <data name="GeneratedPackage_Label" xml:space="preserve">
+    <value>Generated Package</value>
+  </data>
 </root>

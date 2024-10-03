@@ -25,11 +25,16 @@ public sealed partial class ExportCompletedDialog : DialogPage
 
     private void HyperlinkButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        string link = ((HyperlinkButton)sender).Content as string;
+        string? link = ((HyperlinkButton)sender).Content as string;
 
         try
         {
-            ProcessStartInfo processStart = new ProcessStartInfo(link)
+            if(string.IsNullOrEmpty(link))
+            {
+                return;
+            }
+
+            ProcessStartInfo processStart = new(link)
             {
                 UseShellExecute = true,
                 Verb = "explore"
@@ -37,9 +42,9 @@ public sealed partial class ExportCompletedDialog : DialogPage
 
             Process.Start(processStart);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-
+            // todo: log the error
         }
     }
 }

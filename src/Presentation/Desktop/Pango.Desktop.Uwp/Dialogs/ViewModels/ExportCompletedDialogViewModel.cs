@@ -73,8 +73,8 @@ public class ExportCompletedDialogViewModel : ViewModelBase, IDialogViewModel
 
         AppVersion = exportResultParameters.ExportResult.AppVersion;
         FileName = Path.GetFileName(exportResultParameters.ExportResult.Path);
-        FolderPath = Path.GetDirectoryName(exportResultParameters.ExportResult.Path);
-        ContentsInfo = $"{exportResultParameters.ExportResult.Contents.Values.First()} password(s) exoprted";
+        FolderPath = Path.GetDirectoryName(exportResultParameters.ExportResult.Path) ?? string.Empty;
+        ContentsInfo = string.Format(ViewResourceLoader.GetString("ExportCompletedContent_FormattedLabel"), exportResultParameters.ExportResult.Contents.Values.First());
         GeneratedAt = exportResultParameters.ExportResult.GeneratedAt.ToString("G");
     }
 

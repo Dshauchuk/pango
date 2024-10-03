@@ -80,6 +80,12 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public async Task OnSaveAsync()
     {
+        if (_parameters is null)
+        {
+            Logger.LogError("Cannot do the import: ImportDataParameters is null");
+            return;
+        }
+
         byte[]? saltBytes = Encoding.UTF8.GetBytes(this.Validator.MasterPassword);
         Array.Resize(ref saltBytes, 16);
 

@@ -472,4 +472,25 @@
   <data name="AskForDescription_Label" xml:space="preserve">
     <value>Дайце нейкае апісанне</value>
   </data>
+  <data name="ExportCompletedContent_FormattedLabel" xml:space="preserve">
+    <value>Экспартавана {0} пароляў</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="PackageDetails_Label" xml:space="preserve">
+    <value>Дэталі пакета</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Версія</value>
+  </data>
+  <data name="GeneratingTimestamp_Label" xml:space="preserve">
+    <value>Згенераваны ў</value>
+  </data>
+  <data name="GeneratedPackage_Label" xml:space="preserve">
+    <value>Згенераваны Пакет</value>
+  </data>
 </root>

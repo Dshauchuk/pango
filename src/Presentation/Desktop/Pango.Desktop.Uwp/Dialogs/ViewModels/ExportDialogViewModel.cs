@@ -80,6 +80,12 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public async Task OnSaveAsync()
     {
+        if(_parameters is null)
+        {
+            Logger.LogError("Cannot do the export: ExportDataParameters is null");
+            return;
+        }
+
         var saltBytes = Encoding.UTF8.GetBytes(Validator.MasterPassword);
         Array.Resize(ref saltBytes, 16);
 
