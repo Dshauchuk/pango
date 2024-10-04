@@ -127,7 +127,7 @@
 		<ProjectReference Include="..\..\..\Core\Pango.Application\Pango.Application.csproj" />
 		<ProjectReference Include="..\..\..\Core\Pango.Domain\Pango.Domain.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Infrastructure\Pango.Infrastructure.csproj" />
-		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence\Pango.Persistence.csproj" />
+		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence.File\Pango.Persistence.File.csproj" />
 	</ItemGroup>
 
 	<!-- Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging Tools extension 
@@ -152,18 +152,35 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
-	  <None Remove="Dialogs\Views\PasswordDetailsDialog.xaml" />
-	  <None Remove="Package.Dev.appxmanifest" />
-	  <None Remove="Resources\Styles\TextBoxStyles.xaml" />
+	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
+	  <None Remove="Dialogs\Views\ExportCompletedDialog.xaml" />
+	  <None Remove="Dialogs\Views\ExportDialog.xaml" />
+	  <None Remove="Dialogs\Views\ImportDialog.xaml" />
+	  <None Remove="Views\ExportImportView.xaml" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Page Update="Dialogs\Views\PasswordDetailsDialog.xaml">
+	  <Page Update="Dialogs\Views\ImportDialog.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
 	</ItemGroup>
 	<ItemGroup>
-	  <Page Update="Resources\Styles\TextBoxStyles.xaml">
-	    <XamlRuntime>$(DefaultXamlRuntime)</XamlRuntime>
+	  <Page Update="Dialogs\Views\ExportCompletedDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Dialogs\Views\ExportDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\ExportImportView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Dialogs\Views\ChangePasswordDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
 	  </Page>
 	</ItemGroup>
 </Project>

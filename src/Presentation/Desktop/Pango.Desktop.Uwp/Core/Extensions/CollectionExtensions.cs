@@ -13,9 +13,9 @@ public static class CollectionExtensions
     /// <param name="items"></param>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    public static List<PasswordExplorerItem> FindItems(this IEnumerable<PasswordExplorerItem> items, Func<PasswordExplorerItem, bool> predicate)
+    public static List<PangoExplorerItem> FindItems(this IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
     {
-        List<PasswordExplorerItem> resultList = [];
+        List<PangoExplorerItem> resultList = [];
 
         if (items == null || !items.Any())
         {
@@ -31,7 +31,7 @@ public static class CollectionExtensions
 
             if (item.Children.Any())
             {
-                List<PasswordExplorerItem> findings = FindItems(item.Children, predicate);
+                List<PangoExplorerItem> findings = FindItems(item.Children, predicate);
 
                 if (findings.Any())
                 {

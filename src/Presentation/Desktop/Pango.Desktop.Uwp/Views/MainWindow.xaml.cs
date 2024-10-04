@@ -25,18 +25,33 @@ public sealed partial class MainWindow : Window
         SetTitleBar(this.TitleBarBorder);
 
 #if DEBUG
-        Title = "Pango Debug";
+        WindowTitle.Text = Title = "Pango Debug";
 #else
-        Title = "Pango";
+        WindowTitle.Text = Title = "Pango";
 #endif
 
         // track user's activity for IDLE
         RootGrid.PointerMoved += RootGrid_PointerMoved;
         RootGrid.KeyDown += RootGrid_KeyDown;
+
+        App.Current.LoginSucceeded += Current_LoginSucceeded;
+        App.Current.SignedOut += Current_SignedOut;
     }
 
     public event EventHandler<PointerRoutedEventArgs>? PointerMoved;
     public event EventHandler<KeyRoutedEventArgs>? KeyDown;
+
+    private void Current_SignedOut()
+    {
+        UserInfo_TitleBar.Visibility = Visibility.Collapsed;
+        UserName_TitleBar.Text = string.Empty;
+    }
+
+    private void Current_LoginSucceeded(string userName)
+    {
+        UserInfo_TitleBar.Visibility = Visibility.Visible;
+        UserName_TitleBar.Text = userName;
+    }
 
     private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
     {

@@ -1,5 +1,7 @@
 ﻿using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Domain.Entities;
 
@@ -9,12 +11,14 @@ public class DeleteUserCommandHandler
     : IRequestHandler<DeleteUserCommand, ErrorOr<bool>>
 {
     private readonly IUserRepository _userRepository;
-    private readonly IUserDataRepository _userDataRepository;
+    private readonly IUserStorageManager _userDataRepository;
+    private readonly ILogger<DeleteUserCommandHandler> _logger;
 
-    public DeleteUserCommandHandler(IUserRepository userRepository, IUserDataRepository userDataRepository)
+    public DeleteUserCommandHandler(IUserRepository userRepository, IUserStorageManager userDataRepository, ILogger<DeleteUserCommandHandler> logger)
     {
         _userRepository = userRepository;
         _userDataRepository = userDataRepository;
+        _logger = logger;
     }
 
     public async Task<ErrorOr<bool>> Handle(DeleteUserCommand request, CancellationToken cancellationToken)
@@ -35,7 +39,8 @@ public class DeleteUserCommandHandler
         }
         catch (Exception ex)
         {
-            return Error.Failure("cannot_delete_user", ex.Message);
+            _logger.LogError(ex, "User {UserName} cannot be deleted: {Message}", request.UserName, ex.Message);
+            return Error.Failure(ApplicationErrors.User.DeletionFailed, $"User {request.UserName} cannot be deleted: {ex.Message}");
         }
     }
 }

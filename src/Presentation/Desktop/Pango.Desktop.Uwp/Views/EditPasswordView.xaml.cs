@@ -15,9 +15,23 @@ public sealed partial class EditPasswordView : ViewBase
     public EditPasswordView()
     {
         this.InitializeComponent();
+        TitleTextBox.Focus(FocusState.Programmatic);
         DataContext = App.Host.Services.GetRequiredService<EditPasswordViewModel>();
 
         Loaded += EditPasswordView_Loaded;
+        KeyDown += EditPasswordView_KeyDown;
+    }
+
+    private void EditPasswordView_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Windows.System.VirtualKey.Enter:
+                ((EditPasswordViewModel)DataContext).SavePasswordComand.Execute(null);
+                break;
+            default:
+                break;
+        }
     }
 
     private void EditPasswordView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

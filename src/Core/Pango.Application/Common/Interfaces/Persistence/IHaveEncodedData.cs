@@ -1,4 +1,4 @@
-﻿namespace Pango.Persistence;
+﻿namespace Pango.Application.Common.Interfaces.Persistence;
 
 public interface IHaveEncodedData
 {

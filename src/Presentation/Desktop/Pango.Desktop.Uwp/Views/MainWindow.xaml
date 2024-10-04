@@ -10,9 +10,11 @@
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
-    
-    <Grid x:Name="RootGrid" 
+
+    <Grid x:Name="RootGrid"  
+          IsTabStop="False"
           RowDefinitions="32,*">
+        
         <!--  Custom title bar  -->
         <Border Height="30"
                 Margin="0,0,0,0"
@@ -20,12 +22,36 @@
                 x:Name="TitleBarBorder"
                 VerticalAlignment="Top"
                 Background="Transparent">
-            <StackPanel Spacing="5"
-                        Orientation="Horizontal">
-                <Image Width="20"
-                       Height="20"
-                       Source="ms-appx:///assets/logo.png" />
-            </StackPanel>
+            <Grid>
+
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" Spacing="5">
+                    <Image Width="20"
+                           Height="20"
+                           Source="ms-appx:///assets/logo.png" />
+                    <TextBlock x:Name="WindowTitle"
+                               VerticalAlignment="Center"
+                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                </StackPanel>
+
+                <StackPanel x:Name="UserInfo_TitleBar" 
+                            Grid.Column="1"
+                            Margin="10,0" 
+                            Orientation="Horizontal"
+                            HorizontalAlignment="Center"
+                            Visibility="Collapsed">
+                    <SymbolIcon Margin="2"
+                                Symbol="Contact2" />
+                    <TextBlock x:Name="UserName_TitleBar" 
+                               VerticalAlignment="Center"
+                               Margin="2"
+                               Style="{StaticResource CaptionTextBlockStyle}"/>
+                </StackPanel>
+            </Grid>
         </Border>
         
         <!--  Shell  -->

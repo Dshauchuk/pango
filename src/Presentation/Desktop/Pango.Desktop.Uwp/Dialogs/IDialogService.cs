@@ -9,6 +9,14 @@ public interface IDialogService
 
     Task ShowPasswordDetailsAsync(PasswordDetailsParameters passwordDetailsParameters);
 
+    Task ShowPasswordChangeDialogAsync(EmptyDialogParameter dialogParameter);
+    
+    Task ShowDataExportDialogAsync(ExportDataParameters dialogParameter);
+
+    Task ShowDataImportDialogAsync(ImportDataParameters dialogParameter);
+
+    Task ShowExportResultDialogAsync(ExportResultParameters dialogParameter);
+
     Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText);
 }
 

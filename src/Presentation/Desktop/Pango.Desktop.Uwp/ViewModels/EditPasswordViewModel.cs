@@ -30,6 +30,7 @@ public class EditPasswordViewModel : ViewModelBase
     private bool _isNew;
     private List<string>? _availableCatalogs;
     private EditPasswordValidator? _passwordValidator;
+    private string _title = string.Empty;
 
     #endregion
 
@@ -43,6 +44,12 @@ public class EditPasswordViewModel : ViewModelBase
 
     #region Properties
 
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
+    }
+
     public EditPasswordValidator? PasswordValidator
     {
         get => _passwordValidator;
@@ -52,7 +59,18 @@ public class EditPasswordViewModel : ViewModelBase
     public bool IsNew
     {
         get => _isNew;
-        set => SetProperty(ref _isNew, value);
+        set
+        {
+            SetProperty(ref _isNew, value);
+            if (value)
+            {
+                Title = ViewResourceLoader.GetString("NewPassword");
+            }
+            else
+            {
+                Title = ViewResourceLoader.GetString("EditPassword"); 
+            }
+        }
     }
 
     public List<string>? AvailableCatalogs
@@ -105,11 +123,11 @@ public class EditPasswordViewModel : ViewModelBase
 
                 if (!passwordResult.IsError)
                 {
-                    PasswordValidator.Id = passwordId;
-                    PasswordValidator.Login = passwordResult.Value.Login;
-                    PasswordValidator.Title = passwordResult.Value.Name;
-                    PasswordValidator.Password = passwordResult.Value.Value;
-                    PasswordValidator.SelectedCatalog = passwordResult.Value.CatalogPath;
+                    PasswordValidator!.Id = passwordId;
+                    PasswordValidator!.Login = passwordResult.Value.Login;
+                    PasswordValidator!.Title = passwordResult.Value.Name;
+                    PasswordValidator!.Password = passwordResult.Value.Value;
+                    PasswordValidator!.SelectedCatalog = passwordResult.Value.CatalogPath;
 
                     if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
                     {
@@ -160,7 +178,7 @@ public class EditPasswordViewModel : ViewModelBase
                 }
                 else
                 {
-                    Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully created");
+                    Logger.LogDebug("Password \"{Title}\" successfully created", PasswordValidator.Title);
                     WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
@@ -191,7 +209,8 @@ public class EditPasswordViewModel : ViewModelBase
             
             OnOpenIndexView();
 
-            string message = IsNew ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title) : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
+            string message = result.IsError ? ViewResourceLoader.GetString("CannotSavePassword") 
+                : IsNew ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title) : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message));
         }
     }

@@ -14,13 +14,11 @@ public static class Ensure
 
     public static void AreEqual<T>(T value, T expectedValue, string paramName, string? errorMessage = null) where T : IComparable<T>
     {
-        if ((value is null && expectedValue is null) || (value is null && expectedValue is not null) || value.CompareTo(expectedValue) != 0)
+        if ((value is null && expectedValue is null) || (value is null && expectedValue is not null) || (value != null && value.CompareTo(expectedValue) != 0))
         {
             errorMessage ??= $"Value of {paramName} is expected to be \"{expectedValue}\"";
 
             throw new ArgumentException(errorMessage);
         }
     }
-
-
 }
