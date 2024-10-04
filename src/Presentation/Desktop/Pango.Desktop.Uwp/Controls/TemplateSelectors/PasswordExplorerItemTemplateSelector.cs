@@ -11,7 +11,7 @@ class PasswordExplorerItemTemplateSelector : DataTemplateSelector
 
     protected override DataTemplate SelectTemplateCore(object item)
     {
-        var explorerItem = (PasswordExplorerItem)item;
-        return (explorerItem.Type == PasswordExplorerItem.ExplorerItemType.Folder ? FolderTemplate : FileTemplate) ?? throw new System.Exception("PasswordExplorerItemTemplateSelector: missing template");
+        var explorerItem = (PangoExplorerItem)item;
+        return (explorerItem.Type == PangoExplorerItem.ExplorerItemType.Folder ? FolderTemplate : FileTemplate) ?? throw new System.Exception("PasswordExplorerItemTemplateSelector: missing template");
     }
 }

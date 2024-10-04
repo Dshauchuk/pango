@@ -22,4 +22,10 @@ public interface IAppDomainProvider
     /// <param name="pathElements"></param>
     /// <returns></returns>
     string GetPath(string userName, params string[] pathElements);
+
+    /// <summary>
+    /// Returns a path to the temporary folder
+    /// </summary>
+    /// <returns></returns>
+    string GetTempFolderPath();
 }

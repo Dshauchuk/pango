@@ -5,6 +5,8 @@ using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
+using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Application.UseCases.User.Commands.Delete;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -13,6 +15,8 @@ using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -26,6 +30,7 @@ public class UserViewModel : ViewModelBase
     private readonly IDialogService _dialogService;
     private readonly IUserStorageManager _storageManager;
     private string _currentUserName = string.Empty;
+    private string _userContentInfo = "...";
 
     public UserViewModel(ISender sender, IUserContextProvider userContext, ILogger<UserViewModel> logger, IDialogService dialogService, IUserStorageManager storageManager) : base(logger)
     {
@@ -56,6 +61,12 @@ public class UserViewModel : ViewModelBase
         set => SetProperty(ref _currentUserName, value);
     }
 
+    public string UserContentInfo
+    {
+        get => _userContentInfo;
+        set => SetProperty(ref _userContentInfo, value);
+    }
+
     #endregion
 
     #region Overrides
@@ -65,13 +76,20 @@ public class UserViewModel : ViewModelBase
         await base.OnNavigatedToAsync(parameter);
 
         CurrentUserName = _userContext.GetUserName();
+
+        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
+
+        if (!queryResult.IsError)
+        {
+            UserContentInfo = string.Format(ViewResourceLoader.GetString("Content_FormattedValueLabel"), queryResult.Value.Count(p => !p.IsCatalog));
+        }
     }
 
     #endregion
 
     private void OnOpenChangePasswordDialog()
     {
-        _dialogService.ShowPasswordChangeDialog(new EmptyDialogParameter()); 
+        _dialogService.ShowPasswordChangeDialogAsync(new EmptyDialogParameter()); 
     }
 
     private void OnSignOut()

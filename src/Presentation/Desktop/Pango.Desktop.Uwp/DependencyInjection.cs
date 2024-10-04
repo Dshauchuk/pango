@@ -24,9 +24,9 @@ public static class DependencyInjection
 {
     public static IServiceCollection RegisterUIMappings(this IServiceCollection services)
     {
-        TypeAdapterConfig<PangoPasswordListItemDto, PasswordExplorerItem>
+        TypeAdapterConfig<PangoPasswordListItemDto, PangoExplorerItem>
         .NewConfig()
-        .Map(dest => dest.Type, src => src.IsCatalog ? PasswordExplorerItem.ExplorerItemType.Folder : PasswordExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File);
 
         return services;
     }
@@ -45,6 +45,10 @@ public static class DependencyInjection
             .AddSingleton<EditPasswordCatalogDialogViewModel>()
             .AddSingleton<PasswordDetailsDialogViewModel>()
             .AddSingleton<ChangePasswordDialogViewModel>()
+            .AddSingleton<ExportDialogViewModel>()
+            .AddSingleton<ExportCompletedDialogViewModel>()
+            .AddSingleton<ExportImportViewModel>()
+            .AddSingleton<ImportDialogViewModel>()
             .AddSingleton<UserViewModel>();
 
         return services;
@@ -68,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IUserStorageManager, UserFileStorageManager>();
         services.AddScoped<IAppUserProvider, AppUserProvider>();
         services.AddScoped<IDialogService, DialogService>();
+        services.AddScoped<IAppMetaService, AppMetaService>();
         services.AddLogging(loggingBuilder =>
                 loggingBuilder.AddSerilog(dispose: true));
 

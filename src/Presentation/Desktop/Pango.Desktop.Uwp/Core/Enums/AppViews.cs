@@ -11,6 +11,7 @@ public enum AppView
 
     PasswordsIndex,
     EditPassword,
+    ExportImport,
 
     User,
     EditUser

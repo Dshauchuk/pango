@@ -8,7 +8,7 @@ using System.Linq;
 namespace Pango.Desktop.Uwp.Models;
 
 [DebuggerDisplay("{UniqueId}")]
-public class PasswordExplorerItem : ObservableObject
+public class PangoExplorerItem : ObservableObject
 {
     public enum ExplorerItemType { Folder, File };
 
@@ -17,17 +17,18 @@ public class PasswordExplorerItem : ObservableObject
     private bool _isExpanded;
     private string _catalogPath = string.Empty;
     private bool _isVisible = true;
+    private bool _isSelected = false;
 
-    private ObservableCollection<PasswordExplorerItem> _children = [];
+    private ObservableCollection<PangoExplorerItem> _children = [];
 
     #endregion
 
-    public PasswordExplorerItem()
+    public PangoExplorerItem()
     {
         Children = [];
     }
 
-    public PasswordExplorerItem(Guid id, string name, ExplorerItemType type)
+    public PangoExplorerItem(Guid id, string name, ExplorerItemType type)
     {
         Id = id;
         Name = name;
@@ -56,9 +57,9 @@ public class PasswordExplorerItem : ObservableObject
 
     public ExplorerItemType Type { get; set; }
 
-    public PasswordExplorerItem? Parent { get; set; }
+    public virtual PangoExplorerItem? Parent { get; set; }
 
-    public ObservableCollection<PasswordExplorerItem> Children
+    public virtual ObservableCollection<PangoExplorerItem> Children
     {
         get => _children;
         set => SetProperty(ref _children, value);
@@ -74,6 +75,12 @@ public class PasswordExplorerItem : ObservableObject
     {
         get => _isVisible;
         set => SetProperty(ref _isVisible, value);
+    }
+
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set => SetProperty(ref _isSelected, value);
     }
 
     #endregion

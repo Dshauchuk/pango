@@ -415,4 +415,82 @@
   <data name="PasswordIsNotCorrect" xml:space="preserve">
     <value>Пароль няправільны</value>
   </data>
+  <data name="ExportAndImport" xml:space="preserve">
+    <value>Экспарт і імпарт</value>
+  </data>
+  <data name="ExportAndImportDescriptionLabel" xml:space="preserve">
+    <value>Вы можаце падрыхтаваць і экспартаваць некаторыя паролі, каб падзяліцца імі з іншымі прыладамі і карыстальнікамі, або вы можаце імпартаваць ужо экспартаваныя дадзеныя</value>
+  </data>
+  <data name="ExportAndImportTooltip" xml:space="preserve">
+    <value>Экспарт і імпарт дадзеных</value>
+  </data>
+  <data name="ExportDataButtonContent" xml:space="preserve">
+    <value>Экспарт</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Экспарт</value>
+  </data>
+  <data name="ImportDataButtonContent" xml:space="preserve">
+    <value>Імпарт</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Імпарт</value>
+  </data>
+  <data name="ExportResultTitle" xml:space="preserve">
+    <value>Вынікі Экспарту</value>
+  </data>
+  <data name="ImportSingleCompleted_Message" xml:space="preserve">
+    <value>Імпарт завершаны: 1 пароль быў паспяхова імпартаваны.</value>
+  </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Імпарт завершаны: {0} пароляў былі паспяхова імпартаваны.</value>
+  </data>
+  <data name="SelectFile_Title" xml:space="preserve">
+    <value>Выберыце файл...</value>
+  </data>
+  <data name="SelectFile_Hint" xml:space="preserve">
+    <value>Выберыце файл, які змяшчае дадзеныя pango (файл .pngx)</value>
+  </data>
+  <data name="Select_Button" xml:space="preserve">
+    <value>Выбраць</value>
+  </data>
+  <data name="ImportMasterKey_Label" xml:space="preserve">
+    <value>Архіў зашыфраваны - калі ласка, увядзіце ключ</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Змест</value>
+  </data>
+  <data name="Content_FormattedValueLabel" xml:space="preserve">
+    <value>{0} пароляў</value>
+  </data>
+  <data name="CatalogDeleted_FormattedMessage" xml:space="preserve">
+    <value>Каталог "{0}" быў паспяхова выдалены</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Апісанне</value>
+  </data>
+  <data name="AskForDescription_Label" xml:space="preserve">
+    <value>Дайце нейкае апісанне</value>
+  </data>
+  <data name="ExportCompletedContent_FormattedLabel" xml:space="preserve">
+    <value>Экспартавана {0} пароляў</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>Файл</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Папка</value>
+  </data>
+  <data name="PackageDetails_Label" xml:space="preserve">
+    <value>Дэталі пакета</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Версія</value>
+  </data>
+  <data name="GeneratingTimestamp_Label" xml:space="preserve">
+    <value>Згенераваны ў</value>
+  </data>
+  <data name="GeneratedPackage_Label" xml:space="preserve">
+    <value>Згенераваны Пакет</value>
+  </data>
 </root>
