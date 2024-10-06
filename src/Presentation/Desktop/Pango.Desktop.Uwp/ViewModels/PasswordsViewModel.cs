@@ -570,10 +570,7 @@ public sealed class PasswordsViewModel : ViewModelBase
                 Id = treeItem.Id,
                 CatalogPath = baseCatalogPath,
                 IsCatalog = treeItem.Type == PangoExplorerItem.ExplorerItemType.Folder,
-                Name = treeItem.Name,
-                //TODO: change CreatedAt and LastModifiedAt to the real dates
-                CreatedAt = DateTimeOffset.UtcNow,
-                LastModifiedAt = DateTimeOffset.UtcNow
+                Name = treeItem.Name
             });
 
             if (treeItem.Children.Any())
