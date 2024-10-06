@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
+using Pango.Application.UseCases.Password.Commands.UpdatePasswordsCatalogPath;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -532,6 +533,57 @@ public sealed class PasswordsViewModel : ViewModelBase
 
             return false;
         }
+    }
+
+    /// <summary>
+    /// Saves all <see cref="Passwords"/> in the current state
+    /// </summary>
+    public async Task UpdatePasswordItemsInTreeAsync()
+    {
+        List<PangoPasswordListItemDto> allPasswordDtosFromTree = BuildPasswordDtosFromTree(Passwords.ToList(), string.Empty);
+        List<PangoPasswordListItemDto> allOriginalPasswordDtosFromTree = BuildPasswordDtosFromTree(_originalList.ToList(), string.Empty);
+        // find all passwords with updated catalog paths
+        List<PangoPasswordListItemDto> passwordListItemDtosToUpdate = allPasswordDtosFromTree
+            .Where(pd => allOriginalPasswordDtosFromTree.FirstOrDefault(ol => ol.Id == pd.Id)?.CatalogPath != pd.CatalogPath).ToList();
+
+        if (passwordListItemDtosToUpdate.Count > 0)
+        {
+            await _sender.Send(new UpdatePasswordsCatalogPathCommand(passwordListItemDtosToUpdate.ToDictionary(k => k.Id, v => v.CatalogPath)));
+            SetOriginalList(allPasswordDtosFromTree.Adapt<IEnumerable<PasswordExplorerItem>>());
+        }
+    }
+
+    /// <summary>
+    /// Retrieves list of all passwords from the <paramref name="itemsSource"/> of tree structure
+    /// </summary>
+    /// <param name="itemsSource">List of items in tree structure</param>
+    /// <param name="baseCatalogPath">Catalog path for the first nesting level of items in tree</param>
+    /// <returns>List of passwords, created from the passed <paramref name="itemsSource"/></returns>
+    private static List<PangoPasswordListItemDto> BuildPasswordDtosFromTree(List<PasswordExplorerItem> itemsSource, string baseCatalogPath)
+    {
+        List<PangoPasswordListItemDto> result = new();
+
+        foreach (PasswordExplorerItem treeItem in itemsSource)
+        {
+            result.Add(new PangoPasswordListItemDto()
+            {
+                Id = treeItem.Id,
+                CatalogPath = baseCatalogPath,
+                IsCatalog = treeItem.Type == PasswordExplorerItem.ExplorerItemType.Folder,
+                Name = treeItem.Name,
+                //TODO: change CreatedAt and LastModifiedAt to the real dates
+                CreatedAt = DateTimeOffset.UtcNow,
+                LastModifiedAt = DateTimeOffset.UtcNow
+            });
+
+            if (treeItem.Children.Any())
+            {
+                string childrenBaseCatalogPath = $"{baseCatalogPath}{(string.IsNullOrEmpty(baseCatalogPath) ? string.Empty : AppConstants.CatalogDelimeter)}{treeItem.Name}";
+                result.AddRange(BuildPasswordDtosFromTree(treeItem.Children.ToList(), childrenBaseCatalogPath));
+            }
+        }
+
+        return result;
     }
 
     /// <summary>

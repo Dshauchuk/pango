@@ -56,7 +56,10 @@ public class PasswordExplorerItem : ObservableObject
 
     public ExplorerItemType Type { get; set; }
 
-    public PasswordExplorerItem Parent { get; set; }
+    /// <summary>
+    /// Parent element. Null for the first level of nesting
+    /// </summary>
+    public PasswordExplorerItem? Parent { get; set; }
 
     public ObservableCollection<PasswordExplorerItem> Children
     {
