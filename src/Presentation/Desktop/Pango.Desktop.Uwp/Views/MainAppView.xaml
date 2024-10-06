@@ -42,6 +42,11 @@
                                          Icon="Contact" 
                                          IsTabStop="False"
                                          ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
+                <muxc:NavigationViewItem x:Name="ExportImportItem"
+                                         Content="{loc:StringResource Key=ExportAndImport}"
+                                         Icon="SaveLocal" 
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=ExportAndImportTooltip}"/>
             </muxc:NavigationView.MenuItems>
             
             <muxc:NavigationView.Content>

@@ -387,4 +387,112 @@
   <data name="CapsLockWarningText" xml:space="preserve">
     <value>Having caps-lock turned on might result in incorrect password</value>
   </data>
+  <data name="Notes_Label" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="Notes_Placeholder" xml:space="preserve">
+    <value>Any notes like secret questions, references, etc.</value>
+  </data>
+  <data name="ChangePassword" xml:space="preserve">
+    <value>Change password</value>
+  </data>
+  <data name="ChangePasswordDialogTitle" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="ChangePassword_Label" xml:space="preserve">
+    <value>Change Password</value>
+  </data>
+  <data name="Confirmation_Label" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+  <data name="CurrentPassword_Label" xml:space="preserve">
+    <value>Current Password</value>
+  </data>
+  <data name="NewPassword_Label" xml:space="preserve">
+    <value>New Password</value>
+  </data>
+  <data name="PasswordHasBeenChanged" xml:space="preserve">
+    <value>Password has been changed</value>
+  </data>
+  <data name="PasswordIsNotCorrect" xml:space="preserve">
+    <value>Password is not correct</value>
+  </data>
+  <data name="ExportAndImport" xml:space="preserve">
+    <value>Export and Import</value>
+  </data>
+  <data name="ExportAndImportDescriptionLabel" xml:space="preserve">
+    <value>You can prepare and export some passwords to share with other devices and users, or you can import already exported data</value>
+  </data>
+  <data name="ExportAndImportTooltip" xml:space="preserve">
+    <value>Export and import of data</value>
+  </data>
+  <data name="ExportDataButtonContent" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ExportTitle" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="ImportDataButtonContent" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportTitle" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ExportResultTitle" xml:space="preserve">
+    <value>Export Results</value>
+  </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Import completed: {0} passwords were imported successfully.</value>
+  </data>
+  <data name="ImportSingleCompleted_Message" xml:space="preserve">
+    <value>Import completed: 1 password was imported successfully.</value>
+  </data>
+  <data name="SelectFile_Title" xml:space="preserve">
+    <value>Select a file...</value>
+  </data>
+  <data name="SelectFile_Hint" xml:space="preserve">
+    <value>Select a file that contains pango data (.pngx file)</value>
+  </data>
+  <data name="Select_Button" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="ImportMasterKey_Label" xml:space="preserve">
+    <value>The archive is encrypted - please enter the key</value>
+  </data>
+  <data name="Content" xml:space="preserve">
+    <value>Content</value>
+  </data>
+  <data name="Content_FormattedValueLabel" xml:space="preserve">
+    <value>{0} passwords</value>
+  </data>
+  <data name="CatalogDeleted_FormattedMessage" xml:space="preserve">
+    <value>Catalog "{0}" has been successfully deleted</value>
+  </data>
+  <data name="Description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="AskForDescription_Label" xml:space="preserve">
+    <value>Provide some description here</value>
+  </data>
+  <data name="ExportCompletedContent_FormattedLabel" xml:space="preserve">
+    <value>{0} passwords exported</value>
+  </data>
+  <data name="File" xml:space="preserve">
+    <value>File</value>
+  </data>
+  <data name="Folder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+  <data name="PackageDetails_Label" xml:space="preserve">
+    <value>Package Details</value>
+  </data>
+  <data name="Version" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="GeneratingTimestamp_Label" xml:space="preserve">
+    <value>Generated at</value>
+  </data>
+  <data name="GeneratedPackage_Label" xml:space="preserve">
+    <value>Generated Package</value>
+  </data>
 </root>

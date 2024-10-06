@@ -30,7 +30,7 @@ public class EditPasswordViewModel : ViewModelBase
     private bool _isNew;
     private List<string>? _availableCatalogs;
     private EditPasswordValidator? _passwordValidator;
-    private string _title;
+    private string _title = string.Empty;
 
     #endregion
 
@@ -123,11 +123,11 @@ public class EditPasswordViewModel : ViewModelBase
 
                 if (!passwordResult.IsError)
                 {
-                    PasswordValidator.Id = passwordId;
-                    PasswordValidator.Login = passwordResult.Value.Login;
-                    PasswordValidator.Title = passwordResult.Value.Name;
-                    PasswordValidator.Password = passwordResult.Value.Value;
-                    PasswordValidator.SelectedCatalog = passwordResult.Value.CatalogPath;
+                    PasswordValidator!.Id = passwordId;
+                    PasswordValidator!.Login = passwordResult.Value.Login;
+                    PasswordValidator!.Title = passwordResult.Value.Name;
+                    PasswordValidator!.Password = passwordResult.Value.Value;
+                    PasswordValidator!.SelectedCatalog = passwordResult.Value.CatalogPath;
 
                     if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
                     {
@@ -178,7 +178,7 @@ public class EditPasswordViewModel : ViewModelBase
                 }
                 else
                 {
-                    Logger.LogDebug($"Password \"{PasswordValidator.Title}\" successfully created");
+                    Logger.LogDebug("Password \"{Title}\" successfully created", PasswordValidator.Title);
                     WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }

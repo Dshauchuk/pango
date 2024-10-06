@@ -8,17 +8,11 @@ public class PasswordHashProvider : IPasswordHashProvider
 {
     const int Iterations = 10000;
 
-    public string Hash(string password, out byte[] salt)
+    public string Hash(string password, byte[] salt)
     {
-        if(string.IsNullOrEmpty(password))
+        if (string.IsNullOrEmpty(password))
         {
             throw new ArgumentNullException(nameof(password), "Password must be specified");
-        }
-
-        salt = new byte[16];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(salt);
         }
 
         return Convert.ToBase64String(KeyDerivation.Pbkdf2(
@@ -27,6 +21,17 @@ public class PasswordHashProvider : IPasswordHashProvider
             prf: KeyDerivationPrf.HMACSHA256,
             iterationCount: Iterations,
             numBytesRequested: 32));
+    }
+
+    public string Hash(string password, out byte[] salt)
+    {
+        salt = new byte[16];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(salt);
+        }
+
+        return Hash(password, salt);
     }
 
     public bool VerifyPassword(string password, string hash, byte[] salt)

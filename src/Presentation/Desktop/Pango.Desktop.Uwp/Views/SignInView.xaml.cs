@@ -18,7 +18,11 @@ public sealed partial class SignInView : ViewBase
         DataContext = App.Host.Services.GetRequiredService<SignInViewModel>();
 
         Loaded += SignInView_Loaded;
-        App.Current.KeyboardHook.CapsLockChanged += KeyboardHook_CapsLockChanged;
+
+        if(App.Current.KeyboardHook != null)
+        {
+            App.Current.KeyboardHook.CapsLockChanged += KeyboardHook_CapsLockChanged;
+        }
     }
 
     private void KeyboardHook_CapsLockChanged(object? sender, bool e)

@@ -15,8 +15,17 @@ namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
 {
+    #region Fields
+    
     private readonly ISender _sender;
-    private PasswordDetailsParameters _parameters;
+    private PasswordDetailsParameters? _parameters;
+    private string _name = string.Empty;
+    private string _login = string.Empty;
+    private string _password = string.Empty;
+    private string _catalog = string.Empty;
+    private string _notes = string.Empty;
+
+    #endregion
 
     public PasswordDetailsDialogViewModel(ISender sender, ILogger<PasswordDetailsDialogViewModel> logger) : base(logger)
     {
@@ -24,45 +33,45 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
         _sender = sender;
     }
 
+    #region Properties
+
     public IDialogContext DialogContext { get; }
 
     public Guid PasswordId { get; private set; }
 
-    private string _name;
     public string Name
     { 
         get => _name;
         set => SetProperty(ref _name, value); 
     }
 
-    private string _login;
     public string Login
     {
         get => _login;
         set => SetProperty(ref _login, value);
     }
 
-    private string _password;
     public string Password
     {
         get => _password;
         set => SetProperty(ref _password, value);
     }
 
-    private string _catalog;
     public string Catalog
     {
         get => _catalog;
         set => SetProperty(ref _catalog, value);
     }
 
-    private string _notes;
     public string Notes
     {
         get => _notes;
         set => SetProperty(ref _notes, value);
     }
 
+    #endregion
+
+    #region Overrides
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {
@@ -95,6 +104,10 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
         }
     }
 
+    #endregion
+
+    #region Public Methods
+
     public bool CanSave()
     {
         return true;
@@ -111,4 +124,6 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
 
         return Task.CompletedTask;
     }
+
+    #endregion
 }

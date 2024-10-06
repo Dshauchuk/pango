@@ -11,6 +11,6 @@ public class AppUserProvider : IAppUserProvider
     /// <returns></returns>
     public string GetUserId()
     {
-        return SecureUserSession.GetUser().UserName;
+        return SecureUserSession.GetUser()?.UserName ?? string.Empty;
     }
 }

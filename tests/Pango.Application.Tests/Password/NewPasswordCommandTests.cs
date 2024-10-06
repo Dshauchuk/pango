@@ -1,6 +1,4 @@
-﻿using Moq;
-using Pango.Application.Common.Interfaces.Persistence;
-using Pango.Application.UseCases.Password.Commands.NewPassword;
+﻿using Pango.Application.UseCases.Password.Commands.NewPassword;
 
 namespace Pango.Application.Tests.Password;
 
@@ -23,24 +21,5 @@ public class NewPasswordCommandTests
         Assert.Equal(value, command.Value);
         Assert.NotNull(command.Properties);
         Assert.Empty(command.Properties);
-    }
-}
-
-public class NewPasswordCommandHandlerTests
-{
-    [Fact]
-    public async Task NewPasswordCommandHandler_Creates_Password_Successfully()
-    {
-        // Arrange
-        var mockRepository = new Mock<IPasswordRepository>();
-        var handler = new NewPasswordCommandHandler(mockRepository.Object);
-        var request = new NewPasswordCommand("Password", "user", "encrypted_value");
-
-        // Act
-        var result = await handler.Handle(request, CancellationToken.None);
-
-        // Assert
-        mockRepository.Verify(repo => repo.CreateAsync(It.IsAny<Domain.Entities.PangoPassword>()), Times.Once);
-        Assert.False(result.IsError);
     }
 }

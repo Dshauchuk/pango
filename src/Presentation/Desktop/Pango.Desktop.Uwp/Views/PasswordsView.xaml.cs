@@ -55,7 +55,7 @@ public sealed partial class PasswordsView : PageBase
 
         if (viewModel is not null)
         {
-            viewModel.SelectedItem = args.InvokedItem as PasswordExplorerItem;
+            viewModel.SelectedItem = args.InvokedItem as PangoExplorerItem;
         }
     }
 
@@ -79,20 +79,20 @@ public sealed partial class PasswordsView : PageBase
     private void EditContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+        viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
     }
 
     private void SeeContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.SeePasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+        viewModel?.SeePasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
     }
 
 
     private void DeleteContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.DeleteCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+        viewModel?.DeleteCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
     }
 
     private void AddPassword_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
@@ -101,7 +101,7 @@ public sealed partial class PasswordsView : PageBase
 
         if(viewModel is not null)
         {
-            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
+            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreatePasswordCommand.Execute(null);
         }
     }
@@ -112,7 +112,7 @@ public sealed partial class PasswordsView : PageBase
         
         if(viewModel is not null)
         {
-            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem;
+            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreateCatalogCommand.Execute(null);
         }
     }
@@ -123,15 +123,16 @@ public sealed partial class PasswordsView : PageBase
 
         if(viewModel is not null)
         {
-            viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PasswordExplorerItem);
+            viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
         }
     }
 
     private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
     {
-        var item = (e.OriginalSource as FrameworkElement).DataContext as PasswordExplorerItem;
-
-        await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+        if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item })
+        {
+            await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+        }
     }
 
     private void PasswordsTreeView_DragItemsStarting(TreeView sender, TreeViewDragItemsStartingEventArgs args)

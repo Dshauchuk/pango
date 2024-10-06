@@ -14,6 +14,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\Pango.Persistence.File\Pango.Persistence.File.csproj" />
 	  <ProjectReference Include="..\Pango.Persistence\Pango.Persistence.csproj" />
 	</ItemGroup>
 

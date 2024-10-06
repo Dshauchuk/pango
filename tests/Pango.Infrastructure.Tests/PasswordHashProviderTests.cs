@@ -4,7 +4,7 @@ namespace Pango.Infrastructure.Tests;
 
 public class PasswordHashProviderTests
 {
-    private PasswordHashProvider _passwordHashProvider;
+    private readonly PasswordHashProvider _passwordHashProvider;
 
     public PasswordHashProviderTests()
     {
@@ -56,7 +56,7 @@ public class PasswordHashProviderTests
     public void VerifyPassword_Returns_False_For_Empty_Salt()
     {
         // Act
-        bool isValid = _passwordHashProvider.VerifyPassword("password", "hash", new byte[0]);
+        bool isValid = _passwordHashProvider.VerifyPassword("password", "hash", Array.Empty<byte>());
 
         // Assert
         Assert.False(isValid);

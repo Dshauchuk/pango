@@ -2,7 +2,7 @@
 using Newtonsoft.Json.Linq;
 using Pango.Application.Common;
 using Pango.Application.Common.Exceptions;
-using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Persistence;
 using System.Security.Cryptography;
 
@@ -10,18 +10,11 @@ namespace Pango.Infrastructure.Services;
 
 public class ContentEncoder : IContentEncoder
 {
-    private readonly IUserContextProvider _userContextProvider;
-
-    public ContentEncoder(IUserContextProvider userContextProvider)
-    {
-        _userContextProvider = userContextProvider;
-    }
-
-    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent)
+    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent, string key, string salt)
     {
         try
         {
-            string jsonContent = Decrypt(encryptedContent, await GetKeyAsync(), await GetVectorAsync());
+            string jsonContent = await Task.Run(() => Decrypt(encryptedContent, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
 
             var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
 
@@ -46,32 +39,22 @@ public class ContentEncoder : IContentEncoder
         }
         catch(Exception ex)
         {
-            throw new DataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot decrypt data of type {typeof(T).Name}", ex);
+            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot decrypt data of type {typeof(T).Name}", ex);
         }
     }
 
-    public async Task<byte[]> EncryptAsync<T>(T content)
+    public async Task<byte[]> EncryptAsync<T>(T content, string key, string salt)
     {
         try
         {
-            string json = JsonConvert.SerializeObject(content);
+            string json = JsonConvert.SerializeObject(content, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
-            return Encrypt(json, await GetKeyAsync(), await GetVectorAsync());
+            return await Task.Run(() => Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
         }
         catch (Exception ex)
         {
-            throw new DataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
+            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
         }
-    }
-
-    private async Task<byte[]> GetKeyAsync()
-    {
-        return Convert.FromBase64String(await _userContextProvider.GetKeyAsync());
-    }
-
-    private async Task<byte[]> GetVectorAsync()
-    {
-        return Convert.FromBase64String(await _userContextProvider.GetSaltAsync());
     }
 
     private static byte[] Encrypt(string simpletext, byte[] key, byte[] iv)
@@ -107,22 +90,22 @@ public class ContentEncoder : IContentEncoder
         Ensure.AreEqual(iv.Length, 16, nameof(key));
 
         string simpletext = String.Empty;
-        using (Aes aes = Aes.Create())
+        try
         {
+            using Aes aes = Aes.Create();
             aes.Padding = PaddingMode.PKCS7;
 
             ICryptoTransform decryptor = aes.CreateDecryptor(key, iv);
-            using (MemoryStream memoryStream = new(cipheredText))
-            {
-                using (CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read))
-                {
-                    using (StreamReader streamReader = new(cryptoStream))
-                    {
-                        simpletext = streamReader.ReadToEnd();
-                    }
-                }
-            }
+            using MemoryStream memoryStream = new(cipheredText);
+            using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+            using StreamReader streamReader = new(cryptoStream);
+            simpletext = streamReader.ReadToEnd();
         }
+        catch(Exception ex)
+        {
+            throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Data decryption failed: probably the key is wrong", ex);
+        }
+
         return simpletext;
     }
 }
