@@ -2,6 +2,7 @@
 using MediatR;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.Password.Commands.UpdatePasswordsCatalogPath;
@@ -10,10 +11,17 @@ public class UpdatePasswordsCatalogPathCommandHandler
     : IRequestHandler<UpdatePasswordsCatalogPathCommand, ErrorOr<bool>>
 {
     private readonly IPasswordRepository _passwordRepository;
+    private readonly IUserContextProvider _userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory;
 
-    public UpdatePasswordsCatalogPathCommandHandler(IPasswordRepository passwordRepository)
+    public UpdatePasswordsCatalogPathCommandHandler(
+        IPasswordRepository passwordRepository,
+        IUserContextProvider userContextProvider,
+        IRepositoryContextFactory repositoryContextFactory)
     {
         _passwordRepository = passwordRepository;
+        _userContextProvider = userContextProvider;
+        _repositoryContextFactory = repositoryContextFactory;
     }
 
     public async Task<ErrorOr<bool>> Handle(UpdatePasswordsCatalogPathCommand request, CancellationToken cancellationToken)
@@ -23,7 +31,9 @@ public class UpdatePasswordsCatalogPathCommandHandler
             return true;
         }
 
-        IEnumerable<PangoPassword> passwords = await _passwordRepository.QueryAsync(p => request.PasswordIdCatalogPathPairs.ContainsKey(p.Id));
+        IRepositoryActionContext context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
+
+        IEnumerable<PangoPassword> passwords = await _passwordRepository.QueryAsync(p => request.PasswordIdCatalogPathPairs.ContainsKey(p.Id), context);
 
         if (passwords.Count() != request.PasswordIdCatalogPathPairs.Keys.Count)
         {
@@ -35,7 +45,7 @@ public class UpdatePasswordsCatalogPathCommandHandler
         foreach (PangoPassword passwordToUpdate in passwords)
         {
             passwordToUpdate.CatalogPath = request.PasswordIdCatalogPathPairs[passwordToUpdate.Id];
-            await _passwordRepository.UpdateAsync(passwordToUpdate);
+            await _passwordRepository.UpdateAsync(passwordToUpdate, context);
         }
 
         return true;

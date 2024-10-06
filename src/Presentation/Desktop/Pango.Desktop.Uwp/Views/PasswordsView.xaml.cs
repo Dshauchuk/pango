@@ -20,7 +20,7 @@ namespace Pango.Desktop.Uwp.Views;
 public sealed partial class PasswordsView : PageBase
 {
     private int _passwordsTreeBeforeDragAndDropItemIndex;
-    private PasswordExplorerItem? _draggedItemOldParent;
+    private PangoExplorerItem? _draggedItemOldParent;
 
     public PasswordsView()
         : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
@@ -138,7 +138,7 @@ public sealed partial class PasswordsView : PageBase
     private void PasswordsTreeView_DragItemsStarting(TreeView sender, TreeViewDragItemsStartingEventArgs args)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        PasswordExplorerItem? item = args.Items.FirstOrDefault() as PasswordExplorerItem;
+        PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
 
         if (viewModel is not null && item is not null)
         {
@@ -152,12 +152,12 @@ public sealed partial class PasswordsView : PageBase
     private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        PasswordExplorerItem? item = args.Items.FirstOrDefault() as PasswordExplorerItem;
+        PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
 
         if (viewModel is not null && item is not null)
         {
-            PasswordExplorerItem? newParent = args.NewParentItem as PasswordExplorerItem;
-            if (newParent?.Type == PasswordExplorerItem.ExplorerItemType.File)
+            PangoExplorerItem? newParent = args.NewParentItem as PangoExplorerItem;
+            if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
             {
                 newParent = MoveItemToParentOfFile(item, newParent, viewModel.Passwords);
             }
@@ -180,23 +180,23 @@ public sealed partial class PasswordsView : PageBase
     /// </summary>
     /// <param name="item">Item, for which new parent should be set</param>
     /// <param name="newParent">New parent for the passed <paramref name="item"/></param>
-    private static void SetNewParent(PasswordExplorerItem item, PasswordExplorerItem? newParent)
+    private static void SetNewParent(PangoExplorerItem item, PangoExplorerItem? newParent)
     {
         item.Parent = newParent;
         RecalculateCatalogPath(item);
     }
 
     /// <summary>
-    /// Recalculates <see cref="PasswordExplorerItem.CatalogPath"/> field, based on the <see cref="PasswordExplorerItem.Parent"/> for passed <paramref name="item"/> and all its Children
+    /// Recalculates <see cref="PangoExplorerItem.CatalogPath"/> field, based on the <see cref="PangoExplorerItem.Parent"/> for passed <paramref name="item"/> and all its Children
     /// </summary>
-    /// <param name="item">Element, for which and for which Children <see cref="PasswordExplorerItem.CatalogPath"/> should be recalculated</param>
-    private static void RecalculateCatalogPath(PasswordExplorerItem item)
+    /// <param name="item">Element, for which and for which Children <see cref="PangoExplorerItem.CatalogPath"/> should be recalculated</param>
+    private static void RecalculateCatalogPath(PangoExplorerItem item)
     {
         item.CatalogPath = item.Parent is null ? string.Empty : $"{item.Parent.CatalogPath}{AppConstants.CatalogDelimeter}{item.Parent.Name}";
 
-        if (item.Type == PasswordExplorerItem.ExplorerItemType.Folder)
+        if (item.Type == PangoExplorerItem.ExplorerItemType.Folder)
         {
-            foreach (PasswordExplorerItem child in item.Children)
+            foreach (PangoExplorerItem child in item.Children)
             {
                 RecalculateCatalogPath(child);
             }
@@ -208,7 +208,7 @@ public sealed partial class PasswordsView : PageBase
     /// </summary>
     /// <param name="passwords">List of passwords (one of them is <paramref name="movedElement"/>)</param>
     /// <param name="movedElement">Password, that was added to the <paramref name="passwords"/> collection and should be ordered within the collection</param>
-    private static void OrderByTypeAfterElementMoved(ObservableCollection<PasswordExplorerItem> passwords, PasswordExplorerItem movedElement)
+    private static void OrderByTypeAfterElementMoved(ObservableCollection<PangoExplorerItem> passwords, PangoExplorerItem movedElement)
     {
         int currentElementIndex = passwords.IndexOf(movedElement);
 
@@ -225,15 +225,15 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="passwords">List of passwords (one of them is <paramref name="item"/>)</param>
     /// <param name="item"></param>
     /// <returns>Index of ordered <paramref name="item"/> within the passed <paramref name="passwords"/> collection</returns>
-    private static int GetOrderedItemIndex(IEnumerable<PasswordExplorerItem> passwords, PasswordExplorerItem item)
+    private static int GetOrderedItemIndex(IEnumerable<PangoExplorerItem> passwords, PangoExplorerItem item)
     {
-        int orderedElementIndex = passwords.OrderByDescending(p => p.Type, Comparer<PasswordExplorerItem.ExplorerItemType>.Create((e1, e2) =>
+        int orderedElementIndex = passwords.OrderByDescending(p => p.Type, Comparer<PangoExplorerItem.ExplorerItemType>.Create((e1, e2) =>
         {
-            if (e1 == PasswordExplorerItem.ExplorerItemType.Folder && e2 == PasswordExplorerItem.ExplorerItemType.File)
+            if (e1 == PangoExplorerItem.ExplorerItemType.Folder && e2 == PangoExplorerItem.ExplorerItemType.File)
             {
                 return 1;
             }
-            if (e1 == PasswordExplorerItem.ExplorerItemType.File && e2 == PasswordExplorerItem.ExplorerItemType.Folder)
+            if (e1 == PangoExplorerItem.ExplorerItemType.File && e2 == PangoExplorerItem.ExplorerItemType.Folder)
             {
                 return -1;
             }
@@ -250,11 +250,11 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="file">File, from which <paramref name="item"/> should be moved</param>
     /// <param name="itemsSource">Collection of all passwords in tree format</param>
     /// <returns>New parent of a passed <paramref name="item"/></returns>
-    private static PasswordExplorerItem? MoveItemToParentOfFile(PasswordExplorerItem item, PasswordExplorerItem file, ObservableCollection<PasswordExplorerItem> itemsSource)
+    private static PangoExplorerItem? MoveItemToParentOfFile(PangoExplorerItem item, PangoExplorerItem file, ObservableCollection<PangoExplorerItem> itemsSource)
     {
         file.Children.Remove(item);
 
-        ObservableCollection<PasswordExplorerItem> targetCollection;
+        ObservableCollection<PangoExplorerItem> targetCollection;
         if (file.Parent is null)
         {
             targetCollection = itemsSource;
@@ -264,7 +264,7 @@ public sealed partial class PasswordsView : PageBase
             targetCollection = file.Parent.Children;
         }
 
-        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union(new PasswordExplorerItem[1] { item }), item);
+        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union(new PangoExplorerItem[1] { item }), item);
         targetCollection.Insert(orderedElementIndex, item);
 
         return file.Parent;
