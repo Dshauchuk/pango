@@ -19,9 +19,6 @@ namespace Pango.Desktop.Uwp.Views;
 [AppView(AppView.PasswordsIndex)]
 public sealed partial class PasswordsView : PageBase
 {
-    private int _passwordsTreeBeforeDragAndDropItemIndex;
-    private PangoExplorerItem? _draggedItemOldParent;
-
     public PasswordsView()
         : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
@@ -135,21 +132,7 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
-    private void PasswordsTreeView_DragItemsStarting(TreeView sender, TreeViewDragItemsStartingEventArgs args)
-    {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
-
-        if (viewModel is not null && item is not null)
-        {
-            _passwordsTreeBeforeDragAndDropItemIndex = item.Parent is null ? viewModel.Passwords.IndexOf(item) : item.Parent.Children.IndexOf(item);
-            _passwordsTreeBeforeDragAndDropItemIndex = _passwordsTreeBeforeDragAndDropItemIndex == -1 ? 0 : _passwordsTreeBeforeDragAndDropItemIndex;
-
-            _draggedItemOldParent = item.Parent;
-        }
-    }
-
-    private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    private void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
         PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
@@ -168,8 +151,6 @@ public sealed partial class PasswordsView : PageBase
             }
 
             SetNewParent(item, newParent);
-
-            await viewModel.UpdatePasswordItemsInTreeAsync();
         }
     }
 

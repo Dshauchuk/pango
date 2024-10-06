@@ -8,6 +8,7 @@ using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Serilog;
 using System;
+using Windows.UI.Core.Preview;
 using ApplicationBase = Microsoft.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
@@ -32,10 +33,12 @@ sealed partial class App : ApplicationBase
         KeyboardHook = new KeyboardHook();
 
         this.UnhandledException += App_UnhandledException;
+        SystemNavigationManagerPreview.GetForCurrentView().CloseRequested += App_CloseRequested;
     }
 
     public event Action<string>? LoginSucceeded;
     public event Action? SignedOut;
+    public event Action? AppCloseRequested;
 
     public static IHost Host { get; } = BuildHost();
 
@@ -43,6 +46,11 @@ sealed partial class App : ApplicationBase
     {
         e.Handled = true;
         Log.Logger?.Error(e.Exception, e?.Message ?? "Unhandled error");
+    }
+
+    private void App_CloseRequested(object? sender, SystemNavigationCloseRequestedPreviewEventArgs e)
+    {
+        AppCloseRequested?.Invoke();
     }
 
     private static IHost BuildHost()

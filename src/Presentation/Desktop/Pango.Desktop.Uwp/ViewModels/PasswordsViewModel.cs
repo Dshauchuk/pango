@@ -57,6 +57,7 @@ public sealed class PasswordsViewModel : ViewModelBase
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
 
         App.Current.LoginSucceeded += Current_LoginSucceeded;
+        App.Current.AppCloseRequested += Current_AppCloseRequested;
     }
 
     #region Commands
@@ -124,6 +125,13 @@ public sealed class PasswordsViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        await base.OnNavigatedFromAsync(parameter);
+
+        await UpdatePasswordItemsInTreeAsync();
+    }
+
     #endregion
 
     #region Event&Command Handlers
@@ -131,6 +139,11 @@ public sealed class PasswordsViewModel : ViewModelBase
     private async void Current_LoginSucceeded(string userId)
     {
         await ResetViewAsync();
+    }
+
+    private void Current_AppCloseRequested()
+    {
+        UpdatePasswordItemsInTreeAsync().GetAwaiter().GetResult();
     }
 
     private async void OnSeePasswordCommand(PangoExplorerItem? item)
@@ -540,43 +553,39 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// </summary>
     public async Task UpdatePasswordItemsInTreeAsync()
     {
-        List<PangoPasswordListItemDto> allPasswordDtosFromTree = BuildPasswordDtosFromTree(Passwords.ToList(), string.Empty);
-        List<PangoPasswordListItemDto> allOriginalPasswordDtosFromTree = BuildPasswordDtosFromTree(_originalList.ToList(), string.Empty);
+        Dictionary<Guid, string> allPasswordsFromTree = BuildPasswordAndCatalogPathsPairs(Passwords.ToList(), string.Empty);
+        Dictionary<Guid, string> allOriginalPasswordFromTree = BuildPasswordAndCatalogPathsPairs(_originalList.ToList(), string.Empty);
         // find all passwords with updated catalog paths
-        List<PangoPasswordListItemDto> passwordListItemDtosToUpdate = allPasswordDtosFromTree
-            .Where(pd => allOriginalPasswordDtosFromTree.FirstOrDefault(ol => ol.Id == pd.Id)?.CatalogPath != pd.CatalogPath).ToList();
+        Dictionary<Guid, string> passwordListItemDtosToUpdate = allPasswordsFromTree
+            .Where(pd => allOriginalPasswordFromTree.TryGetValue(pd.Key, out string? originalCatalogPath) && pd.Value != originalCatalogPath).ToDictionary();
 
         if (passwordListItemDtosToUpdate.Count > 0)
         {
-            await _sender.Send(new MovePasswordsToCatalogCommand(passwordListItemDtosToUpdate.ToDictionary(k => k.Id, v => v.CatalogPath)));
-            SetOriginalList(allPasswordDtosFromTree.Adapt<IEnumerable<PangoExplorerItem>>());
+            await _sender.Send(new MovePasswordsToCatalogCommand(passwordListItemDtosToUpdate));
         }
     }
 
     /// <summary>
-    /// Retrieves list of all passwords from the <paramref name="itemsSource"/> of tree structure
+    /// Retrieves list of Id+CatalogPath of all passwords from the <paramref name="itemsSource"/> of tree structure
     /// </summary>
     /// <param name="itemsSource">List of items in tree structure</param>
     /// <param name="baseCatalogPath">Catalog path for the first nesting level of items in tree</param>
-    /// <returns>List of passwords, created from the passed <paramref name="itemsSource"/></returns>
-    private static List<PangoPasswordListItemDto> BuildPasswordDtosFromTree(List<PangoExplorerItem> itemsSource, string baseCatalogPath)
+    /// <returns>Passwords Id+CatalogPath, created from the passed <paramref name="itemsSource"/></returns>
+    private static Dictionary<Guid, string> BuildPasswordAndCatalogPathsPairs(List<PangoExplorerItem> itemsSource, string baseCatalogPath)
     {
-        List<PangoPasswordListItemDto> result = new();
+        Dictionary<Guid, string> result = new();
 
         foreach (PangoExplorerItem treeItem in itemsSource)
         {
-            result.Add(new PangoPasswordListItemDto()
-            {
-                Id = treeItem.Id,
-                CatalogPath = baseCatalogPath,
-                IsCatalog = treeItem.Type == PangoExplorerItem.ExplorerItemType.Folder,
-                Name = treeItem.Name
-            });
+            result.Add(treeItem.Id, baseCatalogPath);
 
             if (treeItem.Children.Any())
             {
                 string childrenBaseCatalogPath = $"{baseCatalogPath}{(string.IsNullOrEmpty(baseCatalogPath) ? string.Empty : AppConstants.CatalogDelimeter)}{treeItem.Name}";
-                result.AddRange(BuildPasswordDtosFromTree(treeItem.Children.ToList(), childrenBaseCatalogPath));
+                foreach (KeyValuePair<Guid, string> itemToAdd in BuildPasswordAndCatalogPathsPairs(treeItem.Children.ToList(), childrenBaseCatalogPath))
+                {
+                    result.Add(itemToAdd.Key, itemToAdd.Value);
+                }
             }
         }
 
