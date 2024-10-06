@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
-using Pango.Application.UseCases.Password.Commands.UpdatePasswordsCatalogPath;
+using Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -548,7 +548,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         if (passwordListItemDtosToUpdate.Count > 0)
         {
-            await _sender.Send(new UpdatePasswordsCatalogPathCommand(passwordListItemDtosToUpdate.ToDictionary(k => k.Id, v => v.CatalogPath)));
+            await _sender.Send(new MovePasswordsToCatalogCommand(passwordListItemDtosToUpdate.ToDictionary(k => k.Id, v => v.CatalogPath)));
             SetOriginalList(allPasswordDtosFromTree.Adapt<IEnumerable<PangoExplorerItem>>());
         }
     }

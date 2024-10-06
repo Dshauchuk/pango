@@ -5,16 +5,16 @@ using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Domain.Entities;
 
-namespace Pango.Application.UseCases.Password.Commands.UpdatePasswordsCatalogPath;
+namespace Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
 
-public class UpdatePasswordsCatalogPathCommandHandler
-    : IRequestHandler<UpdatePasswordsCatalogPathCommand, ErrorOr<bool>>
+public class MovePasswordsToCatalogCommandHandler
+    : IRequestHandler<MovePasswordsToCatalogCommand, ErrorOr<bool>>
 {
     private readonly IPasswordRepository _passwordRepository;
     private readonly IUserContextProvider _userContextProvider;
     private readonly IRepositoryContextFactory _repositoryContextFactory;
 
-    public UpdatePasswordsCatalogPathCommandHandler(
+    public MovePasswordsToCatalogCommandHandler(
         IPasswordRepository passwordRepository,
         IUserContextProvider userContextProvider,
         IRepositoryContextFactory repositoryContextFactory)
@@ -24,7 +24,7 @@ public class UpdatePasswordsCatalogPathCommandHandler
         _repositoryContextFactory = repositoryContextFactory;
     }
 
-    public async Task<ErrorOr<bool>> Handle(UpdatePasswordsCatalogPathCommand request, CancellationToken cancellationToken)
+    public async Task<ErrorOr<bool>> Handle(MovePasswordsToCatalogCommand request, CancellationToken cancellationToken)
     {
         if (request.PasswordIdCatalogPathPairs.Count == 0)
         {
