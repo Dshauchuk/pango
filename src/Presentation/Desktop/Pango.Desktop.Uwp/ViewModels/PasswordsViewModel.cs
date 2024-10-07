@@ -57,7 +57,6 @@ public sealed class PasswordsViewModel : ViewModelBase
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
 
         App.Current.LoginSucceeded += Current_LoginSucceeded;
-        App.Current.AppCloseRequested += Current_AppCloseRequested;
     }
 
     #region Commands
@@ -125,13 +124,6 @@ public sealed class PasswordsViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
-    public override async Task OnNavigatedFromAsync(object? parameter)
-    {
-        await base.OnNavigatedFromAsync(parameter);
-
-        await UpdatePasswordItemsInTreeAsync();
-    }
-
     #endregion
 
     #region Event&Command Handlers
@@ -139,11 +131,6 @@ public sealed class PasswordsViewModel : ViewModelBase
     private async void Current_LoginSucceeded(string userId)
     {
         await ResetViewAsync();
-    }
-
-    private void Current_AppCloseRequested()
-    {
-        UpdatePasswordItemsInTreeAsync().GetAwaiter().GetResult();
     }
 
     private async void OnSeePasswordCommand(PangoExplorerItem? item)
@@ -549,40 +536,78 @@ public sealed class PasswordsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Saves all <see cref="Passwords"/> in the current state
+    /// Updates passwords to commit movement of <paramref name="movedItem"/> to the <paramref name="newParent"/>
     /// </summary>
-    public async Task UpdatePasswordItemsInTreeAsync()
+    /// <param name="movedItem">Item to move</param>
+    /// <param name="newParent">New parent of the <paramref name="movedItem"/></param>
+    public async Task CommitPasswordMovementAsync(PangoExplorerItem movedItem, PangoExplorerItem? newParent)
     {
-        Dictionary<Guid, string> allPasswordsFromTree = BuildPasswordAndCatalogPathsPairs(Passwords.ToList(), string.Empty);
-        Dictionary<Guid, string> allOriginalPasswordFromTree = BuildPasswordAndCatalogPathsPairs(_originalList.ToList(), string.Empty);
-        // find all passwords with updated catalog paths
-        Dictionary<Guid, string> passwordListItemDtosToUpdate = allPasswordsFromTree
-            .Where(pd => allOriginalPasswordFromTree.TryGetValue(pd.Key, out string? originalCatalogPath) && pd.Value != originalCatalogPath).ToDictionary();
+        Dictionary<Guid, string> passwordItemsToUpdate = BuildPasswordAndCatalogPathPairs(new List<PangoExplorerItem>(1) { movedItem });
 
-        if (passwordListItemDtosToUpdate.Count > 0)
+        if (passwordItemsToUpdate.Count > 0)
         {
-            await _sender.Send(new MovePasswordsToCatalogCommand(passwordListItemDtosToUpdate));
+            await _sender.Send(new MovePasswordsToCatalogCommand(passwordItemsToUpdate));
         }
+
+        MoveTreeItem(_originalList, movedItem.Id, newParent?.Id);
+    }
+
+    /// <summary>
+    /// Moves item with id <paramref name="itemToMoveId"/> to the parent item with id <paramref name="newParentId"/> within the passed <paramref name="items"/> collection
+    /// </summary>
+    /// <param name="items">Collection of items within which need to move password</param>
+    /// <param name="itemToMoveId">Id of item to move</param>
+    /// <param name="newParentId">Id of new parent item</param>
+    private static void MoveTreeItem(ObservableCollection<PangoExplorerItem> items, Guid itemToMoveId, Guid? newParentId)
+    {
+        PangoExplorerItem? itemToMove = FindPassword(items, p => p.Id == itemToMoveId);
+        if (itemToMove is null)
+            return;
+
+        PangoExplorerItem? newParent = null;
+        if (newParentId.HasValue)
+        {
+            newParent = FindPassword(items, p => p.Id == newParentId);
+        }
+
+        if (itemToMove.Parent is null)
+        {
+            items.Remove(itemToMove);
+        }
+        else
+        {
+            itemToMove.Parent.Children.Remove(itemToMove);
+        }
+
+        if (newParent is null)
+        {
+            items.Add(itemToMove);
+        }
+        else
+        {
+            newParent.Children.Add(itemToMove);
+        }
+
+        itemToMove.Parent = newParent;
+        itemToMove.RecalculateCatalogPath();
     }
 
     /// <summary>
     /// Retrieves list of Id+CatalogPath of all passwords from the <paramref name="itemsSource"/> of tree structure
     /// </summary>
     /// <param name="itemsSource">List of items in tree structure</param>
-    /// <param name="baseCatalogPath">Catalog path for the first nesting level of items in tree</param>
     /// <returns>Passwords Id+CatalogPath, created from the passed <paramref name="itemsSource"/></returns>
-    private static Dictionary<Guid, string> BuildPasswordAndCatalogPathsPairs(List<PangoExplorerItem> itemsSource, string baseCatalogPath)
+    private static Dictionary<Guid, string> BuildPasswordAndCatalogPathPairs(List<PangoExplorerItem> itemsSource)
     {
         Dictionary<Guid, string> result = new();
 
         foreach (PangoExplorerItem treeItem in itemsSource)
         {
-            result.Add(treeItem.Id, baseCatalogPath);
+            result.Add(treeItem.Id, treeItem.CatalogPath);
 
             if (treeItem.Children.Any())
             {
-                string childrenBaseCatalogPath = $"{baseCatalogPath}{(string.IsNullOrEmpty(baseCatalogPath) ? string.Empty : AppConstants.CatalogDelimeter)}{treeItem.Name}";
-                foreach (KeyValuePair<Guid, string> itemToAdd in BuildPasswordAndCatalogPathsPairs(treeItem.Children.ToList(), childrenBaseCatalogPath))
+                foreach (KeyValuePair<Guid, string> itemToAdd in BuildPasswordAndCatalogPathPairs(treeItem.Children.ToList()))
                 {
                     result.Add(itemToAdd.Key, itemToAdd.Value);
                 }
@@ -598,7 +623,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="items"></param>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    private PangoExplorerItem? FindPassword(IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
+    private static PangoExplorerItem? FindPassword(IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
     {
         if(items is null || !items.Any())
         {

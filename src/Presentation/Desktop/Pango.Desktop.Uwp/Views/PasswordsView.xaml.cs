@@ -3,9 +3,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Pango.Application.Common;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
@@ -132,7 +132,7 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
-    private void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
         PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
@@ -151,6 +151,8 @@ public sealed partial class PasswordsView : PageBase
             }
 
             SetNewParent(item, newParent);
+
+            await viewModel.CommitPasswordMovementAsync(item, newParent);
         }
     }
 
@@ -164,24 +166,7 @@ public sealed partial class PasswordsView : PageBase
     private static void SetNewParent(PangoExplorerItem item, PangoExplorerItem? newParent)
     {
         item.Parent = newParent;
-        RecalculateCatalogPath(item);
-    }
-
-    /// <summary>
-    /// Recalculates <see cref="PangoExplorerItem.CatalogPath"/> field, based on the <see cref="PangoExplorerItem.Parent"/> for passed <paramref name="item"/> and all its Children
-    /// </summary>
-    /// <param name="item">Element, for which and for which Children <see cref="PangoExplorerItem.CatalogPath"/> should be recalculated</param>
-    private static void RecalculateCatalogPath(PangoExplorerItem item)
-    {
-        item.CatalogPath = item.Parent is null ? string.Empty : $"{item.Parent.CatalogPath}{AppConstants.CatalogDelimeter}{item.Parent.Name}";
-
-        if (item.Type == PangoExplorerItem.ExplorerItemType.Folder)
-        {
-            foreach (PangoExplorerItem child in item.Children)
-            {
-                RecalculateCatalogPath(child);
-            }
-        }
+        item.RecalculateCatalogPath();
     }
 
     /// <summary>
