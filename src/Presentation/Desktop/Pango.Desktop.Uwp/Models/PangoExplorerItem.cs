@@ -57,6 +57,9 @@ public class PangoExplorerItem : ObservableObject
 
     public ExplorerItemType Type { get; set; }
 
+    /// <summary>
+    /// Parent element. Null for the first level of nesting
+    /// </summary>
     public virtual PangoExplorerItem? Parent { get; set; }
 
     public virtual ObservableCollection<PangoExplorerItem> Children
