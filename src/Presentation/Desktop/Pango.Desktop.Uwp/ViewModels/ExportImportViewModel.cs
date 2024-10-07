@@ -44,7 +44,7 @@ public sealed class ExportImportViewModel : ViewModelBase
         IDialogService dialogService) 
         : base(logger)
     {
-        ExportDataCommand = new RelayCommand(OnExportAsync);
+        ExportDataCommand = new RelayCommand(OnExportAsync, CanExport);
         ImportDataCommand = new RelayCommand(OnImportDataAsync, CanImport);
         NavigateToOptionCommand = new RelayCommand<int>(async(e) => await OnNavigateToOptionAsync(e));
 
@@ -139,6 +139,11 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     #region Private Methods
 
+    private bool CanExport()
+    {
+        return Passwords.Any(p => p.IsSelected);
+    }
+
     private bool CanImport()
     {
         return !string.IsNullOrWhiteSpace(ImportFilePath);
@@ -151,7 +156,8 @@ public sealed class ExportImportViewModel : ViewModelBase
 
     private async void OnExportCompleted(object recipient, ExportCompletedMessage message)
     {
-         await _dialogService.ShowExportResultDialogAsync(new ExportResultParameters(message.Value));
+        await ResetViewAsync();
+        await _dialogService.ShowExportResultDialogAsync(new ExportResultParameters(message.Value));
     }
 
     /// <summary>

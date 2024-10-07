@@ -493,4 +493,7 @@
   <data name="GeneratedPackage_Label" xml:space="preserve">
     <value>Згенераваны Пакет</value>
   </data>
+  <data name="ArchiveEncryptionPassword_Placeholder" xml:space="preserve">
+    <value>Пароль для шыфравання архіва</value>
+  </data>
 </root>
