@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
+using Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -535,12 +536,94 @@ public sealed class PasswordsViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Updates passwords to commit movement of <paramref name="movedItem"/> to the <paramref name="newParent"/>
+    /// </summary>
+    /// <param name="movedItem">Item to move</param>
+    /// <param name="newParent">New parent of the <paramref name="movedItem"/></param>
+    public async Task CommitPasswordMovementAsync(PangoExplorerItem movedItem, PangoExplorerItem? newParent)
+    {
+        Dictionary<Guid, string> passwordItemsToUpdate = BuildPasswordAndCatalogPathPairs(new List<PangoExplorerItem>(1) { movedItem });
+
+        if (passwordItemsToUpdate.Count > 0)
+        {
+            await _sender.Send(new MovePasswordsToCatalogCommand(passwordItemsToUpdate));
+        }
+
+        MoveTreeItem(_originalList, movedItem.Id, newParent?.Id);
+    }
+
+    /// <summary>
+    /// Moves item with id <paramref name="itemToMoveId"/> to the parent item with id <paramref name="newParentId"/> within the passed <paramref name="items"/> collection
+    /// </summary>
+    /// <param name="items">Collection of items within which need to move password</param>
+    /// <param name="itemToMoveId">Id of item to move</param>
+    /// <param name="newParentId">Id of new parent item</param>
+    private static void MoveTreeItem(ObservableCollection<PangoExplorerItem> items, Guid itemToMoveId, Guid? newParentId)
+    {
+        PangoExplorerItem? itemToMove = FindPassword(items, p => p.Id == itemToMoveId);
+        if (itemToMove is null)
+            return;
+
+        PangoExplorerItem? newParent = null;
+        if (newParentId.HasValue)
+        {
+            newParent = FindPassword(items, p => p.Id == newParentId);
+        }
+
+        if (itemToMove.Parent is null)
+        {
+            items.Remove(itemToMove);
+        }
+        else
+        {
+            itemToMove.Parent.Children.Remove(itemToMove);
+        }
+
+        if (newParent is null)
+        {
+            items.Add(itemToMove);
+        }
+        else
+        {
+            newParent.Children.Add(itemToMove);
+        }
+
+        itemToMove.Parent = newParent;
+        itemToMove.RecalculateCatalogPath();
+    }
+
+    /// <summary>
+    /// Retrieves list of Id+CatalogPath of all passwords from the <paramref name="itemsSource"/> of tree structure
+    /// </summary>
+    /// <param name="itemsSource">List of items in tree structure</param>
+    /// <returns>Passwords Id+CatalogPath, created from the passed <paramref name="itemsSource"/></returns>
+    private static Dictionary<Guid, string> BuildPasswordAndCatalogPathPairs(List<PangoExplorerItem> itemsSource)
+    {
+        Dictionary<Guid, string> result = new();
+
+        foreach (PangoExplorerItem treeItem in itemsSource)
+        {
+            result.Add(treeItem.Id, treeItem.CatalogPath);
+
+            if (treeItem.Children.Any())
+            {
+                foreach (KeyValuePair<Guid, string> itemToAdd in BuildPasswordAndCatalogPathPairs(treeItem.Children.ToList()))
+                {
+                    result.Add(itemToAdd.Key, itemToAdd.Value);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
     /// Returns a password that fits <paramref name="predicate"/>
     /// </summary>
     /// <param name="items"></param>
     /// <param name="predicate"></param>
     /// <returns></returns>
-    private PangoExplorerItem? FindPassword(IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
+    private static PangoExplorerItem? FindPassword(IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
     {
         if(items is null || !items.Any())
         {

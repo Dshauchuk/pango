@@ -11,7 +11,7 @@
     d:DataContext="{d:DesignInstance Type=dialogviewmodels:ExportDialogViewModel}"
     mc:Ignorable="d">
 
-    <Grid>
+    <Grid MinWidth="350">
         <Grid DataContext="{Binding Path=Validator}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -19,18 +19,20 @@
             </Grid.RowDefinitions>
 
             <controls:ValidationTextBox Grid.Row="0" 
-                            Margin="10"
-                            PropertyName="Description"
-                            Text="{Binding Path=Description, Mode=TwoWay}"
-                            HeaderText="{loc:StringResource Key='Description'}"
-                            PlaceholderText="{loc:StringResource Key='AskForDescription_Label'}"/>
+                                        Margin="10"
+                                        PropertyName="Description"
+                                        Text="{Binding Path=Description, Mode=TwoWay}"
+                                        HeaderText="{loc:StringResource Key='Description'}"
+                                        PlaceholderText="{loc:StringResource Key='AskForDescription_Label'}"/>
 
             <controls:ValidationPasswordBox Grid.Row="1"
-                                Margin="10"
-                                PropertyName="MasterPassword"
-                                Password="{Binding Path=MasterPassword, Mode=TwoWay}"
-                                HeaderText="{loc:StringResource Key='Password'}"
-                                PlaceholderText="{loc:StringResource Key='Password'}"/>
+                                            Margin="10"
+                                            MinWidth="300"
+                                            PropertyName="MasterPassword"
+                                            Password="{Binding Path=MasterPassword, Mode=TwoWay}"
+                                            HeaderText="{loc:StringResource Key='Password'}"
+                                            HideCopyButton="True"
+                                            PlaceholderText="{loc:StringResource Key='ArchiveEncryptionPassword_Placeholder'}"/>
         </Grid>
     </Grid>
 </views:DialogPage>

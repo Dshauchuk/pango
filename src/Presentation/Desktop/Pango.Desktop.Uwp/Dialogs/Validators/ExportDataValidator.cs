@@ -40,4 +40,12 @@ public class ExportDataValidator : ObservableValidator
             ValidateProperty(value, nameof(MasterPassword));
         }
     }
+
+    public void Reset()
+    {
+        Description = string.Empty;
+        MasterPassword = string.Empty;
+
+        ValidateAllProperties();
+    }
 }

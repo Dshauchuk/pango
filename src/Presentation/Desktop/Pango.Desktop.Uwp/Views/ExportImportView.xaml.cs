@@ -59,6 +59,8 @@ public sealed partial class ExportImportView : PageBase
                 }
             }
         }
+
+        ((ExportImportViewModel)ViewModel).ExportDataCommand.NotifyCanExecuteChanged();
     }
 
     private async void PickPngxFileButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
