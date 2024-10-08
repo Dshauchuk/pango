@@ -13,7 +13,7 @@
 		<EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<PackageCertificateThumbprint>4E9F427E9883A716B016C9FE10F5E0D9D69C8FD9</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
