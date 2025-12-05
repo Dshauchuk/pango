@@ -25,9 +25,9 @@ public sealed partial class MainWindow : Window
         SetTitleBar(this.TitleBarBorder);
 
 #if DEBUG
-        WindowTitle.Text = Title = "Pango Debug";
+        WindowTitle.Text = Title = $"Pango Debug v.{GetAppVersion()}";
 #else
-        WindowTitle.Text = Title = "Pango";
+        WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}";
 #endif
 
         // track user's activity for IDLE
@@ -40,6 +40,12 @@ public sealed partial class MainWindow : Window
 
     public event EventHandler<PointerRoutedEventArgs>? PointerMoved;
     public event EventHandler<KeyRoutedEventArgs>? KeyDown;
+
+    private static string GetAppVersion()
+    {
+        var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+        return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
+    }
 
     private void Current_SignedOut()
     {
