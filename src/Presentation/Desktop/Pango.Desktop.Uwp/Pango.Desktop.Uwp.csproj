@@ -137,10 +137,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<!--<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
 			<SubType>Designer</SubType>
-		</AppxManifest>
-		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
+		</AppxManifest>-->
+		<AppxManifest Include="Package.Dev.appxmanifest">
 			<SubType>Designer</SubType>
 		</AppxManifest>
 	</ItemGroup>
