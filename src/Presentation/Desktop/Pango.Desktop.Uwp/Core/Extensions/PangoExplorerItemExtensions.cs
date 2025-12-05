@@ -11,7 +11,7 @@ internal static class PangoExplorerItemExtensions
     /// <param name="item">Element, for which and for which Children <see cref="PangoExplorerItem.CatalogPath"/> should be recalculated</param>
     internal static void RecalculateCatalogPath(this PangoExplorerItem item)
     {
-        item.CatalogPath = item.Parent is null ? string.Empty : $"{item.Parent.CatalogPath}{AppConstants.CatalogDelimeter}{item.Parent.Name}";
+        item.CatalogPath = item.Parent is null ? string.Empty : $"{(string.IsNullOrEmpty(item.Parent.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter)}{item.Parent.Name}";
 
         if (item.Type == PangoExplorerItem.ExplorerItemType.Folder)
         {

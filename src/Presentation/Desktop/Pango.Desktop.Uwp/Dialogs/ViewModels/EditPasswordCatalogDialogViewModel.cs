@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Application.UseCases.Password.Commands.UpdatePassword;
@@ -25,6 +26,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
     private readonly ISender _sender;
     private string _newCatalogName = string.Empty;
     private string _initialCatalog = string.Empty;
+    private string _originalInitialCatalog = string.Empty;
     private List<string>? _availableCatalogs;
     private List<string>? _existingCatalogs;
     private PangoExplorerItem? _selectedCatalog;
@@ -64,6 +66,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
         {
             SetProperty(ref _initialCatalog, value);
             OnPropertyChanged(nameof(InitialCatalog));
+            DialogContext.RaiseDialogContentChanged(this);
         }
     }
 
@@ -87,21 +90,33 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public bool CanSave()
     {
-        return !string.IsNullOrWhiteSpace(NewCatalogName) && (_existingCatalogs != null && !_existingCatalogs.Contains(NewCatalogName));
+        bool res = !string.IsNullOrWhiteSpace(NewCatalogName) && (_existingCatalogs != null && !_existingCatalogs.Contains(NewCatalogName));
+        return res;
     }
 
     public void Initialize(EditCatalogParameters editCatalogParameters)
     {
         editCatalogParameters ??= new([], string.Empty, null, []);
 
+        IsNew = editCatalogParameters!.SelectedCatalog is null;
         _selectedCatalog = editCatalogParameters.SelectedCatalog;
         _existingCatalogs = editCatalogParameters.ExistingCatalogs;
 
-        AvailableCatalogs = editCatalogParameters.AllAvailableCatalogs ?? [];
-        NewCatalogName = editCatalogParameters.SelectedCatalog?.Name ?? string.Empty;
-        InitialCatalog = editCatalogParameters.SelectedCatalog?.CatalogPath ?? editCatalogParameters?.DefaultCatalog ?? string.Empty;
+        if (IsNew)
+        {
+            AvailableCatalogs = editCatalogParameters.AllAvailableCatalogs ?? [];
+        }
+        else
+        {
+            string forbiddenParentPath = string.IsNullOrEmpty(_selectedCatalog.CatalogPath) ?
+                _selectedCatalog.Name : 
+                $"{_selectedCatalog.CatalogPath}{AppConstants.CatalogDelimeter}{_selectedCatalog.Name}";
 
-        IsNew = editCatalogParameters!.SelectedCatalog is null;
+            AvailableCatalogs = editCatalogParameters.AllAvailableCatalogs.Where(c => !c.StartsWith(forbiddenParentPath)).ToList();
+        }
+
+        NewCatalogName = editCatalogParameters.SelectedCatalog?.Name ?? string.Empty;
+        InitialCatalog = _originalInitialCatalog = editCatalogParameters.SelectedCatalog?.CatalogPath ?? editCatalogParameters?.DefaultCatalog ?? string.Empty;
     }
 
     public Task OnCancelAsync()
