@@ -330,6 +330,12 @@
     <value>minute(-s)</value>
     <comment>1 minute(-s), 3 minute(-s)</comment>
   </data>
+  <data name="PasswordDeleted_Format" xml:space="preserve">
+    <value>Password "{0}" has been successfully deleted</value>
+  </data>
+  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
+    <value>Failed to delete password "{0}"</value>
+  </data>
   <data name="CatalogCreated_Format" xml:space="preserve">
     <value>Catalog "{0}" has been successfully created</value>
   </data>
@@ -341,12 +347,6 @@
   </data>
   <data name="CatalogUpdateFailed_Format" xml:space="preserve">
     <value>Failed to update catalog "{0}"</value>
-  </data>
-  <data name="PasswordDeleted_Format" xml:space="preserve">
-    <value>Password "{0}" has been successfully deleted</value>
-  </data>
-  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
-    <value>Failed to delete password "{0}"</value>
   </data>
   <data name="NoPasswordsFound" xml:space="preserve">
     <value>No passwords found</value>
@@ -369,9 +369,6 @@
   <data name="SeePassword" xml:space="preserve">
     <value>Show Password</value>
   </data>
-  <data name="CannotSavePassword" xml:space="preserve">
-    <value>Cannot save password</value>
-  </data>
   <data name="Message_LoginEmpty" xml:space="preserve">
     <value>Login failed for user "{0}": User name or password is empty</value>
   </data>
@@ -383,6 +380,9 @@
   </data>
   <data name="Message_LoginSuccess" xml:space="preserve">
     <value>Authentication succeeded</value>
+  </data>
+  <data name="CannotSavePassword" xml:space="preserve">
+    <value>Cannot save password</value>
   </data>
   <data name="CapsLockWarningText" xml:space="preserve">
     <value>Having caps-lock turned on might result in incorrect password</value>
@@ -441,11 +441,11 @@
   <data name="ExportResultTitle" xml:space="preserve">
     <value>Export Results</value>
   </data>
-  <data name="ImportCompleted_Message" xml:space="preserve">
-    <value>Import completed: {0} passwords were imported successfully.</value>
-  </data>
   <data name="ImportSingleCompleted_Message" xml:space="preserve">
     <value>Import completed: 1 password was imported successfully.</value>
+  </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Import completed: {0} passwords were imported successfully.</value>
   </data>
   <data name="SelectFile_Title" xml:space="preserve">
     <value>Select a file...</value>
@@ -497,5 +497,11 @@
   </data>
   <data name="ArchiveEncryptionPassword_Placeholder" xml:space="preserve">
     <value>Password for the archive encryption</value>
+  </data>
+  <data name="TooManyUsers" xml:space="preserve">
+    <value>The maximum number of users has been reached</value>
+  </data>
+  <data name="UserRegistrationFailed" xml:space="preserve">
+    <value>Registration error</value>
   </data>
 </root>

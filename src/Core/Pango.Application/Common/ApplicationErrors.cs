@@ -19,6 +19,7 @@ public static class ApplicationErrors
         public const string DeletionFailed = "User.DeletionFailed";
         public const string RegistrationFailed = "User.RegistrationFailed";
         public const string NotFound = "User.NotFound";
+        public const string TooManyUsers = "User.TooManyUsers";
     }
 
     public static class Password

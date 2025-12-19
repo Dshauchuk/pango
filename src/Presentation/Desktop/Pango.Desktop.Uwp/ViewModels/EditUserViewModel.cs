@@ -2,10 +2,14 @@
 using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
+using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels.Validators;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -71,7 +75,21 @@ public sealed class EditUserViewModel : ViewModelBase
 
         if (!UserValidator.HasErrors)
         {
-            await _sender.Send(new RegisterUserCommand(UserValidator.UserName, UserValidator.Password));
+            var result = await _sender.Send(new RegisterUserCommand(UserValidator.UserName, UserValidator.Password));
+
+            if (result.IsError)
+            {
+                if(result.Errors.Any(e => e.Code == ApplicationErrors.User.TooManyUsers))
+                {
+                    WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("TooManyUsers"), AppNotificationType.Warning));
+                }
+                else
+                {
+                    WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("UserRegistrationFailed"), AppNotificationType.Error));
+                }
+                return;
+            }
+
             OnOpenSignInView();
         }
     }
