@@ -496,4 +496,10 @@
   <data name="ArchiveEncryptionPassword_Placeholder" xml:space="preserve">
     <value>Пароль для шыфравання архіва</value>
   </data>
+  <data name="TooManyUsers" xml:space="preserve">
+    <value>Дасягнута максімальная колькасць карыстальнікаў</value>
+  </data>
+  <data name="UserRegistrationFailed" xml:space="preserve">
+    <value>Памылка рэгістрацыі</value>
+  </data>
 </root>

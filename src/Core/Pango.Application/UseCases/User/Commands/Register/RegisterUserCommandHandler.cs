@@ -13,6 +13,8 @@ namespace Pango.Application.UseCases.User.Commands.Register;
 public class RegisterUserCommandHandler
 : IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
 {
+    private const int MaxUserCount = 5;
+
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHashProvider _passwordHashProvider;
     private readonly ILogger<RegisterUserCommandHandler> _logger;
@@ -28,6 +30,12 @@ public class RegisterUserCommandHandler
     {
         try
         {
+            var existingUsers = await _userRepository.ListAsync();
+            if(existingUsers.Count() >= MaxUserCount)
+            {
+                return Error.Validation(ApplicationErrors.User.TooManyUsers, $"Can't create more than {MaxUserCount} users");
+            }
+
             string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
 
             PangoUser user = new()
