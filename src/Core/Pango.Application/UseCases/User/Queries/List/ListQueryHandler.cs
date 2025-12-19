@@ -1,6 +1,7 @@
 ﻿using ErrorOr;
 using Mapster;
 using MediatR;
+using NaturalSort.Extension;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Models;
 
@@ -18,7 +19,9 @@ public class ListQueryHandler
 
     public async Task<ErrorOr<IEnumerable<PangoUserDto>>> Handle(ListQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<PangoUserDto> users = (await _userRepository.ListAsync()).Select(u => u.Adapt<PangoUserDto>());
+        IEnumerable<PangoUserDto> users = (await _userRepository.ListAsync())
+            .OrderBy(u => u.UserName, StringComparison.OrdinalIgnoreCase.WithNaturalSort())
+            .Select(u => u.Adapt<PangoUserDto>());
         return users.ToList();
     }
 }
