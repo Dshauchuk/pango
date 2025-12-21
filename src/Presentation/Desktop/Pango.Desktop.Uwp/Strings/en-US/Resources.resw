@@ -504,4 +504,43 @@
   <data name="UserRegistrationFailed" xml:space="preserve">
     <value>Registration error</value>
   </data>
+  <data name="ExportFolderPath" xml:space="preserve">
+    <value>Export folder path</value>
+  </data>
+  <data name="SelectExportFolder_Placeholder" xml:space="preserve">
+    <value>Select folder for export</value>
+  </data>
+  <data name="SelectFolder" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="SelectExportFolder_Tooltip" xml:space="preserve">
+    <value>Click to select folder for saving exported file</value>
+  </data>
+  <data name="SelectItemsToExport" xml:space="preserve">
+    <value>Select items to export</value>
+  </data>
+  <data name="ValidationError_Required" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="ValidationError_MinLength" xml:space="preserve">
+    <value>Minimum length is 3 characters.</value>
+  </data>
+  <data name="ValidationError_ExportPath" xml:space="preserve">
+    <value>Selected folder does not exist or is invalid.</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="FileName_Placeholder" xml:space="preserve">
+    <value>Enter file name (without extension)</value>
+  </data>
+  <data name="ValidationError_InvalidFileName" xml:space="preserve">
+    <value>Name contains invalid characters.</value>
+  </data>
+  <data name="Export_FileExistsTitle" xml:space="preserve">
+    <value>File already exists</value>
+  </data>
+  <data name="ValidationError_FileExists" xml:space="preserve">
+    <value>A file with this name already exists in the selected folder.</value>
+  </data>
 </root>
