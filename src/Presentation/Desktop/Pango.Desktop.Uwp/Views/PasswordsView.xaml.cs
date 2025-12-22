@@ -96,7 +96,7 @@ public sealed partial class PasswordsView : PageBase
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
 
-        if (viewModel is not null)
+        if(viewModel is not null)
         {
             viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreatePasswordCommand.Execute(null);
@@ -106,8 +106,8 @@ public sealed partial class PasswordsView : PageBase
     private void AddCatalog_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-
-        if (viewModel is not null)
+        
+        if(viewModel is not null)
         {
             viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreateCatalogCommand.Execute(null);
@@ -118,7 +118,7 @@ public sealed partial class PasswordsView : PageBase
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
 
-        if (viewModel is not null)
+        if(viewModel is not null)
         {
             viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
         }
@@ -230,21 +230,9 @@ public sealed partial class PasswordsView : PageBase
             targetCollection = file.Parent.Children;
         }
 
-        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union([item]), item);
+        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union(new PangoExplorerItem[1] { item }), item);
         targetCollection.Insert(orderedElementIndex, item);
 
         return file.Parent;
-    }
-
-    // Enable folder expand/collapse via double-tap on any part of the folder row
-    private async void Folder_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
-    {
-        if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item } && item.Type == PangoExplorerItem.ExplorerItemType.Folder)
-        {
-            if (sender is TreeViewItem treeViewItem)
-            {
-                treeViewItem.IsExpanded = !treeViewItem.IsExpanded;
-            }
-        }
     }
 }
