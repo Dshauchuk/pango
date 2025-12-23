@@ -89,6 +89,7 @@ public sealed class EditUserViewModel : ViewModelBase
                 }
                 return;
             }
+            Clear();
 
             OnOpenSignInView();
         }
