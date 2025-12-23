@@ -60,6 +60,13 @@ public sealed class EditUserViewModel : ViewModelBase
         Clear();
     }
 
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        await base.OnNavigatedFromAsync(parameter);
+
+        Clear();
+    }
+
     #endregion
 
     #region Private Methods
@@ -89,7 +96,6 @@ public sealed class EditUserViewModel : ViewModelBase
                 }
                 return;
             }
-            Clear();
 
             OnOpenSignInView();
         }
