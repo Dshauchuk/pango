@@ -502,4 +502,43 @@
   <data name="UserRegistrationFailed" xml:space="preserve">
     <value>Памылка рэгістрацыі</value>
   </data>
+  <data name="ExportFolderPath" xml:space="preserve">
+    <value>Шлях да папкі экспарту</value>
+  </data>
+  <data name="SelectExportFolder_Placeholder" xml:space="preserve">
+    <value>Абярыце папку для экспарту</value>
+  </data>
+  <data name="SelectFolder" xml:space="preserve">
+    <value>Абраць</value>
+  </data>
+  <data name="SelectExportFolder_Tooltip" xml:space="preserve">
+    <value>Націсніце, каб абраць папку для захавання экспартаванага файла</value>
+  </data>
+  <data name="SelectItemsToExport" xml:space="preserve">
+    <value>Выберыце элементы для экспарту</value>
+  </data>
+  <data name="ValidationError_Required" xml:space="preserve">
+    <value>Гэта поле абавязковае.</value>
+  </data>
+  <data name="ValidationError_MinLength" xml:space="preserve">
+    <value>Мінімальная даўжыня — 3 сімвалы.</value>
+  </data>
+  <data name="ValidationError_ExportPath" xml:space="preserve">
+    <value>Выбраная папка не існуе альбо шлях няправільны.</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>Назва файла</value>
+  </data>
+  <data name="FileName_Placeholder" xml:space="preserve">
+    <value>Увядзіце назву (без пашырэння)</value>
+  </data>
+  <data name="ValidationError_InvalidFileName" xml:space="preserve">
+    <value>Назва ўтрымлівае недапушчальныя сімвалы.</value>
+  </data>
+  <data name="Export_FileExistsTitle" xml:space="preserve">
+    <value>Файл ужо існуе</value>
+  </data>
+  <data name="ValidationError_FileExists" xml:space="preserve">
+    <value>Файл з такой назвай ужо існуе ў абранай папцы.</value>
+  </data>
 </root>

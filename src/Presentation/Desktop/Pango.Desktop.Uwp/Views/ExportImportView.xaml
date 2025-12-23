@@ -342,7 +342,7 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Margin="0" 
-                                   Text="Select items to export"
+                                   Text="{loc:StringResource Key='SelectItemsToExport'}"
                                    Style="{StaticResource SubtitleTextBlockStyle}"/>
 
                         <Grid Grid.Row="1">
