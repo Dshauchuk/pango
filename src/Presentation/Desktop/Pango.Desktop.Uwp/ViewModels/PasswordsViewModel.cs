@@ -279,7 +279,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     /// <param name="searchText"></param>
     private void OnFilterAsync(string? searchText)
     {
-        Func<PangoExplorerItem, bool> searchPredicate = string.IsNullOrEmpty(searchText)
+        Func<PangoExplorerItem, bool> searchPredicate = string.IsNullOrWhiteSpace(searchText)
             ? (i) => true
             : (i) => i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
         foreach (PangoExplorerItem password in Passwords)
