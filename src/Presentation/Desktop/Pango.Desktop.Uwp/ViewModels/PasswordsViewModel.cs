@@ -227,16 +227,16 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private async void OnEditPasswordAsync(PangoExplorerItem? selected)
     {
-        if(selected is null)
+        if (selected is null)
         {
             return;
         }
 
-        if(selected.Type == PangoExplorerItem.ExplorerItemType.Folder)
+        if (selected.Type == PangoExplorerItem.ExplorerItemType.Folder)
         {
             await _dialogService
                 .ShowNewCatalogDialogAsync(
-                    new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected, (selected?.Parent?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
+                    new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), selected, (selected?.Parent?.Children ?? Passwords)?.Where(c => c.Type == PangoExplorerItem.ExplorerItemType.Folder).Select(c => c.Name).ToList() ?? []));
         }
         else
         {
@@ -253,7 +253,7 @@ public sealed class PasswordsViewModel : ViewModelBase
     {
         await _dialogService
             .ShowNewCatalogDialogAsync(
-                new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Select(c => c.Name).ToList() ?? []));
+                new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Where(c => c.Type == PangoExplorerItem.ExplorerItemType.Folder).Select(c => c.Name).ToList() ?? []));
     }
 
     private async void OnUpdateListAsync()

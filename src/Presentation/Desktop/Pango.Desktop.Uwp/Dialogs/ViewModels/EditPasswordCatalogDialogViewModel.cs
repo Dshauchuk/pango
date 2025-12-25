@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.NewPassword;
 using Pango.Application.UseCases.Password.Commands.UpdatePassword;
@@ -64,6 +65,7 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
         {
             SetProperty(ref _initialCatalog, value);
             OnPropertyChanged(nameof(InitialCatalog));
+            DialogContext.RaiseDialogContentChanged(this);
         }
     }
 
@@ -87,7 +89,26 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
     public bool CanSave()
     {
-        return !string.IsNullOrWhiteSpace(NewCatalogName) && (_existingCatalogs != null && !_existingCatalogs.Contains(NewCatalogName));
+        string separator = AppConstants.CatalogDelimeter.ToString();
+        string proposedPath = string.IsNullOrEmpty(InitialCatalog)
+            ? NewCatalogName
+            : $"{InitialCatalog}{separator}{NewCatalogName}";
+
+        var catalogs = AvailableCatalogs ?? Enumerable.Empty<string>();
+
+        bool isPathFree = IsNew
+            ? !catalogs.Contains(proposedPath, StringComparer.OrdinalIgnoreCase)
+            : (proposedPath.Equals(GetCurrentFullPath(), StringComparison.OrdinalIgnoreCase) || !catalogs.Contains(proposedPath, StringComparer.OrdinalIgnoreCase));
+
+        return !string.IsNullOrWhiteSpace(NewCatalogName) && isPathFree;
+    }
+
+    private string GetCurrentFullPath()
+    {
+        if (_selectedCatalog == null) return string.Empty;
+        return string.IsNullOrEmpty(_selectedCatalog.CatalogPath)
+            ? _selectedCatalog.Name
+            : $"{_selectedCatalog.CatalogPath}{AppConstants.CatalogDelimeter}{_selectedCatalog.Name}";
     }
 
     public void Initialize(EditCatalogParameters editCatalogParameters)
@@ -96,12 +117,26 @@ public class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialogViewMode
 
         _selectedCatalog = editCatalogParameters.SelectedCatalog;
         _existingCatalogs = editCatalogParameters.ExistingCatalogs;
+        IsNew = editCatalogParameters!.SelectedCatalog is null;
 
-        AvailableCatalogs = editCatalogParameters.AllAvailableCatalogs ?? [];
+        var allCatalogs = editCatalogParameters.AllAvailableCatalogs ?? [];
+
+        if (!IsNew && _selectedCatalog != null)
+        {
+            string currentPath = GetCurrentFullPath();
+            string childPrefix = $"{currentPath}{AppConstants.CatalogDelimeter}";
+
+            AvailableCatalogs = [.. allCatalogs
+                .Where(c => !c.Equals(currentPath, StringComparison.OrdinalIgnoreCase) &&
+                            !c.StartsWith(childPrefix, StringComparison.OrdinalIgnoreCase))];
+        }
+        else
+        {
+            AvailableCatalogs = allCatalogs;
+        }
+
         NewCatalogName = editCatalogParameters.SelectedCatalog?.Name ?? string.Empty;
         InitialCatalog = editCatalogParameters.SelectedCatalog?.CatalogPath ?? editCatalogParameters?.DefaultCatalog ?? string.Empty;
-
-        IsNew = editCatalogParameters!.SelectedCatalog is null;
     }
 
     public Task OnCancelAsync()
