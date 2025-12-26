@@ -45,18 +45,18 @@ public class UpdatePasswordCommandHandler
 
             if (password.IsCatalog)
             {
-                string oldCatalogPath = request.CatalogPath + (string.IsNullOrEmpty(request.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + password.Name;
-                var catalogPasswords = await _passwordRepository.QueryAsync(p => p.CatalogPath == oldCatalogPath, context);
+                string oldCatalogPath = string.IsNullOrEmpty(password.CatalogPath) ? password.Name : $"{password.CatalogPath}{AppConstants.CatalogDelimeter}{password.Name}";
+
+                var catalogPasswords = await _passwordRepository.QueryAsync(p => p.CatalogPath == oldCatalogPath || p.CatalogPath.StartsWith(oldCatalogPath + AppConstants.CatalogDelimeter), context);
 
                 if (catalogPasswords.Any())
                 {
                     string newCatalogPath = request.CatalogPath + (string.IsNullOrEmpty(request.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + request.Name;
 
-                    // DS
-                    // TODO: create update(many)
                     foreach (var pwd in catalogPasswords)
                     {
-                        pwd.CatalogPath = newCatalogPath;
+                        string suffix = pwd.CatalogPath[oldCatalogPath.Length..];
+                        pwd.CatalogPath = newCatalogPath + suffix;
                         await _passwordRepository.UpdateAsync(pwd, context);
                     }
                 }
