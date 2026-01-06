@@ -89,7 +89,7 @@
                                Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
                     <toolkit:SettingsExpander Header="{StaticResource AppTitleName}" 
                                               Margin="{StaticResource ControlSectionMargin}"
-                                              Description="© 2024 Cats Lab. All rights reserved.">
+                                              Description="© 2026 Cats Lab. All rights reserved.">
                         <toolkit:SettingsExpander.HeaderIcon>
                             <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/StoreLogo.scale-400.png" />
                         </toolkit:SettingsExpander.HeaderIcon>
