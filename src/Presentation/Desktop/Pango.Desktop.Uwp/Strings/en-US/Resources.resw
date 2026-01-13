@@ -543,4 +543,58 @@
   <data name="ValidationError_FileExists" xml:space="preserve">
     <value>A file with this name already exists in the selected folder.</value>
   </data>
+  <data name="GeneratePassword_Title" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="PasswordStrength" xml:space="preserve">
+    <value>Password strength</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Password length</value>
+  </data>
+  <data name="CharactersToUse" xml:space="preserve">
+    <value>Characters to use</value>
+  </data>
+  <data name="UseUppercase" xml:space="preserve">
+    <value>Uppercase letters (A–Z)</value>
+  </data>
+  <data name="UseLowercase" xml:space="preserve">
+    <value>Lowercase letters (a–z)</value>
+  </data>
+  <data name="UseDigits" xml:space="preserve">
+    <value>Digits (0–9)</value>
+  </data>
+  <data name="UseSpecial" xml:space="preserve">
+    <value>Special characters</value>
+  </data>
+  <data name="ExcludeAmbiguousCharacters" xml:space="preserve">
+    <value>Exclude ambiguous characters (Il10oOsS5)</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="PasswordStrength_Strong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="PasswordStrength_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="PasswordStrength_Weak" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="PasswordGeneration_Error_NoCharSet" xml:space="preserve">
+    <value>Select at least one character set.</value>
+  </data>
+  <data name="PasswordGeneration_Error_LengthOutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters.</value>
+  </data>
+  <data name="GeneratePassword" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="GeneratePasswordTooltip" xml:space="preserve">
+    <value>Create a strong password</value>
+  </data>
 </root>

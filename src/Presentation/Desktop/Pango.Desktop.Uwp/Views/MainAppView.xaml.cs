@@ -43,7 +43,8 @@ public sealed partial class MainAppView : ViewBase
             new NavigationEntry(HomeItem, typeof(HomeView)),
             new NavigationEntry(PasswordsItem, typeof(PasswordsView)),
             new NavigationEntry(UserItem, typeof(UserView)),
-            new NavigationEntry(ExportImportItem, typeof(ExportImportView))
+            new NavigationEntry(ExportImportItem, typeof(ExportImportView)),
+            new NavigationEntry(GeneratePasswordItem, typeof(GeneratePasswordView))
         ];
     }
 
