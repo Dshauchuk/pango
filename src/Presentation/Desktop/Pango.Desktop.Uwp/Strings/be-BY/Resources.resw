@@ -595,4 +595,37 @@
   <data name="GeneratePasswordTooltip" xml:space="preserve">
     <value>Стварыць надзейны пароль</value>
   </data>
+  <data name="PasswordLengthTooltip" xml:space="preserve">
+    <value>Даўжыня пароля (8-64 сімвала)</value>
+  </data>
+  <data name="PasswordLengthUnits" xml:space="preserve">
+    <value>сімвалы</value>
+  </data>
+  <data name="UseUppercaseTooltip" xml:space="preserve">
+    <value>Дадайце загалоўныя літары (A-Z), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="UseDigitsTooltip" xml:space="preserve">
+    <value>Дадайце лічбы (0-9), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="UseLowercaseTooltip" xml:space="preserve">
+    <value>Дадайце малыя літары (A-z), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="ExcludeAmbiguousTooltip" xml:space="preserve">
+    <value>Выключыць сімвалы, якія могуць выглядаць падобнымі (Il10oOsS5)</value>
+  </data>
+  <data name="UseSpecialTooltip" xml:space="preserve">
+    <value>Дадайце спецыяльныя сімвалы, каб абцяжарыць падбор пароля</value>
+  </data>
+  <data name="PasswordLength_OutOfRange" xml:space="preserve">
+    <value>Даўжыня пароля павінна складаць ад 8 да 64 сімвалаў</value>
+  </data>
+  <data name="PasswordLength_Invalid" xml:space="preserve">
+    <value>Недапушчальнае значэнне даўжыні пароля</value>
+  </data>
+  <data name="RegeneratePassword" xml:space="preserve">
+    <value>Стварыць новы пароль</value>
+  </data>
+  <data name="OtherPasswords" xml:space="preserve">
+    <value>Іншыя прапанаваныя паролі</value>
+  </data>
 </root>

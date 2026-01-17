@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
@@ -16,7 +17,7 @@ namespace Pango.Desktop.Uwp.Views
     public sealed partial class GeneratePasswordView : PageBase
     {
         public GeneratePasswordView()
-       : base(App.Host.Services.GetRequiredService<ILogger<GeneratePasswordView>>())
+            : base(App.Host.Services.GetRequiredService<ILogger<GeneratePasswordView>>())
         {
             InitializeComponent();
 

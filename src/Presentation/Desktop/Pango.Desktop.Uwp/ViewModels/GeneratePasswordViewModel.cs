@@ -10,8 +10,68 @@ namespace Pango.Desktop.Uwp.ViewModels
     public sealed class GeneratePasswordViewModel : ViewModelBase
     {
         public string GeneratedPassword { get; set; } = string.Empty;
-        public int Length { get; set; } = 16;
 
+        private int _length = 16;
+        public int Length
+        {
+            get => _length;
+            private set
+            {
+                if (_length == value)
+                    return;
+
+                _length = value;
+                OnPropertyChanged(nameof(Length));
+            }
+        }
+
+        private string _lengthText = "16";
+        public string LengthText
+        {
+            get => _lengthText;
+            set
+            {
+                if (_lengthText == value)
+                    return;
+
+                _lengthText = value;
+                OnPropertyChanged(nameof(LengthText));
+
+                ValidateLengthCore(value);
+            }
+        }
+
+        private string _lengthError;
+        public string LengthError
+        {
+            get => _lengthError;
+            set
+            {
+                if (_lengthError == value)
+                    return;
+
+                _lengthError = value;
+                OnPropertyChanged(nameof(LengthError));
+            }
+        }
+
+        private void ValidateLengthCore(string text)
+        {
+            if (!int.TryParse(text, out var parsed))
+            {
+                LengthError = ViewResourceLoader.GetString("PasswordLength_Invalid");
+                return;
+            }
+
+            if (parsed < 8 || parsed > 64)
+            {
+                LengthError = ViewResourceLoader.GetString("PasswordLength_OutOfRange");
+                return;
+            }
+
+            LengthError = string.Empty;
+            Length = parsed;
+        }
         public bool UseUppercase { get; set; } = true;
         public bool UseLowercase { get; set; } = true;
         public bool UseDigits { get; set; } = true;
@@ -29,7 +89,7 @@ namespace Pango.Desktop.Uwp.ViewModels
                     _strength = value;
                     OnPropertyChanged(nameof(Strength));
                     OnPropertyChanged(nameof(StrengthLabel));
-                    OnPropertyChanged(nameof(StrengthBrush)); 
+                    OnPropertyChanged(nameof(StrengthBrush));
                 }
             }
         }
@@ -58,11 +118,11 @@ namespace Pango.Desktop.Uwp.ViewModels
 
         public GeneratePasswordViewModel(ILogger<GeneratePasswordViewModel> logger) : base(logger)
         {
-            GenerateCommand = new RelayCommand(() => {  });
-            ApplyCommand = new RelayCommand(() => {  });
-            CancelCommand = new RelayCommand(() => {  });
-            CopyPasswordCommand = new RelayCommand(() => {  });
-            RegeneratePasswordCommand = new RelayCommand(() => {  });
+            GenerateCommand = new RelayCommand(() => { });
+            ApplyCommand = new RelayCommand(() => { });
+            CancelCommand = new RelayCommand(() => { });
+            CopyPasswordCommand = new RelayCommand(() => { });
+            RegeneratePasswordCommand = new RelayCommand(() => { });
         }
     }
 
