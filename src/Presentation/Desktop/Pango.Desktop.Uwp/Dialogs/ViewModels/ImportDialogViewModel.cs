@@ -11,13 +11,12 @@ using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
-using System.Text;
 using System.Threading.Tasks;
 using ImportDataValidator = Pango.Desktop.Uwp.Dialogs.Validators.ImportDataValidator;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 {
     #region Fields
 
@@ -42,7 +41,7 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public IDialogContext DialogContext { get; }
 
-    public ImportDataValidator Validator 
+    public ImportDataValidator Validator
     {
         get => _validator;
         set => SetProperty(ref _validator, value);
@@ -86,26 +85,28 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
             return;
         }
 
-        byte[]? saltBytes = Encoding.UTF8.GetBytes(this.Validator.MasterPassword);
-        Array.Resize(ref saltBytes, 16);
-
-        string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, saltBytes);
-        EncodingOptions encoding = new (passwordHash, Convert.ToBase64String(saltBytes));
+        string password = Validator.MasterPassword?.Trim() ?? string.Empty;
+        var encoding = new EncodingOptions(password, string.Empty);
 
         ErrorOr<ImportResult> result = await _sender.Send(new ImportDataCommand(_parameters.FilePath, new ImportOptions(encoding)));
 
         if (result.IsError)
         {
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Import failed: {result.FirstError}", Core.Enums.AppNotificationType.Error));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
+                ViewResourceLoader.GetString("Import_EncryptedArchiveError"), Core.Enums.AppNotificationType.Error));
         }
         else
         {
-            int count = result.Value.Manifest.Contents[Domain.Enums.ContentType.Passwords];
-            string message = count == 1 ? ViewResourceLoader.GetString("ImportSingleCompleted_Message")
-                : string.Format(ViewResourceLoader.GetString("ImportCompleted_Message"), count);
+            int count = 0;
+            if (result.Value.Manifest.Contents != null && result.Value.Manifest.Contents.TryGetValue(Domain.Enums.ContentType.Passwords, out int value))
+            {
+                count = value;
+            }
 
-            WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(message));
-            WeakReferenceMessenger.Default.Send<ImportCompletedMessage>(new ImportCompletedMessage(result.Value));
+            string message = count == 1 ? ViewResourceLoader.GetString("ImportSingleCompleted_Message") : string.Format(ViewResourceLoader.GetString("ImportCompleted_Message"), count);
+
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message));
+            WeakReferenceMessenger.Default.Send(new ImportCompletedMessage(result.Value));
         }
     }
 

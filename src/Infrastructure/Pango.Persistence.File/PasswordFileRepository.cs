@@ -1,6 +1,4 @@
-﻿using ErrorOr;
-using Microsoft.Extensions.Logging;
-using Pango.Application.Common;
+﻿using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
@@ -8,35 +6,40 @@ using Pango.Domain.Entities;
 
 namespace Pango.Persistence.File;
 
-public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswordRepository
+public class PasswordFileRepository(
+    IContentEncoder contentEncoder,
+    IAppDomainProvider appDomainProvider,
+    ILogger<PasswordFileRepository> logger,
+    IAppOptions appOptions) : FileRepositoryBase<PangoPassword>(contentEncoder, appDomainProvider, appOptions, logger), IPasswordRepository
 {
     protected override string DirectoryName => "passwords";
-    
-    public PasswordFileRepository(IContentEncoder contentEncoder,
-        IAppDomainProvider appDomainProvider,
-        ILogger<PasswordFileRepository> logger,
-        IAppOptions appOptions)
-        : base(contentEncoder, appDomainProvider, appOptions, logger)
-    { }
 
     public async Task CreateAsync(PangoPassword password, IRepositoryActionContext context)
     {
-        if(context is not FileRepositoryActionContext ctx)
+        if (context is not FileRepositoryActionContext ctx)
         {
-            throw new ArgumentException($"Invalid type of context. It must be {typeof(FileRepositoryActionContext).FullName}", nameof(context));       
+            throw new ArgumentException($"Invalid type of context. It must be {typeof(FileRepositoryActionContext).FullName}", nameof(context));
         }
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
 
-        if (password.IsCatalog && passwordList.Any(p => p.Name.Equals(password.CatalogPath) && p.CatalogPath.Equals(password.CatalogPath)))
+        bool alreadyExists = passwordList.Any(p =>
+            p.Name.Equals(password.Name, StringComparison.OrdinalIgnoreCase) &&
+            (p.CatalogPath ?? string.Empty).Equals(password.CatalogPath ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
+            p.IsCatalog == password.IsCatalog &&
+            (password.IsCatalog || (p.Login ?? string.Empty).Equals(password.Login ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+        );
+
+        if (alreadyExists)
         {
-            Logger.LogInformation("Catalog {catalog} cannot be created: there is already a catalog with the same name.", password.Name);
+            Logger.LogInformation("Item {name} in {path} (IsCatalog: {isCat}) already exists. Skipping.",
+                password.Name, password.CatalogPath, password.IsCatalog);
             return;
         }
 
+        password.UserName = ctx.UserId;
         passwordList.Add(password);
-
-        await SaveItemsForUserAsync(passwordList, password.UserName, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+        await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
     }
 
     public async Task CreateAsync(IEnumerable<PangoPassword> passwords, IRepositoryActionContext context)
@@ -48,18 +51,21 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
 
-        foreach(var newPassword in passwords)
+        foreach (var newItem in passwords)
         {
-            if(newPassword.IsCatalog && passwordList.Any(p => p.Name.Equals(newPassword.Name) && p.CatalogPath.Equals(newPassword.CatalogPath)))
+            bool exists = passwordList.Any(p =>
+                p.Name.Equals(newItem.Name, StringComparison.OrdinalIgnoreCase) &&
+                (p.CatalogPath ?? string.Empty).Equals(newItem.CatalogPath ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
+                p.IsCatalog == newItem.IsCatalog &&
+                (newItem.IsCatalog || (p.Login ?? string.Empty).Equals(newItem.Login ?? string.Empty, StringComparison.OrdinalIgnoreCase))
+            );
+
+            if (!exists)
             {
-                Logger.LogInformation("Catalog {catalog} cannot be created: there is already a catalog with the same name.", newPassword.Name);
-                continue;
+                newItem.UserName = ctx.UserId;
+                passwordList.Add(newItem);
             }
-
-            newPassword.UserName = ctx.UserId;
-            passwordList.Add(newPassword);
         }
-
         await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
     }
 
@@ -71,18 +77,19 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
         }
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
-        
-        var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id) ?? throw new PasswordNotFoundException($"Pango password with ID \"{password.Id}\" not found");
+        var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id)
+            ?? throw new PasswordNotFoundException($"Pango password with ID \"{password.Id}\" not found");
+
         pwdToUpdate.Name = password.Name;
         pwdToUpdate.Login = password.Login;
         pwdToUpdate.Properties = password.Properties;
         pwdToUpdate.Value = password.Value;
         pwdToUpdate.Target = password.Target;
         pwdToUpdate.CatalogPath = password.CatalogPath;
+        pwdToUpdate.IsCatalog = password.IsCatalog;
         pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
 
-        await SaveItemsForUserAsync(passwordList, password.UserName, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
-
+        await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
         return pwdToUpdate;
     }
 
@@ -96,10 +103,10 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
         var pwdToRemove = passwordList.FirstOrDefault(p => p.Id == password.Id);
 
-        if (pwdToRemove != null) 
+        if (pwdToRemove != null)
         {
             passwordList.Remove(pwdToRemove);
-            await SaveItemsForUserAsync(passwordList, password.UserName, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+            await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
         }
     }
 
@@ -110,7 +117,8 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
             throw new ArgumentException($"Invalid type of context. It must be {typeof(FileRepositoryActionContext).FullName}", nameof(context));
         }
 
-        return (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).FirstOrDefault(predicate);
+        var items = await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+        return items.FirstOrDefault(predicate);
     }
 
     public async Task<IEnumerable<PangoPassword>> QueryAsync(Func<PangoPassword, bool> predicate, IRepositoryActionContext context)
@@ -120,6 +128,7 @@ public class PasswordFileRepository : FileRepositoryBase<PangoPassword>, IPasswo
             throw new ArgumentException($"Invalid type of context. It must be {typeof(FileRepositoryActionContext).FullName}", nameof(context));
         }
 
-        return (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).Where(predicate);
+        var items = await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+        return items.Where(predicate);
     }
 }

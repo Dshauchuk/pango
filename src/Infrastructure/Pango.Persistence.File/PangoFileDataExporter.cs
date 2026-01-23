@@ -8,23 +8,16 @@ using Package = System.IO.Packaging.Package;
 
 namespace Pango.Persistence.File;
 
-public class PangoFileDataExporter : IDataExporter
+public class PangoFileDataExporter(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider, ILogger<PangoFileDataExporter> logger) : IDataExporter
 {
-    private readonly IContentEncoder _contentEncoder;
-    private readonly IAppDomainProvider _appDomainProvider;
-    private readonly ILogger _logger;
+    private readonly IContentEncoder _contentEncoder = contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
+    private readonly ILogger _logger = logger;
 
     private static readonly SemaphoreSlim _semaphore = new(1, 1);
     private const string PackageFileExtension = ".pngx";
     private const int MaxRetries = 3;
     private const int DelayMiliseconds = 1000;
-
-    public PangoFileDataExporter(IContentEncoder contentEncoder, IAppDomainProvider appDomainProvider, ILogger<PangoFileDataExporter> logger)
-    {
-        _contentEncoder = contentEncoder;
-        _appDomainProvider = appDomainProvider;
-        _logger = logger;
-    }
 
     public async Task<string> ExportAsync(PangoPackageManifest manifest, IEnumerable<IContentPackage> contentPackages, IExportOptions exportOptions)
     {
@@ -49,7 +42,7 @@ public class PangoFileDataExporter : IDataExporter
                     byte[] encryptedManifestData = await _contentEncoder.EncryptAsync(manifest, exportOptions.EncodingOptions.Key, exportOptions.EncodingOptions.Salt);
                     using (Stream partStream = manifestPart.GetStream())
                     {
-                        partStream.Write(encryptedManifestData, 0, encryptedManifestData.Length);
+                        await partStream.WriteAsync(encryptedManifestData);
                     }
 
                     int partIndex = 1;
@@ -65,7 +58,7 @@ public class PangoFileDataExporter : IDataExporter
                         // Write the encrypted data to the package part
                         using (Stream partStream = part.GetStream())
                         {
-                            partStream.Write(encryptedData, 0, encryptedData.Length);
+                            await partStream.WriteAsync(encryptedData);
                         }
 
                         partIndex++;

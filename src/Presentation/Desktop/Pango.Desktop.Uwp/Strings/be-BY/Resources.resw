@@ -541,4 +541,46 @@
   <data name="ValidationError_FileExists" xml:space="preserve">
     <value>Файл з такой назвай ужо існуе ў абранай папцы.</value>
   </data>
+  <data name="BackupSettings_Header" xml:space="preserve">
+    <value>Рэзервовае капіраванне</value>
+  </data>
+  <data name="BackupPath_Label" xml:space="preserve">
+    <value>Шлях захавання</value>
+  </data>
+  <data name="Browse_Button" xml:space="preserve">
+    <value>Агляд...</value>
+  </data>
+  <data name="DefaultPath_Button" xml:space="preserve">
+    <value>Шлях па змаўчанні</value>
+  </data>
+  <data name="OpenFolder_Button" xml:space="preserve">
+    <value>Адкрыць папку</value>
+  </data>
+  <data name="BackupInterval_Label" xml:space="preserve">
+    <value>Перыядычнасць</value>
+  </data>
+  <data name="Hour(-s)" xml:space="preserve">
+    <value>гадзін(-ы)</value>
+  </data>
+  <data name="BackupSaved_Message" xml:space="preserve">
+    <value>Налады бэкапу захаваны.</value>
+  </data>
+  <data name="BackupPathInvalid_Error" xml:space="preserve">
+    <value>Няправільны шлях.</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Захаваць змены</value>
+  </data>
+  <data name="BackupService_Toggle" xml:space="preserve">
+    <value>Уключыць фонавую службу бэкапу</value>
+  </data>
+  <data name="BackupPassword_Label" xml:space="preserve">
+    <value>Пароль рэзервовай копіі (аўтаматычны)</value>
+  </data>
+  <data name="BackupPassword_Tooltip" xml:space="preserve">
+    <value>Гэты пароль выкарыстоўваецца для шыфравання файлаў. Ён спатрэбіцца для аднаўлення.</value>
+  </data>
+  <data name="Import_EncryptedArchiveError" xml:space="preserve">
+    <value>Архіў зашыфраваны. Праверце правільнасць пароля.</value>
+  </data>
 </root>

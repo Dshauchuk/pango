@@ -10,77 +10,75 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.Data.Commands.Import;
 
-public class ImportDataCommandHandler
-    : IRequestHandler<ImportDataCommand, ErrorOr<ImportResult>>
+public class ImportDataCommandHandler(
+    IDataImporter dataImporter,
+    IPasswordRepository passwordRepository,
+    IRepositoryContextFactory repositoryContextFactory,
+    IUserContextProvider userContextProvider,
+    ILogger<ImportDataCommandHandler> logger) : IRequestHandler<ImportDataCommand, ErrorOr<ImportResult>>
 {
-    private readonly IDataImporter _dataImporter;
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly ILogger _logger;
-
-    public ImportDataCommandHandler(
-        IDataImporter dataImporter, 
-        IPasswordRepository passwordRepository, 
-        IRepositoryContextFactory repositoryContextFactory, 
-        IUserContextProvider userContextProvider,
-        ILogger<ImportDataCommandHandler> logger)
-    {
-        _logger = logger;
-        _dataImporter = dataImporter;
-        _passwordRepository = passwordRepository;
-        _repositoryContextFactory = repositoryContextFactory;
-        _userContextProvider = userContextProvider;
-    }
+    private readonly IDataImporter _dataImporter = dataImporter;
+    private readonly IPasswordRepository _passwordRepository = passwordRepository;
+    private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly ILogger _logger = logger;
 
     public async Task<ErrorOr<ImportResult>> Handle(ImportDataCommand request, CancellationToken cancellationToken)
     {
         try
         {
             ImportResultDto result = await _dataImporter.ImportAsync(request.SourcePath, request.Options);
+            if (result is null) return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");
 
-            if(result is null)
+            var context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
+            var existingItems = (await _passwordRepository.QueryAsync(p => true, context)).ToList();
+
+            foreach (IContentPackage package in result.ContentPackages)
             {
-                return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");   
-            }
-            else
-            {
-                foreach (IContentPackage package in result.ContentPackages)
+                if (package.ContentType == Domain.Enums.ContentType.Passwords)
                 {
-                    if(package.ContentType == Domain.Enums.ContentType.Passwords)
+                    if (package.Data is not IEnumerable<PangoPassword> importedItems) continue;
+
+                    List<PangoPassword> itemsToAdd = [];
+                    foreach (var newItem in importedItems)
                     {
-                        var passwords = package.Data as IEnumerable<PangoPassword>;
+                        string newPath = newItem.CatalogPath ?? string.Empty;
 
-                        if(passwords is not null && passwords.Any())
+                        bool alreadyExists = existingItems.Any(existing => {
+                            bool samePath = (existing.CatalogPath ?? string.Empty).Equals(newPath, StringComparison.OrdinalIgnoreCase);
+                            bool sameName = existing.Name.Equals(newItem.Name, StringComparison.OrdinalIgnoreCase);
+
+                            if (!samePath || !sameName) return false;
+                            if (newItem.IsCatalog != existing.IsCatalog) return false;
+                            if (newItem.IsCatalog) return true;
+
+                            return (existing.Login ?? string.Empty).Equals(newItem.Login ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        if (!alreadyExists)
                         {
-                            // re-generate the ID to avoid collisions
-                            foreach (var item in passwords)
-                            {
-                                item.Id = Guid.NewGuid();
-                            }
-
-                            await _passwordRepository.CreateAsync(passwords, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
+                            newItem.Id = Guid.NewGuid();
+                            newItem.UserName = _userContextProvider.GetUserName();
+                            itemsToAdd.Add(newItem);
+                            existingItems.Add(newItem);
                         }
                     }
-                    else
+
+                    if (itemsToAdd.Any())
                     {
-                        throw new NotImplementedException($"Cannot parse {package.ContentType.ToString()} type. Not implemented.");
+                        await _passwordRepository.CreateAsync(itemsToAdd, context);
                     }
                 }
             }
-
             return new ImportResult(result.Manifest);
+        }
+        catch (PangoDataDecryptionException ex)
+        {
+            return Error.Failure(ex.Code, "Wrong password for the export file.");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Data import failed: {message}", ex.Message);
-
-            if(ex is PangoException pEx)
-            {
-                return Error.Failure(pEx.Code, pEx.Message);
-            }
-
-            return Error.Failure(ApplicationErrors.Data.ImportError, $"Import failed: {ex.Message}");
+            return Error.Failure(ApplicationErrors.Data.ImportError, ex.Message);
         }
     }
 }

@@ -543,4 +543,46 @@
   <data name="ValidationError_FileExists" xml:space="preserve">
     <value>A file with this name already exists in the selected folder.</value>
   </data>
+  <data name="BackupSettings_Header" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="BackupPath_Label" xml:space="preserve">
+    <value>Storage Path</value>
+  </data>
+  <data name="Browse_Button" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="DefaultPath_Button" xml:space="preserve">
+    <value>Default path</value>
+  </data>
+  <data name="OpenFolder_Button" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="BackupInterval_Label" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="Hour(-s)" xml:space="preserve">
+    <value>hour(s)</value>
+  </data>
+  <data name="BackupSaved_Message" xml:space="preserve">
+    <value>Backup settings saved.</value>
+  </data>
+  <data name="BackupPathInvalid_Error" xml:space="preserve">
+    <value>Invalid path.</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+  <data name="BackupService_Toggle" xml:space="preserve">
+    <value>Enable Background Backup Service</value>
+  </data>
+  <data name="BackupPassword_Label" xml:space="preserve">
+    <value>Backup Password (Auto-generated)</value>
+  </data>
+  <data name="BackupPassword_Tooltip" xml:space="preserve">
+    <value>This password is used to encrypt your backup files. You will need it to import/restore data.</value>
+  </data>
+  <data name="Import_EncryptedArchiveError" xml:space="preserve">
+    <value>The archive is encrypted. Please ensure you entered the correct backup password.</value>
+  </data>
 </root>
