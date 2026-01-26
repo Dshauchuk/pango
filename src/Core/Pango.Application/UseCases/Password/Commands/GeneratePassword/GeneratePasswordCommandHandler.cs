@@ -38,7 +38,7 @@ namespace Pango.Application.UseCases.Password.Commands.GeneratePassword
                     request.UseLowercase,
                     request.UseDigits,
                     request.UseSpecial,
-                    request.ExcludeAmbitious
+                    request.ExcludeAmbiguous
                 );
 
                 var password = await _passwordGenerator.GeneratePassword(options);
