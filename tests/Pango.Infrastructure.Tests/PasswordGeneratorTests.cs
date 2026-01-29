@@ -34,20 +34,20 @@ namespace Pango.Infrastructure.Tests
         [InlineData(16)]
         [InlineData(32)]
         [InlineData(64)]
-        public async Task GeneratePassword_LengthIsRespected(int length)
+        public async Task GeneratePasswordAsync_LengthIsRespected(int length)
         {
             // Arrange
             var options = CreateOptions(length: length);
 
             // Act
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             // Assert
             Assert.Equal(length, password.Length);
         }
 
         [Fact]
-        public async Task GeneratePassword_UppercaseOnly_ContainsOnlyUppercase()
+        public async Task GeneratePasswordAsync_UppercaseOnly_ContainsOnlyUppercase()
         {
             // Arrange
             var options = CreateOptions(
@@ -58,7 +58,7 @@ namespace Pango.Infrastructure.Tests
                 useSpecial: false);
 
             // Act
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             // Assert
             Assert.NotEmpty(password);
@@ -66,7 +66,7 @@ namespace Pango.Infrastructure.Tests
         }
 
         [Fact]
-        public async Task GeneratePassword_LowercaseOnly_ContainsOnlyLowercase()
+        public async Task GeneratePasswordAsync_LowercaseOnly_ContainsOnlyLowercase()
         {
             var options = CreateOptions(
                 length: 16,
@@ -75,13 +75,13 @@ namespace Pango.Infrastructure.Tests
                 useDigits: false,
                 useSpecial: false);
 
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             Assert.NotEmpty(password);
             Assert.All(password, c => Assert.InRange(c, 'a', 'z'));
         }
         [Fact]
-        public async Task GeneratePassword_DigitsOnly_ContainsOnlyDigits()
+        public async Task GeneratePasswordAsync_DigitsOnly_ContainsOnlyDigits()
         {
             var options = CreateOptions(
                 length: 16,
@@ -90,13 +90,13 @@ namespace Pango.Infrastructure.Tests
                 useDigits: true,
                 useSpecial: false);
 
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             Assert.NotEmpty(password);
             Assert.All(password, c => Assert.InRange(c, '0', '9'));
         }
         [Fact]
-        public async Task GeneratePassword_UpperLowerDigits_ContainsAllSelectedTypes()
+        public async Task GeneratePasswordAsync_UpperLowerDigits_ContainsAllSelectedTypes()
         {
             var options = CreateOptions(
                 length: 16,
@@ -105,7 +105,7 @@ namespace Pango.Infrastructure.Tests
                 useDigits: true,
                 useSpecial: false);
 
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             Assert.NotEmpty(password);
             Assert.Contains(password, char.IsUpper);
@@ -113,7 +113,7 @@ namespace Pango.Infrastructure.Tests
             Assert.Contains(password, char.IsDigit);
         }
         [Fact]
-        public async Task GeneratePassword_SpecialIncluded_ContainsAtLeastOneSpecial()
+        public async Task GeneratePasswordAsync_SpecialIncluded_ContainsAtLeastOneSpecial()
         {
             var options = CreateOptions(
                 length: 16,
@@ -122,7 +122,7 @@ namespace Pango.Infrastructure.Tests
                 useDigits: false,
                 useSpecial: true);
 
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             Assert.NotEmpty(password);
 
@@ -130,7 +130,7 @@ namespace Pango.Infrastructure.Tests
             Assert.Contains(password, c => special.Contains(c));
         }
         [Fact]
-        public async Task GeneratePassword_ExcludeAmbiguous_RemovesAmbiguousCharacters()
+        public async Task GeneratePasswordAsync_ExcludeAmbiguous_RemovesAmbiguousCharacters()
         {
             var options = CreateOptions(
                 length: 32,
@@ -140,23 +140,47 @@ namespace Pango.Infrastructure.Tests
                 useSpecial: false,
                 excludeAmbiguous: true);
 
-            var password = await _passwordGenerator.GeneratePassword(options);
+            var password = await _passwordGenerator.GeneratePasswordAsync(options);
 
             const string ambiguous = "0O1Il|"; 
 
             Assert.DoesNotContain(password, c => ambiguous.Contains(c));
         }
         [Fact]
-        public async Task GeneratePassword_MultipleCalls_ProduceDifferentPasswords()
+        public async Task GeneratePasswordAsync_MultipleCalls_ProduceDifferentPasswords()
         {
             var options = CreateOptions(length: 16);
 
-            var p1 = await _passwordGenerator.GeneratePassword(options);
-            var p2 = await _passwordGenerator.GeneratePassword(options);
-            var p3 = await _passwordGenerator.GeneratePassword(options);
+            var p1 = await _passwordGenerator.GeneratePasswordAsync(options);
+            var p2 = await _passwordGenerator.GeneratePasswordAsync(options);
+            var p3 = await _passwordGenerator.GeneratePasswordAsync(options);
 
             Assert.False(p1 == p2 && p2 == p3);
         }
 
+        [Fact]
+        public async Task GeneratePasswordAsync_NullOptions_Throws()
+        {
+            await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+                await _passwordGenerator.GeneratePasswordAsync(null!).AsTask());
+        }
+
+        [Fact]
+        public async Task GeneratePasswordAsync_NonPositiveLength_Throws()
+        {
+            var options = new PasswordGenerationOptions(0, true, false, false, false, false);
+
+            await Assert.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
+                await _passwordGenerator.GeneratePasswordAsync(options).AsTask());
+        }
+
+        [Fact]
+        public async Task GeneratePasswordAsync_NoCharsAfterFiltering_Throws()
+        {
+            var options = new PasswordGenerationOptions(10, false, false, false, false, true);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+                await _passwordGenerator.GeneratePasswordAsync(options).AsTask());
+        }
     }
 }
