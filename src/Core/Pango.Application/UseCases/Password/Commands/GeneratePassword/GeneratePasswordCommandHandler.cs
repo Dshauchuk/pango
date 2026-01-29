@@ -41,7 +41,7 @@ namespace Pango.Application.UseCases.Password.Commands.GeneratePassword
                     request.ExcludeAmbiguous
                 );
 
-                var password = await _passwordGenerator.GeneratePassword(options);
+                var password = await _passwordGenerator.GeneratePasswordAsync(options);
                 return password;
             }
             catch (Exception ex)

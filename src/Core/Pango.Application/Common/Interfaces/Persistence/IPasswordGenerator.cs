@@ -1,7 +1,6 @@
-﻿namespace Pango.Application.Common.Interfaces.Persistence
+﻿namespace Pango.Application.Common.Interfaces.Persistence;
+
+public interface IPasswordGenerator
 {
-    public interface IPasswordGenerator
-    {
-        Task<string> GeneratePassword(PasswordGenerationOptions options);
-    }
+    ValueTask<string> GeneratePasswordAsync(PasswordGenerationOptions options);
 }
