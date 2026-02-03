@@ -541,4 +541,91 @@
   <data name="ValidationError_FileExists" xml:space="preserve">
     <value>Файл з такой назвай ужо існуе ў абранай папцы.</value>
   </data>
+  <data name="GeneratePassword_Title" xml:space="preserve">
+    <value>Генератар пароляў</value>
+  </data>
+  <data name="PasswordStrength" xml:space="preserve">
+    <value>Надзейнасць пароля</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Даўжыня пароля</value>
+  </data>
+  <data name="CharactersToUse" xml:space="preserve">
+    <value>Сiмвалы для выкарыстання</value>
+  </data>
+  <data name="UseUppercase" xml:space="preserve">
+    <value>Вялікія літары (A–Z)</value>
+  </data>
+  <data name="UseLowercase" xml:space="preserve">
+    <value>Маленькія літары (a–z)</value>
+  </data>
+  <data name="UseDigits" xml:space="preserve">
+    <value>Лічбы (0–9)</value>
+  </data>
+  <data name="UseSpecial" xml:space="preserve">
+    <value>Асаблівыя сімвалы</value>
+  </data>
+  <data name="ExcludeAmbiguousCharacters" xml:space="preserve">
+    <value>Выключыць неадназначныя сімвалы (Il10oOsS5)</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>Згенераваць</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Ужыць</value>
+  </data>
+  <data name="PasswordStrength_Strong" xml:space="preserve">
+    <value>Моцны</value>
+  </data>
+  <data name="PasswordStrength_Medium" xml:space="preserve">
+    <value>Сярэдні</value>
+  </data>
+  <data name="PasswordStrength_Weak" xml:space="preserve">
+    <value>Слабы</value>
+  </data>
+  <data name="PasswordGeneration_Error_NoCharSet" xml:space="preserve">
+    <value>Абярыце хаця б адзін набор сімвалаў.</value>
+  </data>
+  <data name="PasswordGeneration_Error_LengthOutOfRange" xml:space="preserve">
+    <value>Даўжыня пароля павінна быць ад 8 да 64 сімвалаў.</value>
+  </data>
+  <data name="GeneratePassword" xml:space="preserve">
+    <value>Генератар пароляў</value>
+  </data>
+  <data name="GeneratePasswordTooltip" xml:space="preserve">
+    <value>Стварыць надзейны пароль</value>
+  </data>
+  <data name="PasswordLengthTooltip" xml:space="preserve">
+    <value>Даўжыня пароля (8-64 сімвала)</value>
+  </data>
+  <data name="PasswordLengthUnits" xml:space="preserve">
+    <value>сімвалы</value>
+  </data>
+  <data name="UseUppercaseTooltip" xml:space="preserve">
+    <value>Дадайце загалоўныя літары (A-Z), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="UseDigitsTooltip" xml:space="preserve">
+    <value>Дадайце лічбы (0-9), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="UseLowercaseTooltip" xml:space="preserve">
+    <value>Дадайце малыя літары (A-z), каб павысіць надзейнасць пароля</value>
+  </data>
+  <data name="ExcludeAmbiguousTooltip" xml:space="preserve">
+    <value>Выключыць сімвалы, якія могуць выглядаць падобнымі (Il10oOsS5)</value>
+  </data>
+  <data name="UseSpecialTooltip" xml:space="preserve">
+    <value>Дадайце спецыяльныя сімвалы, каб абцяжарыць падбор пароля</value>
+  </data>
+  <data name="PasswordLength_OutOfRange" xml:space="preserve">
+    <value>Даўжыня пароля павінна складаць ад 8 да 64 сімвалаў</value>
+  </data>
+  <data name="PasswordLength_Invalid" xml:space="preserve">
+    <value>Недапушчальнае значэнне даўжыні пароля</value>
+  </data>
+  <data name="RegeneratePassword" xml:space="preserve">
+    <value>Стварыць новы пароль</value>
+  </data>
+  <data name="OtherPasswords" xml:space="preserve">
+    <value>Іншыя прапанаваныя паролі</value>
+  </data>
 </root>
