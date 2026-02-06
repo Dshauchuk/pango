@@ -597,4 +597,40 @@
   <data name="GeneratePasswordTooltip" xml:space="preserve">
     <value>Create a strong password</value>
   </data>
+  <data name="PasswordLengthTooltip" xml:space="preserve">
+    <value>Password length (8–64 characters)</value>
+  </data>
+  <data name="PasswordLengthUnits" xml:space="preserve">
+    <value>chars</value>
+  </data>
+  <data name="UseUppercaseTooltip" xml:space="preserve">
+    <value>Add uppercase letters (A–Z) to increase password strength</value>
+  </data>
+  <data name="UseDigitsTooltip" xml:space="preserve">
+    <value>Add digits (0–9) to increase password strength</value>
+  </data>
+  <data name="UseLowercaseTooltip" xml:space="preserve">
+    <value>Add lowercase letters (a–z) to increase password strength</value>
+  </data>
+  <data name="ExcludeAmbiguousTooltip" xml:space="preserve">
+    <value>Exclude characters that can look similar (Il10oOsS5)</value>
+  </data>
+  <data name="UseSpecialTooltip" xml:space="preserve">
+    <value>Add special characters to make the password harder to guess</value>
+  </data>
+  <data name="PasswordLength_OutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters</value>
+  </data>
+  <data name="PasswordLength_Invalid" xml:space="preserve">
+    <value>Invalid password length value</value>
+  </data>
+  <data name="RegeneratePassword" xml:space="preserve">
+    <value>Generate new password</value>
+  </data>
+  <data name="OtherPasswords" xml:space="preserve">
+    <value>Other suggested passwords</value>
+  </data>
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Password generated successfully</value>
+  </data>
 </root>
