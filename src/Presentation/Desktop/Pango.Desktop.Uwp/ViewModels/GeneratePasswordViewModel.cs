@@ -17,8 +17,8 @@ namespace Pango.Desktop.Uwp.ViewModels
 {
     public sealed class GeneratePasswordViewModel : ViewModelBase
     {
+        #region Fields
         private readonly ISender _sender;
-
         private string _generatedPassword = string.Empty;
         private int _length = 16;
         private string _lengthText = "16";
@@ -30,6 +30,7 @@ namespace Pango.Desktop.Uwp.ViewModels
         private bool _useSpecial = false;
         private bool _excludeAmbiguous = false;
         private PasswordStrength _strength;
+        #endregion
 
         #region Properties
         public string GeneratedPassword
@@ -223,6 +224,16 @@ namespace Pango.Desktop.Uwp.ViewModels
             CancelCommand = new RelayCommand(Cancel);
             SaveAsCommand = new RelayCommand(SaveAs, CanSaveAs);
         }
+
+        #region Overrides
+        public override async Task OnNavigatedToAsync(object? parameter)
+        {
+            await base.OnNavigatedToAsync(parameter);
+
+            Clear();
+        }
+        #endregion
+
         private async Task GenerateAsync()
         {
             if (!ValidateLengthInput(LengthText))
@@ -318,6 +329,7 @@ namespace Pango.Desktop.Uwp.ViewModels
             // TODO: Implement Cancel functionality
             Logger.LogInformation("Cancel password generation clicked.");
         }
+
         private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
         private void SaveAs()
         {
@@ -332,6 +344,22 @@ namespace Pango.Desktop.Uwp.ViewModels
             // separate message - create new password with generated value
             WeakReferenceMessenger.Default.Send(new CreatePasswordFromGeneratorMessage(GeneratedPassword));
         }
+
+        private void Clear()
+        {
+            GeneratedPassword = string.Empty;
+            Length = 16;
+            LengthText = "16";
+            LengthError = string.Empty;
+
+            UseUppercase = true;
+            UseLowercase = true;
+            UseDigits = true;
+            UseSpecial = false;
+            ExcludeAmbiguous = false;
+
+            Strength = PasswordStrength.Weak;
+        }              
 
         private void UpdateStrength()
         {
