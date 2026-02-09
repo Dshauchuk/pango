@@ -115,6 +115,7 @@ public sealed class PasswordsViewModel : ViewModelBase
 
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
         WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
+        WeakReferenceMessenger.Default.Register<CreatePasswordFromGeneratorMessage>(this, OnCreatePasswordFromGenerator);
     }
 
     public override async Task OnNavigatedToAsync(object? parameter)
@@ -157,6 +158,10 @@ public sealed class PasswordsViewModel : ViewModelBase
         await ResetViewAsync();
     }
 
+    private void OnCreatePasswordFromGenerator(object recipient, CreatePasswordFromGeneratorMessage message)
+    {
+        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new NavigationParameters(AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs(), message.Value))));
+    }
     private async void OnCopyPasswordToClipboard(PangoExplorerItem? dto)
     {
         if(dto is null)

@@ -633,4 +633,7 @@
   <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
     <value>Password generated successfully</value>
   </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save as</value>
+  </data>
 </root>

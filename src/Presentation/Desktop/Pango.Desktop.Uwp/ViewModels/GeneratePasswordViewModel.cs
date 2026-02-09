@@ -6,6 +6,8 @@ using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models.Parameters;
+using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.Linq;
 using System.Threading.Tasks;
@@ -42,6 +44,7 @@ namespace Pango.Desktop.Uwp.ViewModels
                 OnPropertyChanged(nameof(GeneratedPassword));
                 UpdateStrength();
                 CopyPasswordCommand.NotifyCanExecuteChanged();
+                SaveAsCommand.NotifyCanExecuteChanged();
             }
         }
 
@@ -204,6 +207,7 @@ namespace Pango.Desktop.Uwp.ViewModels
         public RelayCommand CopyPasswordCommand { get; }
         public RelayCommand ApplyCommand { get; }
         public RelayCommand CancelCommand { get; }
+        public RelayCommand SaveAsCommand { get; }
 
         #endregion
 
@@ -217,6 +221,7 @@ namespace Pango.Desktop.Uwp.ViewModels
             CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
             ApplyCommand = new RelayCommand(Apply);
             CancelCommand = new RelayCommand(Cancel);
+            SaveAsCommand = new RelayCommand(SaveAs, CanSaveAs);
         }
         private async Task GenerateAsync()
         {
@@ -302,7 +307,7 @@ namespace Pango.Desktop.Uwp.ViewModels
         }
         private void Apply()
         {
-            // TODO: Implement Cancel functionality
+            // TODO: Implement Apply functionality
             Logger.LogInformation(
                 "Apply password clicked with value length {Length}",
                 GeneratedPassword?.Length ?? 0);
@@ -313,6 +318,21 @@ namespace Pango.Desktop.Uwp.ViewModels
             // TODO: Implement Cancel functionality
             Logger.LogInformation("Cancel password generation clicked.");
         }
+        private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
+        private void SaveAs()
+        {
+            if (string.IsNullOrEmpty(GeneratedPassword))
+                return;
+
+            // navigation on PasswordsIndex
+            WeakReferenceMessenger.Default.Send(
+                new NavigationRequstedMessage(
+                    new NavigationParameters(AppView.PasswordsIndex, AppView.GeneratePassword)));
+
+            // separate message - create new password with generated value
+            WeakReferenceMessenger.Default.Send(new CreatePasswordFromGeneratorMessage(GeneratedPassword));
+        }
+
         private void UpdateStrength()
         {
             var password = GeneratedPassword ?? string.Empty;
