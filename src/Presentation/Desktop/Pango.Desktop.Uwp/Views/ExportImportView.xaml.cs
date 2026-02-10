@@ -1,11 +1,14 @@
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
+using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 using System;
-using System.Linq;
 using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -25,79 +28,86 @@ public sealed partial class ExportImportView : PageBase
         this.InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<ExportImportViewModel>();
 
-        this.PasswordsTreeView.SelectionChanged += PasswordsTreeView_SelectionChanged;
+        // Subscribe to ItemInvoked events for checkbox toggle logic
+        this.PasswordsTreeView.ItemInvoked += OnTreeViewItemInvoked;
+        this.ImportTreeView.ItemInvoked += OnTreeViewItemInvoked;
     }
 
-    private void PasswordsTreeView_SelectionChanged(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewSelectionChangedEventArgs args)
+    protected override void OnNavigatedTo(NavigationEventArgs e)
     {
-        if (args.AddedItems.Any())
+        base.OnNavigatedTo(e);
+
+        // Safe registration
+        WeakReferenceMessenger.Default.Register<ImportPreviewReadyMessage>(this, (r, m) =>
         {
-            foreach (var item in args.AddedItems)
+            // Check if page is still valid
+            if (this.XamlRoot == null) return;
+
+            // Dispatch to UI thread to avoid threading issues
+            this.DispatcherQueue.TryEnqueue(() =>
             {
-                if (item is PangoExplorerItem explorerItem)
+                if (ViewModel is ExportImportViewModel vm)
                 {
-                    if (!explorerItem.IsSelected)
-                    {
-                        explorerItem.IsSelected = true;
-
-                        if(explorerItem.Parent != null)
-                        {
-                            explorerItem.Parent.IsSelected = true;
-                        }
-                    }
+                    _ = vm.HandleImportPreviewAsync(m.Value);
                 }
-            }
-        }
-
-        if (args.RemovedItems.Any())
-        {
-            foreach (var item in args.RemovedItems)
-            {
-                if (item is PangoExplorerItem explorerItem)
-                {
-                    explorerItem.IsSelected = false;
-                }
-            }
-        }
-
-        ((ExportImportViewModel)ViewModel).ExportDataCommand.NotifyCanExecuteChanged();
+            });
+        });
     }
 
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        WeakReferenceMessenger.Default.UnregisterAll(this);
+    }
+
+    // Handle TreeView item clicks to toggle checkbox selection
+    private void OnTreeViewItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItem is PangoExplorerItem item)
+        {
+            // Toggle selection state
+            item.IsSelected = !item.IsSelected;
+
+            // Notify commands about selection change
+            if (ViewModel is ExportImportViewModel vm)
+            {
+                if (sender == PasswordsTreeView)
+                    vm.ExportDataCommand.NotifyCanExecuteChanged();
+                else if (sender == ImportTreeView)
+                    vm.FinalizeImportCommand.NotifyCanExecuteChanged();
+            }
+        }
+    }
+
+    // Handles picking the .pngx file
     private async void PickPngxFileButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        if (ViewModel is not ExportImportViewModel viewModel)
+        if (ViewModel is not ExportImportViewModel viewModel) return;
+
+        try
         {
-            return;
+            var openPicker = new FileOpenPicker();
+
+            // Get window handle safely
+            var window = App.Current.CurrentWindow;
+            if (window == null) return;
+
+            var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+            WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
+
+            openPicker.ViewMode = PickerViewMode.Thumbnail;
+            openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
+            openPicker.FileTypeFilter.Add(".pngx");
+
+            var file = await openPicker.PickSingleFileAsync();
+            if (file != null)
+            {
+                viewModel.ImportFilePath = file.Path;
+            }
         }
-
-        viewModel.ImportFilePath = string.Empty;
-
-        // Create a file picker
-        var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
-
-        // See the sample code below for how to make the window accessible from the App class.
-        var window = App.Current.CurrentWindow;
-
-        // Retrieve the window handle (HWND) of the current WinUI 3 window.
-        var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-
-        // Initialize the file picker with the window handle (HWND).
-        WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
-
-        // Set options for your file picker
-        openPicker.ViewMode = PickerViewMode.Thumbnail;
-        openPicker.SuggestedStartLocation = PickerLocationId.Downloads;
-        openPicker.FileTypeFilter.Add(".pngx");
-
-        // Open the picker for the user to pick a file
-        var file = await openPicker.PickSingleFileAsync();
-        if (file != null)
+        catch (Exception ex)
         {
-            viewModel.ImportFilePath = file.Path;
-        }
-        else
-        {
-            viewModel.ImportFilePath = string.Empty;
+            Logger.LogError(ex, "Error picking file");
         }
     }
 }

@@ -4,15 +4,10 @@ using Pango.Application.Common.Interfaces.Persistence;
 
 namespace Pango.Application.UseCases.Data.Commands.Import;
 
-public class ImportDataCommand : IRequest<ErrorOr<ImportResult>>
+public class ImportDataCommand(string sourcePath, IImportOptions options, List<Guid>? selectedIds = null, bool importToSeparateFolder = false) : IRequest<ErrorOr<ImportResult>>
 {
-    public ImportDataCommand(string sourcePath, IImportOptions options)
-    {
-        SourcePath = sourcePath;
-        Options = options;
-    }
-
-    public string SourcePath { get; }
-    
-    public IImportOptions Options { get; }
+    public string SourcePath { get; } = sourcePath;
+    public IImportOptions Options { get; } = options;
+    public List<Guid>? SelectedIds { get; } = selectedIds;
+    public bool ImportToSeparateFolder { get; } = importToSeparateFolder;
 }

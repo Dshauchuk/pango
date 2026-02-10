@@ -585,4 +585,55 @@
   <data name="Import_EncryptedArchiveError" xml:space="preserve">
     <value>The archive is encrypted. Please ensure you entered the correct backup password.</value>
   </data>
+  <data name="Theme_Default" xml:space="preserve">
+    <value>System Default</value>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="BackupRetention_Label" xml:space="preserve">
+    <value>Keep backups for</value>
+  </data>
+  <data name="Day(-s)" xml:space="preserve">
+    <value>day(s)</value>
+  </data>
+  <data name="BugRequest_Header" xml:space="preserve">
+    <value>File a bug or request new feature</value>
+  </data>
+  <data name="Copyright_Description" xml:space="preserve">
+    <value>© 2026 Cats Lab. All rights reserved.</value>
+  </data>
+  <data name="ToggleSwitch_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ToggleSwitch_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="BackupServiceDescription" xml:space="preserve">
+    <value>Automatically save encrypted copies of your data</value>
+  </data>
+  <data name="ImportSettings_Header" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportDestination_Label" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="ImportDestination_Description" xml:space="preserve">
+    <value>Choose where imported items will be placed</value>
+  </data>
+  <data name="ImportDestination_Root" xml:space="preserve">
+    <value>Import into root directory</value>
+  </data>
+  <data name="ImportDestination_Folder" xml:space="preserve">
+    <value>Import into separate folder</value>
+  </data>
+  <data name="SelectItemsToImport" xml:space="preserve">
+    <value>Select items to import</value>
+  </data>
+  <data name="ImportPreview_Loading" xml:space="preserve">
+    <value>Reading file structure...</value>
+  </data>
 </root>

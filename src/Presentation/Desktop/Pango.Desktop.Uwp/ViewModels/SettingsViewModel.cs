@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System;
@@ -29,22 +30,39 @@ namespace Pango.Desktop.Uwp.ViewModels;
 [AppView(AppView.Settings)]
 public partial class SettingsViewModel : ViewModelBase
 {
+    #region Nested Types
+
+    public enum ImportDestination { Root = 0, Folder = 1 }
+
+    public class ImportDestinationOption
+    {
+        public required string Content { get; set; }
+        public ImportDestination Value { get; set; }
+    }
+
+    #endregion
+
     #region Fields
 
     // Services
     private readonly IUserContextProvider _userContextProvider;
     private readonly IAppDomainProvider _appDomainProvider;
+    private readonly IAppMetaService _appMetaService;
+    private readonly ResourceLoader _resourceLoader;
 
     // Appearance & Behavior
     private AppLanguage _selectedLanguage;
     private AppTheme _selectedAppTheme;
     private bool _allowAutolock;
     private KeyValuePair<int, string>? _selectedLockOnIdleInMinutesItem;
+    private ImportDestination _selectedImportDestination;
+    private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
 
     // Backup Configuration
     private string _configPath = string.Empty;
     private string _backupPath = string.Empty;
     private int _selectedBackupInterval;
+    private int _retentionDays;
     private bool _isBackupServiceEnabled;
     private string _backupPassword = string.Empty;
 
@@ -55,36 +73,35 @@ public partial class SettingsViewModel : ViewModelBase
     public SettingsViewModel(
         ILogger<SettingsViewModel> logger,
         IUserContextProvider userContextProvider,
-        IAppDomainProvider appDomainProvider) : base(logger)
+        IAppDomainProvider appDomainProvider,
+        IAppMetaService appMetaService) : base(logger)
     {
         _userContextProvider = userContextProvider;
         _appDomainProvider = appDomainProvider;
+        _appMetaService = appMetaService;
+        _resourceLoader = new ResourceLoader();
 
-        // 1. Initialize Collections
         Languages = new ObservableCollection<AppLanguage>(AppLanguage.GetAppLanguageCollection());
-        AppThemes = new ObservableCollection<AppTheme>(Enum.GetValues(typeof(ElementTheme))
-            .Cast<ElementTheme>()
-            .Select(e => new AppTheme { Name = ViewResourceLoader.GetString($"AppTheme_{e}"), Value = (int)e }));
+        AppThemes = [];
+        LockOnIdleInMinutesItems = [];
+        BackupIntervals = [5, 10, 15, 20, 30, 60, 120, 180];
 
-        string localizedMinutes = ViewResourceLoader.GetString("Minute(-s)");
-        LockOnIdleInMinutesItems = new ObservableCollection<KeyValuePair<int, string>>(
+        ImportDestinationOptions =
         [
-            new(1, $"1 {localizedMinutes}"),
-            new(3, $"3 {localizedMinutes}"),
-            new(5, $"5 {localizedMinutes}"),
-            new(10, $"10 {localizedMinutes}"),
-            new(15, $"15 {localizedMinutes}"),
-            new(30, $"30 {localizedMinutes}")
-        ]);
+            new() { Content = _resourceLoader.GetString("ImportDestination_Root"), Value = ImportDestination.Root },
+            new() { Content = _resourceLoader.GetString("ImportDestination_Folder"), Value = ImportDestination.Folder }
+        ];
 
-        BackupIntervals = new ObservableCollection<int>([1, 5, 10, 15, 20, 30, 45, 60]);
+        _selectedImportDestination = LoadImportSetting();
 
-        // 2. Initialize App Settings (Language/Theme)
+        InitializeDisplayResources();
+
         string appliedLocale = AppLanguageHelper.GetAppliedAppLanguage().Locale;
         _selectedLanguage = Languages.FirstOrDefault(e => e.Locale == appliedLocale) ?? Languages.First();
-        _selectedAppTheme = AppThemes.First(e => e.Value == (int)AppThemeHelper.Theme);
 
-        // 3. Initialize Autolock Settings
+        var currentThemeVal = (int)AppThemeHelper.Theme;
+        _selectedAppTheme = AppThemes.FirstOrDefault(e => e.Value == currentThemeVal) ?? AppThemes.First();
+
         int? blockAppAfterIdleMinutes = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.BlockAppAfterIdleMinutes];
         if (blockAppAfterIdleMinutes.HasValue)
         {
@@ -97,7 +114,6 @@ public partial class SettingsViewModel : ViewModelBase
             _allowAutolock = false;
         }
 
-        // 4. Initialize Backup Configuration
         _ = InitializeBackupConfigAsync();
     }
 
@@ -105,14 +121,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     #region Properties - General
 
-    public static string Version
-    {
-        get
-        {
-            var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
-            return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
-        }
-    }
+    public string Version => _appMetaService.GetAppVersion();
 
     #endregion
 
@@ -125,10 +134,10 @@ public partial class SettingsViewModel : ViewModelBase
         get => _selectedLanguage;
         set
         {
-            if (value is not null)
+            if (value is not null && SetProperty(ref _selectedLanguage, value))
             {
                 AppLanguageHelper.ChangeAppLanguage(value, typeof(SettingsView));
-                SetProperty(ref _selectedLanguage, value);
+                InitializeDisplayResources();
             }
         }
     }
@@ -140,14 +149,9 @@ public partial class SettingsViewModel : ViewModelBase
         get => _selectedAppTheme;
         set
         {
-            if (value != null)
+            if (value != null && SetProperty(ref _selectedAppTheme, value))
             {
-                ElementTheme? elementTheme = (ElementTheme)value.Value;
-                if (elementTheme.HasValue && elementTheme.Value != AppThemeHelper.Theme)
-                {
-                    AppThemeHelper.SetTheme(elementTheme.Value);
-                }
-                SetProperty(ref _selectedAppTheme, value);
+                AppThemeHelper.SetTheme((ElementTheme)value.Value);
             }
         }
     }
@@ -174,10 +178,18 @@ public partial class SettingsViewModel : ViewModelBase
         get => _allowAutolock;
         set
         {
-            SelectedLockOnIdleInMinutesItem = value ? LockOnIdleInMinutesItems[3] : null;
-            SetProperty(ref _allowAutolock, value);
+            if (SetProperty(ref _allowAutolock, value))
+            {
+                if (value && SelectedLockOnIdleInMinutesItem == null && LockOnIdleInMinutesItems.Count > 2)
+                    SelectedLockOnIdleInMinutesItem = LockOnIdleInMinutesItems[2];
+
+                if (!value)
+                    SelectedLockOnIdleInMinutesItem = null;
+            }
         }
     }
+
+    public bool AllowLaunchAtStartup { get => false; set { OnPropertyChanged(); } }
 
     #endregion
 
@@ -197,6 +209,17 @@ public partial class SettingsViewModel : ViewModelBase
         set => SetProperty(ref _selectedBackupInterval, value);
     }
 
+    public int RetentionDays
+    {
+        get => _retentionDays;
+        set
+        {
+            if (value < 1) value = 1;
+            if (value > 365) value = 365;
+            SetProperty(ref _retentionDays, value);
+        }
+    }
+
     public bool IsBackupServiceEnabled
     {
         get => _isBackupServiceEnabled;
@@ -207,6 +230,24 @@ public partial class SettingsViewModel : ViewModelBase
     {
         get => _backupPassword;
         set => SetProperty(ref _backupPassword, value);
+    }
+
+    public ObservableCollection<ImportDestinationOption> ImportDestinationOptions
+    {
+        get => _importDestinationOptions;
+        private set => SetProperty(ref _importDestinationOptions, value);
+    }
+
+    public ImportDestinationOption? SelectedImportDestination
+    {
+        get => ImportDestinationOptions.FirstOrDefault(x => x.Value == _selectedImportDestination);
+        set
+        {
+            if (value != null && SetProperty(ref _selectedImportDestination, value.Value))
+            {
+                SaveImportSetting(value.Value);
+            }
+        }
     }
 
     #endregion
@@ -228,23 +269,65 @@ public partial class SettingsViewModel : ViewModelBase
     private RelayCommand? _cancelBackupChangesCommand;
     public RelayCommand CancelBackupChangesCommand => _cancelBackupChangesCommand ??= new RelayCommand(async () => await LoadBackupSettingsAsync());
 
+    public void BugRequestCard_Click(object _, RoutedEventArgs _1)
+    {
+        _ = Launcher.LaunchUriAsync(new Uri("https://github.com/"));
+    }
+
     #endregion
 
     #region Methods - Backup Implementation
+
+    private void InitializeDisplayResources()
+    {
+        // 1. Refresh Themes
+        var currentThemeVal = _selectedAppTheme?.Value ?? (int)AppThemeHelper.Theme;
+
+        AppThemes.Clear();
+        AppThemes.Add(new AppTheme { Value = (int)ElementTheme.Default, Name = _resourceLoader.GetString("Theme_Default") });
+        AppThemes.Add(new AppTheme { Value = (int)ElementTheme.Light, Name = _resourceLoader.GetString("Theme_Light") });
+        AppThemes.Add(new AppTheme { Value = (int)ElementTheme.Dark, Name = _resourceLoader.GetString("Theme_Dark") });
+
+        _selectedAppTheme = AppThemes.FirstOrDefault(t => t.Value == currentThemeVal) ?? AppThemes.First();
+        OnPropertyChanged(nameof(SelectedAppTheme));
+
+        // 2. Refresh Autolock Options
+        string localizedMinutes = _resourceLoader.GetString("Minute(-s)");
+        var currentIdleKey = _selectedLockOnIdleInMinutesItem?.Key;
+
+        LockOnIdleInMinutesItems.Clear();
+        LockOnIdleInMinutesItems.Add(new(1, $"1 {localizedMinutes}"));
+        LockOnIdleInMinutesItems.Add(new(3, $"3 {localizedMinutes}"));
+        LockOnIdleInMinutesItems.Add(new(5, $"5 {localizedMinutes}"));
+        LockOnIdleInMinutesItems.Add(new(10, $"10 {localizedMinutes}"));
+        LockOnIdleInMinutesItems.Add(new(15, $"15 {localizedMinutes}"));
+        LockOnIdleInMinutesItems.Add(new(30, $"30 {localizedMinutes}"));
+
+        if (currentIdleKey.HasValue)
+        {
+            _selectedLockOnIdleInMinutesItem = LockOnIdleInMinutesItems.FirstOrDefault(k => k.Key == currentIdleKey);
+        }
+        OnPropertyChanged(nameof(SelectedLockOnIdleInMinutesItem));
+
+        // 3. Refresh Import Options
+        var currentImportVal = _selectedImportDestination;
+
+        ImportDestinationOptions.Clear();
+        ImportDestinationOptions.Add(new() { Content = _resourceLoader.GetString("ImportDestination_Root"), Value = ImportDestination.Root });
+        ImportDestinationOptions.Add(new() { Content = _resourceLoader.GetString("ImportDestination_Folder"), Value = ImportDestination.Folder });
+
+        // Restore selected item based on saved Value
+        OnPropertyChanged(nameof(SelectedImportDestination));
+    }
 
     private async Task InitializeBackupConfigAsync()
     {
         // Path to ProgramData/Pango/backup_config.json
         string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         string configDir = Path.Combine(commonAppData, "Pango");
-
-        if (!Directory.Exists(configDir))
-        {
-            Directory.CreateDirectory(configDir);
-        }
+        if (!Directory.Exists(configDir)) Directory.CreateDirectory(configDir);
 
         _configPath = Path.Combine(configDir, "backup_config.json");
-
         await LoadBackupSettingsAsync();
     }
 
@@ -253,7 +336,6 @@ public partial class SettingsViewModel : ViewModelBase
         try
         {
             BackupSettings? settings = null;
-
             if (File.Exists(_configPath))
             {
                 string json = await File.ReadAllTextAsync(_configPath);
@@ -266,9 +348,9 @@ public partial class SettingsViewModel : ViewModelBase
             BackupPath = string.IsNullOrEmpty(settings.TargetFolderPath) ? GetDefaultPath() : settings.TargetFolderPath;
             SelectedBackupInterval = settings.IntervalMinutes > 0 ? settings.IntervalMinutes : 60;
             IsBackupServiceEnabled = settings.IsEnabled;
+            RetentionDays = settings.RetentionDays > 0 ? settings.RetentionDays : 7;
 
             string currentUser = _userContextProvider.GetUserName();
-            bool needToSaveImmediately = false;
 
             if (settings.Users.TryGetValue(currentUser, out UserBackupProfile? profile))
             {
@@ -277,21 +359,6 @@ public partial class SettingsViewModel : ViewModelBase
             else
             {
                 BackupPassword = GenerateRandomPassword();
-
-                string sourcePath = _appDomainProvider.GetUserFolderPath(currentUser);
-
-                settings.Users.Add(currentUser, new UserBackupProfile
-                {
-                    BackupPassword = BackupPassword,
-                    SourceDataPath = sourcePath
-                });
-
-                needToSaveImmediately = true;
-            }
-
-            if (needToSaveImmediately)
-            {
-                await SaveSettingsToFileAsync(settings);
             }
         }
         catch (Exception ex)
@@ -299,6 +366,7 @@ public partial class SettingsViewModel : ViewModelBase
             Logger.LogError(ex, "Error loading backup settings");
             SetDefaultBackupPath();
             BackupPassword = GenerateRandomPassword();
+            RetentionDays = 7;
         }
     }
 
@@ -308,10 +376,7 @@ public partial class SettingsViewModel : ViewModelBase
         await File.WriteAllTextAsync(_configPath, json);
     }
 
-    private static string GetDefaultPath()
-    {
-        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Pango", "Backup");
-    }
+    private static string GetDefaultPath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Pango", "Backup");
 
     private async Task BrowseBackupPathAsync()
     {
@@ -325,17 +390,10 @@ public partial class SettingsViewModel : ViewModelBase
         WinRT.Interop.InitializeWithWindow.Initialize(folderPicker, hWnd);
 
         StorageFolder folder = await folderPicker.PickSingleFolderAsync();
-        if (folder != null)
-        {
-            BackupPath = folder.Path;
-        }
+        if (folder != null) BackupPath = folder.Path;
     }
 
-    private void SetDefaultBackupPath()
-    {
-        string defaultPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Pango", "Backup");
-        BackupPath = defaultPath;
-    }
+    private void SetDefaultBackupPath() => BackupPath = GetDefaultPath();
 
     private async Task OpenBackupFolderAsync()
     {
@@ -343,85 +401,76 @@ public partial class SettingsViewModel : ViewModelBase
         {
             await Launcher.LaunchFolderPathAsync(BackupPath);
         }
+        else
+        {
+            SendNotification("BackupPathInvalid_Error", AppNotificationType.Warning);
+        }
     }
 
     private async Task SaveBackupSettingsAsync()
     {
-        if (string.IsNullOrWhiteSpace(BackupPath) || BackupPath.Length < 3 || Path.GetInvalidPathChars().Any(BackupPath.Contains))
+        if (string.IsNullOrWhiteSpace(BackupPath))
         {
             SendNotification("BackupPathInvalid_Error", AppNotificationType.Error);
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(BackupPassword) || BackupPassword.Length < 3)
-        {
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
-                "Password must be at least 3 characters long",
-                AppNotificationType.Error));
-            return;
-        }
-
         try
         {
-            if (!Directory.Exists(BackupPath))
-            {
-                Directory.CreateDirectory(BackupPath);
-            }
+            if (!Directory.Exists(BackupPath)) Directory.CreateDirectory(BackupPath);
 
             BackupSettings settings;
             if (File.Exists(_configPath))
             {
-                string existingJson = await File.ReadAllTextAsync(_configPath);
-                settings = JsonSerializer.Deserialize<BackupSettings>(existingJson) ?? new BackupSettings();
+                string json = await File.ReadAllTextAsync(_configPath);
+                settings = JsonSerializer.Deserialize<BackupSettings>(json) ?? new BackupSettings();
             }
             else
             {
                 settings = new BackupSettings();
             }
 
-            settings.Users ??= [];
-
             settings.TargetFolderPath = BackupPath;
             settings.IntervalMinutes = SelectedBackupInterval;
             settings.IsEnabled = IsBackupServiceEnabled;
+            settings.RetentionDays = RetentionDays;
+            settings.Users ??= [];
 
             string userName = _userContextProvider.GetUserName();
-            string absoluteSourcePath = _appDomainProvider.GetUserFolderPath(userName);
-
             var userProfile = new UserBackupProfile
             {
                 BackupPassword = this.BackupPassword,
-                SourceDataPath = absoluteSourcePath
+                SourceDataPath = _appDomainProvider.GetUserFolderPath(userName)
             };
 
-            if (!settings.Users.TryAdd(userName, userProfile))
-            {
-                settings.Users[userName] = userProfile;
-            }
+            if (!settings.Users.TryAdd(userName, userProfile)) settings.Users[userName] = userProfile;
 
-            string json = JsonSerializer.Serialize(settings);
-            await File.WriteAllTextAsync(_configPath, json);
-
+            await SaveSettingsToFileAsync(settings);
             SendNotification("BackupSaved_Message", AppNotificationType.Success);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to save backup settings");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
-                $"Error: {ex.Message}",
-                AppNotificationType.Error));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Error: {ex.Message}", AppNotificationType.Error));
         }
     }
 
     private void SendNotification(string resourceKey, AppNotificationType type)
     {
-        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
-                ViewResourceLoader.GetString(resourceKey), type));
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(_resourceLoader.GetString(resourceKey), type));
     }
 
-    private static string GenerateRandomPassword()
+    private static string GenerateRandomPassword() => Guid.NewGuid().ToString("N")[..12].ToUpper();
+
+    private static ImportDestination LoadImportSetting()
     {
-        return Guid.NewGuid().ToString("N")[..12].ToUpper();
+        var val = ApplicationData.Current.LocalSettings.Values["ImportDestination"] as int?;
+        return (ImportDestination)(val ?? 0);
+    }
+
+    private static void SaveImportSetting(ImportDestination value)
+    {
+        ApplicationData.Current.LocalSettings.Values["ImportDestination"] = (int)value;
     }
 
     #endregion

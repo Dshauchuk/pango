@@ -583,4 +583,55 @@
   <data name="Import_EncryptedArchiveError" xml:space="preserve">
     <value>Архіў зашыфраваны. Праверце правільнасць пароля.</value>
   </data>
+  <data name="Theme_Default" xml:space="preserve">
+    <value>Як у сістэме</value>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Светлая</value>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Цёмная</value>
+  </data>
+  <data name="BackupRetention_Label" xml:space="preserve">
+    <value>Захоўваць копіі</value>
+  </data>
+  <data name="Day(-s)" xml:space="preserve">
+    <value>дзён/дні</value>
+  </data>
+  <data name="BugRequest_Header" xml:space="preserve">
+    <value>Паведаміць пра памылку ці прапанаваць функцыю</value>
+  </data>
+  <data name="Copyright_Description" xml:space="preserve">
+    <value>© 2026 Cats Lab. Усе правы абаронены.</value>
+  </data>
+  <data name="ToggleSwitch_On" xml:space="preserve">
+    <value>Укл.</value>
+  </data>
+  <data name="ToggleSwitch_Off" xml:space="preserve">
+    <value>Выкл.</value>
+  </data>
+  <data name="BackupServiceDescription" xml:space="preserve">
+    <value>Аўтаматычна захоўваць зашыфраваныя копіі вашых даных</value>
+  </data>
+  <data name="ImportSettings_Header" xml:space="preserve">
+    <value>Імпарт</value>
+  </data>
+  <data name="ImportDestination_Label" xml:space="preserve">
+    <value>Месца прызначэння</value>
+  </data>
+  <data name="ImportDestination_Description" xml:space="preserve">
+    <value>Выберыце, куды будуць змешчаны імпартаваныя элементы</value>
+  </data>
+  <data name="ImportDestination_Root" xml:space="preserve">
+    <value>Імпартаваць у каранёвы каталог</value>
+  </data>
+  <data name="ImportDestination_Folder" xml:space="preserve">
+    <value>Імпартаваць у асобную папку</value>
+  </data>
+  <data name="SelectItemsToImport" xml:space="preserve">
+    <value>Выберыце элементы для імпарту</value>
+  </data>
+  <data name="ImportPreview_Loading" xml:space="preserve">
+    <value>Чытанне структуры файла...</value>
+  </data>
 </root>

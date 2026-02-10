@@ -10,6 +10,7 @@ public class BackupSettings
 {
     public string TargetFolderPath { get; set; } = string.Empty;
     public int IntervalMinutes { get; set; } = 60;
+    public int RetentionDays { get; set; } = 7;
     public bool IsEnabled { get; set; } = true;
     public Dictionary<string, UserBackupProfile> Users { get; set; } = [];
 }

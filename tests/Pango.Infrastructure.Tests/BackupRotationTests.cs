@@ -1,123 +1,135 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
 using Pango.Infrastructure.Services;
+using System.Runtime.Versioning;
 
-namespace Pango.Tests.Infrastructure;
+namespace Pango.Tests;
 
+[SupportedOSPlatform("windows")]
 public class BackupRotationTests : IDisposable
 {
-    private readonly string _testTargetDir;
-    private readonly string _testSourceDir;
-    private readonly BackupManager _manager;
-    private readonly Mock<ILogger<BackupManager>> _loggerMock;
+    private readonly string _testBackupFolder;
+    private readonly Mock<ILogger<BackupManager>> _mockLogger;
+    private readonly BackupManager _backupManager;
+    private const string TestUser = "testuser";
 
-    // Constructor acts as Setup in xUnit
+    // Sets up the test environment and creates a temp directory
     public BackupRotationTests()
     {
-        _testTargetDir = Path.Combine(Path.GetTempPath(), "Pango_Target_" + Guid.NewGuid());
-        _testSourceDir = Path.Combine(Path.GetTempPath(), "Pango_Source_" + Guid.NewGuid());
+        _testBackupFolder = Path.Combine(Path.GetTempPath(), "PangoBackupTests_" + Guid.NewGuid());
+        Directory.CreateDirectory(_testBackupFolder);
 
-        Directory.CreateDirectory(_testTargetDir);
-        Directory.CreateDirectory(_testSourceDir);
-
-        // Create a dummy file in source to zip and encrypt
-        File.WriteAllText(Path.Combine(_testSourceDir, "data.txt"), "Sensitive Content");
-
-        _loggerMock = new Mock<ILogger<BackupManager>>();
-        _manager = new BackupManager(_loggerMock.Object);
+        _mockLogger = new Mock<ILogger<BackupManager>>();
+        _backupManager = new BackupManager(_mockLogger.Object);
     }
 
-    // Dispose acts as TearDown in xUnit
+    // Cleans up the temp directory after tests
     public void Dispose()
     {
-        if (Directory.Exists(_testTargetDir)) Directory.Delete(_testTargetDir, true);
-        if (Directory.Exists(_testSourceDir)) Directory.Delete(_testSourceDir, true);
+        if (Directory.Exists(_testBackupFolder))
+        {
+            try { Directory.Delete(_testBackupFolder, true); } catch { }
+        }
         GC.SuppressFinalize(this);
     }
 
     [Fact]
-    public async Task PerformBackupForUser_ShouldCreateEncryptedFile()
+    // Verifies that files older than the retention period are deleted
+    public async Task CleanUpOldBackupsAsync_ShouldDeleteFiles_OlderThanRetentionDays()
     {
         // Arrange
-        string userId = "TestUser";
-        string password = "TestPassword";
+        int retentionDays = 7;
+        string oldFile = CreateDummyBackupFile(DateTime.Now.AddDays(-10)); // 10 days old
+        string newFile = CreateDummyBackupFile(DateTime.Now.AddDays(-2));  // 2 days old
+        string todayFile = CreateDummyBackupFile(DateTime.Now);
 
         // Act
-        await _manager.PerformBackupForUserAsync(userId, _testSourceDir, _testTargetDir, password);
+        await _backupManager.CleanUpOldBackupsAsync(_testBackupFolder, TestUser, retentionDays);
 
         // Assert
-        string date = DateTime.Now.ToString("yyyy-MM-dd");
-        string expectedFile = Path.Combine(_testTargetDir, $"{date}-{userId}_Backup.pngx");
-
-        Assert.True(File.Exists(expectedFile));
-
-        // Ensure file is not empty
-        var fileInfo = new FileInfo(expectedFile);
-        Assert.True(fileInfo.Length > 0);
+        Assert.False(File.Exists(oldFile), "Old file (> 7 days) should be deleted");
+        Assert.True(File.Exists(newFile), "New file (2 days) should exist");
+        Assert.True(File.Exists(todayFile), "Today's file should exist");
     }
 
     [Fact]
-    public async Task PerformBackupForUser_ShouldRotateMaxThreeFiles()
+    // Verifies that no files are deleted if infinite retention (0) is selected
+    public async Task CleanUpOldBackupsAsync_ShouldKeepAll_WhenRetentionIsZero()
     {
         // Arrange
-        string userId = "TestUser";
-        string password = "TestPassword";
-        string date = DateTime.Now.ToString("yyyy-MM-dd");
+        int retentionDays = 0; // Infinite
+        string veryOldFile = CreateDummyBackupFile(DateTime.Now.AddDays(-365));
 
-        string baseFile = Path.Combine(_testTargetDir, $"{date}-{userId}_Backup.pngx");
-        string file1 = Path.Combine(_testTargetDir, $"{date}-{userId}_Backup1.pngx");
-        string file2 = Path.Combine(_testTargetDir, $"{date}-{userId}_Backup2.pngx");
+        // Act
+        await _backupManager.CleanUpOldBackupsAsync(_testBackupFolder, TestUser, retentionDays);
 
-        // Act & Assert 1: First backup
-        await _manager.PerformBackupForUserAsync(userId, _testSourceDir, _testTargetDir, password);
-        Assert.True(File.Exists(baseFile));
-        Assert.False(File.Exists(file1));
-
-        // Act & Assert 2: Second backup (should move base to 1)
-        await Task.Delay(50);
-        await _manager.PerformBackupForUserAsync(userId, _testSourceDir, _testTargetDir, password);
-        Assert.True(File.Exists(baseFile));
-        Assert.True(File.Exists(file1));
-        Assert.False(File.Exists(file2));
-
-        // Act & Assert 3: Third backup (should fill 2)
-        await Task.Delay(50);
-        await _manager.PerformBackupForUserAsync(userId, _testSourceDir, _testTargetDir, password);
-        Assert.True(File.Exists(baseFile));
-        Assert.True(File.Exists(file1));
-        Assert.True(File.Exists(file2));
+        // Assert
+        Assert.True(File.Exists(veryOldFile), "File should be kept when retention is 0 (infinite)");
     }
 
     [Fact]
-    public async Task CleanUpOldBackups_ShouldKeepOnlyLatestOfYesterday()
+    // Verifies that files within the valid date range are preserved
+    public async Task CleanUpOldBackupsAsync_ShouldNotDelete_IfWithinRetentionPeriod()
     {
         // Arrange
-        string userId = "CleanupUser";
-        string oldDate = "2023-01-01";
-
-        // Simulate 3 files from a past date
-        string f1 = Path.Combine(_testTargetDir, $"{oldDate}-{userId}_Backup.pngx");
-        string f2 = Path.Combine(_testTargetDir, $"{oldDate}-{userId}_Backup1.pngx");
-        string f3 = Path.Combine(_testTargetDir, $"{oldDate}-{userId}_Backup2.pngx");
-
-        File.Create(f1).Close();
-        await Task.Delay(20);
-        File.Create(f2).Close();
-        await Task.Delay(20);
-        File.Create(f3).Close();
-
-        // Force WriteTime to verify logic relies on timestamp, not just name
-        File.SetLastWriteTime(f1, DateTime.Now.AddDays(-10));
-        File.SetLastWriteTime(f2, DateTime.Now.AddDays(-9));
-        File.SetLastWriteTime(f3, DateTime.Now.AddDays(-8));
+        int retentionDays = 30;
+        string file = CreateDummyBackupFile(DateTime.Now.AddDays(-20));
 
         // Act
-        await _manager.CleanUpOldBackupsAsync(_testTargetDir, userId);
+        await _backupManager.CleanUpOldBackupsAsync(_testBackupFolder, TestUser, retentionDays);
 
         // Assert
-        var files = Directory.GetFiles(_testTargetDir);
+        Assert.True(File.Exists(file), "File within retention period should not be deleted");
+    }
 
-        Assert.Single(files);
-        Assert.Equal(f3, files[0]);
+    [Fact]
+    // Verifies that random files or files from other users are ignored
+    public async Task CleanUpOldBackupsAsync_ShouldIgnore_NonBackupFiles()
+    {
+        // Arrange
+        string randomFile = Path.Combine(_testBackupFolder, "random.txt");
+        File.WriteAllText(randomFile, "data");
+
+        string wrongPattern = Path.Combine(_testBackupFolder, "2020-01-01-wronguser_Backup.pngx");
+        File.WriteAllText(wrongPattern, "data");
+
+        // Act
+        await _backupManager.CleanUpOldBackupsAsync(_testBackupFolder, TestUser, 5);
+
+        // Assert
+        Assert.True(File.Exists(randomFile), "Random text file should be ignored");
+        Assert.True(File.Exists(wrongPattern), "File with wrong user pattern should be ignored");
+    }
+
+    [Fact]
+    // Verifies behavior when file age exactly matches retention limit
+    public async Task CleanUpOldBackupsAsync_ShouldHandle_EdgeCase_ExactlyOnRetentionLimit()
+    {
+        // Arrange
+        int retentionDays = 5;
+        // 5 days minus 1 minute means it is NOT YET older than 5 days
+        string edgeFile = CreateDummyBackupFile(DateTime.Now.AddDays(-5).AddMinutes(1));
+
+        // Act
+        await _backupManager.CleanUpOldBackupsAsync(_testBackupFolder, TestUser, retentionDays);
+
+        // Assert
+        Assert.True(File.Exists(edgeFile), "File slightly inside retention limit should exist");
+    }
+
+    // Helper method to create a dummy file with a specific date in filename
+    private string CreateDummyBackupFile(DateTime date)
+    {
+        string timestamp = date.ToString("yyyy-MM-dd_HH-mm-ss");
+        string fileName = $"{timestamp}-{TestUser}_Backup.pngx";
+        string fullPath = Path.Combine(_testBackupFolder, fileName);
+
+        File.WriteAllText(fullPath, "dummy encrypted content");
+
+        // Update OS timestamps to match filename for consistency
+        File.SetCreationTime(fullPath, date);
+        File.SetLastWriteTime(fullPath, date);
+
+        return fullPath;
     }
 }

@@ -23,22 +23,9 @@ public class PasswordFileRepository(
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
 
-        bool alreadyExists = passwordList.Any(p =>
-            p.Name.Equals(password.Name, StringComparison.OrdinalIgnoreCase) &&
-            (p.CatalogPath ?? string.Empty).Equals(password.CatalogPath ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
-            p.IsCatalog == password.IsCatalog &&
-            (password.IsCatalog || (p.Login ?? string.Empty).Equals(password.Login ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-        );
-
-        if (alreadyExists)
-        {
-            Logger.LogInformation("Item {name} in {path} (IsCatalog: {isCat}) already exists. Skipping.",
-                password.Name, password.CatalogPath, password.IsCatalog);
-            return;
-        }
-
         password.UserName = ctx.UserId;
         passwordList.Add(password);
+
         await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
     }
 
@@ -53,19 +40,10 @@ public class PasswordFileRepository(
 
         foreach (var newItem in passwords)
         {
-            bool exists = passwordList.Any(p =>
-                p.Name.Equals(newItem.Name, StringComparison.OrdinalIgnoreCase) &&
-                (p.CatalogPath ?? string.Empty).Equals(newItem.CatalogPath ?? string.Empty, StringComparison.OrdinalIgnoreCase) &&
-                p.IsCatalog == newItem.IsCatalog &&
-                (newItem.IsCatalog || (p.Login ?? string.Empty).Equals(newItem.Login ?? string.Empty, StringComparison.OrdinalIgnoreCase))
-            );
-
-            if (!exists)
-            {
-                newItem.UserName = ctx.UserId;
-                passwordList.Add(newItem);
-            }
+            newItem.UserName = ctx.UserId;
+            passwordList.Add(newItem);
         }
+
         await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
     }
 
@@ -77,8 +55,9 @@ public class PasswordFileRepository(
         }
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
+
         var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id)
-            ?? throw new PasswordNotFoundException($"Pango password with ID \"{password.Id}\" not found");
+                          ?? throw new PasswordNotFoundException($"Pango password with ID \"{password.Id}\" not found");
 
         pwdToUpdate.Name = password.Name;
         pwdToUpdate.Login = password.Login;
@@ -90,6 +69,7 @@ public class PasswordFileRepository(
         pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
 
         await SaveItemsForUserAsync(passwordList, ctx.UserId, Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions);
+
         return pwdToUpdate;
     }
 
@@ -101,8 +81,8 @@ public class PasswordFileRepository(
         }
 
         var passwordList = (await ExtractAllItemsForUserAsync(Path.Combine(ctx.WorkingDirectoryPath, DirectoryName), ctx.EncodingOptions)).ToList();
-        var pwdToRemove = passwordList.FirstOrDefault(p => p.Id == password.Id);
 
+        var pwdToRemove = passwordList.FirstOrDefault(p => p.Id == password.Id);
         if (pwdToRemove != null)
         {
             passwordList.Remove(pwdToRemove);

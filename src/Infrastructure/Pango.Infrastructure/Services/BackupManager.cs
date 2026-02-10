@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
+using System.Globalization;
 using System.IO.Compression;
 using System.Security.Cryptography;
 
@@ -18,40 +19,34 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
     }
 
     // Main logic: Rotates files, Zips content, Encrypts Zip, and Cleans up old files
-    public async Task PerformBackupForUserAsync(string userId, string sourcePath, string targetRootPath, string backupPassword)
+    public async Task PerformBackupForUserAsync(string userId, string sourcePath, string targetRootPath, string backupPassword, int retentionDays)
     {
         try
         {
             // Ensure the target directory exists
             if (!Directory.Exists(targetRootPath)) Directory.CreateDirectory(targetRootPath);
 
-            string datePart = DateTime.Now.ToString("yyyy-MM-dd");
-            string baseFileName = $"{datePart}-{userId}_Backup";
-
-            // Determine target file path based on rotation logic
-            string targetFilePath = await Task.Run(() => RotateAndGetPath(targetRootPath, baseFileName));
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+            string fileName = $"{timestamp}-{userId}_Backup.pngx";
+            string targetFilePath = Path.Combine(targetRootPath, fileName);
             string tempZipPath = targetFilePath + ".tmp";
 
             await Task.Run(() =>
             {
                 if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
-                if (File.Exists(targetFilePath)) File.Delete(targetFilePath);
-
                 ZipFile.CreateFromDirectory(sourcePath, tempZipPath);
             });
 
             await EncryptFileAsync(tempZipPath, targetFilePath, backupPassword);
 
-            File.Delete(tempZipPath);
+            if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+            _logger.LogInformation("Backup created: {Path}", targetFilePath);
 
-            _logger.LogInformation("Encrypted backup created for {User} at {Path}", userId, targetFilePath);
-
-            // Remove older backups from previous days
-            await CleanUpOldBackupsAsync(targetRootPath, userId);
+            await CleanUpOldBackupsAsync(targetRootPath, userId, retentionDays);
         }
         catch (DirectoryNotFoundException)
         {
-            _logger.LogWarning("Source directory for user {User} not found: {Path}", userId, sourcePath);
+            _logger.LogWarning("Source directory not found for user {User}", userId);
         }
         catch (Exception ex)
         {
@@ -64,10 +59,7 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
     {
         // 1. Generate random Salt (16 bytes)
         byte[] salt = new byte[16];
-        using (var rng = RandomNumberGenerator.Create())
-        {
-            rng.GetBytes(salt);
-        }
+        using (var rng = RandomNumberGenerator.Create()) { rng.GetBytes(salt); }
 
         // 2. Derive Key and IV from Password and Salt
         using var kdf = new Rfc2898DeriveBytes(password, salt, 50000, HashAlgorithmName.SHA256);
@@ -94,71 +86,57 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
         await fsInput.CopyToAsync(cs);
     }
 
-    // Rotates files to keep max 3 versions per day (Base -> 1 -> 2)
-    private static string RotateAndGetPath(string folder, string baseName)
+    public Task CleanUpOldBackupsAsync(string targetPath, string userName)
     {
-        string file0 = Path.Combine(folder, $"{baseName}.pngx");
-        string file1 = Path.Combine(folder, $"{baseName}1.pngx");
-        string file2 = Path.Combine(folder, $"{baseName}2.pngx");
-
-        // Shift existing files: 1->2, 0->1
-        if (File.Exists(file1))
-        {
-            if (File.Exists(file2)) File.Delete(file2);
-            File.Move(file1, file2);
-        }
-
-        if (File.Exists(file0))
-        {
-            File.Move(file0, file1);
-        }
-
-        return file0;
+        return CleanUpOldBackupsAsync(targetPath, userName, 7);
     }
 
-    // Deletes files from previous days, keeping only the latest one per day
-    public Task CleanUpOldBackupsAsync(string targetPath, string userName)
+    public Task CleanUpOldBackupsAsync(string targetPath, string userName, int retentionDays)
     {
         return Task.Run(() =>
         {
             try
             {
+                if (retentionDays <= 0)
+                {
+                    _logger.LogDebug("Retention policy disabled (days <= 0). Keeping all files.");
+                    return;
+                }
+
                 DirectoryInfo dir = new(targetPath);
                 if (!dir.Exists) return;
 
-                string todayString = DateTime.Now.ToString("yyyy-MM-dd");
+                var files = dir.GetFiles($"*-{userName}_Backup.pngx");
+                DateTime now = DateTime.Now;
 
-                // Find all backup files for this user
-                var files = dir.GetFiles($"*-{userName}_Backup*.pngx");
-
-                // Group by Date part of filename
-                var groups = files.GroupBy(f => f.Name.Length >= 10 ? f.Name[..10] : "unknown");
-
-                foreach (var group in groups)
+                foreach (var file in files)
                 {
-                    // Skip today's backups
-                    if (group.Key == todayString) continue;
-
-                    // Keep only the newest file in the group
-                    var orderedFiles = group.OrderByDescending(f => f.LastWriteTime).ToList();
-
-                    for (int i = 1; i < orderedFiles.Count; i++)
+                    if (file.Name.Length >= 19)
                     {
-                        try
+                        string datePart = file.Name[..19];
+                        if (DateTime.TryParseExact(datePart, "yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime backupDate))
                         {
-                            orderedFiles[i].Delete();
-                            _logger.LogDebug("Deleted old backup: {Name}", orderedFiles[i].Name);
-                        }
-                        catch (Exception delEx)
-                        {
-                            _logger.LogWarning(delEx, "Failed to delete file {Name}", orderedFiles[i].Name);
+                            double ageInDays = (now - backupDate).TotalDays;
+
+                            if (ageInDays > retentionDays)
+                            {
+                                try
+                                {
+                                    file.Delete();
+                                    _logger.LogDebug("Deleted expired backup: {Name} (Age: {Age:F1} days)", file.Name, ageInDays);
+                                }
+                                catch (Exception delEx)
+                                {
+                                    _logger.LogWarning(delEx, "Failed to delete old backup {Name}", file.Name);
+                                }
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error during old backup cleanup");
+                _logger.LogError(ex, "Error during retention cleanup");
             }
         });
     }
