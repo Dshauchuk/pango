@@ -37,6 +37,8 @@ public sealed class PasswordsViewModel : ViewModelBase
     private PangoExplorerItem? _selectedItem;
     private ObservableCollection<PangoExplorerItem> _originalList;
     private string _searchText = string.Empty;
+    private bool _isLoaded;
+    private string? _pendingGeneratedPassword;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
@@ -117,12 +119,20 @@ public sealed class PasswordsViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
         WeakReferenceMessenger.Default.Register<CreatePasswordFromGeneratorMessage>(this, OnCreatePasswordFromGenerator);
     }
-
+    
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
 
         await ResetViewAsync();
+        _isLoaded = true;
+
+        // if the password from the generator has already been received during the download, we will process it now
+        if (!string.IsNullOrEmpty(_pendingGeneratedPassword))
+        {
+            OpenEditForGeneratedPassword(_pendingGeneratedPassword);
+            _pendingGeneratedPassword = null;
+        }
     }
 
     #endregion
@@ -160,8 +170,15 @@ public sealed class PasswordsViewModel : ViewModelBase
 
     private void OnCreatePasswordFromGenerator(object recipient, CreatePasswordFromGeneratorMessage message)
     {
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new NavigationParameters(AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs(), message.Value))));
+        if (!_isLoaded)
+        {
+            // save password and leave
+            _pendingGeneratedPassword = message.Value;
+            return;
+        }
+        OpenEditForGeneratedPassword(message.Value);
     }
+    
     private async void OnCopyPasswordToClipboard(PangoExplorerItem? dto)
     {
         if(dto is null)
@@ -684,5 +701,23 @@ public sealed class PasswordsViewModel : ViewModelBase
             SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
             SelectedItem.CatalogPath;
 
+    /// <summary>
+    /// Opens EditPasswordView with generated password value
+    /// </summary>
+    /// <returns></returns>
+    private void OpenEditForGeneratedPassword(string generatedPassword)
+    {
+        WeakReferenceMessenger.Default.Send(
+            new NavigationRequstedMessage(
+                new NavigationParameters(
+                    AppView.EditPassword,
+                    AppView.PasswordsIndex,
+                    new EditPasswordParameters(
+                        isNew: true,
+                        catalog: GetPathToSelectedFolder(),
+                        selectedPasswordId: null,
+                        availableCatalogs: GetAvailableCatalogs(),
+                        generatedPassword: generatedPassword))));
+    }
     #endregion
 }
