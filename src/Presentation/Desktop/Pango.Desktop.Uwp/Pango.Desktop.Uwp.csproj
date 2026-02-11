@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
 		<RootNamespace>Pango.Desktop.Uwp</RootNamespace>
@@ -108,18 +108,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.0.240109" />
-		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
-		<PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240607001" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.2.251219" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
 		<PackageReference Include="PInvoke.User32" Version="0.7.124" />
-		<PackageReference Include="Serilog" Version="4.0.0" />
-		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -157,6 +154,12 @@
 	  <None Remove="Dialogs\Views\ExportDialog.xaml" />
 	  <None Remove="Dialogs\Views\ImportDialog.xaml" />
 	  <None Remove="Views\ExportImportView.xaml" />
+	  <None Remove="Views\GeneratePasswordView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\GeneratePasswordView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\ImportDialog.xaml">

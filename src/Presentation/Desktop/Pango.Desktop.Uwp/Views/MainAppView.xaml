@@ -48,8 +48,13 @@
                                          Icon="SaveLocal" 
                                          IsTabStop="False"
                                          ToolTipService.ToolTip="{loc:StringResource Key=ExportAndImportTooltip}"/>
+                <muxc:NavigationViewItem x:Name="GeneratePasswordItem"
+                                         Content="{loc:StringResource Key=GeneratePassword}"
+                                         Icon="Memo"
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=GeneratePasswordTooltip}"/>
             </muxc:NavigationView.MenuItems>
-            
+
             <muxc:NavigationView.Content>
                 <!--  Navigation frame  -->
                 <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" IsTabStop="False"/>

@@ -1,7 +1,4 @@
-﻿using Pango.Application.UseCases.User.Commands.ChangePassword;
-using Pango.Persistence.File;
-
-namespace Pango.Application.Tests.Password;
+﻿namespace Pango.Application.Tests.Password;
 
 public class ChangeUserPasswordCommandTests
 {

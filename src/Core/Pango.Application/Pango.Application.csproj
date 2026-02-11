@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0-windows10.0.19041.0;net7.0-windows10.0.19041.0</TargetFrameworks>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<TargetFramework>net10.0</TargetFramework>
 	</PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="ErrorOr" Version="1.2.1" />
-	  <PackageReference Include="FluentValidation" Version="11.7.1" />
-	  <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.7.1" />
-	  <PackageReference Include="Mapster" Version="7.3.0" />
-	  <PackageReference Include="Mapster.DependencyInjection" Version="1.0.0" />
+	  <PackageReference Include="ErrorOr" Version="2.0.1" />
+	  <PackageReference Include="FluentValidation" Version="12.1.1" />
+	  <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+	  <PackageReference Include="Mapster" Version="7.4.0" />
+	  <PackageReference Include="Mapster.DependencyInjection" Version="1.0.1" />
 	  <PackageReference Include="MediatR" Version="12.1.1" />
-	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.1" />
+	  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
 	  <PackageReference Include="NaturalSort.Extension" Version="4.4.1" />
 	</ItemGroup>
 	<ItemGroup>

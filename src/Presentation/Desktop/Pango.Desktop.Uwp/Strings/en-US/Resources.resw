@@ -543,6 +543,93 @@
   <data name="ValidationError_FileExists" xml:space="preserve">
     <value>A file with this name already exists in the selected folder.</value>
   </data>
+  <data name="GeneratePassword_Title" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="PasswordStrength" xml:space="preserve">
+    <value>Password strength</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Password length</value>
+  </data>
+  <data name="CharactersToUse" xml:space="preserve">
+    <value>Characters to use</value>
+  </data>
+  <data name="UseUppercase" xml:space="preserve">
+    <value>Uppercase letters (A–Z)</value>
+  </data>
+  <data name="UseLowercase" xml:space="preserve">
+    <value>Lowercase letters (a–z)</value>
+  </data>
+  <data name="UseDigits" xml:space="preserve">
+    <value>Digits (0–9)</value>
+  </data>
+  <data name="UseSpecial" xml:space="preserve">
+    <value>Special characters</value>
+  </data>
+  <data name="ExcludeAmbiguousCharacters" xml:space="preserve">
+    <value>Exclude ambiguous characters (Il10oOsS5)</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="PasswordStrength_Strong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="PasswordStrength_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="PasswordStrength_Weak" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="PasswordGeneration_Error_NoCharSet" xml:space="preserve">
+    <value>Select at least one character set.</value>
+  </data>
+  <data name="PasswordGeneration_Error_LengthOutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters.</value>
+  </data>
+  <data name="GeneratePassword" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="GeneratePasswordTooltip" xml:space="preserve">
+    <value>Create a strong password</value>
+  </data>
+  <data name="PasswordLengthTooltip" xml:space="preserve">
+    <value>Password length (8–64 characters)</value>
+  </data>
+  <data name="PasswordLengthUnits" xml:space="preserve">
+    <value>chars</value>
+  </data>
+  <data name="UseUppercaseTooltip" xml:space="preserve">
+    <value>Add uppercase letters (A–Z) to increase password strength</value>
+  </data>
+  <data name="UseDigitsTooltip" xml:space="preserve">
+    <value>Add digits (0–9) to increase password strength</value>
+  </data>
+  <data name="UseLowercaseTooltip" xml:space="preserve">
+    <value>Add lowercase letters (a–z) to increase password strength</value>
+  </data>
+  <data name="ExcludeAmbiguousTooltip" xml:space="preserve">
+    <value>Exclude characters that can look similar (Il10oOsS5)</value>
+  </data>
+  <data name="UseSpecialTooltip" xml:space="preserve">
+    <value>Add special characters to make the password harder to guess</value>
+  </data>
+  <data name="PasswordLength_OutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters</value>
+  </data>
+  <data name="PasswordLength_Invalid" xml:space="preserve">
+    <value>Invalid password length value</value>
+  </data>
+  <data name="RegeneratePassword" xml:space="preserve">
+    <value>Generate new password</value>
+  </data>
+  <data name="OtherPasswords" xml:space="preserve">
+    <value>Other suggested passwords</value>
+  </data>
   <data name="BackupSettings_Header" xml:space="preserve">
     <value>Backup</value>
   </data>
