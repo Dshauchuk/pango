@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>WinExe</OutputType>
-	<UseWindowsForms>true</UseWindowsForms>
+	<UseWindowsForms>True</UseWindowsForms>
 	<UserSecretsId>dotnet-Pango.BackupService-e78251c5-4aeb-4998-8d62-af1514f27016</UserSecretsId>
   </PropertyGroup>
 
