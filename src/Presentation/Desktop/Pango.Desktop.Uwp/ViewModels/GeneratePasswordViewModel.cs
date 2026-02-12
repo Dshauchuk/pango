@@ -22,7 +22,6 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     private readonly ISender _sender;
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
-    private string _lengthText = PasswordConstants.SafeLength.ToString();
     private string _lengthError;
     private string _charsetsError;
     private bool _useUppercase = true;
@@ -60,20 +59,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
 
             _length = value;
             OnPropertyChanged(nameof(Length));
-        }
-    }
-    public string LengthText
-    {
-        get => _lengthText;
-        set
-        {
-            if (_lengthText == value)
-                return;
-
-            _lengthText = value;
-            OnPropertyChanged(nameof(LengthText));
-
-            ValidateLengthInput(value);
+            ValidateLength(value);
         }
     }
     public string LengthError
@@ -237,7 +223,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
 
     private async Task GenerateAsync()
     {
-        if (!ValidateLengthInput(LengthText))
+        if (!ValidateLength(Length))
             return;
         if (!ValidateCharsets())
             return;
@@ -270,24 +256,17 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
             new InAppNotificationMessage(
                 ViewResourceLoader.GetString("PasswordGeneratedSuccessfully")));
     }
-    private bool ValidateLengthInput(string text)
+    private bool ValidateLength(int value)
     {
-        if (!int.TryParse(text, out var parsed))
-        {
-            LengthError = ViewResourceLoader.GetString("PasswordLength_Invalid");
-            return false;
-        }
-
-        if (parsed < PasswordConstants.MinLength || parsed > PasswordConstants.MaxLength)
+        if (value < PasswordConstants.MinLength || value > PasswordConstants.MaxLength)
         {
             LengthError = ViewResourceLoader.GetString("PasswordLength_OutOfRange");
             return false;
         }
-
         LengthError = string.Empty;
-        Length = parsed;
         return true;
     }
+
     private bool ValidateCharsets()
     {
         if (!UseUppercase && !UseLowercase && !UseDigits && !UseSpecial)
@@ -350,7 +329,6 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     {
         GeneratedPassword = string.Empty;
         Length = PasswordConstants.SafeLength;
-        LengthText = PasswordConstants.SafeLength.ToString();
         LengthError = string.Empty;
 
         UseUppercase = true;
@@ -362,7 +340,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
         Strength = PasswordStrength.Weak;
     }
 
-     private int CalculatePasswordStrength(string password)
+    private int CalculatePasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password))
         {
@@ -382,6 +360,12 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
 
         return score;
     }
+    private PasswordStrength GetPasswordStrength(int score)
+    {
+        if (score <= PasswordConstants.WeakThreshold) return PasswordStrength.Weak;
+        if (score <= PasswordConstants.MediumThreshold) return PasswordStrength.Medium;
+        return PasswordStrength.Strong;
+    }
 
     private void UpdateStrength()
     {
@@ -389,8 +373,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
 
         var score = CalculatePasswordStrength(password);
 
-        Strength = score <= 3 ? PasswordStrength.Weak :
-            score <= 6 ? PasswordStrength.Medium : PasswordStrength.Strong;
+        Strength = GetPasswordStrength(score);
     }
     private static bool ContainsUpper(string s) => s.Any(char.IsUpper);
     private static bool ContainsLower(string s) => s.Any(char.IsLower);

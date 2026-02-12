@@ -1,11 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.Messaging.Messages;
 
-namespace Pango.Desktop.Uwp.Mvvm.Messages
+namespace Pango.Desktop.Uwp.Mvvm.Messages;
+
+public class CreatePasswordFromGeneratorMessage : ValueChangedMessage<string>
 {
-    public class CreatePasswordFromGeneratorMessage : ValueChangedMessage<string>
+    public CreatePasswordFromGeneratorMessage(string value) : base(value)
     {
-        public CreatePasswordFromGeneratorMessage(string value) : base(value)
-        {
-        }
     }
 }
