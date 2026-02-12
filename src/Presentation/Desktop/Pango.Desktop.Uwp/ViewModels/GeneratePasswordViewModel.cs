@@ -21,8 +21,8 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     #region Fields
     private readonly ISender _sender;
     private string _generatedPassword = string.Empty;
-    private int _length = 16;
-    private string _lengthText = "16";
+    private int _length = PasswordConstants.SafeLength;
+    private string _lengthText = PasswordConstants.SafeLength.ToString();
     private string _lengthError;
     private string _charsetsError;
     private bool _useUppercase = true;
@@ -349,8 +349,8 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     private void Clear()
     {
         GeneratedPassword = string.Empty;
-        Length = PasswordConstants.MinLength;
-        LengthText = PasswordConstants.MinLength.ToString();
+        Length = PasswordConstants.SafeLength;
+        LengthText = PasswordConstants.SafeLength.ToString();
         LengthError = string.Empty;
 
         UseUppercase = true;
@@ -362,14 +362,11 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
         Strength = PasswordStrength.Weak;
     }
 
-    private void UpdateStrength()
+     private int CalculatePasswordStrength(string password)
     {
-        var password = GeneratedPassword ?? string.Empty;
-
-        if (password.Length == 0)
+        if (string.IsNullOrEmpty(password))
         {
-            Strength = PasswordStrength.Weak;
-            return;
+            return 0;
         }
 
         int score = 0;
@@ -383,12 +380,17 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
         if (ContainsDigit(password)) score += 1;
         if (ContainsSpecial(password)) score += 1;
 
-        if (score <= 3)
-            Strength = PasswordStrength.Weak;
-        else if (score <= 6)
-            Strength = PasswordStrength.Medium;
-        else
-            Strength = PasswordStrength.Strong;
+        return score;
+    }
+
+    private void UpdateStrength()
+    {
+        var password = GeneratedPassword ?? string.Empty;
+
+        var score = CalculatePasswordStrength(password);
+
+        Strength = score <= 3 ? PasswordStrength.Weak :
+            score <= 6 ? PasswordStrength.Medium : PasswordStrength.Strong;
     }
     private static bool ContainsUpper(string s) => s.Any(char.IsUpper);
     private static bool ContainsLower(string s) => s.Any(char.IsLower);
