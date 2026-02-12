@@ -1,24 +1,23 @@
 ﻿using Microsoft.Extensions.Logging;
-using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using System.Globalization;
 using System.IO.Compression;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace Pango.Infrastructure.Services;
 
 public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
 {
+    private const int DefaultRetentionDays = 7;
+    private const int TimestampPrefixLength = 19;
+    private const string DateFormat = "yyyy-MM-dd_HH-mm-ss";
+
     private readonly ILogger<BackupManager> _logger = logger;
 
-    // Legacy method required by interface, currently unused
-    public async Task PerformBackupAsync(BackupSettings settings)
-    {
-        if (string.IsNullOrEmpty(settings.TargetFolderPath)) return;
-        await Task.CompletedTask;
-    }
-
-    // Main logic: Rotates files, Zips content, Encrypts Zip, and Cleans up old files
+    /// <summary>
+    /// Orchestrates the backup process: zips, encrypts, and rotates old files.
+    /// </summary>
     public async Task PerformBackupForUserAsync(string userId, string sourcePath, string targetRootPath, string backupPassword, int retentionDays)
     {
         try
@@ -26,27 +25,27 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
             // Ensure the target directory exists
             if (!Directory.Exists(targetRootPath)) Directory.CreateDirectory(targetRootPath);
 
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
-            string fileName = $"{timestamp}-{userId}_Backup.pngx";
+            string fileName = GenerateBackupFileName(userId);
             string targetFilePath = Path.Combine(targetRootPath, fileName);
             string tempZipPath = targetFilePath + ".tmp";
 
-            await Task.Run(() =>
-            {
-                if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
-                ZipFile.CreateFromDirectory(sourcePath, tempZipPath);
-            });
+            if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
+            ZipFile.CreateFromDirectory(sourcePath, tempZipPath);
 
             await EncryptFileAsync(tempZipPath, targetFilePath, backupPassword);
 
             if (File.Exists(tempZipPath)) File.Delete(tempZipPath);
-            _logger.LogInformation("Backup created: {Path}", targetFilePath);
+
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("Backup created: {Path}", targetFilePath);
+            }
 
             await CleanUpOldBackupsAsync(targetRootPath, userId, retentionDays);
         }
-        catch (DirectoryNotFoundException)
+        catch (DirectoryNotFoundException ex)
         {
-            _logger.LogWarning("Source directory not found for user {User}", userId);
+            _logger.LogError(ex, "Source directory not found for user {User}", userId);
         }
         catch (Exception ex)
         {
@@ -54,7 +53,18 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
         }
     }
 
-    // Encrypts file using AES-256 with a random Salt and IV stored in the file header
+    /// <summary>
+    /// Generates a unique filename based on current timestamp and user ID.
+    /// </summary>
+    private static string GenerateBackupFileName(string userId)
+    {
+        string timestamp = DateTime.Now.ToString(DateFormat);
+        return $"{timestamp}-{userId}_Backup.pngx";
+    }
+
+    /// <summary>
+    /// Encrypts a file using AES-256 with Pbkdf2 key derivation.
+    /// </summary>
     private static async Task EncryptFileAsync(string inputFile, string outputFile, string password)
     {
         // 1. Generate random Salt (16 bytes)
@@ -62,13 +72,11 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
         using (var rng = RandomNumberGenerator.Create()) { rng.GetBytes(salt); }
 
         // 2. Derive Key and IV from Password and Salt
-        using var kdf = new Rfc2898DeriveBytes(password, salt, 50000, HashAlgorithmName.SHA256);
-        byte[] key = kdf.GetBytes(32);
-        byte[] iv = kdf.GetBytes(16);
+        byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 50000, HashAlgorithmName.SHA256, 48);
 
         using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = iv;
+        aes.Key = derivedBytes[0..32];
+        aes.IV = derivedBytes[32..48];
         aes.Mode = CipherMode.CBC;
         aes.Padding = PaddingMode.PKCS7;
 
@@ -78,7 +86,7 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
         await fsOutput.WriteAsync(salt.AsMemory(0, salt.Length));
 
         // 4. Write IV (16 bytes) to the file
-        await fsOutput.WriteAsync(iv.AsMemory(0, iv.Length));
+        await fsOutput.WriteAsync(aes.IV.AsMemory(0, aes.IV.Length));
 
         // 5. Write Encrypted Data
         await using var cs = new CryptoStream(fsOutput, aes.CreateEncryptor(), CryptoStreamMode.Write);
@@ -86,58 +94,66 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
         await fsInput.CopyToAsync(cs);
     }
 
+    /// <summary>
+    /// Overload for cleanup using the default retention period.
+    /// </summary>
     public Task CleanUpOldBackupsAsync(string targetPath, string userName)
     {
-        return CleanUpOldBackupsAsync(targetPath, userName, 7);
+        return CleanUpOldBackupsAsync(targetPath, userName, DefaultRetentionDays);
     }
 
+    /// <summary>
+    /// Deletes backup files older than the specified retention days.
+    /// </summary>
     public Task CleanUpOldBackupsAsync(string targetPath, string userName, int retentionDays)
     {
-        return Task.Run(() =>
+        try
         {
-            try
+            if (retentionDays <= 0)
             {
-                if (retentionDays <= 0)
+                _logger.LogDebug("Retention policy disabled. Keeping all files.");
+                return Task.CompletedTask;
+            }
+
+            DirectoryInfo dir = new(targetPath);
+            if (!dir.Exists) return Task.CompletedTask;
+
+            var files = dir.GetFiles($"*-{userName}_Backup.pngx");
+            DateTime now = DateTime.Now;
+
+            foreach (var file in files)
+            {
+                if (file.Name.Length >= TimestampPrefixLength)
                 {
-                    _logger.LogDebug("Retention policy disabled (days <= 0). Keeping all files.");
-                    return;
-                }
-
-                DirectoryInfo dir = new(targetPath);
-                if (!dir.Exists) return;
-
-                var files = dir.GetFiles($"*-{userName}_Backup.pngx");
-                DateTime now = DateTime.Now;
-
-                foreach (var file in files)
-                {
-                    if (file.Name.Length >= 19)
+                    string datePart = file.Name[..TimestampPrefixLength];
+                    if (DateTime.TryParseExact(datePart, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime backupDate))
                     {
-                        string datePart = file.Name[..19];
-                        if (DateTime.TryParseExact(datePart, "yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime backupDate))
-                        {
-                            double ageInDays = (now - backupDate).TotalDays;
+                        double ageInDays = (now - backupDate).TotalDays;
 
-                            if (ageInDays > retentionDays)
+                        if (ageInDays > retentionDays)
+                        {
+                            try
                             {
-                                try
+                                file.Delete();
+                                if (_logger.IsEnabled(LogLevel.Debug))
                                 {
-                                    file.Delete();
                                     _logger.LogDebug("Deleted expired backup: {Name} (Age: {Age:F1} days)", file.Name, ageInDays);
                                 }
-                                catch (Exception delEx)
-                                {
-                                    _logger.LogWarning(delEx, "Failed to delete old backup {Name}", file.Name);
-                                }
+                            }
+                            catch (Exception delEx)
+                            {
+                                _logger.LogWarning(delEx, "Failed to delete old backup {Name}", file.Name);
                             }
                         }
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during retention cleanup");
-            }
-        });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during retention cleanup");
+        }
+
+        return Task.CompletedTask;
     }
 }

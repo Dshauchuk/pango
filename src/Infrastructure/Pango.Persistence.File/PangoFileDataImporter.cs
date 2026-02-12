@@ -20,11 +20,18 @@ public class PangoFileDataImporter(
     private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
     private readonly IUserContextProvider _userContextProvider = userContextProvider;
     private readonly ILogger _logger = logger;
-    private static readonly SemaphoreSlim _semaphore = new(1, 1);
-    private const int MaxRetries = 3;
-    private const int DelayMiliseconds = 1000;
-    private const string PackageFileExtension = ".pngx";
 
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+
+    private const int MaxRetries = 3;
+    private const int DelayMilliseconds = 1000;
+    private const string PackageFileExtension = ".pngx";
+    private const string DataFileExtension = ".pngdat";
+    private const string StaticSaltStr = "PangoStaticExportSalt";
+
+    /// <summary>
+    /// Orchestrates the import process by securing access and reading data.
+    /// </summary>
     public async Task<ImportResultDto> ImportAsync(string filePath, IImportOptions importOptions)
     {
         await _semaphore.WaitAsync();
@@ -40,6 +47,9 @@ public class PangoFileDataImporter(
         }
     }
 
+    /// <summary>
+    /// Reads and decrypts the package manifest from the zip archive.
+    /// </summary>
     public async Task<PangoPackageManifest> ReadManifestAsync(string filePath, IImportOptions importOptions)
     {
         ThrowIfFileIsNotValid(filePath);
@@ -64,18 +74,17 @@ public class PangoFileDataImporter(
             {
                 try
                 {
-                    _logger.LogDebug("Reading manifest from {filePath}", workingFilePath);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Reading manifest from {filePath}", workingFilePath);
+                    }
+
                     using var fs = new FileStream(workingFilePath, FileMode.Open);
                     using var archive = new ZipArchive(fs, ZipArchiveMode.Read);
 
                     foreach (var entry in archive.Entries)
                     {
-                        // FIX: Ignore non-data files, system files, and folders
-                        if (string.IsNullOrEmpty(entry.Name) ||
-                            entry.FullName.StartsWith("_rels") ||
-                            entry.Name == "[Content_Types].xml" ||
-                            !entry.Name.EndsWith(".pngdat", StringComparison.OrdinalIgnoreCase))
-                            continue;
+                        if (ShouldSkipEntry(entry)) continue;
 
                         using var entryStream = entry.Open();
                         using var ms = new MemoryStream();
@@ -98,15 +107,16 @@ public class PangoFileDataImporter(
                         []
                     );
                 }
-                catch (PangoDataDecryptionException)
+                catch (PangoDataDecryptionException ex)
                 {
+                    _logger.LogError(ex, "Failed to decrypt manifest data.");
                     throw;
                 }
                 catch (IOException e)
                 {
-                    _logger.LogError("Manifest reading attempt {attempt} failed: {message}", attempt + 1, e.Message);
+                    _logger.LogError("Manifest reading attempt {Attempt} failed: {Message}", attempt + 1, e.Message);
                     if (attempt == MaxRetries - 1) throw;
-                    await Task.Delay(DelayMiliseconds);
+                    await Task.Delay(DelayMilliseconds);
                 }
             }
         }
@@ -114,13 +124,23 @@ public class PangoFileDataImporter(
         {
             if (!string.IsNullOrEmpty(tempDecryptedPath) && System.IO.File.Exists(tempDecryptedPath))
             {
-                try { System.IO.File.Delete(tempDecryptedPath); } catch { }
+                try
+                {
+                    System.IO.File.Delete(tempDecryptedPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete temporary decrypted file at {Path}", tempDecryptedPath);
+                }
             }
         }
 
         throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Unable to read manifest from file.");
     }
 
+    /// <summary>
+    /// Extracts and decrypts content packages from the zip archive.
+    /// </summary>
     public async Task<List<IContentPackage>> ExtractContentAsync(string filePath, IImportOptions importOptions)
     {
         ThrowIfFileIsNotValid(filePath);
@@ -146,18 +166,17 @@ public class PangoFileDataImporter(
             {
                 try
                 {
-                    _logger.LogDebug("Extracting content from {filePath}", workingFilePath);
+                    if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        _logger.LogDebug("Extracting content from {filePath}", workingFilePath);
+                    }
+
                     using var fs = new FileStream(workingFilePath, FileMode.Open);
                     using var archive = new ZipArchive(fs, ZipArchiveMode.Read);
 
                     foreach (var entry in archive.Entries)
                     {
-                        // FIX: Strict filter for .pngdat files only
-                        if (string.IsNullOrEmpty(entry.Name) ||
-                            entry.FullName.StartsWith("_rels") ||
-                            entry.Name == "[Content_Types].xml" ||
-                            !entry.Name.EndsWith(".pngdat", StringComparison.OrdinalIgnoreCase))
-                            continue;
+                        if (ShouldSkipEntry(entry)) continue;
 
                         using var entryStream = entry.Open();
                         using var ms = new MemoryStream();
@@ -179,15 +198,16 @@ public class PangoFileDataImporter(
                     }
                     break;
                 }
-                catch (PangoDataDecryptionException)
+                catch (PangoDataDecryptionException ex)
                 {
+                    _logger.LogError(ex, "Critical decryption failure during content extraction.");
                     throw;
                 }
                 catch (IOException e)
                 {
-                    _logger.LogError("Content extraction attempt {attempt} failed: {message}", attempt + 1, e.Message);
+                    _logger.LogError("Content extraction attempt {Attempt} failed: {Message}", attempt + 1, e.Message);
                     if (attempt == MaxRetries - 1) throw;
-                    await Task.Delay(DelayMiliseconds);
+                    await Task.Delay(DelayMilliseconds);
                 }
             }
         }
@@ -195,7 +215,14 @@ public class PangoFileDataImporter(
         {
             if (!string.IsNullOrEmpty(tempDecryptedPath) && System.IO.File.Exists(tempDecryptedPath))
             {
-                try { System.IO.File.Delete(tempDecryptedPath); } catch { }
+                try
+                {
+                    System.IO.File.Delete(tempDecryptedPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete temporary content file at {Path}", tempDecryptedPath);
+                }
             }
             _logger.LogDebug("Content extraction completed");
         }
@@ -203,17 +230,34 @@ public class PangoFileDataImporter(
         return importedPackages;
     }
 
+    /// <summary>
+    /// Helper to filter out system files and non-data entries from the archive.
+    /// </summary>
+    private static bool ShouldSkipEntry(ZipArchiveEntry entry)
+    {
+        return string.IsNullOrEmpty(entry.Name) ||
+               entry.FullName.StartsWith("_rels") ||
+               entry.Name == "[Content_Types].xml" ||
+               !entry.Name.EndsWith(DataFileExtension, StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Checks if the file is a standard Zip or an encrypted backup.
+    /// </summary>
     private static async Task<bool> IsEncryptedBackupFileAsync(string filePath)
     {
         try
         {
             using (ZipFile.OpenRead(filePath)) { }
-            return false;
+            return await Task.FromResult(false);
         }
         catch (InvalidDataException) { return true; }
         catch (Exception) { return true; }
     }
 
+    /// <summary>
+    /// Attempts to decrypt raw byte data into a strongly typed object.
+    /// </summary>
     private async Task<T?> TryDecrypt<T>(byte[] data, EncodingOptions options)
     {
         if (string.IsNullOrEmpty(options.Key)) return default;
@@ -226,18 +270,21 @@ public class PangoFileDataImporter(
 
         if (!isValidKey)
         {
-            byte[] staticSalt = Encoding.UTF8.GetBytes("PangoStaticExportSalt");
-            using var derive = new Rfc2898DeriveBytes(options.Key, staticSalt, 50000, HashAlgorithmName.SHA256);
-            keyBase64 = Convert.ToBase64String(derive.GetBytes(32));
-            saltBase64 = Convert.ToBase64String(derive.GetBytes(16));
+            byte[] staticSalt = Encoding.UTF8.GetBytes(StaticSaltStr);
+
+            byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(options.Key), staticSalt, 50000, HashAlgorithmName.SHA256, 48);
+
+            keyBase64 = Convert.ToBase64String(derivedBytes[0..32]);
+            saltBase64 = Convert.ToBase64String(derivedBytes[32..48]);
         }
 
         try
         {
             return await _contentEncoder.DecryptAsync<T>(data, keyBase64, saltBase64);
         }
-        catch (PangoDataDecryptionException)
+        catch (PangoDataDecryptionException ex)
         {
+            _logger.LogError(ex, "Decryption failed for internal data block.");
             throw;
         }
         catch (Exception ex)
@@ -247,6 +294,9 @@ public class PangoFileDataImporter(
         }
     }
 
+    /// <summary>
+    /// Decrypts the entire backup file using AES-256 and writes to output.
+    /// </summary>
     private static async Task DecryptBackupFileAsync(string inputFile, string outputFile, string password)
     {
         await using var fsInput = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
@@ -256,8 +306,7 @@ public class PangoFileDataImporter(
         byte[] iv = new byte[16];
         if (await fsInput.ReadAsync(iv.AsMemory(0, 16)) < 16) throw new IOException("Invalid header");
 
-        using var kdf = new Rfc2898DeriveBytes(password, salt, 50000, HashAlgorithmName.SHA256);
-        byte[] key = kdf.GetBytes(32);
+        byte[] key = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 50000, HashAlgorithmName.SHA256, 32);
 
         using var aes = Aes.Create();
         aes.Key = key;
@@ -277,10 +326,8 @@ public class PangoFileDataImporter(
     }
 
     /// <summary>
-    /// Throws <see cref="PangoImportException"/> if file <paramref name="filePath"/> is not valid
+    /// Validates file existence and extension.
     /// </summary>
-    /// <param name="filePath"></param>
-    /// <exception cref="PangoImportException"></exception>
     private static void ThrowIfFileIsNotValid(string filePath)
     {
         if (!System.IO.File.Exists(filePath)) throw new PangoImportException($"File {filePath} doesn't exist");

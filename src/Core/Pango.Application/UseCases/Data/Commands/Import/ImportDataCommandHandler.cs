@@ -62,7 +62,7 @@ public class ImportDataCommandHandler(
                     if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
                     {
                         var rootItems = importedItems.Where(x => string.IsNullOrEmpty(x.CatalogPath)).ToList();
-                        if (rootItems.Any()) { sourceRootName = rootItems.First().Name; break; }
+                        if (rootItems.Count != 0) { sourceRootName = rootItems.First().Name; break; }
                     }
                 }
 
@@ -98,7 +98,7 @@ public class ImportDataCommandHandler(
                 if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
                 {
                     var allSourceList = importedItems.ToList();
-                    HashSet<Guid> selectedIdsSet = request.SelectedIds?.Any() == true ? GetSelectedIdsWithParents(allSourceList, [.. request.SelectedIds]) : [.. allSourceList.Select(x => x.Id)];
+                    HashSet<Guid> selectedIdsSet = request.SelectedIds?.Count > 0 ? GetSelectedIdsWithParents(allSourceList, [.. request.SelectedIds]) : [.. allSourceList.Select(x => x.Id)];
                     var itemsToProcess = allSourceList.Where(x => selectedIdsSet.Contains(x.Id)).ToList();
                     var processedItems = ReconstructHierarchy(itemsToProcess, importRootFolder);
 
@@ -119,7 +119,7 @@ public class ImportDataCommandHandler(
                 }
             }
 
-            if (itemsToCreate.Any()) await passwordRepository.CreateAsync(itemsToCreate, context);
+            if (itemsToCreate.Count != 0) await passwordRepository.CreateAsync(itemsToCreate, context);
             return new ImportResult(result.Manifest);
         }
         catch (Exception ex)
@@ -129,13 +129,17 @@ public class ImportDataCommandHandler(
         }
     }
 
-    // Generates unique key for catalog: CatalogPath|Name
+    /// <summary>
+    /// Generates a unique catalog key using CatalogPath and Name, separated by '|'.
+    /// </summary>
     private static string GetUniqueCatalogKey(PangoPassword item)
     {
-        return $"{item.CatalogPath?.Trim() ?? ""}|{item.Name?.Trim() ?? ""}";
+        return $"{item.CatalogPath?.Trim() ?? string.Empty}|{item.Name?.Trim() ?? string.Empty}";
     }
 
-    // Returns all selected IDs and their ancestors recursively
+    /// <summary>
+    /// Returns all selected IDs and their parent IDs recursively up the hierarchy.
+    /// </summary>
     private static HashSet<Guid> GetSelectedIdsWithParents(List<PangoPassword> allItems, HashSet<Guid> selectedIds)
     {
         var result = new HashSet<Guid>(selectedIds);
@@ -152,7 +156,9 @@ public class ImportDataCommandHandler(
         return result;
     }
 
-    // Builds parent-child map using CatalogPath
+    /// <summary>
+    /// Builds a parent-child mapping using CatalogPath to identify hierarchical relationships.
+    /// </summary>
     private static Dictionary<Guid, Guid?> BuildParentMap(List<PangoPassword> allItems)
     {
         var parentMap = new Dictionary<Guid, Guid?>();
@@ -175,7 +181,9 @@ public class ImportDataCommandHandler(
         return parentMap;
     }
 
-    // Reconstructs hierarchy: prepends forcedRoot to CatalogPath if provided
+    /// <summary>
+    /// Reconstructs the item hierarchy by prepending a forced root path to CatalogPath.
+    /// </summary>
     private static List<PangoPassword> ReconstructHierarchy(List<PangoPassword> itemsToSave, string? forcedRoot)
     {
         var result = new List<PangoPassword>();
@@ -195,7 +203,9 @@ public class ImportDataCommandHandler(
         return result;
     }
 
-    // Builds full path: CatalogPath + Name
+    /// <summary>
+    /// Constructs the full path of an item by combining CatalogPath and Name.
+    /// </summary>
     private static string GetFullPath(PangoPassword item)
     {
         return string.IsNullOrEmpty(item.CatalogPath) ? item.Name : $"{item.CatalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
