@@ -29,7 +29,6 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private string _exportFolderPath = string.Empty;
     private string _exportingItemsInfo = string.Empty;
-    private const string FileExtension = ".pngx";
     private ExportDataValidator _validator;
 
     #endregion
@@ -129,7 +128,7 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         else
         {
             var sourcePath = result.Value.Path;
-            string fullDestinationPath = Path.Combine(Validator.ExportFolderPath, $"{Validator.FileName}{FileExtension}");
+            string fullDestinationPath = Path.Combine(Validator.ExportFolderPath, $"{Validator.FileName}{AppConstants.ExportFileExtension}");
 
             try
             {
@@ -151,7 +150,12 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Failed to copy exported file to destination folder");
+                Logger.LogError(
+                                ex,
+                                "Failed to copy exported file to destination folder. FileName={FileName}, ExportFolder={ExportFolder}, DestinationPath={DestinationPath}",
+                                Validator.FileName,
+                                Validator.ExportFolderPath,
+                                fullDestinationPath);
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Failed to save file to selected folder: {ex.Message}", Core.Enums.AppNotificationType.Error));
                 WeakReferenceMessenger.Default.Send<ExportCompletedMessage>(new ExportCompletedMessage(result.Value));
             }
@@ -188,7 +192,7 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         try
         {
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string defaultExportPath = Path.Combine(documentsPath, "PangoExports");
+            string defaultExportPath = Path.Combine(documentsPath, AppConstants.DefaultExportFolderName);
 
             if (!Directory.Exists(defaultExportPath))
             {
