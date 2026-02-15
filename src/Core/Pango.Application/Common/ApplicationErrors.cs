@@ -29,5 +29,7 @@ public static class ApplicationErrors
         public const string DeletionFailed = "Password.DeletionFailed";
         public const string CreationFailed = "Password.DeletionFailed";
         public const string ModificationFailed = "Password.ModificationFailed";
+        public const string GenerationInvalidLength = "Password.Generation.InvalidLength";
+        public const string GenerationInvalidCharsets = "Password.Generation.InvalidCharsets";
     }
 }

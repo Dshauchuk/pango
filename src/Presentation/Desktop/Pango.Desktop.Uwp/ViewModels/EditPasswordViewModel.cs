@@ -138,6 +138,11 @@ public class EditPasswordViewModel : ViewModelBase
             else
             {
                 PasswordValidator!.SelectedCatalog = parameters.Catalog;
+
+                if (!string.IsNullOrEmpty(parameters.GeneratedPassword))
+                {
+                    PasswordValidator.Password = parameters.GeneratedPassword;
+                }
             }
         }
     }
