@@ -31,6 +31,7 @@
                     <converters:EmptyStringToRootFolderNameConverter x:Key="EmptyStringToRootFolderNameConverter"/>
                     <converters:BoolReverseConverter x:Key="BoolReverseConverter"/>
                     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+                    <converters:IntToStringConverter x:Key="IntToStringConverter"/>
                     
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>

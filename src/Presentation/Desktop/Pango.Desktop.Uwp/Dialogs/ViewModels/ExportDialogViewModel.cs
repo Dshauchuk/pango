@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -30,7 +30,6 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private string _exportFolderPath = string.Empty;
     private string _exportingItemsInfo = string.Empty;
-    private const string FileExtension = ".pngx";
     private ExportDataValidator _validator;
 
     #endregion
@@ -120,14 +119,15 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
             {
                 byte[] staticSalt = Encoding.UTF8.GetBytes("PangoStaticExportSalt");
 
-                using var derive = new Rfc2898DeriveBytes(
+                byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(
                     masterPassword,
                     staticSalt,
                     50000,
-                    HashAlgorithmName.SHA256);
+                    HashAlgorithmName.SHA256,
+                    48);
 
-                string keyBase64 = Convert.ToBase64String(derive.GetBytes(32));
-                string ivBase64 = Convert.ToBase64String(derive.GetBytes(16));
+                string keyBase64 = Convert.ToBase64String(derivedBytes[0..32]);
+                string ivBase64 = Convert.ToBase64String(derivedBytes[32..48]);
 
                 var encoding = new EncodingOptions(keyBase64, ivBase64);
 
@@ -143,7 +143,7 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
                 else
                 {
                     var sourcePath = result.Value.Path;
-                    string fullDestinationPath = Path.Combine(exportPath, $"{fileName}{FileExtension}");
+                    string fullDestinationPath = Path.Combine(exportPath, $"{fileName}{AppConstants.ExportFileExtension}");
 
                     File.Copy(sourcePath, fullDestinationPath, true);
                     if (File.Exists(sourcePath)) File.Delete(sourcePath);
@@ -201,7 +201,7 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         try
         {
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string defaultExportPath = Path.Combine(documentsPath, "PangoExports");
+            string defaultExportPath = Path.Combine(documentsPath, AppConstants.DefaultExportFolderName);
 
             if (!Directory.Exists(defaultExportPath))
             {

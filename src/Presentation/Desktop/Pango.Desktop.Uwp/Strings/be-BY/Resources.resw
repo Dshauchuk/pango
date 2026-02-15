@@ -720,5 +720,10 @@
   </data>
   <data name="ImportPreview_Loading" xml:space="preserve">
     <value>Чытанне структуры файла...</value>
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Пароль паспяхова згенераваны</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Захаваць як</value>
   </data>
 </root>
