@@ -630,6 +630,12 @@
   <data name="OtherPasswords" xml:space="preserve">
     <value>Other suggested passwords</value>
   </data>
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Password generated successfully</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save as</value>
+  </data>
   <data name="BackupSettings_Header" xml:space="preserve">
     <value>Backup</value>
   </data>

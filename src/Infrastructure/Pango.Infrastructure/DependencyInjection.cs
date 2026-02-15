@@ -12,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IContentEncoder, ContentEncoder>();
+        services.AddSingleton<IPasswordGenerator, PasswordGenerator>();
         services.AddFileStorage();
 
         return services;

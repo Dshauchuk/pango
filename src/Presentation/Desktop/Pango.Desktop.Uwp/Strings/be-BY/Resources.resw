@@ -628,6 +628,12 @@
   <data name="OtherPasswords" xml:space="preserve">
     <value>Іншыя прапанаваныя паролі</value>
   </data>
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Пароль паспяхова згенераваны</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Захаваць як</value>
+  </data>
   <data name="BackupSettings_Header" xml:space="preserve">
     <value>Рэзервовае капіраванне</value>
   </data>
