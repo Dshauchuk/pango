@@ -728,5 +728,12 @@
   </data>
   <data name="ImportPreview_Loading" xml:space="preserve">
     <value>Reading file structure...</value>
+=========
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Password generated successfully</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save as</value>
+>>>>>>>>> Temporary merge branch 2
   </data>
 </root>
