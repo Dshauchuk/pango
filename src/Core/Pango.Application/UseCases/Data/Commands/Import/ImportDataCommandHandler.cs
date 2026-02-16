@@ -18,6 +18,9 @@ public class ImportDataCommandHandler(
     IUserContextProvider userContextProvider,
     ILogger<ImportDataCommandHandler> logger) : IRequestHandler<ImportDataCommand, ErrorOr<ImportResult>>
 {
+    /// <summary> 
+    /// Handles importing password data from external sources into the repository. 
+    /// </summary>
     public async Task<ErrorOr<ImportResult>> Handle(ImportDataCommand request, CancellationToken cancellationToken)
     {
         try
@@ -26,98 +29,9 @@ public class ImportDataCommandHandler(
             if (result is null) return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");
 
             var context = repositoryContextFactory.Create(userContextProvider.GetUserName(), await userContextProvider.GetEncodingOptionsAsync());
-            string? importRootFolder = null;
+            string? importRootFolder = await GetImportRootFolderAsync(request, result, context);
 
-            // Import into separate folder (original behavior)
-            if (request.ImportToSeparateFolder)
-            {
-                var culture = CultureInfo.CurrentUICulture.Name;
-                string baseFolderName = culture.StartsWith("be", StringComparison.OrdinalIgnoreCase) ? "Імпартаванае" : "Imported";
-                string finalFolderName = baseFolderName;
-                var allRootFolders = (await passwordRepository.QueryAsync(p => p.IsCatalog && string.IsNullOrEmpty(p.CatalogPath), context)).Select(x => x.Name).ToList();
-                int counter = 1;
-                while (allRootFolders.Any(n => n.Equals(finalFolderName, StringComparison.OrdinalIgnoreCase)))
-                {
-                    finalFolderName = $"{baseFolderName} ({counter})";
-                    counter++;
-                }
-                var rootFolderNode = new PangoPassword
-                {
-                    Id = Guid.NewGuid(),
-                    Name = finalFolderName,
-                    IsCatalog = true,
-                    CatalogPath = string.Empty,
-                    UserName = userContextProvider.GetUserName(),
-                    CreatedAt = DateTimeOffset.UtcNow
-                };
-                await passwordRepository.CreateAsync(rootFolderNode, context);
-                importRootFolder = rootFolderNode.Name;
-            }
-            // Import into root catalog
-            else
-            {
-                string? sourceRootName = null;
-                foreach (IContentPackage package in result.ContentPackages)
-                {
-                    if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
-                    {
-                        var rootItems = importedItems.Where(x => string.IsNullOrEmpty(x.CatalogPath)).ToList();
-                        if (rootItems.Count != 0) { sourceRootName = rootItems.First().Name; break; }
-                    }
-                }
-
-                if (!string.IsNullOrEmpty(sourceRootName))
-                {
-                    var allRootFolders = (await passwordRepository.QueryAsync(p => p.IsCatalog && string.IsNullOrEmpty(p.CatalogPath), context)).Select(x => x.Name).ToList();
-                    string finalRootName = sourceRootName;
-                    int counter = 1;
-                    while (allRootFolders.Any(n => n.Equals(finalRootName, StringComparison.OrdinalIgnoreCase)))
-                    {
-                        finalRootName = $"{sourceRootName} ({counter})";
-                        counter++;
-                    }
-                    var rootFolderNode = new PangoPassword
-                    {
-                        Id = Guid.NewGuid(),
-                        Name = finalRootName,
-                        IsCatalog = true,
-                        CatalogPath = string.Empty,
-                        UserName = userContextProvider.GetUserName(),
-                        CreatedAt = DateTimeOffset.UtcNow
-                    };
-                    await passwordRepository.CreateAsync(rootFolderNode, context);
-                    importRootFolder = finalRootName;
-                }
-            }
-
-            List<PangoPassword> itemsToCreate = [];
-            HashSet<string> importedCatalogsLookup = new(StringComparer.OrdinalIgnoreCase);
-
-            foreach (IContentPackage package in result.ContentPackages)
-            {
-                if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
-                {
-                    var allSourceList = importedItems.ToList();
-                    HashSet<Guid> selectedIdsSet = request.SelectedIds?.Count > 0 ? GetSelectedIdsWithParents(allSourceList, [.. request.SelectedIds]) : [.. allSourceList.Select(x => x.Id)];
-                    var itemsToProcess = allSourceList.Where(x => selectedIdsSet.Contains(x.Id)).ToList();
-                    var processedItems = ReconstructHierarchy(itemsToProcess, importRootFolder);
-
-                    foreach (var newItem in processedItems)
-                    {
-                        if (string.IsNullOrWhiteSpace(newItem.Name)) continue;
-                        if (newItem.IsCatalog)
-                        {
-                            string catalogKey = GetUniqueCatalogKey(newItem);
-                            if (importedCatalogsLookup.Contains(catalogKey)) continue;
-                            importedCatalogsLookup.Add(catalogKey);
-                        }
-                        newItem.Id = Guid.NewGuid();
-                        newItem.UserName = userContextProvider.GetUserName();
-                        newItem.CreatedAt = DateTimeOffset.UtcNow;
-                        itemsToCreate.Add(newItem);
-                    }
-                }
-            }
+            List<PangoPassword> itemsToCreate = ProcessPackages(result.ContentPackages, request, importRootFolder);
 
             if (itemsToCreate.Count != 0) await passwordRepository.CreateAsync(itemsToCreate, context);
             return new ImportResult(result.Manifest);
@@ -129,7 +43,104 @@ public class ImportDataCommandHandler(
         }
     }
 
-    /// <summary>
+    /// <summary> 
+    /// Determines the root folder name for imported items based on import options and source structure. 
+    /// </summary>
+    private async Task<string?> GetImportRootFolderAsync(ImportDataCommand request, ImportResultDto result, IRepositoryActionContext context)
+    {
+        if (request.ImportToSeparateFolder)
+        {
+            var culture = CultureInfo.CurrentUICulture.Name;
+            string baseFolderName = culture.StartsWith("be", StringComparison.OrdinalIgnoreCase) ? "Імпартаванае" : "Imported";
+            return await CreateUniqueRootFolderAsync(baseFolderName, context);
+        }
+        else
+        {
+            string? sourceRootName = null;
+            foreach (IContentPackage package in result.ContentPackages)
+            {
+                if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
+                {
+                    var rootItems = importedItems.Where(x => string.IsNullOrEmpty(x.CatalogPath)).ToList();
+                    if (rootItems.Count != 0) { sourceRootName = rootItems.First().Name; break; }
+                }
+            }
+
+            if (!string.IsNullOrEmpty(sourceRootName))
+            {
+                return await CreateUniqueRootFolderAsync(sourceRootName, context);
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary> 
+    /// Creates a unique root folder name by appending a numeric suffix if needed and persists it. 
+    /// </summary>
+    private async Task<string> CreateUniqueRootFolderAsync(string baseName, IRepositoryActionContext context)
+    {
+        var allRootFolders = (await passwordRepository.QueryAsync(p => p.IsCatalog && string.IsNullOrEmpty(p.CatalogPath), context))
+                             .Select(x => x.Name).ToList();
+
+        string finalName = baseName;
+        int counter = 1;
+        while (allRootFolders.Any(n => n.Equals(finalName, StringComparison.OrdinalIgnoreCase)))
+        {
+            finalName = $"{baseName} ({counter})";
+            counter++;
+        }
+
+        var rootFolderNode = new PangoPassword
+        {
+            Id = Guid.NewGuid(),
+            Name = finalName,
+            IsCatalog = true,
+            CatalogPath = string.Empty,
+            UserName = userContextProvider.GetUserName(),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        await passwordRepository.CreateAsync(rootFolderNode, context);
+        return finalName;
+    }
+
+    /// <summary> 
+    /// Processes imported content packages, filters selected items, and reconstructs hierarchy. 
+    /// </summary>
+    private List<PangoPassword> ProcessPackages(IEnumerable<IContentPackage> packages, ImportDataCommand request, string? importRootFolder)
+    {
+        List<PangoPassword> itemsToCreate = [];
+        HashSet<string> importedCatalogsLookup = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (IContentPackage package in packages)
+        {
+            if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
+            {
+                var allSourceList = importedItems.ToList();
+                HashSet<Guid> selectedIdsSet = request.SelectedIds?.Count > 0 ? GetSelectedIdsWithParents(allSourceList, [.. request.SelectedIds]) : [.. allSourceList.Select(x => x.Id)];
+                var itemsToProcess = allSourceList.Where(x => selectedIdsSet.Contains(x.Id)).ToList();
+                var processedItems = ReconstructHierarchy(itemsToProcess, importRootFolder);
+
+                foreach (var newItem in processedItems)
+                {
+                    if (string.IsNullOrWhiteSpace(newItem.Name)) continue;
+                    if (newItem.IsCatalog)
+                    {
+                        string catalogKey = GetUniqueCatalogKey(newItem);
+                        if (importedCatalogsLookup.Contains(catalogKey)) continue;
+                        importedCatalogsLookup.Add(catalogKey);
+                    }
+                    newItem.Id = Guid.NewGuid();
+                    newItem.UserName = userContextProvider.GetUserName();
+                    newItem.CreatedAt = DateTimeOffset.UtcNow;
+                    itemsToCreate.Add(newItem);
+                }
+            }
+        }
+        return itemsToCreate;
+    }
+
+    /// <summary> 
     /// Generates a unique catalog key using CatalogPath and Name, separated by '|'.
     /// </summary>
     private static string GetUniqueCatalogKey(PangoPassword item)
@@ -137,7 +148,7 @@ public class ImportDataCommandHandler(
         return $"{item.CatalogPath?.Trim() ?? string.Empty}|{item.Name?.Trim() ?? string.Empty}";
     }
 
-    /// <summary>
+    /// <summary> 
     /// Returns all selected IDs and their parent IDs recursively up the hierarchy.
     /// </summary>
     private static HashSet<Guid> GetSelectedIdsWithParents(List<PangoPassword> allItems, HashSet<Guid> selectedIds)
@@ -156,7 +167,7 @@ public class ImportDataCommandHandler(
         return result;
     }
 
-    /// <summary>
+    /// <summary> 
     /// Builds a parent-child mapping using CatalogPath to identify hierarchical relationships.
     /// </summary>
     private static Dictionary<Guid, Guid?> BuildParentMap(List<PangoPassword> allItems)
@@ -181,12 +192,12 @@ public class ImportDataCommandHandler(
         return parentMap;
     }
 
-    /// <summary>
+    /// <summary> 
     /// Reconstructs the item hierarchy by prepending a forced root path to CatalogPath.
     /// </summary>
     private static List<PangoPassword> ReconstructHierarchy(List<PangoPassword> itemsToSave, string? forcedRoot)
     {
-        var result = new List<PangoPassword>();
+        var result = new List<PangoPassword>(itemsToSave.Count);
         foreach (var item in itemsToSave)
         {
             var newItem = item.Adapt<PangoPassword>();

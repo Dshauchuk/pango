@@ -10,98 +10,118 @@ namespace Pango.Infrastructure.Services;
 
 public class ContentEncoder : IContentEncoder
 {
-    public Task<T?> DecryptAsync<T>(byte[] encryptedContent, string key, string salt)
+    /// <summary>
+    /// Decrypts a byte array into an object of type T using the provided key and salt.
+    /// </summary>
+    /// <param name="encryptedContent">The raw encrypted bytes.</param>
+    /// <param name="key">The Base64 encoded encryption key.</param>
+    /// <param name="salt">The Base64 encoded initialization vector (IV).</param>
+    public async Task<T?> DecryptAsync<T>(byte[] encryptedContent, string key, string salt)
     {
-        try
+        return await Task.Run(() =>
         {
-            if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(salt))
-                throw new ArgumentException("Key and Salt cannot be empty");
-
-            byte[] keyBytes;
-            byte[] ivBytes;
-
             try
             {
-                keyBytes = Convert.FromBase64String(key);
-                ivBytes = Convert.FromBase64String(salt);
-            }
-            catch (FormatException ex)
-            {
-                throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Invalid key format (Base64 expected).", ex);
-            }
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(salt))
+                    throw new ArgumentException("Key and Salt cannot be empty");
 
-            string jsonContent = Decrypt(encryptedContent, keyBytes, ivBytes);
+                byte[] keyBytes;
+                byte[] ivBytes;
 
-            var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
-
-            // DS
-            // this code converts JArray into a List<object>
-            if (deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
-            {
-                var encodedDataType = encodedData.Data.GetType();
-                if (encodedDataType == typeof(JArray))
+                try
                 {
-                    var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
-                    if (dataType != null)
+                    keyBytes = Convert.FromBase64String(key);
+                    ivBytes = Convert.FromBase64String(salt);
+                }
+                catch (FormatException ex)
+                {
+                    throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Invalid key format (Base64 expected).", ex);
+                }
+
+                string jsonContent = Decrypt(encryptedContent, keyBytes, ivBytes);
+
+                var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
+
+                // DS
+                // this code converts JArray into a List<object>
+                if (deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
+                {
+                    var encodedDataType = encodedData.Data.GetType();
+                    if (encodedDataType == typeof(JArray))
                     {
-                        encodedData.Data = ((JArray)encodedData.Data).ToObject(dataType);
+                        var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
+                        if (dataType != null)
+                        {
+                            encodedData.Data = ((JArray)encodedData.Data).ToObject(dataType);
+                        }
                     }
                 }
+
+                return deserializedObject;
             }
-
-            return Task.FromResult(deserializedObject);
-        }
-        catch (PangoDataDecryptionException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            throw new PangoDataDecryptionException(
-                ApplicationErrors.Data.DecryptionError,
-                $"Decryption failed for {typeof(T).Name}.",
-                ex);
-        }
+            catch (PangoDataDecryptionException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new PangoDataDecryptionException(
+                    ApplicationErrors.Data.DecryptionError,
+                    $"Decryption failed for {typeof(T).Name}.",
+                    ex);
+            }
+        });
     }
 
-    public Task<byte[]> EncryptAsync<T>(T content, string key, string salt)
+    /// <summary>
+    /// Encrypts an object of type T into a byte array using the provided key and salt.
+    /// </summary>
+    /// <param name="content">The object to be encrypted.</param>
+    /// <param name="key">The Base64 encoded encryption key.</param>
+    /// <param name="salt">The Base64 encoded initialization vector (IV).</param>
+    public async Task<byte[]> EncryptAsync<T>(T content, string key, string salt)
     {
-        try
+        return await Task.Run(() =>
         {
-            string json = JsonConvert.SerializeObject(content, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
+            try
+            {
+                string json = JsonConvert.SerializeObject(content, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
 
-            byte[] result = Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt));
-            return Task.FromResult(result);
-        }
-        catch (Exception ex)
-        {
-            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
-        }
+                return Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt));
+            }
+            catch (Exception ex)
+            {
+                throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
+            }
+        });
     }
 
+    /// <summary>
+    /// Internal helper to execute AES encryption logic.
+    /// </summary>
     private static byte[] Encrypt(string simpletext, byte[] key, byte[] iv)
     {
         Ensure.AreEqual(key.Length, 32, nameof(key));
         Ensure.AreEqual(iv.Length, 16, nameof(key));
 
-        byte[] cipheredtext;
-        using (Aes aes = Aes.Create())
+        using Aes aes = Aes.Create();
+        aes.Padding = PaddingMode.PKCS7;
+        aes.Mode = CipherMode.CBC;
+
+        using ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
+        using MemoryStream memoryStream = new();
+        using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
+        using (StreamWriter streamWriter = new(cryptoStream))
         {
-            aes.Padding = PaddingMode.PKCS7;
-
-            ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
-            using MemoryStream memoryStream = new();
-            using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
-            using (StreamWriter streamWriter = new(cryptoStream))
-            {
-                streamWriter.Write(simpletext);
-            }
-
-            cipheredtext = memoryStream.ToArray();
+            streamWriter.Write(simpletext);
         }
-        return cipheredtext;
+
+        return memoryStream.ToArray();
     }
 
+    /// <summary>
+    /// Internal helper to execute AES decryption logic.
+    /// </summary>
     private static string Decrypt(byte[] cipheredText, byte[] key, byte[] iv)
     {
         Ensure.AreEqual(key.Length, 32, nameof(key));
