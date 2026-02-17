@@ -1,86 +1,224 @@
 ﻿using ErrorOr;
+using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
-using Pango.Application.Common.Exceptions;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Domain.Entities;
+using System.Globalization;
 
 namespace Pango.Application.UseCases.Data.Commands.Import;
 
-public class ImportDataCommandHandler
-    : IRequestHandler<ImportDataCommand, ErrorOr<ImportResult>>
+public class ImportDataCommandHandler(
+    IDataImporter dataImporter,
+    IPasswordRepository passwordRepository,
+    IRepositoryContextFactory repositoryContextFactory,
+    IUserContextProvider userContextProvider,
+    ILogger<ImportDataCommandHandler> logger) : IRequestHandler<ImportDataCommand, ErrorOr<ImportResult>>
 {
-    private readonly IDataImporter _dataImporter;
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly ILogger _logger;
-
-    public ImportDataCommandHandler(
-        IDataImporter dataImporter, 
-        IPasswordRepository passwordRepository, 
-        IRepositoryContextFactory repositoryContextFactory, 
-        IUserContextProvider userContextProvider,
-        ILogger<ImportDataCommandHandler> logger)
-    {
-        _logger = logger;
-        _dataImporter = dataImporter;
-        _passwordRepository = passwordRepository;
-        _repositoryContextFactory = repositoryContextFactory;
-        _userContextProvider = userContextProvider;
-    }
-
+    /// <summary> 
+    /// Handles importing password data from external sources into the repository. 
+    /// </summary>
     public async Task<ErrorOr<ImportResult>> Handle(ImportDataCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            ImportResultDto result = await _dataImporter.ImportAsync(request.SourcePath, request.Options);
+            ImportResultDto result = await dataImporter.ImportAsync(request.SourcePath, request.Options);
+            if (result is null) return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");
 
-            if(result is null)
-            {
-                return Error.Failure(ApplicationErrors.Data.ImportError, "Import result is null");   
-            }
-            else
-            {
-                foreach (IContentPackage package in result.ContentPackages)
-                {
-                    if(package.ContentType == Domain.Enums.ContentType.Passwords)
-                    {
-                        var passwords = package.Data as IEnumerable<PangoPassword>;
+            var context = repositoryContextFactory.Create(userContextProvider.GetUserName(), await userContextProvider.GetEncodingOptionsAsync());
+            string? importRootFolder = await GetImportRootFolderAsync(request, result, context);
 
-                        if(passwords is not null && passwords.Any())
-                        {
-                            // re-generate the ID to avoid collisions
-                            foreach (var item in passwords)
-                            {
-                                item.Id = Guid.NewGuid();
-                            }
+            List<PangoPassword> itemsToCreate = ProcessPackages(result.ContentPackages, request, importRootFolder);
 
-                            await _passwordRepository.CreateAsync(passwords, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
-                        }
-                    }
-                    else
-                    {
-                        throw new NotImplementedException($"Cannot parse {package.ContentType.ToString()} type. Not implemented.");
-                    }
-                }
-            }
-
+            if (itemsToCreate.Count != 0) await passwordRepository.CreateAsync(itemsToCreate, context);
             return new ImportResult(result.Manifest);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Data import failed: {message}", ex.Message);
+            logger.LogError(ex, "Import failed");
+            return Error.Failure(ApplicationErrors.Data.ImportError, ex.Message);
+        }
+    }
 
-            if(ex is PangoException pEx)
+    /// <summary> 
+    /// Determines the root folder name for imported items based on import options and source structure. 
+    /// </summary>
+    private async Task<string?> GetImportRootFolderAsync(ImportDataCommand request, ImportResultDto result, IRepositoryActionContext context)
+    {
+        if (request.ImportToSeparateFolder)
+        {
+            var culture = CultureInfo.CurrentUICulture.Name;
+            string baseFolderName = culture.StartsWith("be", StringComparison.OrdinalIgnoreCase) ? "Імпартаванае" : "Imported";
+            return await CreateUniqueRootFolderAsync(baseFolderName, context);
+        }
+        else
+        {
+            string? sourceRootName = null;
+            foreach (IContentPackage package in result.ContentPackages)
             {
-                return Error.Failure(pEx.Code, pEx.Message);
+                if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
+                {
+                    var rootItems = importedItems.Where(x => string.IsNullOrEmpty(x.CatalogPath)).ToList();
+                    if (rootItems.Count != 0) { sourceRootName = rootItems.First().Name; break; }
+                }
             }
 
-            return Error.Failure(ApplicationErrors.Data.ImportError, $"Import failed: {ex.Message}");
+            if (!string.IsNullOrEmpty(sourceRootName))
+            {
+                return await CreateUniqueRootFolderAsync(sourceRootName, context);
+            }
         }
+
+        return null;
+    }
+
+    /// <summary> 
+    /// Creates a unique root folder name by appending a numeric suffix if needed and persists it. 
+    /// </summary>
+    private async Task<string> CreateUniqueRootFolderAsync(string baseName, IRepositoryActionContext context)
+    {
+        var allRootFolders = (await passwordRepository.QueryAsync(p => p.IsCatalog && string.IsNullOrEmpty(p.CatalogPath), context))
+                             .Select(x => x.Name).ToList();
+
+        string finalName = baseName;
+        int counter = 1;
+        while (allRootFolders.Any(n => n.Equals(finalName, StringComparison.OrdinalIgnoreCase)))
+        {
+            finalName = $"{baseName} ({counter})";
+            counter++;
+        }
+
+        var rootFolderNode = new PangoPassword
+        {
+            Id = Guid.NewGuid(),
+            Name = finalName,
+            IsCatalog = true,
+            CatalogPath = string.Empty,
+            UserName = userContextProvider.GetUserName(),
+            CreatedAt = DateTimeOffset.UtcNow
+        };
+        await passwordRepository.CreateAsync(rootFolderNode, context);
+        return finalName;
+    }
+
+    /// <summary> 
+    /// Processes imported content packages, filters selected items, and reconstructs hierarchy. 
+    /// </summary>
+    private List<PangoPassword> ProcessPackages(IEnumerable<IContentPackage> packages, ImportDataCommand request, string? importRootFolder)
+    {
+        List<PangoPassword> itemsToCreate = [];
+        HashSet<string> importedCatalogsLookup = new(StringComparer.OrdinalIgnoreCase);
+
+        foreach (IContentPackage package in packages)
+        {
+            if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
+            {
+                var allSourceList = importedItems.ToList();
+                HashSet<Guid> selectedIdsSet = request.SelectedIds?.Count > 0 ? GetSelectedIdsWithParents(allSourceList, [.. request.SelectedIds]) : [.. allSourceList.Select(x => x.Id)];
+                var itemsToProcess = allSourceList.Where(x => selectedIdsSet.Contains(x.Id)).ToList();
+                var processedItems = ReconstructHierarchy(itemsToProcess, importRootFolder);
+
+                foreach (var newItem in processedItems)
+                {
+                    if (string.IsNullOrWhiteSpace(newItem.Name)) continue;
+                    if (newItem.IsCatalog)
+                    {
+                        string catalogKey = GetUniqueCatalogKey(newItem);
+                        if (importedCatalogsLookup.Contains(catalogKey)) continue;
+                        importedCatalogsLookup.Add(catalogKey);
+                    }
+                    newItem.Id = Guid.NewGuid();
+                    newItem.UserName = userContextProvider.GetUserName();
+                    newItem.CreatedAt = DateTimeOffset.UtcNow;
+                    itemsToCreate.Add(newItem);
+                }
+            }
+        }
+        return itemsToCreate;
+    }
+
+    /// <summary> 
+    /// Generates a unique catalog key using CatalogPath and Name, separated by '|'.
+    /// </summary>
+    private static string GetUniqueCatalogKey(PangoPassword item)
+    {
+        return $"{item.CatalogPath?.Trim() ?? string.Empty}|{item.Name?.Trim() ?? string.Empty}";
+    }
+
+    /// <summary> 
+    /// Returns all selected IDs and their parent IDs recursively up the hierarchy.
+    /// </summary>
+    private static HashSet<Guid> GetSelectedIdsWithParents(List<PangoPassword> allItems, HashSet<Guid> selectedIds)
+    {
+        var result = new HashSet<Guid>(selectedIds);
+        var parentMap = BuildParentMap(allItems);
+        foreach (var selectedId in selectedIds.ToList())
+        {
+            var currentId = selectedId;
+            while (parentMap.TryGetValue(currentId, out var parentId) && parentId.HasValue)
+            {
+                if (!result.Contains(parentId.Value)) result.Add(parentId.Value);
+                currentId = parentId.Value;
+            }
+        }
+        return result;
+    }
+
+    /// <summary> 
+    /// Builds a parent-child mapping using CatalogPath to identify hierarchical relationships.
+    /// </summary>
+    private static Dictionary<Guid, Guid?> BuildParentMap(List<PangoPassword> allItems)
+    {
+        var parentMap = new Dictionary<Guid, Guid?>();
+        var pathMap = new Dictionary<string, PangoPassword>(StringComparer.OrdinalIgnoreCase);
+        foreach (var item in allItems)
+        {
+            if (string.IsNullOrWhiteSpace(item.Name)) continue;
+            string fullPath = GetFullPath(item);
+            if (!pathMap.ContainsKey(fullPath)) pathMap[fullPath] = item;
+        }
+        foreach (var item in allItems)
+        {
+            if (string.IsNullOrEmpty(item.CatalogPath)) parentMap[item.Id] = null;
+            else
+            {
+                var parentPath = item.CatalogPath;
+                parentMap[item.Id] = pathMap.TryGetValue(parentPath, out var parent) ? parent.Id : (Guid?)null;
+            }
+        }
+        return parentMap;
+    }
+
+    /// <summary> 
+    /// Reconstructs the item hierarchy by prepending a forced root path to CatalogPath.
+    /// </summary>
+    private static List<PangoPassword> ReconstructHierarchy(List<PangoPassword> itemsToSave, string? forcedRoot)
+    {
+        var result = new List<PangoPassword>(itemsToSave.Count);
+        foreach (var item in itemsToSave)
+        {
+            var newItem = item.Adapt<PangoPassword>();
+            if (!string.IsNullOrEmpty(forcedRoot))
+            {
+                newItem.CatalogPath = string.IsNullOrEmpty(item.CatalogPath) ? forcedRoot : $"{forcedRoot}{AppConstants.CatalogDelimeter}{item.CatalogPath}";
+            }
+            else
+            {
+                newItem.CatalogPath = item.CatalogPath;
+            }
+            result.Add(newItem);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Constructs the full path of an item by combining CatalogPath and Name.
+    /// </summary>
+    private static string GetFullPath(PangoPassword item)
+    {
+        return string.IsNullOrEmpty(item.CatalogPath) ? item.Name : $"{item.CatalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
     }
 }

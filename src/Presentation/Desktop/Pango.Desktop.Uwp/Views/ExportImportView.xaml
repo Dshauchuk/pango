@@ -197,64 +197,34 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Name="FolderTemplate"
-                      x:DataType="local:PangoExplorerItem">
-            <TreeViewItem AutomationProperties.Name="{Binding Name}"
-                          ItemsSource="{Binding Children}" 
-                          IsExpanded="False" 
+        <DataTemplate x:Name="FolderTemplate" x:DataType="local:PangoExplorerItem">
+            <TreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" 
+                          ItemsSource="{Binding Children}"
                           Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
-                <!--<TreeViewItem.ContextFlyout>
-                    <MenuFlyout>
-                        <MenuFlyoutItem x:Name="Edit_CatalogContextMenuItem" Text="{loc:StringResource Key=Edit}" Icon="Edit" Click="EditContextMenuItem_Click"/>
-                        <MenuFlyoutItem x:Name="Delete_CatalogContextMenuItem" Text="{loc:StringResource Key=Delete}" Icon="Delete" Click="DeleteContextMenuItem_Click"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem x:Name="AddPassword_CatalogContextMenuItem" Text="{loc:StringResource Key=AddPassword}" Icon="Add" Click="AddPassword_CatalogContextMenuItem_Click"/>
-                        <MenuFlyoutItem x:Name="AddCatalog_CatalogContextMenuItem" Text="{loc:StringResource Key=AddNewCatalog}" Icon="NewFolder" Click="AddCatalog_CatalogContextMenuItem_Click"/>
-                    </MenuFlyout>
-                </TreeViewItem.ContextFlyout>-->
-                <StackPanel Orientation="Horizontal">
-                    <Image Width="20"
-                       Source="../Assets/folder.png"/>
-                    <TextBlock Margin="0,0,10,0"/>
-                    <TextBlock Text="{Binding Name}" />
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                              MinWidth="0" Margin="0,0,8,0"/>
+                    <Image Width="20" Source="../Assets/folder.png"/>
+                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
                 </StackPanel>
             </TreeViewItem>
         </DataTemplate>
 
-        <DataTemplate x:Name="FileTemplate"
-                      x:DataType="local:PangoExplorerItem">
-            <TreeViewItem HorizontalAlignment="Stretch"
-                          Padding="0 0 10 0"
-                          HorizontalContentAlignment="Stretch"
-                          AutomationProperties.Name="{Binding Name}"
-                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
-
-                <!--<TreeViewItem.ContextFlyout>
-                    <MenuFlyout >
-                        <MenuFlyoutItem x:Name="SeePassword_PasswordContextMenuItem" Text="{loc:StringResource Key=SeePassword}" Click="SeeContextMenuItem_Click">
-                            <MenuFlyoutItem.Icon>
-                                <FontIcon Glyph="&#xE7B3;"/>
-                            </MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutItem x:Name="EditPassword_PasswordContextMenuItem" Text="{loc:StringResource Key=Edit}" Icon="Edit" Click="EditContextMenuItem_Click"/>
-                        <MenuFlyoutItem x:Name="DeletePassword_PasswordContextMenuItem" Text="{loc:StringResource Key=Delete}" Icon="Delete" Click="DeleteContextMenuItem_Click"/>
-                        <MenuFlyoutSeparator/>
-                        <MenuFlyoutItem x:Name="CopyPassword_PasswordContextMenuItem" Text="{loc:StringResource Key=CopyPassword}" Icon="Copy" Click="CopyPassword_PasswordContextMenuItem_Click"/>
-                    </MenuFlyout>
-                </TreeViewItem.ContextFlyout>-->
-                <Grid HorizontalAlignment="Stretch">
+        <DataTemplate x:Name="FileTemplate" x:DataType="local:PangoExplorerItem">
+            <TreeViewItem Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
+                <Grid>
                     <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
 
-                    <FontIcon Glyph="&#xE8D7;"
-                          Margin="5,2"
-                          FontSize="{StaticResource FontIconSize}"/>
+                    <CheckBox Grid.Column="0" 
+                              IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                              MinWidth="0" Margin="0,0,8,0"/>
 
-                    <TextBlock Grid.Column="1" 
-                           Text="{Binding Name}"
-                           VerticalAlignment="Center"/>
+                    <FontIcon Grid.Column="1" Glyph="&#xE8D7;" FontSize="{StaticResource FontIconSize}" Margin="0,0,8,0"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center"/>
                 </Grid>
             </TreeViewItem>
         </DataTemplate>
@@ -265,74 +235,45 @@
     </Page.Resources>
 
     <Grid>
-        <Grid x:Name="RootGrid"
-              Margin="{StaticResource PageContentContainerMargin}">
-
+        <Grid x:Name="RootGrid" Margin="{StaticResource PageContentContainerMargin}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0">
-                <TextBlock Margin="0" 
-                           Text="{Binding TitleText}"
-                           Style="{StaticResource HeaderTextBlockStyle}"/>
-            </Grid>
+            <TextBlock Margin="0" Text="{Binding TitleText}" Style="{StaticResource HeaderTextBlockStyle}"/>
 
-            <Pivot Grid.Row="1"
-                   x:Name="ExportImport_Pivot"
-                   Margin="0"
-                   IsLocked="True"
-                   SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
+            <Pivot Grid.Row="1" x:Name="ExportImport_Pivot" Margin="0" IsLocked="True" SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
+                <!-- Header Template (Empty) -->
                 <Pivot.HeaderTemplate>
                     <DataTemplate>
-                        <StackPanel Width="0"
-                                Height="0">
-                            <TextBlock Text="{Binding}" />
-                        </StackPanel>
+                        <StackPanel Width="0" Height="0"/>
                     </DataTemplate>
                 </Pivot.HeaderTemplate>
 
+                <!-- 0: Main Menu -->
                 <PivotItem Margin="0">
-                    <Grid HorizontalAlignment="Center"
-                          VerticalAlignment="Center">
-                        <StackPanel Orientation="Vertical"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center"
-                                    MaxWidth="400">
-                            <TextBlock Text="{loc:StringResource Key=ExportAndImportDescriptionLabel}"
-                                       TextWrapping="WrapWholeWords"
-                                       HorizontalAlignment="Center"/>
-                            <StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Center">
-                                <Button Margin="10" 
-                                        Content="{loc:StringResource Key=ExportDataButtonContent}"
-                                        HorizontalAlignment="Center"
-                                        Style="{StaticResource AccentButtonStyle}"
-                                        Command="{Binding Path=NavigateToOptionCommand}">
+                    <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <StackPanel Orientation="Vertical" MaxWidth="400" Spacing="20">
+                            <TextBlock Text="{loc:StringResource Key=ExportAndImportDescriptionLabel}" TextWrapping="WrapWholeWords" HorizontalAlignment="Center" TextAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="10">
+                                <Button Content="{loc:StringResource Key=ExportDataButtonContent}" Style="{StaticResource AccentButtonStyle}" Command="{Binding NavigateToOptionCommand}">
                                     <Button.CommandParameter>
                                         <x:Int32>1</x:Int32>
                                     </Button.CommandParameter>
                                 </Button>
-
-                                <TextBlock Margin="5"
-                                           VerticalAlignment="Center"
-                                           Text="{loc:StringResource Key=Or}"/>
-
-                                <Button Margin="10" 
-                                        Content="{loc:StringResource Key=ImportDataButtonContent}"
-                                        HorizontalAlignment="Center"
-                                        Style="{StaticResource AccentButtonStyle}"
-                                        Command="{Binding Path=NavigateToOptionCommand}">
+                                <TextBlock Text="{loc:StringResource Key=Or}" VerticalAlignment="Center"/>
+                                <Button Content="{loc:StringResource Key=ImportDataButtonContent}" Style="{StaticResource AccentButtonStyle}" Command="{Binding NavigateToOptionCommand}">
                                     <Button.CommandParameter>
                                         <x:Int32>2</x:Int32>
-                                    </Button.CommandParameter>                                
+                                    </Button.CommandParameter>
                                 </Button>
                             </StackPanel>
                         </StackPanel>
                     </Grid>
                 </PivotItem>
 
+                <!-- 1: Export Selection -->
                 <PivotItem Margin="0">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -340,32 +281,18 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
+                        <TextBlock Text="{loc:StringResource Key='SelectItemsToExport'}" Style="{StaticResource SubtitleTextBlockStyle}"/>
 
-                        <TextBlock Margin="0" 
-                                   Text="{loc:StringResource Key='SelectItemsToExport'}"
-                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
-
-                        <Grid Grid.Row="1">
+                        <Grid Grid.Row="1" Margin="0,10">
                             <TreeView x:Name="PasswordsTreeView" 
-                                      Margin="10 "
-                                      SelectionMode="Multiple"
-                                      ItemsSource="{Binding Path=Passwords}"                                      
-                                      ItemContainerStyle="{StaticResource MUX_MultiSelectTreeViewItemStyle}"
-                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}">
-                            </TreeView>
+                                      SelectionMode="None" 
+                                      ItemsSource="{Binding Passwords}" 
+                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}"/>
                         </Grid>
-                        
-                        <StackPanel Grid.Row="2" 
-                                    Margin="10" 
-                                    Orientation="Horizontal"
-                                    HorizontalAlignment="Right">
-                            <Button Margin="5" 
-                                    Content="{loc:StringResource Key='ExportDataButtonContent'}"
-                                    Style="{StaticResource AccentButtonStyle}"
-                                    Command="{Binding Path=ExportDataCommand}"/>
-                            <Button Margin="5" 
-                                    Content="{loc:StringResource Key='Cancel'}"
-                                    Command="{Binding Path=NavigateToOptionCommand}">
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                            <Button Content="{loc:StringResource Key='ExportDataButtonContent'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding ExportDataCommand}"/>
+                            <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding NavigateToOptionCommand}">
                                 <Button.CommandParameter>
                                     <x:Int32>0</x:Int32>
                                 </Button.CommandParameter>
@@ -374,6 +301,7 @@
                     </Grid>
                 </PivotItem>
 
+                <!-- 2: Import File Selection -->
                 <PivotItem>
                     <Grid>
                         <Grid.RowDefinitions>
@@ -382,59 +310,52 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-
-                        <TextBlock Margin="0" 
-                                   Text="{loc:StringResource Key='SelectFile_Title'}"
-                                   Style="{StaticResource SubtitleTextBlockStyle}"/>
-
-                        <TextBlock Grid.Row="1" 
-                                   Margin="0" 
-                                   Text="{loc:StringResource Key='SelectFile_Hint'}"
-                                   Style="{StaticResource BodyTextBlockStyle}"/>
-
-                        <StackPanel Grid.Row="2" 
-                                    Margin="10, 20, 0, 0"
-                                    VerticalAlignment="Top" 
-                                    Orientation="Horizontal">
-                            <Button x:Name="PickPngxFileButton" 
-                                    Content="{loc:StringResource Key='Select_Button'}"
-                                    Click="PickPngxFileButton_Click" 
-                                    VerticalAlignment="Center"
-                                    Margin="5"/>
-
-                            <FontIcon Glyph="&#xE8E5;"
-                                      Margin="10,2,0,2"
-                                      VerticalAlignment="Center"
-                                      FontSize="{StaticResource FontIconSize}"
-                                      Visibility="{Binding Text, ElementName=PickPngxFileOutputTextBlock, Converter={StaticResource NullOrEmptyToCollapsedConverter}}"/>
-
-                            <TextBlock x:Name="PickPngxFileOutputTextBlock" 
-                                       TextWrapping="Wrap" 
-                                       Text="{Binding ImportFilePath}"
-                                       VerticalAlignment="Center"
-                                       Padding="0"
-                                       Margin="5"/>
-                        </StackPanel>
-
-                        <Grid Grid.Row="3"
-                              Margin="0, 10">
-                            <StackPanel Orientation="Horizontal"
-                                        HorizontalAlignment="Right">
-                                <Button Margin="5" 
-                                        Content="{loc:StringResource Key='ImportDataButtonContent'}"
-                                        Style="{StaticResource AccentButtonStyle}"
-                                        Command="{Binding ImportDataCommand}"/>
-
-                                <Button Margin="5"
-                                        Content="{loc:StringResource Key='Cancel'}"
-                                        Command="{Binding NavigateToOptionCommand}">
-                                    <Button.CommandParameter>
-                                        <x:Int32>0</x:Int32>
-                                    </Button.CommandParameter>
-                                </Button>
+                        <TextBlock Text="{loc:StringResource Key='SelectFile_Title'}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+                        <TextBlock Grid.Row="1" Text="{loc:StringResource Key='SelectFile_Hint'}" Style="{StaticResource BodyTextBlockStyle}" Margin="0,5,0,0"/>
+                        <StackPanel Grid.Row="2" Margin="0,20,0,0" Orientation="Horizontal" Spacing="10">
+                            <Button Content="{loc:StringResource Key='Select_Button'}" Click="PickPngxFileButton_Click"/>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding Text, ElementName=PickPngxFileOutputTextBlock, Converter={StaticResource NullOrEmptyToCollapsedConverter}}">
+                                <FontIcon Glyph="&#xE8E5;" FontSize="{StaticResource FontIconSize}" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="PickPngxFileOutputTextBlock" Text="{Binding ImportFilePath}" VerticalAlignment="Center" Margin="5,0,0,0"/>
                             </StackPanel>
+                        </StackPanel>
+                        <StackPanel Grid.Row="3" Margin="0,20" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                            <Button Content="{loc:StringResource Key='ImportDataButtonContent'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding ReadImportFileCommand}"/>
+                            <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding NavigateToOptionCommand}">
+                                <Button.CommandParameter>
+                                    <x:Int32>0</x:Int32>
+                                </Button.CommandParameter>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </PivotItem>
+
+                <!-- 3: Import Item Selection -->
+                <PivotItem Margin="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Text="{loc:StringResource Key='SelectItemsToImport'}" Style="{StaticResource SubtitleTextBlockStyle}"/>
+
+                        <Grid Grid.Row="1" Margin="0,10">
+                            <TreeView x:Name="ImportTreeView" 
+                                      SelectionMode="None"
+                                      ItemsSource="{Binding ImportItems}"                                      
+                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}">
+                            </TreeView>
                         </Grid>
 
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+                            <Button Content="{loc:StringResource Key='ImportDataButtonContent'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding FinalizeImportCommand}"/>
+                            <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding NavigateToOptionCommand}">
+                                <Button.CommandParameter>
+                                    <x:Int32>0</x:Int32>
+                                </Button.CommandParameter>
+                            </Button>
+                        </StackPanel>
                     </Grid>
                 </PivotItem>
             </Pivot>

@@ -6,6 +6,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:toolkit="using:CommunityToolkit.WinUI.Controls"
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
+    xmlns:controls="using:Pango.Desktop.Uwp.Controls"
     xmlns:viewmodels="using:Pango.Desktop.Uwp.ViewModels"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     d:DataContext="{d:DesignInstance Type=viewmodels:SettingsViewModel}"
@@ -18,96 +19,178 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        
+
         <TextBlock Text="{loc:StringResource Key='Settings'}"
                    Style="{StaticResource HeaderTextBlockStyle}"/>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Orientation="Vertical">
-                <!--Security Section-->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{loc:StringResource Key='Security'}"
-                               Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <StackPanel Orientation="Vertical"
-                                Margin="{StaticResource ControlSectionMargin}">
-                        <toolkit:SettingsCard Header="{loc:StringResource Key='Autolock'}"
-                                              Description="{loc:StringResource Key='AutolockDescription'}">
-                            <ToggleSwitch IsOn="{Binding AllowAutolock, Mode=TwoWay}"/>
-                        </toolkit:SettingsCard>
-                        <toolkit:SettingsCard Margin="0 4 0 0" 
-                                              Header="{loc:StringResource Key='AutolockAfterMinutes'}"
-                                              Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}">
-                            <ComboBox DisplayMemberPath="Value"
-                                      SelectedValuePath="Value"
-                                      ItemsSource="{Binding LockOnIdleInMinutesItems}"
-                                      SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"/>
-                        </toolkit:SettingsCard>
-                    </StackPanel>
-                </StackPanel>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Orientation="Vertical" Spacing="8" Padding="0,0,20,40">
 
-                <!--Language Section-->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{loc:StringResource Key='Language'}"
-                               Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}"
-                                          Header="{loc:StringResource Key='ChooseApplicationLanguage'}">
-                        <ComboBox DisplayMemberPath="Name"
-                                  SelectedValuePath="Name"
-                                  ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}"/>
+                <!-- Security Section -->
+                <TextBlock Text="{loc:StringResource Key='Security'}"
+                           Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <StackPanel Orientation="Vertical" Spacing="4" Margin="{StaticResource ControlSectionMargin}">
+                    <toolkit:SettingsCard Header="{loc:StringResource Key='Autolock'}"
+                                          Description="{loc:StringResource Key='AutolockDescription'}">
+                        <ToggleSwitch IsOn="{Binding AllowAutolock, Mode=TwoWay}"
+                                      OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
+                                      OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
+                    </toolkit:SettingsCard>
+                    <toolkit:SettingsCard Header="{loc:StringResource Key='AutolockAfterMinutes'}"
+                                          Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}">
+                        <ComboBox DisplayMemberPath="Value"
+                                  SelectedValuePath="Key"
+                                  ItemsSource="{Binding LockOnIdleInMinutesItems}"
+                                  SelectedItem="{Binding SelectedLockOnIdleInMinutesItem, Mode=TwoWay}"
+                                  MinWidth="150"/>
                     </toolkit:SettingsCard>
                 </StackPanel>
 
-                <!--Appearance Section-->
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Text="{loc:StringResource Key='Appearance'}"
-                               Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <toolkit:SettingsCard Header="{loc:StringResource Key='Theme'}"
+                <!-- Backup Section -->
+                <TextBlock Text="{loc:StringResource Key='BackupSettings_Header'}"
+                           Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+
+                <toolkit:SettingsExpander IsExpanded="True" 
                                           Margin="{StaticResource ControlSectionMargin}">
-                        <ComboBox DisplayMemberPath="Name"
-                                  SelectedValuePath="Name"
-                                  ItemsSource="{Binding AppThemes}"
-                                  SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}"/>
-                    </toolkit:SettingsCard>
-                </StackPanel>
 
-                <!--Other Section-->
-                <StackPanel Orientation="Vertical">
-                    <StackPanel Orientation="Vertical">
-                        <TextBlock Text="{loc:StringResource Key='Other'}"
-                                   Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                        <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}"
-                                              Header="{loc:StringResource Key='LaunchAtStartup'}">
-                            <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}"/>
+                    <toolkit:SettingsExpander.Header>
+                        <Grid>
+                            <StackPanel>
+                                <TextBlock Text="{loc:StringResource Key='BackupService_Toggle'}" Style="{StaticResource BodyStrongTextBlockStyle}"/>
+                                <TextBlock Text="{loc:StringResource Key='BackupServiceDescription'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+                        </Grid>
+                    </toolkit:SettingsExpander.Header>
+
+                    <ToggleSwitch IsOn="{Binding IsBackupServiceEnabled, Mode=TwoWay}" 
+                                  OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
+                                  OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
+
+                    <toolkit:SettingsExpander.Items>
+                        <StackPanel Spacing="16" Padding="20,10,20,20">
+                            <!-- Path Row -->
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="{loc:StringResource Key='BackupPath_Label'}" Margin="0,0,0,4"/>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding BackupPath, Mode=TwoWay}" IsReadOnly="True" Margin="0,0,8,0"/>
+                                        <Button Grid.Column="1" Content="{loc:StringResource Key='Browse_Button'}" Command="{Binding BrowseBackupPathCommand}"/>
+                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                                        <Button Content="{loc:StringResource Key='DefaultPath_Button'}" Command="{Binding SetDefaultBackupPathCommand}" FontSize="12"/>
+                                        <Button Content="{loc:StringResource Key='OpenFolder_Button'}" Command="{Binding OpenBackupFolderCommand}" FontSize="12"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+
+                            <MenuFlyoutSeparator />
+
+                            <!-- Settings Row -->
+                            <Grid ColumnSpacing="20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Frequency -->
+                                <StackPanel>
+                                    <TextBlock Text="{loc:StringResource Key='BackupInterval_Label'}" Margin="0,0,0,4"/>
+                                    <ComboBox ItemsSource="{Binding BackupIntervals}" SelectedItem="{Binding SelectedBackupInterval, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate>
+                                                <TextBlock><Run Text="{Binding}"/> <Run Text="{loc:StringResource Key='Minute(-s)'}"/></TextBlock>
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Retention -->
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{loc:StringResource Key='BackupRetention_Label'}" Margin="0,0,0,4"/>
+                                    <ComboBox SelectedItem="{Binding RetentionDays, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                        <x:Int32>1</x:Int32>
+                                        <x:Int32>7</x:Int32>
+                                        <x:Int32>14</x:Int32>
+                                        <x:Int32>28</x:Int32>
+                                    </ComboBox>
+                                    <TextBlock Text="{loc:StringResource Key='Day(-s)'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <MenuFlyoutSeparator />
+
+                            <!-- Password Row -->
+                            <StackPanel>
+                                <TextBlock Text="{loc:StringResource Key='BackupPassword_Label'}" Margin="0,0,0,4"/>
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox Text="{Binding BackupPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsSpellCheckEnabled="False"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                        <Button Content="{loc:StringResource Key='SaveChanges'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding SaveBackupSettingsCommand}"/>
+                                        <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding CancelBackupChangesCommand}"/>
+                                    </StackPanel>
+                                </Grid>
+                                <TextBlock Text="{loc:StringResource Key='BackupPassword_Tooltip'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                            </StackPanel>
+
+                        </StackPanel>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
+
+                <!-- Import Section -->
+                <TextBlock Text="{loc:StringResource Key='ImportSettings_Header'}"
+                           Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+
+                <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}" 
+                                      Header="{loc:StringResource Key='ImportDestination_Label'}"
+                                      Description="{loc:StringResource Key='ImportDestination_Description'}">
+                    <ComboBox DisplayMemberPath="Content"
+                              ItemsSource="{Binding ImportDestinationOptions}"
+                              SelectedItem="{Binding SelectedImportDestination, Mode=TwoWay}"
+                              MinWidth="200"/>
+                </toolkit:SettingsCard>
+
+                <!-- Other Sections -->
+                <TextBlock Text="{loc:StringResource Key='Language'}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}" Header="{loc:StringResource Key='ChooseApplicationLanguage'}">
+                    <ComboBox DisplayMemberPath="Name" SelectedValuePath="Name" ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" MinWidth="200"/>
+                </toolkit:SettingsCard>
+
+                <TextBlock Text="{loc:StringResource Key='Appearance'}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <toolkit:SettingsCard Header="{loc:StringResource Key='Theme'}" Margin="{StaticResource ControlSectionMargin}">
+                    <ComboBox DisplayMemberPath="Name" SelectedValuePath="Name" ItemsSource="{Binding AppThemes}" SelectedItem="{Binding SelectedAppTheme, Mode=TwoWay}" MinWidth="200"/>
+                </toolkit:SettingsCard>
+
+                <TextBlock Text="{loc:StringResource Key='Other'}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}" Header="{loc:StringResource Key='LaunchAtStartup'}">
+                    <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}" OnContent="{loc:StringResource Key='ToggleSwitch_On'}" OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
+                </toolkit:SettingsCard>
+
+                <TextBlock Text="{loc:StringResource Key=AboutApp}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <toolkit:SettingsExpander Header="{StaticResource AppTitleName}" Margin="{StaticResource ControlSectionMargin}" Description="{loc:StringResource Key='Copyright_Description'}">
+                    <toolkit:SettingsExpander.HeaderIcon>
+                        <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/StoreLogo.scale-400.png" />
+                    </toolkit:SettingsExpander.HeaderIcon>
+                    <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" IsTextSelectionEnabled="True" Text="{Binding Version}" />
+                    <toolkit:SettingsExpander.Items>
+                        <toolkit:SettingsCard x:Name="bugRequestCard" Click="BugRequestCard_Click" Header="{loc:StringResource Key='BugRequest_Header'}" IsClickEnabled="True">
+                            <toolkit:SettingsCard.ActionIcon>
+                                <FontIcon Glyph="&#xE8A7;" />
+                            </toolkit:SettingsCard.ActionIcon>
                         </toolkit:SettingsCard>
-                    </StackPanel>
-                </StackPanel>
-
-                <StackPanel Orientation="Vertical"
-                            Margin="0 0 0 40">
-                    <TextBlock Text="{loc:StringResource Key=AboutApp}"
-                               Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                    <toolkit:SettingsExpander Header="{StaticResource AppTitleName}" 
-                                              Margin="{StaticResource ControlSectionMargin}"
-                                              Description="© 2026 Cats Lab. All rights reserved.">
-                        <toolkit:SettingsExpander.HeaderIcon>
-                            <BitmapIcon ShowAsMonochrome="False" UriSource="/Assets/StoreLogo.scale-400.png" />
-                        </toolkit:SettingsExpander.HeaderIcon>
-                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   IsTextSelectionEnabled="True"
-                                   Text="{Binding Version}" />
-                        <toolkit:SettingsExpander.Items>
-                            <toolkit:SettingsCard x:Name="bugRequestCard"
-                                                  Click="BugRequestCard_Click"
-                                                  Header="File a bug or request new sample"
-                                                  IsClickEnabled="True">
-                                <toolkit:SettingsCard.ActionIcon>
-                                    <FontIcon Glyph="&#xE8A7;" />
-                                </toolkit:SettingsCard.ActionIcon>
-                            </toolkit:SettingsCard>
-                        </toolkit:SettingsExpander.Items>
-                    </toolkit:SettingsExpander>
-                </StackPanel>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
             </StackPanel>
         </ScrollViewer>
     </Grid>
