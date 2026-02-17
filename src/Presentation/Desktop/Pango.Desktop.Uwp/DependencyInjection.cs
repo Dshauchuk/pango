@@ -50,7 +50,8 @@ public static class DependencyInjection
             .AddSingleton<ExportImportViewModel>()
             .AddSingleton<ImportDialogViewModel>()
             .AddSingleton<UserViewModel>()
-            .AddSingleton<GeneratePasswordViewModel>();
+            .AddSingleton<GeneratePasswordViewModel>()
+            .AddSingleton<GeneratePasswordDialogViewModel>();
 
         return services;
     }
