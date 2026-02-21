@@ -25,6 +25,9 @@
       <Deploy />
     </Project>
   </Folder>
+  <Folder Name="/Services/">
+    <Project Path="src/Services/Pango.BackupService/Pango.BackupService.csproj" />
+  </Folder>
   <Folder Name="/Shared/">
     <Project Path="src/Shared/Pango.Shared/Pango.Shared.csproj" />
   </Folder>

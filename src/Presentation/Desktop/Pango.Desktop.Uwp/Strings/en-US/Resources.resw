@@ -729,4 +729,10 @@
   <data name="ImportPreview_Loading" xml:space="preserve">
     <value>Reading file structure...</value>
   </data>
+  <data name="ValidationError_CatalogExists" xml:space="preserve">
+    <value>Folder already exists.</value>
+  </data>
+  <data name="ValidationError_InvalidChars" xml:space="preserve">
+    <value>Invalid characters in the name.</value>
+  </data>
 </root>

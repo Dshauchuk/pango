@@ -16,7 +16,7 @@ using Pango.Desktop.Uwp.Views.Abstract;
 using System;
 using System.Linq;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
+// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409  
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -28,7 +28,7 @@ public sealed partial class Shell : ViewBase
 {
     public Shell()
     {
-        this.InitializeComponent();
+        InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();
 
         SetApplicationLanguage();
@@ -64,7 +64,6 @@ public sealed partial class Shell : ViewBase
         {
             TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, Colors.White);
         }
-
     }
 
     private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
@@ -86,7 +85,7 @@ public sealed partial class Shell : ViewBase
 
     private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
     {
-        var notification = new Notification()
+        Notification notification = new()
         {
             Message = message.Message,
             Severity = CastSeverity(message.Type),
@@ -97,7 +96,7 @@ public sealed partial class Shell : ViewBase
         InAppNotification.Show(notification);
     }
 
-    InfoBarSeverity CastSeverity(AppNotificationType notificationType)
+    private InfoBarSeverity CastSeverity(AppNotificationType notificationType)
     {
         return notificationType switch
         {
@@ -120,7 +119,7 @@ public sealed partial class Shell : ViewBase
 
     #region Private Methods
 
-    private void SetApplicationLanguage()
+    private static void SetApplicationLanguage()
     {
         AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
     }
@@ -139,7 +138,7 @@ public sealed partial class Shell : ViewBase
     }
 
     // Select the introduction item when the shell is loaded
-    private void Shell_OnLoaded(object sender, RoutedEventArgs e)
+    private void Shell_OnLoaded(object sender, RoutedEventArgs routedEventArgs)
     {
 
     }
