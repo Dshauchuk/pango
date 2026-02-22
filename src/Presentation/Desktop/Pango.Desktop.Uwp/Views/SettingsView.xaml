@@ -174,7 +174,7 @@
 
                 <TextBlock Text="{loc:StringResource Key='Other'}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
                 <toolkit:SettingsCard Margin="{StaticResource ControlSectionMargin}" Header="{loc:StringResource Key='LaunchAtStartup'}">
-                    <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup}" OnContent="{loc:StringResource Key='ToggleSwitch_On'}" OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
+                    <ToggleSwitch IsOn="{Binding AllowLaunchAtStartup, Mode=TwoWay}" OnContent="{loc:StringResource Key='ToggleSwitch_On'}" OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
                 </toolkit:SettingsCard>
 
                 <TextBlock Text="{loc:StringResource Key=AboutApp}" Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
