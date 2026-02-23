@@ -155,6 +155,12 @@ public class BackupManager(ILogger<BackupManager> logger) : IBackupManager
                         string datePart = file.Name[..TimestampPrefixLength];
                         if (DateTime.TryParseExact(datePart, DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime backupDate))
                         {
+                            if (Math.Abs((file.CreationTime - backupDate).TotalMinutes) > 2)
+                            {
+                                _logger.LogWarning("Skipping cleanup for {Name}: Metadata timestamp does not match filename.", file.Name);
+                                continue;
+                            }
+
                             double ageInDays = (now - backupDate).TotalDays;
 
                             if (ageInDays > retentionDays)

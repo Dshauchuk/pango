@@ -8,6 +8,7 @@ using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility;
+using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -48,12 +49,14 @@ public partial class SettingsViewModel : ViewModelBase
     private readonly IUserContextProvider _userContextProvider;
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppMetaService _appMetaService;
+    private readonly IStartupService _startupService;
     private readonly ResourceLoader _resourceLoader;
 
     // Appearance & Behavior
     private AppLanguage _selectedLanguage;
     private AppTheme _selectedAppTheme;
     private bool _allowAutolock;
+    private bool _allowLaunchAtStartup;
     private KeyValuePair<int, string>? _selectedLockOnIdleInMinutesItem;
     private ImportDestination _selectedImportDestination;
     private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
@@ -74,11 +77,14 @@ public partial class SettingsViewModel : ViewModelBase
         ILogger<SettingsViewModel> logger,
         IUserContextProvider userContextProvider,
         IAppDomainProvider appDomainProvider,
-        IAppMetaService appMetaService) : base(logger)
+        IAppMetaService appMetaService,
+        IStartupService startupService)
+        : base(logger)
     {
         _userContextProvider = userContextProvider;
         _appDomainProvider = appDomainProvider;
         _appMetaService = appMetaService;
+        _startupService = startupService;
         _resourceLoader = new ResourceLoader();
 
         Languages = new ObservableCollection<AppLanguage>(AppLanguage.GetAppLanguageCollection());
@@ -115,6 +121,7 @@ public partial class SettingsViewModel : ViewModelBase
         }
 
         _ = InitializeBackupConfigAsync();
+        _ = CheckStartupStatusAsync();
     }
 
     #endregion
@@ -189,7 +196,17 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    public bool AllowLaunchAtStartup { get => false; set { OnPropertyChanged(); } }
+    public bool AllowLaunchAtStartup
+    {
+        get => _allowLaunchAtStartup;
+        set
+        {
+            if (SetProperty(ref _allowLaunchAtStartup, value))
+            {
+                _ = ToggleStartupAsync(value);
+            }
+        }
+    }
 
     #endregion
 
@@ -272,6 +289,30 @@ public partial class SettingsViewModel : ViewModelBase
     public void BugRequestCard_Click(object _, RoutedEventArgs _1)
     {
         _ = Launcher.LaunchUriAsync(new Uri("https://github.com/"));
+    }
+
+    #endregion
+
+    #region Methods - Startup Implementation 
+
+    private async Task CheckStartupStatusAsync()
+    {
+        bool enabled = await _startupService.IsStartupEnabledAsync();
+        SetProperty(ref _allowLaunchAtStartup, enabled, nameof(AllowLaunchAtStartup));
+    }
+
+    private async Task ToggleStartupAsync(bool enable)
+    {
+        if (enable)
+        {
+            bool success = await _startupService.EnableStartupAsync();
+            if (!success)
+                SetProperty(ref _allowLaunchAtStartup, false, nameof(AllowLaunchAtStartup));
+        }
+        else
+        {
+            await _startupService.DisableStartupAsync();
+        }
     }
 
     #endregion
@@ -419,7 +460,7 @@ public partial class SettingsViewModel : ViewModelBase
         {
             if (!Directory.Exists(BackupPath)) Directory.CreateDirectory(BackupPath);
 
-            BackupSettings settings;
+            BackupSettings? settings;
             if (File.Exists(_configPath))
             {
                 string json = await File.ReadAllTextAsync(_configPath);
@@ -439,11 +480,12 @@ public partial class SettingsViewModel : ViewModelBase
             string userName = _userContextProvider.GetUserName();
             var userProfile = new UserBackupProfile
             {
-                BackupPassword = this.BackupPassword,
+                BackupPassword = BackupPassword,
                 SourceDataPath = _appDomainProvider.GetUserFolderPath(userName)
             };
 
-            if (!settings.Users.TryAdd(userName, userProfile)) settings.Users[userName] = userProfile;
+            if (!settings.Users.TryAdd(userName, userProfile))
+                settings.Users[userName] = userProfile;
 
             await SaveSettingsToFileAsync(settings);
             SendNotification("BackupSaved_Message", AppNotificationType.Success);

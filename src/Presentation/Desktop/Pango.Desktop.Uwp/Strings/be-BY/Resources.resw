@@ -727,4 +727,10 @@
   <data name="ImportPreview_Loading" xml:space="preserve">
     <value>Чытанне структуры файла...</value>
   </data>
+  <data name="ValidationError_CatalogExists" xml:space="preserve">
+    <value>Папка ўжо існуе.</value>
+  </data>
+  <data name="ValidationError_InvalidChars" xml:space="preserve">
+    <value>Нядзейсныя знакі ў назве.</value>
+  </data>
 </root>
