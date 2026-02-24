@@ -127,33 +127,33 @@ public sealed partial class MainAppView : ViewBase
 
         _initialView = null;
     }
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    }
+    //protected override void RegisterMessages()
+    //{
+    //    base.RegisterMessages();
+    //    WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+    //}
 
-    protected override void UnregisterMessages()
-    {
-        base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    }
+    //protected override void UnregisterMessages()
+    //{
+    //    base.UnregisterMessages();
+    //    WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
+    //}
 
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        switch (message.Value.NavigatedView)
-        {
-            case AppView.PasswordsIndex:
-                NavigationFrame.Navigate(typeof(PasswordsView));
-                NavigationView.SelectedItem =
-                    NavigationItems.First(i => i.PageType == typeof(PasswordsView)).Item;
-                break;
+    //private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    //{
+    //    switch (message.Value.NavigatedView)
+    //    {
+    //        case AppView.PasswordsIndex:
+    //            NavigationFrame.Navigate(typeof(PasswordsView));
+    //            NavigationView.SelectedItem =
+    //                NavigationItems.First(i => i.PageType == typeof(PasswordsView)).Item;
+    //            break;
 
-            case AppView.GeneratePassword:
-                NavigationFrame.Navigate(typeof(GeneratePasswordView));
-                NavigationView.SelectedItem =
-                    NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView)).Item;
-                break;
-        }
-    }
+    //        case AppView.GeneratePassword:
+    //            NavigationFrame.Navigate(typeof(GeneratePasswordView));
+    //            NavigationView.SelectedItem =
+    //                NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView)).Item;
+    //            break;
+    //    }
+    //}
 }

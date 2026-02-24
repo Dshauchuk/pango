@@ -5,8 +5,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Dialogs;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -20,6 +23,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
 {
     #region Fields
     private readonly ISender _sender;
+    private readonly IPasswordGeneratorSettingsService _settingsService;
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError;
@@ -193,22 +197,19 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     public IAsyncRelayCommand GenerateCommand { get; }
     public IAsyncRelayCommand RegeneratePasswordCommand { get; }
     public RelayCommand CopyPasswordCommand { get; }
-    public RelayCommand ApplyCommand { get; }
-    public RelayCommand CancelCommand { get; }
     public RelayCommand SaveAsCommand { get; }
 
     #endregion
 
-    public GeneratePasswordViewModel(ISender sender, ILogger<GeneratePasswordViewModel> logger)
+    public GeneratePasswordViewModel(ISender sender, ILogger<GeneratePasswordViewModel> logger, IPasswordGeneratorSettingsService settingsService)
         : base(logger)
     {
         _sender = sender;
+        _settingsService = settingsService;
 
         GenerateCommand = new AsyncRelayCommand(GenerateAsync);
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
         CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
-        ApplyCommand = new RelayCommand(Apply);
-        CancelCommand = new RelayCommand(Cancel);
         SaveAsCommand = new RelayCommand(SaveAs, CanSaveAs);
     }
 
@@ -217,9 +218,34 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
-        Clear();
+        // load user settings
+        var s = _settingsService.Load();
+
+        Length = s.Length;
+        UseUppercase = s.UseUppercase;
+        UseLowercase = s.UseLowercase;
+        UseDigits = s.UseDigits;
+        UseSpecial = s.UseSpecial;
+        ExcludeAmbiguous = s.ExcludeAmbiguous;
+
+        //Clear();
     }
     #endregion
+
+    private void SaveSettings()
+    {
+        var s = new PasswordGeneratorSettings
+        {
+            Length = Length,
+            UseUppercase = UseUppercase,
+            UseLowercase = UseLowercase,
+            UseDigits = UseDigits,
+            UseSpecial = UseSpecial,
+            ExcludeAmbiguous = ExcludeAmbiguous
+        };
+
+        _settingsService.Save(s);
+    }
 
     private async Task GenerateAsync()
     {
@@ -251,6 +277,8 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
         }
 
         GeneratedPassword = result.Value;
+
+        SaveSettings();
 
         WeakReferenceMessenger.Default.Send(
             new InAppNotificationMessage(
@@ -295,21 +323,7 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
             new InAppNotificationMessage(
                 ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
                 AppNotificationType.Success));
-    }
-    private void Apply()
-    {
-        // TODO: Implement Apply functionality
-        Logger.LogInformation(
-            "Apply password clicked with value length {Length}",
-            GeneratedPassword?.Length ?? 0);
-    }
-
-    private void Cancel()
-    {
-        // TODO: Implement Cancel functionality
-        Logger.LogInformation("Cancel password generation clicked.");
-    }
-
+    }   
     private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
     private void SaveAs()
     {

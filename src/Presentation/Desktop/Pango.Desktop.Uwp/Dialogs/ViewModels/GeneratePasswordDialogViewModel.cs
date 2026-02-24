@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
@@ -21,6 +23,7 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 {
     #region Fields
     private readonly ISender _sender;
+    private readonly IPasswordGeneratorSettingsService _settingsService;
 
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
@@ -199,10 +202,11 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
     #endregion
 
-    public GeneratePasswordDialogViewModel(ISender sender, ILogger<GeneratePasswordDialogViewModel> logger)
+    public GeneratePasswordDialogViewModel(ISender sender, ILogger<GeneratePasswordDialogViewModel> logger, IPasswordGeneratorSettingsService settingsService)
         : base(logger)
     {
         _sender = sender;
+        _settingsService = settingsService;
 
         GenerateCommand = new AsyncRelayCommand(GenerateAsync);
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
@@ -214,7 +218,16 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
-        Clear();
+
+        var s = _settingsService.Load();
+
+        Length = s.Length;
+        UseUppercase = s.UseUppercase;
+        UseLowercase = s.UseLowercase;
+        UseDigits = s.UseDigits;
+        UseSpecial = s.UseSpecial;
+        ExcludeAmbiguous = s.ExcludeAmbiguous;
+
         if (parameter is GeneratePasswordDialogParameters p
             && !string.IsNullOrEmpty(p.GeneratedPassword))
         {
@@ -225,6 +238,20 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
     }
     #endregion
 
+    private void SaveSettings()
+    {
+        var s = new PasswordGeneratorSettings
+        {
+            Length = Length,
+            UseUppercase = UseUppercase,
+            UseLowercase = UseLowercase,
+            UseDigits = UseDigits,
+            UseSpecial = UseSpecial,
+            ExcludeAmbiguous = ExcludeAmbiguous
+        };
+
+        _settingsService.Save(s);
+    }
     private async Task GenerateAsync()
     {
         if (!ValidateLength(Length))
@@ -255,6 +282,8 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
         }
 
         GeneratedPassword = result.Value;
+
+        SaveSettings();
         DialogContext.RaiseDialogContentChanged();
 
         WeakReferenceMessenger.Default.Send(

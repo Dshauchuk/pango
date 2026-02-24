@@ -25,18 +25,18 @@ public sealed partial class GeneratePasswordView : PageBase
         DataContext = App.Host.Services.GetRequiredService<GeneratePasswordViewModel>();
     }
 
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<GeneratePasswordView, NavigationRequstedMessage>(this, (recipient, message) => recipient.OnNavigationRequested(recipient, message));
-    }
-    protected override void UnregisterMessages()
-    {
-        base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    }
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
+    //protected override void RegisterMessages()
+    //{
+    //    base.RegisterMessages();
+    //    WeakReferenceMessenger.Default.Register<GeneratePasswordView, NavigationRequstedMessage>(this, (recipient, message) => recipient.OnNavigationRequested(recipient, message));
+    //}
+    //protected override void UnregisterMessages()
+    //{
+    //    base.UnregisterMessages();
+    //    WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
+    //}
+    //private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    //{
 
-    }
+    //}
 }

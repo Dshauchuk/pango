@@ -79,6 +79,7 @@ public static class DependencyInjection
                 loggingBuilder.AddSerilog(dispose: true));
 
         services.AddSingleton<IAppIdleService, AppIdleService>();
+        services.AddSingleton<IPasswordGeneratorSettingsService, PasswordGeneratorSettingsService>();
 
         // DS
         // TODO: move to the config file
