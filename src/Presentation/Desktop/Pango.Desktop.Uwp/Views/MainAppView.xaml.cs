@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
@@ -38,6 +39,9 @@ public sealed partial class MainAppView : ViewBase
 
         Loaded += MainAppView_Loaded;
 
+        var navService = App.Host.Services.GetRequiredService<INavigationService>();
+        (navService as NavigationService)?.SetFrame(NavigationFrame);
+
         NavigationItems =
         [
             new NavigationEntry(HomeItem, typeof(HomeView)),
@@ -70,12 +74,10 @@ public sealed partial class MainAppView : ViewBase
         AppView appView = AppView.MainAppView;
         if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
-            NavigationFrame.Navigate(pageType);
             appView = pageType.GetCustomAttribute<AppViewAttribute>()?.View ?? throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
         }
         else if (args.IsSettingsInvoked)
         {
-            NavigationFrame.Navigate(typeof(SettingsView));
             appView = AppView.Settings;
         }
 
@@ -85,6 +87,17 @@ public sealed partial class MainAppView : ViewBase
     private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)
     {
         NavigationView.IsBackEnabled = ((Frame)sender).BackStackDepth > 0;
+
+        var navigatedPageType = e.SourcePageType;
+
+        if(navigatedPageType == typeof(SettingsView))
+        {
+            NavigationView.SelectedItem = NavigationView.SettingsItem;
+        }
+        else
+        {
+            NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == navigatedPageType)?.Item;
+        }
     }
 
     private void NavigationView_BackRequested(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs args)
@@ -104,56 +117,30 @@ public sealed partial class MainAppView : ViewBase
     /// </summary>
     private void NavigateToInitialPage()
     {
+        AppView targetView;
+
         if (_initialView is not null)
         {
             if (_initialView == typeof(SettingsView))
             {
-                NavigationView.SelectedItem = NavigationView.SettingsItem;
+                targetView = AppView.Settings;
             }
             else
             {
-                NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == _initialView);
+                targetView = _initialView.GetCustomAttribute<AppViewAttribute>()?.View ?? AppView.Home;
             }
-        }
-        if (NavigationView.SelectedItem is null)
-        {
-            NavigationView.SelectedItem = HomeItem;
-            NavigationFrame.Navigate(typeof(HomeView));
         }
         else
         {
-            NavigationFrame.Navigate(_initialView);
+            targetView = AppView.Home;
         }
+
+        WeakReferenceMessenger.Default.Send(
+        new NavigationRequstedMessage(
+            new Mvvm.Models.NavigationParameters(
+                navigatedView: targetView,
+                sourceView: AppView.MainAppView)));
 
         _initialView = null;
-    }
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    }
-
-    protected override void UnregisterMessages()
-    {
-        base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    }
-
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        switch (message.Value.NavigatedView)
-        {
-            case AppView.PasswordsIndex:
-                NavigationFrame.Navigate(typeof(PasswordsView));
-                NavigationView.SelectedItem =
-                    NavigationItems.First(i => i.PageType == typeof(PasswordsView)).Item;
-                break;
-
-            case AppView.GeneratePassword:
-                NavigationFrame.Navigate(typeof(GeneratePasswordView));
-                NavigationView.SelectedItem =
-                    NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView)).Item;
-                break;
-        }
-    }
+    }    
 }

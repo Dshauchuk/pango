@@ -4,6 +4,7 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
+using Pango.Desktop.Uwp.Core.Navigation;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Dialogs;
@@ -78,7 +79,7 @@ public static class DependencyInjection
                 loggingBuilder.AddSerilog(dispose: true));
 
         services.AddSingleton<IAppIdleService, AppIdleService>();
-
+        services.AddSingleton<INavigationService, NavigationService>();
         // DS
         // TODO: move to the config file
         services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 20 }));
