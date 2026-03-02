@@ -123,7 +123,7 @@ public sealed partial class MainAppView : ViewBase
     {
         NavigationView.IsBackEnabled = ((Frame)sender).BackStackDepth > 0;
 
-        var navigatedPageType = e.SourcePageType;
+        var navigatedPageType = navigationEventArgs.SourcePageType;
 
         if(navigatedPageType == typeof(SettingsView))
         {
