@@ -193,8 +193,6 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
     public IAsyncRelayCommand GenerateCommand { get; }
     public IAsyncRelayCommand RegeneratePasswordCommand { get; }
     public RelayCommand CopyPasswordCommand { get; }
-    public RelayCommand ApplyCommand { get; }
-    public RelayCommand CancelCommand { get; }
     public RelayCommand SaveAsCommand { get; }
 
     #endregion
@@ -207,8 +205,6 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
         GenerateCommand = new AsyncRelayCommand(GenerateAsync);
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
         CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
-        ApplyCommand = new RelayCommand(Apply);
-        CancelCommand = new RelayCommand(Cancel);
         SaveAsCommand = new RelayCommand(SaveAs, CanSaveAs);
     }
 
@@ -295,19 +291,6 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
             new InAppNotificationMessage(
                 ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
                 AppNotificationType.Success));
-    }
-    private void Apply()
-    {
-        // TODO: Implement Apply functionality
-        Logger.LogInformation(
-            "Apply password clicked with value length {Length}",
-            GeneratedPassword?.Length ?? 0);
-    }
-
-    private void Cancel()
-    {
-        // TODO: Implement Cancel functionality
-        Logger.LogInformation("Cancel password generation clicked.");
     }
 
     private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
