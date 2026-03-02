@@ -1,7 +1,7 @@
 name: Feature request
 description: Suggest a sample or enhancement for the Pango secret keeper
 title: "Sample request title"
-labels: ["needs-triage"]
+labels: ["feature","needs-triage"]
 body:
   - type: dropdown
     validations:
@@ -17,7 +17,9 @@ body:
     attributes:
       label: Which version of the app?
       options:
-        - "[beta]v.0.1" 
+        - "v.0.1.2-alpha"
+        - "v.0.1.3-alpha"
+        - "v.0.1.4-alpha"
   - type: textarea
     attributes:
       label: Description

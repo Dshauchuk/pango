@@ -51,7 +51,8 @@ public static class DependencyInjection
             .AddSingleton<ExportImportViewModel>()
             .AddSingleton<ImportDialogViewModel>()
             .AddSingleton<UserViewModel>()
-            .AddSingleton<GeneratePasswordViewModel>();
+            .AddSingleton<GeneratePasswordViewModel>()
+            .AddSingleton<GeneratePasswordDialogViewModel>();
 
         return services;
     }
@@ -79,7 +80,9 @@ public static class DependencyInjection
                 loggingBuilder.AddSerilog(dispose: true));
 
         services.AddSingleton<IAppIdleService, AppIdleService>();
+        services.AddSingleton<IStartupService, StartupService>();
         services.AddSingleton<INavigationService, NavigationService>();
+
         // DS
         // TODO: move to the config file
         services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 20 }));

@@ -19,6 +19,7 @@
                              IsBackButtonVisible="Collapsed"
                              IsBackEnabled="False"
                              OpenPaneLength="200"
+                             CompactPaneLength="48"
                              IsSettingsVisible="True"
                              IsTitleBarAutoPaddingEnabled="False"
                              ItemInvoked="NavigationView_ItemInvoked">

@@ -41,16 +41,20 @@ public class DialogService : IDialogService
     {
         return ShowAsync(new ExportCompletedDialog(dialogParameter));
     }
+    public Task ShowGeneratePasswordDialogAsync(GeneratePasswordDialogParameters dialogParameter)
+    {
+        return ShowAsync(new GeneratePasswordDialog(dialogParameter));
+    }
 
     /// <summary>
     /// Raises a simple confirmation dialog, returns true if user clicked on the primary button, otherwise - false
     /// </summary>
-    /// <param name="confirmationTitle"></param>
-    /// <param name="confirmationText"></param>
-    /// <returns></returns>
+    /// <param name="confirmationTitle">The title of the dialog</param>
+    /// <param name="confirmationText">The body text of the dialog</param>
+    /// <returns>True if accepted, False otherwise</returns>
     public async Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText)
     {
-        var viewResourceLoader = new ResourceLoader();
+        ResourceLoader viewResourceLoader = new();
         ContentDialog subscribeDialog = new()
         {
             XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
@@ -68,9 +72,9 @@ public class DialogService : IDialogService
 
     private async Task ShowAsync(IContentDialog dialogContent)
     {
-        var viewResourceLoader = new ResourceLoader();
+        ResourceLoader viewResourceLoader = new();
 
-        ContentDialog dialog = new()
+        ContentDialog contentDialog = new()
         {
             XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
@@ -87,18 +91,24 @@ public class DialogService : IDialogService
 
         // register a handler for any change of the dialog content
         dialogContent.ViewModel.DialogContext.OnContentChanged += DialogContext_OnContentChanged;
-        void DialogContext_OnContentChanged(object? sender, EventArgs e)
+
+        void DialogContext_OnContentChanged(object? sender, EventArgs eventArgs)
         {
-            dialog.IsPrimaryButtonEnabled = dialogContent.ViewModel.CanSave();
+            contentDialog.IsPrimaryButtonEnabled = dialogContent.ViewModel.CanSave();
         }
 
-        if (dialogContent.ViewModel is ViewModelBase viewModelBase) 
+        if (dialogContent.ViewModel is ViewModelBase viewModelBase)
         {
             await viewModelBase.OnNavigatedToAsync(dialogContent.GetDialogParameter());
         }
 
-        dialog.Opened += dialogContent.DialogOpened;
+        contentDialog.Opened += dialogContent.DialogOpened;
 
-        _ = await dialog.ShowAsync();
+        // Wait for the dialog to close
+        await contentDialog.ShowAsync();
+
+        // Clean up event subscriptions to allow Garbage Collection
+        dialogContent.ViewModel.DialogContext.OnContentChanged -= DialogContext_OnContentChanged;
+        contentDialog.Opened -= dialogContent.DialogOpened;
     }
 }
