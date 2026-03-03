@@ -1,9 +1,7 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.UI.Xaml;
 using Pango.Desktop.Uwp.Core.Attributes;
-using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
 
@@ -24,19 +22,4 @@ public sealed partial class GeneratePasswordView : PageBase
         InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<GeneratePasswordViewModel>();
     }
-
-    //protected override void RegisterMessages()
-    //{
-    //    base.RegisterMessages();
-    //    WeakReferenceMessenger.Default.Register<GeneratePasswordView, NavigationRequstedMessage>(this, (recipient, message) => recipient.OnNavigationRequested(recipient, message));
-    //}
-    //protected override void UnregisterMessages()
-    //{
-    //    base.UnregisterMessages();
-    //    WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    //}
-    //private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    //{
-
-    //}
 }

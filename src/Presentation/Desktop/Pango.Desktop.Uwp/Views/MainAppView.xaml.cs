@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
@@ -14,7 +15,7 @@ using System.Linq;
 using System.Reflection;
 using Windows.ApplicationModel.Resources;
 
-// The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
+// The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236  
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -26,17 +27,21 @@ public sealed partial class MainAppView : ViewBase
     /// </summary>
     private Type? _initialView;
     private readonly IReadOnlyCollection<NavigationEntry> NavigationItems;
-    private ResourceLoader _viewResourceLoader;
+    private readonly ResourceLoader _viewResourceLoader;
 
     public MainAppView(Type? initialView = null)
     {
-        this.InitializeComponent();
+        InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<MainAppViewModel>();
 
         _initialView = initialView;
         _viewResourceLoader = new ResourceLoader();
 
         Loaded += MainAppView_Loaded;
+        Unloaded += MainAppView_Unloaded;
+
+        var navService = App.Host.Services.GetRequiredService<INavigationService>();
+        (navService as NavigationService)?.SetFrame(NavigationFrame);
 
         NavigationItems =
         [
@@ -50,7 +55,7 @@ public sealed partial class MainAppView : ViewBase
 
     #region Event Handlers
 
-    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs routedEventArgs)
     {
         OnNavigatedTo(null);
 
@@ -61,37 +66,85 @@ public sealed partial class MainAppView : ViewBase
 
         NavigateToInitialPage();
 
-        ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).Content = _viewResourceLoader.GetString("Settings");
-        ((Microsoft.UI.Xaml.Controls.NavigationViewItem)NavigationView.SettingsItem).IsTabStop = false;
+        // Set localized string for Settings
+        NavigationViewItem settingsItem = (NavigationViewItem)NavigationView.SettingsItem;
+        settingsItem.Content = _viewResourceLoader.GetString("Settings");
+        settingsItem.IsTabStop = false;
     }
 
-    private void NavigationView_ItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
+    private void MainAppView_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs routedEventArgs)
+    {
+        Loaded -= MainAppView_Loaded;
+        Unloaded -= MainAppView_Unloaded;
+    }
+
+    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs invokedEventArgs)
     {
         AppView appView = AppView.MainAppView;
-        if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
+        NavigationEntry? navigationEntry = NavigationItems.FirstOrDefault(item => item.Item == invokedEventArgs.InvokedItemContainer);
+
+        if (navigationEntry != null && navigationEntry.PageType is Type pageType)
         {
+            if (NavigationFrame.CurrentSourcePageType == pageType)
+            {
+                return;
+            }
+
             NavigationFrame.Navigate(pageType);
-            appView = pageType.GetCustomAttribute<AppViewAttribute>()?.View ?? throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
+
+            NavigationFrame.BackStack.Clear();
+
+            AppViewAttribute? viewAttribute = pageType.GetCustomAttribute<AppViewAttribute>();
+            if (viewAttribute != null)
+            {
+                appView = viewAttribute.View;
+            }
+            else
+            {
+                throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
+            }
         }
-        else if (args.IsSettingsInvoked)
+        else if (invokedEventArgs.IsSettingsInvoked)
         {
-            NavigationFrame.Navigate(typeof(SettingsView));
-            appView = AppView.Settings;
+            if (NavigationFrame.CurrentSourcePageType != typeof(SettingsView))
+            {
+                NavigationFrame.Navigate(typeof(SettingsView));
+                NavigationFrame.BackStack.Clear();
+                appView = AppView.Settings;
+            }
         }
 
         WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView, AppView.MainAppView)));
+
+        NavigationView.IsBackEnabled = false;
     }
 
-    private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)
+    private void NavigationFrame_Navigated(object sender, NavigationEventArgs navigationEventArgs)
     {
         NavigationView.IsBackEnabled = ((Frame)sender).BackStackDepth > 0;
+
+        var navigatedPageType = navigationEventArgs.SourcePageType;
+
+        if(navigatedPageType == typeof(SettingsView))
+        {
+            NavigationView.SelectedItem = NavigationView.SettingsItem;
+        }
+        else
+        {
+            NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == navigatedPageType)?.Item;
+        }
     }
 
-    private void NavigationView_BackRequested(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewBackRequestedEventArgs args)
+    private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs backRequestedEventArgs)
     {
-        if (NavigationFrame.BackStack.LastOrDefault() is PageStackEntry entry)
+        PageStackEntry? lastEntry = NavigationFrame.BackStack.LastOrDefault();
+        if (lastEntry is PageStackEntry entry)
         {
-            NavigationView.SelectedItem = NavigationItems.First(item => item.PageType == entry.SourcePageType).Item;
+            NavigationEntry? navItem = NavigationItems.FirstOrDefault(item => item.PageType == entry.SourcePageType);
+            if (navItem != null)
+            {
+                NavigationView.SelectedItem = navItem.Item;
+            }
 
             NavigationFrame.GoBack();
         }
@@ -104,56 +157,45 @@ public sealed partial class MainAppView : ViewBase
     /// </summary>
     private void NavigateToInitialPage()
     {
+        AppView targetView;
+
         if (_initialView is not null)
         {
             if (_initialView == typeof(SettingsView))
             {
-                NavigationView.SelectedItem = NavigationView.SettingsItem;
+                targetView = AppView.Settings;
             }
             else
             {
-                NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == _initialView);
+                NavigationEntry? targetItem = NavigationItems.FirstOrDefault(item => item.PageType == _initialView);
+                if (targetItem != null)
+                {
+                    NavigationView.SelectedItem = targetItem.Item;
+                }
             }
         }
+
         if (NavigationView.SelectedItem is null)
         {
             NavigationView.SelectedItem = HomeItem;
-            NavigationFrame.Navigate(typeof(HomeView));
+            if (NavigationFrame.CurrentSourcePageType != typeof(HomeView))
+            {
+                NavigationFrame.Navigate(typeof(HomeView));
+                NavigationFrame.BackStack.Clear();
+            }
         }
         else
         {
-            NavigationFrame.Navigate(_initialView);
+            if (_initialView != null && NavigationFrame.CurrentSourcePageType != _initialView)
+            {
+                NavigationFrame.Navigate(_initialView);
+                NavigationFrame.BackStack.Clear();
+            }
         }
 
         _initialView = null;
     }
-    //protected override void RegisterMessages()
-    //{
-    //    base.RegisterMessages();
-    //    WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    //}
+    
 
-    //protected override void UnregisterMessages()
-    //{
-    //    base.UnregisterMessages();
-    //    WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    //}
-
-    //private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    //{
-    //    switch (message.Value.NavigatedView)
-    //    {
-    //        case AppView.PasswordsIndex:
-    //            NavigationFrame.Navigate(typeof(PasswordsView));
-    //            NavigationView.SelectedItem =
-    //                NavigationItems.First(i => i.PageType == typeof(PasswordsView)).Item;
-    //            break;
-
-    //        case AppView.GeneratePassword:
-    //            NavigationFrame.Navigate(typeof(GeneratePasswordView));
-    //            NavigationView.SelectedItem =
-    //                NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView)).Item;
-    //            break;
-    //    }
-    //}
+    
 }

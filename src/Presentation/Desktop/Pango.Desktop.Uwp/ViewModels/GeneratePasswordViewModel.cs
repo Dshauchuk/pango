@@ -323,7 +323,8 @@ public sealed class GeneratePasswordViewModel : ViewModelBase
             new InAppNotificationMessage(
                 ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
                 AppNotificationType.Success));
-    }   
+    }
+
     private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
     private void SaveAs()
     {

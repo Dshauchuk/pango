@@ -13,6 +13,7 @@ using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
 using System;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -103,62 +104,70 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
     public async Task OnSaveAsync()
     {
         Validator.Validate();
-        if (Validator.HasErrors)
+        if (Validator.HasErrors) return;
+        if (_parameters is null) return;
+
+        string masterPassword = Validator.MasterPassword;
+        string description = Validator.Description;
+        string exportPath = Validator.ExportFolderPath;
+        string fileName = Validator.FileName;
+        var itemsToExport = _parameters.Items;
+
+        var exportResult = await Task.Run<(bool Success, string? ErrorMessage, ExportResult? Result)>(async () =>
         {
-            return;
-        }
-
-        if (_parameters is null)
-        {
-            Logger.LogError("Cannot do the export: ExportDataParameters is null");
-            return;
-        }
-
-        var saltBytes = Encoding.UTF8.GetBytes(Validator.MasterPassword);
-        Array.Resize(ref saltBytes, 16);
-        string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, saltBytes);
-        var encoding = new EncodingOptions(passwordHash, Convert.ToBase64String(saltBytes));
-
-        ErrorOr<ExportResult> result = await _sender.Send(new ExportDataCommand(_parameters.Items, new ExportOptions(Validator.Description, encoding)));
-
-        if (result.IsError)
-        {
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Export failed: {result.FirstError}", Core.Enums.AppNotificationType.Error));
-        }
-        else
-        {
-            var sourcePath = result.Value.Path;
-            string fullDestinationPath = Path.Combine(Validator.ExportFolderPath, $"{Validator.FileName}{AppConstants.ExportFileExtension}");
-
             try
             {
-                File.Copy(sourcePath, fullDestinationPath, false);
+                byte[] staticSalt = Encoding.UTF8.GetBytes("PangoStaticExportSalt");
 
-                var newResult = new ExportResult(
-                    fullDestinationPath,
-                    result.Value.Contents,
-                    result.Value.GeneratedAt,
-                    result.Value.AppVersion
-                );
+                byte[] derivedBytes = Rfc2898DeriveBytes.Pbkdf2(
+                    masterPassword,
+                    staticSalt,
+                    50000,
+                    HashAlgorithmName.SHA256,
+                    48);
 
-                WeakReferenceMessenger.Default.Send<ExportCompletedMessage>(new ExportCompletedMessage(newResult));
+                string keyBase64 = Convert.ToBase64String(derivedBytes[0..32]);
+                string ivBase64 = Convert.ToBase64String(derivedBytes[32..48]);
 
-                if (File.Exists(sourcePath))
+                var encoding = new EncodingOptions(keyBase64, ivBase64);
+
+                ErrorOr<ExportResult> result = await _sender.Send(new ExportDataCommand(
+                    itemsToExport,
+                    new ExportOptions(description, encoding)
+                ));
+
+                if (result.IsError)
                 {
-                    File.Delete(sourcePath);
+                    return (false, result.FirstError.Description, null);
+                }
+                else
+                {
+                    var sourcePath = result.Value.Path;
+                    string fullDestinationPath = Path.Combine(exportPath, $"{fileName}{AppConstants.ExportFileExtension}");
+
+                    File.Copy(sourcePath, fullDestinationPath, true);
+                    if (File.Exists(sourcePath)) File.Delete(sourcePath);
+
+                    var finalResult = new ExportResult(fullDestinationPath, result.Value.Contents, result.Value.GeneratedAt, result.Value.AppVersion);
+                    return (true, string.Empty, finalResult);
                 }
             }
             catch (Exception ex)
             {
-                Logger.LogError(
-                                ex,
-                                "Failed to copy exported file to destination folder. FileName={FileName}, ExportFolder={ExportFolder}, DestinationPath={DestinationPath}",
-                                Validator.FileName,
-                                Validator.ExportFolderPath,
-                                fullDestinationPath);
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Failed to save file to selected folder: {ex.Message}", Core.Enums.AppNotificationType.Error));
-                WeakReferenceMessenger.Default.Send<ExportCompletedMessage>(new ExportCompletedMessage(result.Value));
+                Logger.LogError(ex, "Export process failed");
+                return (false, ex.Message, null);
             }
+        });
+
+        if (exportResult.Success && exportResult.Result != null)
+        {
+            WeakReferenceMessenger.Default.Send(new ExportCompletedMessage(exportResult.Result));
+        }
+        else
+        {
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
+                $"Export failed: {exportResult.ErrorMessage}",
+                Core.Enums.AppNotificationType.Error));
         }
     }
 
