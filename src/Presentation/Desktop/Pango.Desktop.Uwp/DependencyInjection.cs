@@ -4,6 +4,7 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
+using Pango.Desktop.Uwp.Core.Navigation;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Dialogs;
@@ -50,7 +51,8 @@ public static class DependencyInjection
             .AddSingleton<ExportImportViewModel>()
             .AddSingleton<ImportDialogViewModel>()
             .AddSingleton<UserViewModel>()
-            .AddSingleton<GeneratePasswordViewModel>();
+            .AddSingleton<GeneratePasswordViewModel>()
+            .AddSingleton<GeneratePasswordDialogViewModel>();
 
         return services;
     }
@@ -79,6 +81,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IAppIdleService, AppIdleService>();
         services.AddSingleton<IStartupService, StartupService>();
+        services.AddSingleton<INavigationService, NavigationService>();
 
         // DS
         // TODO: move to the config file

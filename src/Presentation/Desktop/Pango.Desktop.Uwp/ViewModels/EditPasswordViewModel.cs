@@ -10,6 +10,8 @@ using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -27,6 +29,7 @@ public class EditPasswordViewModel : ViewModelBase
     #region Fields
 
     private readonly ISender _sender;
+    private readonly IDialogService _dialogService;
     private bool _isNew;
     private List<string>? _availableCatalogs;
     private EditPasswordValidator? _passwordValidator;
@@ -34,12 +37,14 @@ public class EditPasswordViewModel : ViewModelBase
 
     #endregion
 
-    public EditPasswordViewModel(ISender sender, ILogger<EditPasswordViewModel> logger): base(logger)
+    public EditPasswordViewModel(ISender sender, ILogger<EditPasswordViewModel> logger, IDialogService dialogService): base(logger)
     {
         _sender = sender;
+        _dialogService = dialogService;
 
         OpenIndexViewCommand = new RelayCommand(OnOpenIndexView);
         SavePasswordComand = new RelayCommand(OnSavePassword);
+        OpenGeneratePasswordDialogCommand = new RelayCommand(OnOpenGeneratePasswordDialog);
     }
 
     #region Properties
@@ -91,6 +96,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     public RelayCommand OpenIndexViewCommand { get; }
     public RelayCommand SavePasswordComand { get; }
+    public RelayCommand OpenGeneratePasswordDialogCommand { get; }
 
     #endregion
 
@@ -145,6 +151,21 @@ public class EditPasswordViewModel : ViewModelBase
                 }
             }
         }
+    }
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+
+        WeakReferenceMessenger.Default.Register<PasswordGeneratedForEditMessage>(
+            this,
+            OnPasswordGeneratedForEdit);
+    }
+
+    protected override void UnregisterMessages()
+    {
+        base.UnregisterMessages();
+
+        WeakReferenceMessenger.Default.Unregister<PasswordGeneratedForEditMessage>(this);
     }
 
     #endregion
@@ -224,6 +245,27 @@ public class EditPasswordViewModel : ViewModelBase
     {
         WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.PasswordsIndex, AppView.EditPassword)));
     }
+    private async void OnOpenGeneratePasswordDialog()
+    {
+        var parameters = new GeneratePasswordDialogParameters(
+            password: PasswordValidator?.Password ?? string.Empty);
+
+        await _dialogService.ShowGeneratePasswordDialogAsync(parameters);
+    }
+
+    /// <summary>
+    /// retrieves the generated password from the dialog
+    /// </summary>
+    /// <param name="recipient"></param>
+    /// <param name="message"></param>
+    private void OnPasswordGeneratedForEdit(object recipient, PasswordGeneratedForEditMessage message)
+    {
+        if (PasswordValidator is null)
+            return;
+
+        PasswordValidator.Password = message.Value;
+    }
+
 
     #endregion
 }

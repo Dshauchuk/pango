@@ -575,7 +575,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         List<string> catalogs =
             [..Passwords.FindItems(p => p.Type == PangoExplorerItem.ExplorerItemType.Folder)
-            .Select(p => string.IsNullOrEmpty(p.CatalogPath) ? p.Name : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}")
+            .Select(p => PasswordPathUtility.BuildCatalogPath(p.CatalogPath, p.Name)) //string.IsNullOrEmpty(p.CatalogPath) ? $"{AppConstants.CatalogDelimeter}{p.Name}" : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}"
             .OrderBy(p => p)];
 
         if (catalogs.Count != 0) catalogs.Insert(0, string.Empty);
@@ -589,7 +589,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private string GetPathToSelectedFolder()
         => SelectedItem == null ? string.Empty :
             SelectedItem.Type == PangoExplorerItem.ExplorerItemType.Folder ?
-            SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
+            PasswordPathUtility.BuildCatalogPath(SelectedItem.CatalogPath, SelectedItem.Name) : //SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
             SelectedItem.CatalogPath;
 
     /// <summary>

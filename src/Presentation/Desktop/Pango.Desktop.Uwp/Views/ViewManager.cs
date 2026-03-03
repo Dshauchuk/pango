@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
@@ -19,11 +20,13 @@ public class ViewManager
     private readonly Dictionary<AppView, ViewBase> _views;
 
     private readonly ILogger _logger;
+    private readonly INavigationService _navigationService;
 
     private ViewManager()
     {
         _views = [];
         _logger = App.Host.Services.GetRequiredService<ILogger<ViewManager>>();
+        _navigationService = App.Host.Services.GetRequiredService<INavigationService>();
 
         WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnViewNavigationRequested);
     }
@@ -40,6 +43,8 @@ public class ViewManager
 
         ViewBase? targetView = _views.ContainsKey(message.Value.NavigatedView) ? _views[message.Value.NavigatedView] : null;
         targetView?.OnNavigatedTo(message.Value);
+
+        _navigationService.Navigate(message.Value.NavigatedView);
     }
 
     public void Register(ViewBase view)

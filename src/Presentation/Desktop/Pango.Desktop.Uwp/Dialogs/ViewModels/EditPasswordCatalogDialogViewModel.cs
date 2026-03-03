@@ -30,6 +30,7 @@ public partial class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialog
     private readonly ISender _sender;
     private string _newCatalogName = string.Empty;
     private string _initialCatalog = string.Empty;
+    private string _originalInitialCatalog = string.Empty;
     private List<string>? _availableCatalogs;
     private List<string>? _existingCatalogs;
     private PangoExplorerItem? _selectedCatalog;
@@ -232,6 +233,7 @@ public partial class EditPasswordCatalogDialogViewModel : ViewModelBase, IDialog
     {
         editCatalogParameters ??= new([], string.Empty, null, []);
 
+        IsNew = editCatalogParameters!.SelectedCatalog is null;
         _selectedCatalog = editCatalogParameters.SelectedCatalog;
         _existingCatalogs = editCatalogParameters.ExistingCatalogs;
         IsNew = editCatalogParameters.SelectedCatalog is null;

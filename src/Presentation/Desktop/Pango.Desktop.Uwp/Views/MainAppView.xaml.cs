@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Navigation;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Navigation;
@@ -38,6 +39,9 @@ public sealed partial class MainAppView : ViewBase
 
         Loaded += MainAppView_Loaded;
         Unloaded += MainAppView_Unloaded;
+
+        var navService = App.Host.Services.GetRequiredService<INavigationService>();
+        (navService as NavigationService)?.SetFrame(NavigationFrame);
 
         NavigationItems =
         [
@@ -118,6 +122,17 @@ public sealed partial class MainAppView : ViewBase
     private void NavigationFrame_Navigated(object sender, NavigationEventArgs navigationEventArgs)
     {
         NavigationView.IsBackEnabled = ((Frame)sender).BackStackDepth > 0;
+
+        var navigatedPageType = navigationEventArgs.SourcePageType;
+
+        if(navigatedPageType == typeof(SettingsView))
+        {
+            NavigationView.SelectedItem = NavigationView.SettingsItem;
+        }
+        else
+        {
+            NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == navigatedPageType)?.Item;
+        }
     }
 
     private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs backRequestedEventArgs)
@@ -142,11 +157,13 @@ public sealed partial class MainAppView : ViewBase
     /// </summary>
     private void NavigateToInitialPage()
     {
+        AppView targetView;
+
         if (_initialView is not null)
         {
             if (_initialView == typeof(SettingsView))
             {
-                NavigationView.SelectedItem = NavigationView.SettingsItem;
+                targetView = AppView.Settings;
             }
             else
             {
