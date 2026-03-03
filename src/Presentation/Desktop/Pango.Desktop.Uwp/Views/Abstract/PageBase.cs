@@ -7,22 +7,29 @@ using System.Diagnostics;
 
 namespace Pango.Desktop.Uwp.Views.Abstract;
 
-public abstract class PageBase(ILogger logger) : Page
+/// <summary>
+/// Base class for pages. Uses NavigationCacheMode.Required to prevent UI recreation and drastically reduce memory spikes when switching tabs.
+/// </summary>
+public abstract class PageBase : Page
 {
     public IViewModel ViewModel => (IViewModel)DataContext;
+    protected ILogger Logger { get; }
 
-    protected ILogger Logger { get; } = logger;
+    public PageBase(ILogger logger)
+    {
+        Logger = logger;
+
+        NavigationCacheMode = NavigationCacheMode.Required;
+    }
 
     protected async override void OnNavigatedTo(NavigationEventArgs e)
     {
-        Debug.WriteLine($"Navigated to {this.GetType().Name}");
-
+        Debug.WriteLine($"Navigated to {GetType().Name}");
         RegisterMessages();
 
-        ViewModelBase? viewModel = DataContext as ViewModelBase;
-        if (viewModel is not null)
+        if (DataContext is ViewModelBase viewModel)
         {
-            await viewModel.OnNavigatedToAsync(e);
+            await viewModel.OnNavigatedToAsync(e.Parameter);
         }
 
         base.OnNavigatedTo(e);
@@ -30,26 +37,17 @@ public abstract class PageBase(ILogger logger) : Page
 
     protected async override void OnNavigatedFrom(NavigationEventArgs e)
     {
-        Debug.WriteLine($"Navigated from {this.GetType().Name}");
-
+        Debug.WriteLine($"Navigated from {GetType().Name}");
         UnregisterMessages();
 
-        ViewModelBase? viewModel = DataContext as ViewModelBase;
-        if (viewModel is not null)
+        if (DataContext is ViewModelBase viewModel)
         {
-            await viewModel.OnNavigatedFromAsync(e);
+            await viewModel.OnNavigatedFromAsync(e.Parameter);
         }
 
         base.OnNavigatedFrom(e);
     }
 
-    protected virtual void RegisterMessages()
-    {
-
-    }
-
-    protected virtual void UnregisterMessages()
-    {
-        WeakReferenceMessenger.Default.UnregisterAll(this);
-    }
+    protected virtual void RegisterMessages() { }
+    protected virtual void UnregisterMessages() { WeakReferenceMessenger.Default.UnregisterAll(this); }
 }

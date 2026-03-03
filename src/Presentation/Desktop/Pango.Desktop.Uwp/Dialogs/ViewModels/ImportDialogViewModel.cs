@@ -21,13 +21,16 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private ImportDataValidator _validator;
     private ImportDataParameters? _parameters;
+    private readonly ISender sender;
     private readonly IDataImporter _dataImporter;
+    private bool _isInitialized = false;
 
     #endregion
 
     public ImportDialogViewModel(ISender sender, IDataImporter dataImporter, ILogger<ImportDialogViewModel> logger) : base(logger)
     {
         DialogContext = new DialogContext();
+        this.sender = sender;
         _dataImporter = dataImporter;
         _validator = new();
         _validator.ErrorsChanged += Validator_ErrorsChanged;
@@ -38,7 +41,6 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
     public IDialogContext DialogContext { get; }
     public ImportDataValidator Validator { get => _validator; set => SetProperty(ref _validator, value); }
 
-    
     #endregion
 
     #region Overrides
@@ -46,8 +48,17 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
+
+        if (_isInitialized && parameter == null)
+            return;
+
         ResetDialog();
-        if (parameter is ImportDataParameters dialogParameters) _parameters = dialogParameters;
+
+        if (parameter is ImportDataParameters dialogParameters)
+        {
+            _parameters = dialogParameters;
+            _isInitialized = true;
+        }
     }
 
     #endregion
@@ -91,7 +102,7 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
         catch (Exception)
         {
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
-               ViewResourceLoader.GetString("Import_EncryptedArchiveError"), Core.Enums.AppNotificationType.Error));
+                ViewResourceLoader.GetString("Import_EncryptedArchiveError"), Core.Enums.AppNotificationType.Error));
         }
     }
 
@@ -109,8 +120,9 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
         DialogContext.RaiseDialogContentChanged();
     }
 
-    private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e) => DialogContext.RaiseDialogContentChanged(e);
-    
+    private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e)
+        => DialogContext.RaiseDialogContentChanged(e);
+
     #endregion
 }
 

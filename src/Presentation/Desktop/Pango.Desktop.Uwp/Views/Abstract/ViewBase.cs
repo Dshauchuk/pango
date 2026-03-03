@@ -5,6 +5,9 @@ using System.Diagnostics;
 
 namespace Pango.Desktop.Uwp.Views.Abstract;
 
+/// <summary>
+/// Base class for UserControl views handled by a custom ViewManager.
+/// </summary>
 public abstract class ViewBase : UserControl
 {
     public ViewBase()
@@ -16,7 +19,7 @@ public abstract class ViewBase : UserControl
 
     public virtual async void OnNavigatedTo(NavigationParameters? e)
     {
-        Debug.WriteLine($"Navigated to {this.GetType().Name}");
+        Debug.WriteLine($"Navigated to {GetType().Name}");
 
         RegisterMessages();
 
@@ -28,7 +31,7 @@ public abstract class ViewBase : UserControl
 
     public virtual async void OnNavigatedFrom(NavigationParameters? e)
     {
-        Debug.WriteLine($"Navigated from {this.GetType().Name}");
+        Debug.WriteLine($"Navigated from {GetType().Name}");
 
         UnregisterMessages();
 

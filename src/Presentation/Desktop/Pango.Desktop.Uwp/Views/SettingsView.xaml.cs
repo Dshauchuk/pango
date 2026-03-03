@@ -17,7 +17,8 @@ public sealed partial class SettingsView : PageBase
     public SettingsView()
         : base(App.Host.Services.GetRequiredService<ILogger<SettingsView>>())
     {
-        this.InitializeComponent();
+        InitializeComponent();
+        NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
         DataContext = App.Host.Services.GetRequiredService<SettingsViewModel>();
     }
 
