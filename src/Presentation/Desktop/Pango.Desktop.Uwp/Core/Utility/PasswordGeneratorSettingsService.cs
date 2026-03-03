@@ -2,6 +2,7 @@
 using Windows.Storage;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
+using Microsoft.Extensions.Logging;
 
 namespace Pango.Infrastructure.Services;
 
@@ -10,9 +11,11 @@ public class PasswordGeneratorSettingsService : IPasswordGeneratorSettingsServic
     private readonly ApplicationDataContainer _localSettings = ApplicationData.Current.LocalSettings;
 
     private readonly IUserContextProvider _userContextProvider;
-    public PasswordGeneratorSettingsService(IUserContextProvider userContextProvider)
+    private readonly ILogger _logger;
+    public PasswordGeneratorSettingsService(IUserContextProvider userContextProvider, ILogger logger)
     {
         _userContextProvider = userContextProvider;
+        _logger = logger;
     }
 
     private string BuildKey()
@@ -32,7 +35,7 @@ public class PasswordGeneratorSettingsService : IPasswordGeneratorSettingsServic
             }
             catch
             {
-
+                _logger.LogError("An error occurred while loading password generator settings.");
             }
         }
         return new PasswordGeneratorSettings();
