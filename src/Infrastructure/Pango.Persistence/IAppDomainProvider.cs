@@ -28,4 +28,10 @@ public interface IAppDomainProvider
     /// </summary>
     /// <returns></returns>
     string GetTempFolderPath();
+
+    /// <summary>
+    /// Returns a custom path for saving application data
+    /// </summary>
+    /// <returns></returns>
+    Task<string?> TryGetCustomDataFolderPathAsync();
 }

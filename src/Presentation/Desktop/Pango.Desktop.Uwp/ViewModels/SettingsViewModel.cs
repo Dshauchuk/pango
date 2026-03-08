@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Pango.Application.Common;
@@ -23,6 +24,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
 using Windows.Storage.Pickers;
 using Windows.System;
 
@@ -60,6 +62,7 @@ public partial class SettingsViewModel : ViewModelBase
     private KeyValuePair<int, string>? _selectedLockOnIdleInMinutesItem;
     private ImportDestination _selectedImportDestination;
     private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
+    private string _selectedDataFolderPath;
 
     // Backup Configuration
     private string _configPath = string.Empty;
@@ -91,6 +94,8 @@ public partial class SettingsViewModel : ViewModelBase
         AppThemes = [];
         LockOnIdleInMinutesItems = [];
         BackupIntervals = [5, 10, 15, 20, 30, 60, 120, 180];
+
+        _selectedDataFolderPath = appDomainProvider.GetAppDataFolderPath();
 
         ImportDestinationOptions =
         [
@@ -161,6 +166,11 @@ public partial class SettingsViewModel : ViewModelBase
                 AppThemeHelper.SetTheme((ElementTheme)value.Value);
             }
         }
+    }
+    public string SelectedDataFolderPath
+    {
+        get => _selectedDataFolderPath;
+        set => SetProperty(ref _selectedDataFolderPath, value);
     }
 
     #endregion
@@ -269,6 +279,16 @@ public partial class SettingsViewModel : ViewModelBase
 
     #endregion
 
+    #region Commands
+    private RelayCommand? _selectDataFolderCommand;
+    public RelayCommand SelectDataFolderCommand => _selectDataFolderCommand ??= new RelayCommand(async () => await SelectDataFolderAsync());
+
+    private RelayCommand? _resetDataFolderCommand;
+    public RelayCommand ResetDataFolderCommand => _resetDataFolderCommand ??= new RelayCommand(ResetDataFolder);
+
+    #endregion
+
+
     #region Commands - Backup
 
     private RelayCommand? _browseBackupPathCommand;
@@ -313,6 +333,51 @@ public partial class SettingsViewModel : ViewModelBase
         {
             await _startupService.DisableStartupAsync();
         }
+    }
+
+    #endregion
+
+    #region Methods - Select data folder
+    private async Task SelectDataFolderAsync()
+    {
+        var picker = new FolderPicker();
+        picker.SuggestedStartLocation = PickerLocationId.Desktop;
+        picker.FileTypeFilter.Add("*");
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.CurrentWindow);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+        StorageFolder folder = await picker.PickSingleFolderAsync();
+
+        if(folder != null)
+        {
+            // save permission to FututreAccessList
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace(Constants.Settings.CustomDataFolderToken, folder);
+
+            SelectedDataFolderPath = folder.Path;
+
+            WeakReferenceMessenger.Default.Send(
+                new InAppNotificationMessage(
+                    ViewResourceLoader.GetString("DataFolderChanged"),
+                    AppNotificationType.Success));
+        }
+    }
+
+    private void ResetDataFolder()
+    {
+        // remove the custom folder and the default folder will return
+        if (StorageApplicationPermissions.FutureAccessList.ContainsItem(
+                Constants.Settings.CustomDataFolderToken))
+        {
+            StorageApplicationPermissions.FutureAccessList.Remove(
+                Constants.Settings.CustomDataFolderToken);
+        }
+
+        SelectedDataFolderPath = ApplicationData.Current.RoamingFolder.Path;
+
+        WeakReferenceMessenger.Default.Send(
+        new InAppNotificationMessage(
+            ViewResourceLoader.GetString("DataFolderChanged"),
+            AppNotificationType.Success));
     }
 
     #endregion
