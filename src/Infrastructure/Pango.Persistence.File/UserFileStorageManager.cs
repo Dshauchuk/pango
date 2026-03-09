@@ -129,12 +129,12 @@ public class UserFileStorageManager: IUserStorageManager
     }
     public async Task MigrateDataAsync(string oldBasePath, string newBasePath)
     {
-        string oldUsersDir = Path.Combine(oldBasePath, "users");
+        string oldUsersDir = Path.Combine(oldBasePath, AppConstants.UsersFolderName);
 
         if (!Directory.Exists(oldUsersDir))
             return;
 
-        string newUsersDir = Path.Combine(newBasePath, "users");
+        string newUsersDir = Path.Combine(newBasePath, AppConstants.UsersFolderName);
 
         await Task.Run(() =>
         {

@@ -1,4 +1,5 @@
-﻿using Pango.Persistence;
+﻿using Pango.Application.Common;
+using Pango.Persistence;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -75,5 +76,5 @@ public class AppDomainProvider : IAppDomainProvider
     }
 
     public string GetUserFolderPath(string userName)
-        => Path.Combine(GetAppDataFolderPath(), "users", userName);    
+        => Path.Combine(GetAppDataFolderPath(), AppConstants.UsersFolderName, userName);    
 }

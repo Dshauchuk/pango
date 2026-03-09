@@ -17,4 +17,6 @@ public static class AppConstants
     /// under the user's Documents directory.
     /// </summary>
     public const string DefaultExportFolderName = "PangoExports";
+
+    public const string UsersFolderName = "users";
 }
