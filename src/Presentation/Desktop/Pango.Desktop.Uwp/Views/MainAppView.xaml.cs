@@ -195,38 +195,7 @@ public sealed partial class MainAppView : ViewBase
 
         _initialView = null;
     }
+    
 
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    }
-
-    protected override void UnregisterMessages()
-    {
-        base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    }
-
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        switch (message.Value.NavigatedView)
-        {
-            case AppView.PasswordsIndex:
-                NavigationFrame.Navigate(typeof(PasswordsView));
-                NavigationFrame.BackStack.Clear();
-
-                NavigationEntry? passwordEntry = NavigationItems.First(i => i.PageType == typeof(PasswordsView));
-                NavigationView.SelectedItem = passwordEntry.Item;
-                break;
-
-            case AppView.GeneratePassword:
-                NavigationFrame.Navigate(typeof(GeneratePasswordView));
-                NavigationFrame.BackStack.Clear();
-
-                NavigationEntry? generateEntry = NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView));
-                NavigationView.SelectedItem = generateEntry.Item;
-                break;
-        }
-    }
+    
 }
