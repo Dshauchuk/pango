@@ -55,7 +55,7 @@ public sealed partial class MainAppView : ViewBase
 
     #region Event Handlers
 
-    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs routedEventArgs)
+    private async void MainAppView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         OnNavigatedTo(null);
 
@@ -72,80 +72,54 @@ public sealed partial class MainAppView : ViewBase
         settingsItem.IsTabStop = false;
     }
 
-    private void MainAppView_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs routedEventArgs)
+    private void MainAppView_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
         Loaded -= MainAppView_Loaded;
         Unloaded -= MainAppView_Unloaded;
     }
-
-    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs invokedEventArgs)
+    private void NavigationView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
     {
-        AppView appView = AppView.MainAppView;
-        NavigationEntry? navigationEntry = NavigationItems.FirstOrDefault(item => item.Item == invokedEventArgs.InvokedItemContainer);
+        AppView appView;
 
-        if (navigationEntry != null && navigationEntry.PageType is Type pageType)
+        if (NavigationItems.FirstOrDefault(item => item.Item == args.InvokedItemContainer)?.PageType is Type pageType)
         {
-            if (NavigationFrame.CurrentSourcePageType == pageType)
-            {
-                return;
-            }
-
-            NavigationFrame.Navigate(pageType);
-
-            NavigationFrame.BackStack.Clear();
-
-            AppViewAttribute? viewAttribute = pageType.GetCustomAttribute<AppViewAttribute>();
-            if (viewAttribute != null)
-            {
-                appView = viewAttribute.View;
-            }
-            else
-            {
-                throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
-            }
+            appView = pageType.GetCustomAttribute<AppViewAttribute>()?.View
+                      ?? throw new InvalidCastException($"Page {pageType.Name} MUST have {nameof(AppViewAttribute)}");
         }
-        else if (invokedEventArgs.IsSettingsInvoked)
+        else if (args.IsSettingsInvoked)
         {
-            if (NavigationFrame.CurrentSourcePageType != typeof(SettingsView))
-            {
-                NavigationFrame.Navigate(typeof(SettingsView));
-                NavigationFrame.BackStack.Clear();
-                appView = AppView.Settings;
-            }
+            appView = AppView.Settings;
+        }
+        else
+        {
+            return;
         }
 
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(appView, AppView.MainAppView)));
-
-        NavigationView.IsBackEnabled = false;
+        WeakReferenceMessenger.Default.Send(
+            new NavigationRequstedMessage(
+                new Mvvm.Models.NavigationParameters(appView, AppView.MainAppView)));
     }
-
-    private void NavigationFrame_Navigated(object sender, NavigationEventArgs navigationEventArgs)
+    private void NavigationFrame_Navigated(object sender, NavigationEventArgs e)
     {
         NavigationView.IsBackEnabled = ((Frame)sender).BackStackDepth > 0;
 
-        var navigatedPageType = navigationEventArgs.SourcePageType;
+        var navigatedPageType = e.SourcePageType;
 
-        if(navigatedPageType == typeof(SettingsView))
+        if (navigatedPageType == typeof(SettingsView))
         {
             NavigationView.SelectedItem = NavigationView.SettingsItem;
         }
         else
         {
-            NavigationView.SelectedItem = NavigationItems.FirstOrDefault(item => item.PageType == navigatedPageType)?.Item;
+            NavigationView.SelectedItem = NavigationItems
+                .FirstOrDefault(item => item.PageType == navigatedPageType)?.Item;
         }
     }
 
-    private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs backRequestedEventArgs)
+    private void NavigationView_BackRequested(NavigationView sender, NavigationViewBackRequestedEventArgs args)
     {
-        PageStackEntry? lastEntry = NavigationFrame.BackStack.LastOrDefault();
-        if (lastEntry is PageStackEntry entry)
+        if (NavigationFrame.CanGoBack)
         {
-            NavigationEntry? navItem = NavigationItems.FirstOrDefault(item => item.PageType == entry.SourcePageType);
-            if (navItem != null)
-            {
-                NavigationView.SelectedItem = navItem.Item;
-            }
-
             NavigationFrame.GoBack();
         }
     }
@@ -167,66 +141,20 @@ public sealed partial class MainAppView : ViewBase
             }
             else
             {
-                NavigationEntry? targetItem = NavigationItems.FirstOrDefault(item => item.PageType == _initialView);
-                if (targetItem != null)
-                {
-                    NavigationView.SelectedItem = targetItem.Item;
-                }
-            }
-        }
-
-        if (NavigationView.SelectedItem is null)
-        {
-            NavigationView.SelectedItem = HomeItem;
-            if (NavigationFrame.CurrentSourcePageType != typeof(HomeView))
-            {
-                NavigationFrame.Navigate(typeof(HomeView));
-                NavigationFrame.BackStack.Clear();
+                targetView = _initialView.GetCustomAttribute<AppViewAttribute>()?.View ?? AppView.Home;
             }
         }
         else
         {
-            if (_initialView != null && NavigationFrame.CurrentSourcePageType != _initialView)
-            {
-                NavigationFrame.Navigate(_initialView);
-                NavigationFrame.BackStack.Clear();
-            }
+            targetView = AppView.Home;
         }
+
+        WeakReferenceMessenger.Default.Send(
+            new NavigationRequstedMessage(
+                new Mvvm.Models.NavigationParameters(
+                    navigatedView: targetView,
+                    sourceView: AppView.MainAppView)));
 
         _initialView = null;
-    }
-
-    protected override void RegisterMessages()
-    {
-        base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
-    }
-
-    protected override void UnregisterMessages()
-    {
-        base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
-    }
-
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
-    {
-        switch (message.Value.NavigatedView)
-        {
-            case AppView.PasswordsIndex:
-                NavigationFrame.Navigate(typeof(PasswordsView));
-                NavigationFrame.BackStack.Clear();
-
-                NavigationEntry? passwordEntry = NavigationItems.First(i => i.PageType == typeof(PasswordsView));
-                NavigationView.SelectedItem = passwordEntry.Item;
-                break;
-
-            case AppView.GeneratePassword:
-                NavigationFrame.Navigate(typeof(GeneratePasswordView));
-                NavigationFrame.BackStack.Clear();
-
-                NavigationEntry? generateEntry = NavigationItems.First(i => i.PageType == typeof(GeneratePasswordView));
-                NavigationView.SelectedItem = generateEntry.Item;
-                break;
-        }
     }
 }

@@ -745,6 +745,6 @@
     <value>Choose data folder</value>
   </data>
   <data name="DataFolderChanged" xml:space="preserve">
-    <value>Папка зменена. Калі ласка, перазапусціце прыкладанне.</value>
+    <value>The folder has been changed. Please restart the application.</value>
   </data>
 </root>

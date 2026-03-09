@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
@@ -49,6 +50,7 @@ public partial class SettingsViewModel : ViewModelBase
 
     // Services
     private readonly IUserContextProvider _userContextProvider;
+    private readonly IUserStorageManager _userStorageManager;
     private readonly IAppDomainProvider _appDomainProvider;
     private readonly IAppMetaService _appMetaService;
     private readonly IStartupService _startupService;
@@ -79,12 +81,14 @@ public partial class SettingsViewModel : ViewModelBase
     public SettingsViewModel(
         ILogger<SettingsViewModel> logger,
         IUserContextProvider userContextProvider,
-        IAppDomainProvider appDomainProvider,
+        IUserStorageManager userStorageManager,
+    IAppDomainProvider appDomainProvider,
         IAppMetaService appMetaService,
         IStartupService startupService)
         : base(logger)
     {
         _userContextProvider = userContextProvider;
+        _userStorageManager = userStorageManager;
         _appDomainProvider = appDomainProvider;
         _appMetaService = appMetaService;
         _startupService = startupService;
@@ -346,20 +350,33 @@ public partial class SettingsViewModel : ViewModelBase
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.CurrentWindow);
         WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
         StorageFolder folder = await picker.PickSingleFolderAsync();
 
-        if(folder != null)
-        {
-            // save permission to FututreAccessList
-            StorageApplicationPermissions.FutureAccessList.AddOrReplace(Constants.Settings.CustomDataFolderToken, folder);
+        if (folder == null) return;
 
-            SelectedDataFolderPath = folder.Path;
+        string oldPath = _appDomainProvider.GetAppDataFolderPath();
+        string newPath = folder.Path;
 
-            WeakReferenceMessenger.Default.Send(
-                new InAppNotificationMessage(
-                    ViewResourceLoader.GetString("DataFolderChanged"),
-                    AppNotificationType.Success));
-        }
+        if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        // save token
+        StorageApplicationPermissions.FutureAccessList.AddOrReplace(
+            Constants.Settings.CustomDataFolderToken, folder);
+
+        // migrate app's data
+        await _userStorageManager.MigrateDataAsync(oldPath, newPath);
+
+        // update cash
+        await _appDomainProvider.TryGetCustomDataFolderPathAsync();
+
+        SelectedDataFolderPath = folder.Path;
+
+        WeakReferenceMessenger.Default.Send(
+            new InAppNotificationMessage(
+                ViewResourceLoader.GetString("DataFolderChanged"),
+                AppNotificationType.Success));
     }
 
     private void ResetDataFolder()
