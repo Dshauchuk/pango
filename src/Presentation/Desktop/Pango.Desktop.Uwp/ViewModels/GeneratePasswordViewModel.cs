@@ -5,8 +5,12 @@ using Microsoft.Extensions.Logging;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
 using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Services;
+using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Dialogs;
+using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.Linq;
@@ -19,6 +23,7 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
 {
     #region Fields
     private readonly ISender _sender;
+    private readonly IPasswordGeneratorSettingsService _settingsService;
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError = string.Empty;
@@ -180,10 +185,11 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
 
     #endregion
 
-    public GeneratePasswordViewModel(ISender sender, ILogger<GeneratePasswordViewModel> logger)
+    public GeneratePasswordViewModel(ISender sender, ILogger<GeneratePasswordViewModel> logger, IPasswordGeneratorSettingsService settingsService)
         : base(logger)
     {
         _sender = sender;
+        _settingsService = settingsService;
 
         GenerateCommand = new AsyncRelayCommand(GenerateAsync);
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
@@ -201,8 +207,34 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
             Clear();
             _isLoaded = true;
         }
+        // load user settings
+        var s = _settingsService.Load();
+
+        Length = s.Length;
+        UseUppercase = s.UseUppercase;
+        UseLowercase = s.UseLowercase;
+        UseDigits = s.UseDigits;
+        UseSpecial = s.UseSpecial;
+        ExcludeAmbiguous = s.ExcludeAmbiguous;
+
+        //Clear();
     }
     #endregion
+
+    private void SaveSettings()
+    {
+        var s = new PasswordGeneratorSettings
+        {
+            Length = Length,
+            UseUppercase = UseUppercase,
+            UseLowercase = UseLowercase,
+            UseDigits = UseDigits,
+            UseSpecial = UseSpecial,
+            ExcludeAmbiguous = ExcludeAmbiguous
+        };
+
+        _settingsService.Save(s);
+    }
 
     private async Task GenerateAsync()
     {
@@ -232,6 +264,8 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         }
 
         GeneratedPassword = result.Value;
+
+        SaveSettings();
 
         WeakReferenceMessenger.Default.Send(
             new InAppNotificationMessage(

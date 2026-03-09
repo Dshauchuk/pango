@@ -82,6 +82,7 @@ public static class DependencyInjection
         services.AddSingleton<IAppIdleService, AppIdleService>();
         services.AddSingleton<IStartupService, StartupService>();
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IPasswordGeneratorSettingsService, PasswordGeneratorSettingsService>();
 
         // DS
         // TODO: move to the config file
