@@ -19,6 +19,7 @@ public class NavigationService : INavigationService
         {AppView.User, typeof(UserView)},
         {AppView.ExportImport, typeof(ExportImportView)},
         {AppView.GeneratePassword, typeof(GeneratePasswordView)},
+        {AppView.Settings, typeof(SettingsView)},
     };
     public void SetFrame(Frame frame)
     {

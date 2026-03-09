@@ -733,4 +733,16 @@
   <data name="ValidationError_InvalidChars" xml:space="preserve">
     <value>Нядзейсныя знакі ў назве.</value>
   </data>
+  <data name="DataStorage" xml:space="preserve">
+    <value>Сховішча дадзеных</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Скід</value>
+  </data>
+  <data name="ChooseDataFolder" xml:space="preserve">
+    <value>Выберыце тэчку з дадзенымі</value>
+  </data>
+  <data name="DataFolderChanged" xml:space="preserve">
+    <value>Папка зменена. Калі ласка, перазапусціце прыкладанне.</value>
+  </data>
 </root>

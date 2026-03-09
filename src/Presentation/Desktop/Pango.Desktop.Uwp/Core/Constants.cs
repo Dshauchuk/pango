@@ -20,5 +20,10 @@ public static class Constants
         /// Contains key, by which value of idle to block the application can be retrived from the <see cref="Windows.Storage.ApplicationDataContainer"/>
         /// </summary>
         public const string BlockAppAfterIdleMinutes = "BlockAppAfterIdleMinutes";
-    }
+
+        /// <summary>
+        /// Contains key for FutureAccessList to persist user-selected data folder access
+        /// </summary>
+        public const string CustomDataFolderToken = "CustomDataFolderToken";
+    }   
 }

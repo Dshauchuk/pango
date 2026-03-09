@@ -127,4 +127,22 @@ public class UserFileStorageManager: IUserStorageManager
             }
         }
     }
+    public async Task MigrateDataAsync(string oldBasePath, string newBasePath)
+    {
+        string oldUsersDir = Path.Combine(oldBasePath, AppConstants.UsersFolderName);
+
+        if (!Directory.Exists(oldUsersDir))
+            return;
+
+        string newUsersDir = Path.Combine(newBasePath, AppConstants.UsersFolderName);
+
+        await Task.Run(() =>
+        {
+            CopyDirectory(oldUsersDir, newUsersDir, recursive: true);
+            Directory.Delete(oldUsersDir, recursive: true);
+        });
+
+        _logger.LogDebug("Migrated user data from {Old} to {New}", oldUsersDir, newUsersDir);
+    }
+
 }

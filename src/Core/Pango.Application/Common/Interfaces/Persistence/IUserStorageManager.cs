@@ -9,4 +9,5 @@ public interface IUserStorageManager
     Task DeleteAllUserDataAsync(string userId);
 
     Task EncryptDataWithAsync(string userId, EncodingOptions encodingOptions);
+    Task MigrateDataAsync(string oldBasePath, string newBasePath);
 }

@@ -6,6 +6,7 @@ using Pango.Application;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
+using Pango.Persistence;
 using Serilog;
 using System;
 using ApplicationBase = Microsoft.UI.Xaml.Application;
@@ -73,8 +74,11 @@ sealed partial class App : ApplicationBase
     /// will be used such as when the application is launched to open a specific file.
     /// </summary>
     /// <param name="e">Details about the launch request and process.</param>
-    protected override void OnLaunched(LaunchActivatedEventArgs e)
+    protected override async void OnLaunched(LaunchActivatedEventArgs e)
     {
+        var appDomainProvider = Host.Services.GetRequiredService<IAppDomainProvider>();
+        await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
+
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
         CurrentWindow.Activate();
     }
