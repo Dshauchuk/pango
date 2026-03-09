@@ -5,7 +5,6 @@ using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
-using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Data.Commands.Export;
 using Pango.Application.UseCases.Data.Commands.Import;
@@ -34,19 +33,18 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     #region Fields
 
     private readonly ISender _sender;
-    private readonly IUserContextProvider _userContextProvider;
     private readonly IDialogService _dialogService;
     private int _selectedOption;
     private string _titleText = string.Empty;
     private string _importFilePath = string.Empty;
     private string _decryptedPasswordCache = string.Empty;
+    private bool _isLoaded = false;
 
     #endregion
 
     public ExportImportViewModel(
         ILogger<ExportImportViewModel> logger,
         ISender sender,
-        IUserContextProvider userContextProvider,
         IDialogService dialogService)
         : base(logger)
     {
@@ -56,7 +54,6 @@ public sealed partial class ExportImportViewModel : ViewModelBase
         NavigateToOptionCommand = new RelayCommand<int>(async (e) => await OnNavigateToOptionAsync(e));
 
         _sender = sender;
-        _userContextProvider = userContextProvider;
         _dialogService = dialogService;
 
         Passwords = []; // Export Tree Items
@@ -64,7 +61,6 @@ public sealed partial class ExportImportViewModel : ViewModelBase
 
         TitleText = ViewResourceLoader.GetString("ExportAndImportTooltip");
     }
-
 
     #region Commands
 
@@ -138,7 +134,17 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
-        await ResetViewAsync();
+
+        if (!_isLoaded || parameter != null)
+        {
+            await ResetViewAsync();
+            _isLoaded = true;
+        }
+        else
+        {
+            var passwords = await LoadPasswordsAsync();
+            DisplayPasswordsInTree(passwords);
+        }
     }
 
     protected override void RegisterMessages()
@@ -211,11 +217,10 @@ public sealed partial class ExportImportViewModel : ViewModelBase
         if (parameters is ImportDataParametersWithPassword p)
         {
             _decryptedPasswordCache = p.Password;
-
             ImportItems.Clear();
 
             // Build tree from the decrypted content passed from dialog
-            var tree = TreeBuilder.BuildTree([.. p.PreLoadedContent]);
+            var tree = await TreeBuilder.BuildTreeAsync([.. p.PreLoadedContent]);
             foreach (var item in tree)
             {
                 ImportItems.Add(item);
@@ -260,7 +265,8 @@ public sealed partial class ExportImportViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Import finalization failed");
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError(ex, "Import finalization failed");
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("Import failed", Core.Enums.AppNotificationType.Error));
         }
         finally
@@ -306,17 +312,16 @@ public sealed partial class ExportImportViewModel : ViewModelBase
 
         switch (option)
         {
-            case 0: // General Menu
+            case 0:
                 await OnNavigatedToGeneralAsync();
                 break;
-            case 1: // Export
+            case 1:
                 await OnNavigatedToExportAsync();
                 break;
-            case 2: // Import File
+            case 2:
                 await OnNavigatedToImportAsync();
                 break;
-            case 3: // Import Selection
-                // Data is already loaded by HandleImportPreviewAsync
+            case 3:
                 break;
         }
     }
@@ -327,17 +332,21 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     /// <returns></returns>
     private async Task<IEnumerable<PangoExplorerItem>> LoadPasswordsAsync()
     {
-        Logger.LogDebug($"Loading passwords...");
+        if (Logger.IsEnabled(LogLevel.Debug))
+            Logger.LogDebug("Loading passwords...");
+
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
         if (queryResult.IsError)
         {
-            Logger.LogError("Loaded passwords failed: {FirstError}", queryResult.FirstError);
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError("Loaded passwords failed: {Error}", queryResult.FirstError);
             return [];
         }
         else
         {
-            Logger.LogDebug("Loaded {count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
+            if (Logger.IsEnabled(LogLevel.Debug))
+                Logger.LogDebug("Loaded {Count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
             return queryResult.Value.Adapt<IEnumerable<PangoExplorerItem>>().OrderBy(i => i.NestingLevel);
         }
     }
@@ -420,10 +429,8 @@ public sealed partial class ExportImportViewModel : ViewModelBase
         sortedPasswordsList.Insert(index, passwordToInsert);
     }
 
-    private Task OnNavigatedToGeneralAsync()
+    private static Task OnNavigatedToGeneralAsync()
     {
-        ImportFilePath = string.Empty;
-        ImportItems.Clear();
         return Task.CompletedTask;
     }
 
@@ -433,10 +440,8 @@ public sealed partial class ExportImportViewModel : ViewModelBase
         DisplayPasswordsInTree(passwords);
     }
 
-    private Task OnNavigatedToImportAsync()
+    private static Task OnNavigatedToImportAsync()
     {
-        ImportFilePath = string.Empty;
-        ImportItems.Clear();
         return Task.CompletedTask;
     }
 

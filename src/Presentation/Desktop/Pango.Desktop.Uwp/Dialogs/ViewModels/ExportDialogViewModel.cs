@@ -19,41 +19,24 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class ExportDialogViewModel(
+    ILogger<ExportDialogViewModel> logger,
+    ISender sender,
+    IUserContextProvider userContextProvider,
+    IPasswordHashProvider passwordHashProvider) : ViewModelBase(logger), IDialogViewModel
 {
     #region Fields
 
-    private readonly ISender _sender;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly IPasswordHashProvider _passwordHashProvider;
+    private readonly ISender _sender = sender;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly IPasswordHashProvider _passwordHashProvider = passwordHashProvider;
     private ExportDataParameters? _parameters;
 
     private string _exportFolderPath = string.Empty;
     private string _exportingItemsInfo = string.Empty;
-    private ExportDataValidator _validator;
+    private ExportDataValidator _validator = new();
 
     #endregion
-
-    // Constructor: Initializes the ViewModel with dependencies and sets up validator and defaults
-    public ExportDialogViewModel(
-        ILogger<ExportDialogViewModel> logger,
-        ISender sender,
-        IUserContextProvider userContextProvider,
-        IPasswordHashProvider passwordHashProvider)
-        : base(logger)
-    {
-        DialogContext = new DialogContext();
-
-        _sender = sender;
-        _userContextProvider = userContextProvider;
-        _passwordHashProvider = passwordHashProvider;
-
-        _validator = new ExportDataValidator();
-        Validator.ErrorsChanged += Validator_ErrorsChanged;
-
-        InitializeDefaultExportPath();
-        InitializeDefaultFileName();
-    }
 
     #region Properties
 
@@ -82,23 +65,17 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         set => SetProperty(ref _validator, value);
     }
 
-    public IDialogContext DialogContext { get; }
+    public IDialogContext DialogContext { get; } = new DialogContext();
 
     #endregion
 
     #region Public Methods
 
     // Determines if the dialog can save based on validator errors
-    public bool CanSave()
-    {
-        return !Validator.HasErrors;
-    }
-
+    public bool CanSave() => !Validator.HasErrors;
+    
     // Handles the cancel action (no-op in this implementation)
-    public Task OnCancelAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public Task OnCancelAsync() => Task.CompletedTask;
 
     // Handles the save action: validates, exports data, and manages file copying
     public async Task OnSaveAsync()
@@ -182,6 +159,11 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
         ResetDialog();
 
+        Validator.ErrorsChanged -= Validator_ErrorsChanged;
+        Validator.ErrorsChanged += Validator_ErrorsChanged;
+        InitializeDefaultExportPath();
+        InitializeDefaultFileName();
+
         if (parameter is not ExportDataParameters dialogParameters)
         {
             return;
@@ -229,14 +211,14 @@ public partial class ExportDialogViewModel : ViewModelBase, IDialogViewModel
     // Resets the dialog state to initial configuration
     private void ResetDialog()
     {
-        if (Validator is null)
+        if (Validator != null)
         {
-            Validator = new();
-            Validator.ErrorsChanged += Validator_ErrorsChanged;
+            Validator.ErrorsChanged -= Validator_ErrorsChanged;
         }
 
+        Validator = new();
+        Validator.ErrorsChanged += Validator_ErrorsChanged;
         Validator.Reset();
-        InitializeDefaultFileName();
     }
 
     // Handles validation errors changed event to notify dialog content changes

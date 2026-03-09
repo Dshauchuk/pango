@@ -4,89 +4,110 @@ using Pango.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
+/// <summary>
+/// Utility class to build the hierarchical folder structure for passwords.
+/// </summary>
 public static class TreeBuilder
 {
-    // Constructs the hierarchical tree from a flat list of passwords.
-    public static ObservableCollection<PangoExplorerItem> BuildTree(List<PangoPassword> flatList)
+    /// <summary>
+    /// Asynchronously builds the visual tree structure from a flat list of passwords.
+    /// </summary>
+    /// <param name="flatList">The flat list of PangoPassword items.</param>
+    /// <param name="previouslyExpandedPaths">A set of folder paths that were expanded before the refresh.</param>
+    /// <returns>A hierarchical ObservableCollection ready for TreeView binding.</returns>
+    public static async Task<ObservableCollection<PangoExplorerItem>> BuildTreeAsync(
+        List<PangoPassword> flatList,
+        HashSet<string>? previouslyExpandedPaths = null)
     {
-        var validItems = flatList.Where(x => !string.IsNullOrWhiteSpace(x.Name)).ToList();
-        var folders = validItems.Where(x => x.IsCatalog).ToList();
-        var files = validItems.Where(x => !x.IsCatalog).ToList();
-
-        var folderMap = new Dictionary<string, PangoExplorerItem>(StringComparer.OrdinalIgnoreCase);
-
-        // create folder nodes
-        foreach (var f in folders)
+        return await Task.Run(() =>
         {
-            string fullPath = GetEntityFullPath(f);
-            if (!folderMap.ContainsKey(fullPath))
+            var folderMap = new Dictionary<string, PangoExplorerItem>(StringComparer.OrdinalIgnoreCase);
+            var childrenMap = new Dictionary<string, List<PangoExplorerItem>>(StringComparer.OrdinalIgnoreCase);
+            var rootItemsList = new List<PangoExplorerItem>();
+            var allFiles = new List<PangoExplorerItem>(flatList.Count);
+
+            foreach (var item in flatList)
             {
-                folderMap[fullPath] = new PangoExplorerItem(f.Id, f.Name, PangoExplorerItem.ExplorerItemType.Folder)
+                if (string.IsNullOrWhiteSpace(item.Name)) continue;
+
+                string catalogPath = item.CatalogPath?.Trim() ?? string.Empty;
+
+                if (item.IsCatalog)
                 {
-                    CatalogPath = f.CatalogPath?.Trim() ?? string.Empty,
-                    IsSelected = false
-                };
-            }
-        }
+                    string fullPath = string.IsNullOrEmpty(catalogPath) ? item.Name : $"{catalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
 
-        var rootItems = new ObservableCollection<PangoExplorerItem>();
-        var allItemsToProcess = new List<PangoExplorerItem>(folderMap.Values);
+                    if (!folderMap.ContainsKey(fullPath))
+                    {
+                        bool isExpanded = previouslyExpandedPaths != null && previouslyExpandedPaths.Contains(fullPath);
 
-        // create file nodes
-        foreach (var f in files)
-        {
-            allItemsToProcess.Add(new PangoExplorerItem(f.Id, f.Name, PangoExplorerItem.ExplorerItemType.File)
-            {
-                CatalogPath = f.CatalogPath?.Trim() ?? string.Empty,
-                IsSelected = false
-            });
-        }
-
-        // link items to parents
-        foreach (var item in allItemsToProcess)
-        {
-            if (string.IsNullOrEmpty(item.CatalogPath))
-            {
-                rootItems.Add(item);
-            }
-            else
-            {
-                if (folderMap.TryGetValue(item.CatalogPath, out var parentFolder))
-                {
-                    parentFolder.AddChild(item);
+                        folderMap[fullPath] = new PangoExplorerItem(item.Id, item.Name, PangoExplorerItem.ExplorerItemType.Folder)
+                        {
+                            CatalogPath = catalogPath,
+                            IsSelected = false,
+                            IsExpanded = isExpanded
+                        };
+                        childrenMap[fullPath] = [];
+                    }
                 }
                 else
                 {
+                    allFiles.Add(new PangoExplorerItem(item.Id, item.Name, PangoExplorerItem.ExplorerItemType.File)
+                    {
+                        CatalogPath = catalogPath,
+                        IsSelected = false
+                    });
+                }
+            }
+
+            foreach (var folder in folderMap.Values)
+            {
+                if (string.IsNullOrEmpty(folder.CatalogPath)) rootItemsList.Add(folder);
+                else if (childrenMap.TryGetValue(folder.CatalogPath, out var list)) list.Add(folder);
+            }
+
+            foreach (var file in allFiles)
+            {
+                if (string.IsNullOrEmpty(file.CatalogPath)) rootItemsList.Add(file);
+                else if (childrenMap.TryGetValue(file.CatalogPath, out var list)) list.Add(file);
+            }
+
+            SortAndBind(rootItemsList, childrenMap);
+
+            return new ObservableCollection<PangoExplorerItem>(rootItemsList);
+        });
+    }
+    /// <summary>
+    /// Recursively sorts the tree structure.
+    /// </summary>
+    /// <param name="items"></param>
+    /// <param name="childrenMap"></param>
+    private static void SortAndBind(List<PangoExplorerItem> items, Dictionary<string, List<PangoExplorerItem>> childrenMap)
+    {
+        items.Sort((a, b) =>
+        {
+            if (a.Type != b.Type) return a.Type == PangoExplorerItem.ExplorerItemType.Folder ? -1 : 1;
+            return string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+        });
+
+        foreach (var item in items)
+        {
+            if (item.Type == PangoExplorerItem.ExplorerItemType.Folder)
+            {
+                string fullPath = string.IsNullOrEmpty(item.CatalogPath) ? item.Name : $"{item.CatalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
+                if (childrenMap.TryGetValue(fullPath, out var children))
+                {
+                    SortAndBind(children, childrenMap);
+                    item.Children = new ObservableCollection<PangoExplorerItem>(children);
+                    foreach (var child in item.Children)
+                    {
+                        child.Parent = item;
+                    }
                 }
             }
         }
-
-        SortChildren(rootItems);
-        return rootItems;
-    }
-
-    // Recursively sorts the tree structure.
-    private static void SortChildren(ObservableCollection<PangoExplorerItem> items)
-    {
-        var sorted = items.OrderByDescending(x => x.Type == PangoExplorerItem.ExplorerItemType.Folder)
-                          .ThenBy(x => x.Name)
-                          .ToList();
-        items.Clear();
-        foreach (var item in sorted)
-        {
-            if (item.Children.Count > 0) SortChildren(item.Children);
-            items.Add(item);
-        }
-    }
-
-    // Helper to get full path string.
-    private static string GetEntityFullPath(PangoPassword item)
-    {
-        if (string.IsNullOrEmpty(item.CatalogPath)) return item.Name;
-        return $"{item.CatalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
     }
 }

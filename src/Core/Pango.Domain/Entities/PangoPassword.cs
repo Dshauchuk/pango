@@ -1,21 +1,25 @@
 ﻿using Pango.Domain.Common;
+using System.Diagnostics;
 
 namespace Pango.Domain.Entities;
 
 /// <summary>
-/// A password persisted in pango
+/// Represents a user's password entry or catalog folder in the domain.
 /// </summary>
 public class PangoPassword : BaseAuditableEntity, ICataloguable
 {
-	public PangoPassword()
-	{
-		Id = Guid.NewGuid();
-        Value = string.Empty;
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly RamProtectedString _protectedValue;
+
+    public PangoPassword()
+    {
+        Id = Guid.NewGuid();
+        _protectedValue = new RamProtectedString(string.Empty);
         Target = string.Empty;
         UserName = string.Empty;
         Name = string.Empty;
         Login = string.Empty;
-        Properties = new();
+        Properties = [];
         CatalogPath = string.Empty;
         LocationPath = string.Empty;
     }
@@ -23,27 +27,31 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
 	/// <summary>
 	/// A password title
 	/// </summary>
-	public string Name { get; set; }
+    public string Name { get; set; }
 
 	/// <summary>
 	/// User's login for the resource
 	/// </summary>
-	public string Login { get; set; }
+    public string Login { get; set; }
 
 	/// <summary>
 	/// Password entry properties
 	/// </summary>
-	public Dictionary<string, string> Properties { get; set; }
+    public Dictionary<string, string> Properties { get; set; }
 
-	/// <summary>
-	/// Encrypted value of the password
-	/// </summary>
-	public string Value { get; set; }
+    /// <summary>
+    /// Gets or sets the password value.
+    /// </summary>
+    public string Value
+    {
+        get => _protectedValue.GetDecryptedValue();
+        set => _protectedValue.SetPlaintextValue(value);
+    }
 
 	/// <summary>
 	/// A resource that the password is for
 	/// </summary>
-	public string Target { get; set; }
+    public string Target { get; set; }
 
     /// <summary>
     /// Name of the password owner
@@ -58,10 +66,10 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
 	/// <summary>
 	/// Indicated if the entity is intended for being a catalog owner
 	/// </summary>
-	public bool IsCatalog { get; set; }
+    public bool IsCatalog { get; set; }
 	
 	/// <summary>
 	/// Presents the path of the file where the password is located
 	/// </summary>
-	public string LocationPath { get; set; }
+    public string LocationPath { get; set; }
 }

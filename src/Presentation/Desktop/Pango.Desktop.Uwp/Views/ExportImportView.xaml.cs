@@ -25,12 +25,13 @@ public sealed partial class ExportImportView : PageBase
     public ExportImportView()
     : base(App.Host.Services.GetRequiredService<ILogger<ExportImportView>>())
     {
-        this.InitializeComponent();
+        InitializeComponent();
+        NavigationCacheMode = NavigationCacheMode.Required;
         DataContext = App.Host.Services.GetRequiredService<ExportImportViewModel>();
 
         // Subscribe to ItemInvoked events for checkbox toggle logic
-        this.PasswordsTreeView.ItemInvoked += OnTreeViewItemInvoked;
-        this.ImportTreeView.ItemInvoked += OnTreeViewItemInvoked;
+        PasswordsTreeView.ItemInvoked += OnTreeViewItemInvoked;
+        ImportTreeView.ItemInvoked += OnTreeViewItemInvoked;
     }
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
@@ -41,10 +42,10 @@ public sealed partial class ExportImportView : PageBase
         WeakReferenceMessenger.Default.Register<ImportPreviewReadyMessage>(this, (r, m) =>
         {
             // Check if page is still valid
-            if (this.XamlRoot == null) return;
+            if (XamlRoot == null) return;
 
             // Dispatch to UI thread to avoid threading issues
-            this.DispatcherQueue.TryEnqueue(() =>
+            DispatcherQueue.TryEnqueue(() =>
             {
                 if (ViewModel is ExportImportViewModel vm)
                 {
