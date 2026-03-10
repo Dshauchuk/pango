@@ -12,7 +12,7 @@ public class PasswordGeneratorSettingsService : IPasswordGeneratorSettingsServic
 
     private readonly IUserContextProvider _userContextProvider;
     private readonly ILogger _logger;
-    public PasswordGeneratorSettingsService(IUserContextProvider userContextProvider, ILogger logger)
+    public PasswordGeneratorSettingsService(IUserContextProvider userContextProvider, ILogger<PasswordGeneratorSettingsService> logger)
     {
         _userContextProvider = userContextProvider;
         _logger = logger;

@@ -149,20 +149,6 @@ public sealed partial class MainAppView : ViewBase
             targetView = AppView.Home;
         }
 
-<<<<<<< Catherine/feature/choose-app-data-location
-        WeakReferenceMessenger.Default.Send(
-            new NavigationRequstedMessage(
-                new Mvvm.Models.NavigationParameters(
-                    navigatedView: targetView,
-                    sourceView: AppView.MainAppView)));
-
         _initialView = null;
     }
-=======
-        _initialView = null;
-    }
-    
-
-    
->>>>>>> develop
 }
