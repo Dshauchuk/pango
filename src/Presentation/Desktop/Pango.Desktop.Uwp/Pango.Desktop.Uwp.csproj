@@ -57,6 +57,7 @@
 		<Content Include="Assets\LargeTile.scale-150.png" />
 		<Content Include="Assets\LargeTile.scale-200.png" />
 		<Content Include="Assets\LargeTile.scale-400.png" />
+		<Content Include="Assets\logo.ico" />
 		<Content Include="Assets\logo.png" />
 		<Content Include="Assets\SmallTile.scale-100.png" />
 		<Content Include="Assets\SmallTile.scale-125.png" />
@@ -111,8 +112,8 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.2.251219" />
 		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.1" />
+		<PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
 		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
 		<PackageReference Include="PInvoke.User32" Version="0.7.124" />
 		<PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
@@ -125,6 +126,7 @@
 		<ProjectReference Include="..\..\..\Core\Pango.Domain\Pango.Domain.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Infrastructure\Pango.Infrastructure.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence.File\Pango.Persistence.File.csproj" />
+		<ProjectReference Include="..\..\..\Services\Pango.BackupService\Pango.BackupService.csproj" />
 	</ItemGroup>
 
 	<!-- Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging Tools extension 
@@ -149,6 +151,7 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Assets\logo.ico" />
 	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
 	  <None Remove="Dialogs\Views\ExportCompletedDialog.xaml" />
 	  <None Remove="Dialogs\Views\ExportDialog.xaml" />
@@ -156,6 +159,11 @@
 	  <None Remove="Dialogs\Views\ImportDialog.xaml" />
 	  <None Remove="Views\ExportImportView.xaml" />
 	  <None Remove="Views\GeneratePasswordView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Update="Assets\logo.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\GeneratePasswordDialog.xaml">

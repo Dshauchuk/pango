@@ -745,4 +745,19 @@
   <data name="DataFolderChanged" xml:space="preserve">
     <value>Папка зменена. Калі ласка, перазапусціце прыкладанне.</value>
   </data>
+  <data name="Tray_OpenPango" xml:space="preserve">
+    <value>Адкрыць Pango</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Выйсці</value>
+  </data>
+  <data name="Tray_StartBackup" xml:space="preserve">
+    <value>Запусціць фонавы бэкап</value>
+  </data>
+  <data name="Tray_StopBackup" xml:space="preserve">
+    <value>Спыніць фонавы бэкап</value>
+  </data>
+  <data name="Tray_CloseWindow" xml:space="preserve">
+    <value>Схаваць у трэй</value>
+  </data>
 </root>

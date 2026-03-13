@@ -3,22 +3,33 @@ using Pango.BackupService;
 using Pango.Infrastructure.Services;
 using System.Runtime.InteropServices;
 
-if (OperatingSystem.IsWindows())
+/// <summary>
+/// Entry point for the background Backup Service.
+/// Hides the console window on Windows OS upon startup.
+/// </summary>
+try
 {
-    var handle = GetConsoleWindow();
-    ShowWindow(handle, 0);
-}
-
-IHost host = Host.CreateDefaultBuilder(args)
-    .UseWindowsService()
-    .ConfigureServices(services =>
+    if (OperatingSystem.IsWindows())
     {
-        services.AddSingleton<IBackupManager, BackupManager>();
-        services.AddHostedService<Worker>();
-    })
-    .Build();
+        var handle = GetConsoleWindow();
+        ShowWindow(handle, 0);
+    }
 
-await host.RunAsync();
+    IHost host = Host.CreateDefaultBuilder(args)
+        .UseWindowsService()
+        .ConfigureServices(services =>
+        {
+            services.AddSingleton<IBackupManager, BackupManager>();
+            services.AddHostedService<Worker>();
+        })
+        .Build();
+
+    await host.RunAsync();
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"Critical failure in Backup Service: {ex.Message}");
+}
 
 [DllImport("kernel32.dll")]
 static extern IntPtr GetConsoleWindow();
