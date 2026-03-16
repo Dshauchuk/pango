@@ -1,4 +1,5 @@
-﻿using Pango.Application.Common;
+﻿using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Persistence;
 using System;
 using System.IO;
@@ -8,13 +9,15 @@ using Windows.Storage.AccessCache;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
-public class AppDomainProvider : IAppDomainProvider
+public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IAppDomainProvider
 {
     private string? _cachedCustomPath;
     private bool _customPathResolved;
+    private readonly ILogger<AppDomainProvider>? _logger = logger;
+
     public string GetAppDataFolderPath()
     {
-        if(_customPathResolved && _cachedCustomPath != null)
+        if (_customPathResolved && _cachedCustomPath != null)
         {
             return _cachedCustomPath;
         }
@@ -28,7 +31,17 @@ public class AppDomainProvider : IAppDomainProvider
         {
             var futureAccessList = StorageApplicationPermissions.FutureAccessList;
 
-            if (futureAccessList.ContainsItem(Constants.Settings.CustomDataFolderToken))
+            bool hasToken = false;
+            foreach (var entry in futureAccessList.Entries)
+            {
+                if (entry.Token == Constants.Settings.CustomDataFolderToken)
+                {
+                    hasToken = true;
+                    break;
+                }
+            }
+
+            if (hasToken)
             {
                 var folder = await futureAccessList.GetFolderAsync(Constants.Settings.CustomDataFolderToken);
                 _cachedCustomPath = folder.Path;
@@ -36,11 +49,12 @@ public class AppDomainProvider : IAppDomainProvider
                 return folder.Path;
             }
         }
-        catch
+        catch (Exception ex)
         {
             // folder deleted or is not available
+            _logger?.LogWarning(ex, "Failed to get custom data folder path. It may have been deleted or access was revoked. Falling back to default app data folder.");
             _cachedCustomPath = null;
-            _customPathResolved= true;
+            _customPathResolved = true;
         }
 
         return null;
@@ -60,14 +74,14 @@ public class AppDomainProvider : IAppDomainProvider
 
     public string GetPath(string userName, params string[] pathElements)
     {
-        if(pathElements.Length == 0)
+        if (pathElements.Length == 0)
         {
             return GetUserFolderPath(userName);
         }
 
         string[] pathSegments = new string[pathElements.Length + 1];
         pathSegments[0] = GetUserFolderPath(userName);
-        for(int i = 1; i < pathSegments.Length; i++)
+        for (int i = 1; i < pathSegments.Length; i++)
         {
             pathSegments[i] = pathElements[i - 1];
         }
@@ -76,5 +90,5 @@ public class AppDomainProvider : IAppDomainProvider
     }
 
     public string GetUserFolderPath(string userName)
-        => Path.Combine(GetAppDataFolderPath(), AppConstants.UsersFolderName, userName);    
+        => Path.Combine(GetAppDataFolderPath(), AppConstants.UsersFolderName, userName);
 }

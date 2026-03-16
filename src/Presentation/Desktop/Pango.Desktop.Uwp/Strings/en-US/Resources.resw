@@ -747,4 +747,19 @@
   <data name="DataFolderChanged" xml:space="preserve">
     <value>The folder has been changed. Please restart the application.</value>
   </data>
+  <data name="Tray_OpenPango" xml:space="preserve">
+    <value>Open Pango</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Tray_StartBackup" xml:space="preserve">
+    <value>Start Background Backup</value>
+  </data>
+  <data name="Tray_StopBackup" xml:space="preserve">
+    <value>Stop Background Backup</value>
+  </data>
+  <data name="Tray_CloseWindow" xml:space="preserve">
+    <value>Close to Tray</value>
+  </data>
 </root>

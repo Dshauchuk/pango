@@ -38,6 +38,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private ObservableCollection<PangoExplorerItem> _originalList;
     private string _searchText = string.Empty;
     private bool _isLoaded;
+    private bool _needsRefresh;
     private string? _pendingGeneratedPassword;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
@@ -117,19 +118,20 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
         WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
         WeakReferenceMessenger.Default.Register<CreatePasswordFromGeneratorMessage>(this, OnCreatePasswordFromGenerator);
+        WeakReferenceMessenger.Default.Register<ImportCompletedMessage>(this, OnImportCompleted);
     }
 
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
 
-        if (!_isLoaded || parameter != null)
+        if (!_isLoaded || parameter != null || _needsRefresh)
         {
             await ResetViewAsync();
             _isLoaded = true;
+            _needsRefresh = false;
         }
 
-        // if the password from the generator has already been received during the download, we will process it now
         if (!string.IsNullOrEmpty(_pendingGeneratedPassword))
         {
             OpenEditForGeneratedPassword(_pendingGeneratedPassword);
@@ -140,6 +142,19 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     #endregion
 
     #region Event&Command Handlers
+
+    /// <summary>
+    /// Sets the dirty flag to force tree refresh when user navigates back to this view.
+    /// </summary>
+    private void OnImportCompleted(object recipient, ImportCompletedMessage message)
+    {
+        if (Logger.IsEnabled(LogLevel.Debug))
+        {
+            Logger.LogDebug("Import completed detected. Flagging passwords view for refresh.");
+        }
+
+        _needsRefresh = true;
+    }
 
     private async void Current_LoginSucceeded(string userId) => await ResetViewAsync();
 
@@ -165,7 +180,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         if (!_isLoaded)
         {
-            // save password and leave
             _pendingGeneratedPassword = message.Value;
             return;
         }
@@ -190,19 +204,13 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         if (dto is null) return;
 
         string confirmationTitle = ViewResourceLoader.GetString("Confirm_PasswordDeletion");
-        string confirmationDescription;
-        string completionMessage;
+        string confirmationDescription = dto.Type == PangoExplorerItem.ExplorerItemType.Folder
+            ? string.Format(ViewResourceLoader.GetString("RemoveCatalog_Message"), dto.Name, dto.Children?.Count ?? 0)
+            : ViewResourceLoader.GetString("Confirm_PasswordDeletionDetails");
 
-        if (dto.Type == PangoExplorerItem.ExplorerItemType.Folder)
-        {
-            confirmationDescription = string.Format(ViewResourceLoader.GetString("RemoveCatalog_Message"), dto.Name, dto.Children?.Count ?? 0);
-            completionMessage = string.Format(ViewResourceLoader.GetString("CatalogDeleted_FormattedMessage"), dto.Name);
-        }
-        else
-        {
-            confirmationDescription = ViewResourceLoader.GetString("Confirm_PasswordDeletionDetails");
-            completionMessage = string.Format(ViewResourceLoader.GetString("PasswordDeleted_Format"), dto.Name);
-        }
+        string completionMessage = dto.Type == PangoExplorerItem.ExplorerItemType.Folder
+            ? string.Format(ViewResourceLoader.GetString("CatalogDeleted_FormattedMessage"), dto.Name)
+            : string.Format(ViewResourceLoader.GetString("PasswordDeleted_Format"), dto.Name);
 
         bool deletionConfirmed = await _dialogService.ConfirmAsync(confirmationTitle, confirmationDescription);
         if (!deletionConfirmed) return;
@@ -211,15 +219,17 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
         if (result.IsError)
         {
-            Logger.LogError("Deleting {ItemType} \"{ItemName}\" failed: {Error}",
-                dto.Type == PangoExplorerItem.ExplorerItemType.File ? "password" : "catalog", dto.Name, result.FirstError);
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError("Deleting {ItemType} \"{ItemName}\" failed: {Error}", dto.Type == PangoExplorerItem.ExplorerItemType.File ? "password" : "catalog", dto.Name, result.FirstError);
+
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
         }
         else
         {
             RemovePassword(Passwords, dto);
-            Logger.LogDebug("{ItemType} \"{ItemName}\" has been successfully deleted",
-                dto.Type == PangoExplorerItem.ExplorerItemType.File ? "Password" : "Catalog", dto.Name);
+            if (Logger.IsEnabled(LogLevel.Debug))
+                Logger.LogDebug("{ItemType} \"{ItemName}\" successfully deleted", dto.Type == PangoExplorerItem.ExplorerItemType.File ? "Password" : "Catalog", dto.Name);
+
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
         }
     }
@@ -244,13 +254,13 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                 new EditCatalogParameters(GetAvailableCatalogs(), GetPathToSelectedFolder(), null, (SelectedItem?.Children ?? Passwords)?.Where(c => c.Type == PangoExplorerItem.ExplorerItemType.Folder).Select(c => c.Name).ToList() ?? []));
 
     private async void OnUpdateListAsync() => await ResetViewAsync();
-    
+
     #endregion
 
     #region Public Methods
 
     public async Task ShowPasswordDetailsAsync(PangoExplorerItem selectedPassword) => await _dialogService.ShowPasswordDetailsAsync(new PasswordDetailsParameters(selectedPassword.Id, GetAvailableCatalogs()));
-    
+
     #endregion
 
     #region Private Methods
@@ -352,17 +362,21 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <returns></returns>
     private async Task<IEnumerable<PangoExplorerItem>> LoadPasswordsAsync()
     {
-        Logger.LogDebug("Loading passwords...");
+        if (Logger.IsEnabled(LogLevel.Debug))
+            Logger.LogDebug("Loading passwords...");
+
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
         if (queryResult.IsError)
         {
-            Logger.LogError("Loaded passwords failed: {Error}", queryResult.FirstError);
+            if (Logger.IsEnabled(LogLevel.Error))
+                Logger.LogError("Loaded passwords failed: {Error}", queryResult.FirstError);
             return [];
         }
         else
         {
-            Logger.LogDebug("Loaded {Count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
+            if (Logger.IsEnabled(LogLevel.Debug))
+                Logger.LogDebug("Loaded {Count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
             return queryResult.Value.Adapt<IEnumerable<PangoExplorerItem>>().OrderBy(i => i.NestingLevel);
         }
     }
@@ -470,8 +484,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
         if (passwordToRemove is not null)
         {
-            // remove it from the original list firstly
-            // becase the removing from the displayed collection triggers notification of change of HasPasswords prop
             var originalItemToRemove = _originalList.FirstOrDefault(p => p.Id.Equals(passwordToRemove.Id));
             if (originalItemToRemove != null) _originalList.Remove(originalItemToRemove);
             passwords.Remove(passwordToRemove);
@@ -575,7 +587,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         List<string> catalogs =
             [..Passwords.FindItems(p => p.Type == PangoExplorerItem.ExplorerItemType.Folder)
-            .Select(p => PasswordPathUtility.BuildCatalogPath(p.CatalogPath, p.Name)) //string.IsNullOrEmpty(p.CatalogPath) ? $"{AppConstants.CatalogDelimeter}{p.Name}" : $"{p.CatalogPath}{AppConstants.CatalogDelimeter}{p.Name}"
+            .Select(p => PasswordPathUtility.BuildCatalogPath(p.CatalogPath, p.Name))
             .OrderBy(p => p)];
 
         if (catalogs.Count != 0) catalogs.Insert(0, string.Empty);
@@ -589,7 +601,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private string GetPathToSelectedFolder()
         => SelectedItem == null ? string.Empty :
             SelectedItem.Type == PangoExplorerItem.ExplorerItemType.Folder ?
-            PasswordPathUtility.BuildCatalogPath(SelectedItem.CatalogPath, SelectedItem.Name) : //SelectedItem.CatalogPath + (string.IsNullOrEmpty(SelectedItem.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + SelectedItem.Name :
+            PasswordPathUtility.BuildCatalogPath(SelectedItem.CatalogPath, SelectedItem.Name) :
             SelectedItem.CatalogPath;
 
     /// <summary>
