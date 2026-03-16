@@ -241,7 +241,7 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Margin="0" Text="{Binding TitleText}" Style="{StaticResource HeaderTextBlockStyle}"/>
+            <TextBlock Margin="0" Text="{loc:StringResource Key=ExportAndImportTooltip}" Style="{StaticResource HeaderTextBlockStyle}"/>
 
             <Pivot Grid.Row="1" x:Name="ExportImport_Pivot" Margin="0" IsLocked="True" SelectedIndex="{Binding SelectedOption, Mode=TwoWay}">
                 <!-- Header Template (Empty) -->
