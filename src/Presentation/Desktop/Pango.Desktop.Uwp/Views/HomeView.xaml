@@ -5,11 +5,127 @@
     xmlns:local="using:Pango.Desktop.Uwp.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     mc:Ignorable="d"
-    d:DesignHeight="300"
-    d:DesignWidth="400">
+    d:DesignHeight="600"
+    d:DesignWidth="1000">
 
     <Grid>
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="60">
 
+            <!-- Header Section -->
+            <StackPanel Spacing="15" HorizontalAlignment="Center">
+                <TextBlock Text="{loc:StringResource Key=Home_WelcomeTitle}"
+                           Style="{StaticResource TitleTextBlockStyle}"
+                           FontSize="42"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+
+            <!-- Quick Navigation Cards Section (One Row) -->
+            <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
+
+                <!-- Passwords Card -->
+                <Button Command="{Binding NavigateCommand}" 
+                        CommandParameter="PasswordsIndex"
+                        PointerEntered="Passwords_PointerEntered"
+                        PointerExited="Passwords_PointerExited"
+                        Width="140" Height="140" 
+                        CornerRadius="12" 
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <FontIcon x:Name="PasswordsIcon" Glyph="&#xE8D7;" FontSize="46" FontFamily="{ThemeResource SymbolThemeFontFamily}" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                        <TextBlock Text="{loc:StringResource Key=Passwords}" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Users Card -->
+                <Button Command="{Binding NavigateCommand}" 
+                        CommandParameter="User"
+                        PointerEntered="Users_PointerEntered"
+                        PointerExited="Users_PointerExited"
+                        Width="140" Height="140" 
+                        CornerRadius="12" 
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <FontIcon x:Name="UsersIcon" Glyph="&#xE77B;" FontSize="46" FontFamily="{ThemeResource SymbolThemeFontFamily}" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                        <TextBlock Text="{loc:StringResource Key=User}" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Export / Import Card -->
+                <Button Command="{Binding NavigateCommand}" 
+                        CommandParameter="ExportImport"
+                        PointerEntered="Export_PointerEntered"
+                        PointerExited="Export_PointerExited"
+                        Width="140" Height="140" 
+                        CornerRadius="12" 
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <FontIcon x:Name="ExportIcon" Glyph="&#xE78C;" FontSize="46" FontFamily="{ThemeResource SymbolThemeFontFamily}" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                        <TextBlock Text="{loc:StringResource Key=ExportAndImport}" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Password Generator Card -->
+                <Button Command="{Binding NavigateCommand}" 
+                        CommandParameter="GeneratePassword"
+                        PointerEntered="Generator_PointerEntered"
+                        PointerExited="Generator_PointerExited"
+                        Width="140" Height="140" 
+                        CornerRadius="12" 
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <FontIcon x:Name="GeneratorIcon" Glyph="&#xE77C;" FontSize="46" FontFamily="{ThemeResource SymbolThemeFontFamily}" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                        <TextBlock Text="{loc:StringResource Key=Generate}" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Settings Card -->
+                <Button Command="{Binding NavigateCommand}" 
+                        CommandParameter="Settings"
+                        PointerEntered="Settings_PointerEntered"
+                        PointerExited="Settings_PointerExited"
+                        Width="140" Height="140" 
+                        CornerRadius="12" 
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1">
+                    <StackPanel Spacing="15" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <FontIcon x:Name="SettingsIcon" Glyph="&#xE713;" FontSize="46" FontFamily="{ThemeResource SymbolThemeFontFamily}" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                        <TextBlock Text="{loc:StringResource Key=Settings}" Style="{StaticResource BodyStrongTextBlockStyle}" HorizontalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+            </StackPanel>
+        </StackPanel>
     </Grid>
 </Page>

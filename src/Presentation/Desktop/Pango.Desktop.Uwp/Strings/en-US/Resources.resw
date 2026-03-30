@@ -762,4 +762,7 @@
   <data name="Tray_CloseWindow" xml:space="preserve">
     <value>Close to Tray</value>
   </data>
+  <data name="Home_WelcomeTitle" xml:space="preserve">
+    <value>Welcome to Pango</value>
+  </data>
 </root>

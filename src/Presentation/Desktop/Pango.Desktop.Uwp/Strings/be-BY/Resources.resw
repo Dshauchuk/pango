@@ -760,4 +760,7 @@
   <data name="Tray_CloseWindow" xml:space="preserve">
     <value>Схаваць у трэй</value>
   </data>
+  <data name="Home_WelcomeTitle" xml:space="preserve">
+    <value>Сардэчна запрашаем у Pango</value>
+  </data>
 </root>
