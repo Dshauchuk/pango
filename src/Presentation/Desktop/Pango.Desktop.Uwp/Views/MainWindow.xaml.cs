@@ -20,7 +20,7 @@ namespace Pango.Desktop.Uwp.Views;
 /// </summary>
 public sealed partial class MainWindow : Window
 {
-    private const int MinWindowWidth = 800;
+    private const int MinWindowWidth = 1050;
     private const int MinWindowHeight = 600;
 
     private bool _isForceExit = false;
