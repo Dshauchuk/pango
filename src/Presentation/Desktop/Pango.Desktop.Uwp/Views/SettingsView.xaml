@@ -67,84 +67,92 @@
                                   OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
 
                     <toolkit:SettingsExpander.Items>
-                        <StackPanel Spacing="16" Padding="20,10,20,20">
-                            <!-- Path Row -->
-                            <Grid ColumnSpacing="12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <StackPanel>
-                                    <TextBlock Text="{loc:StringResource Key='BackupPath_Label'}" Margin="0,0,0,4"/>
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-                                        <TextBox Text="{Binding BackupPath, Mode=TwoWay}" IsReadOnly="True" Margin="0,0,8,0"/>
-                                        <Button Grid.Column="1" Content="{loc:StringResource Key='Browse_Button'}" Command="{Binding BrowseBackupPathCommand}"/>
-                                    </Grid>
-                                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
-                                        <Button Content="{loc:StringResource Key='DefaultPath_Button'}" Command="{Binding SetDefaultBackupPathCommand}" FontSize="12"/>
-                                        <Button Content="{loc:StringResource Key='OpenFolder_Button'}" Command="{Binding OpenBackupFolderCommand}" FontSize="12"/>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
+                        <toolkit:SettingsCard HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                            <toolkit:SettingsCard.Template>
+                                <ControlTemplate TargetType="toolkit:SettingsCard">
+                                    <ContentPresenter Content="{TemplateBinding Content}" HorizontalAlignment="Stretch"/>
+                                </ControlTemplate>
+                            </toolkit:SettingsCard.Template>
 
-                            <MenuFlyoutSeparator />
-
-                            <!-- Settings Row -->
-                            <Grid ColumnSpacing="20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <!-- Frequency -->
-                                <StackPanel>
-                                    <TextBlock Text="{loc:StringResource Key='BackupInterval_Label'}" Margin="0,0,0,4"/>
-                                    <ComboBox ItemsSource="{Binding BackupIntervals}" SelectedItem="{Binding SelectedBackupInterval, Mode=TwoWay}" HorizontalAlignment="Stretch">
-                                        <ComboBox.ItemTemplate>
-                                            <DataTemplate>
-                                                <TextBlock><Run Text="{Binding}"/> <Run Text="{loc:StringResource Key='Minute(-s)'}"/></TextBlock>
-                                            </DataTemplate>
-                                        </ComboBox.ItemTemplate>
-                                    </ComboBox>
-                                </StackPanel>
-
-                                <!-- Retention -->
-                                <StackPanel Grid.Column="1">
-                                    <TextBlock Text="{loc:StringResource Key='BackupRetention_Label'}" Margin="0,0,0,4"/>
-                                    <ComboBox SelectedItem="{Binding RetentionDays, Mode=TwoWay}" HorizontalAlignment="Stretch">
-                                        <x:Int32>1</x:Int32>
-                                        <x:Int32>7</x:Int32>
-                                        <x:Int32>14</x:Int32>
-                                        <x:Int32>28</x:Int32>
-                                    </ComboBox>
-                                    <TextBlock Text="{loc:StringResource Key='Day(-s)'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
-                                </StackPanel>
-                            </Grid>
-
-                            <MenuFlyoutSeparator />
-
-                            <!-- Password Row -->
-                            <StackPanel>
-                                <TextBlock Text="{loc:StringResource Key='BackupPassword_Label'}" Margin="0,0,0,4"/>
-                                <Grid ColumnSpacing="10">
+                            <StackPanel Spacing="16" Padding="20,10,20,20" HorizontalAlignment="Stretch">
+                                <!-- Path Row -->
+                                <Grid ColumnSpacing="12">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
-                                    <TextBox Text="{Binding BackupPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsSpellCheckEnabled="False"/>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
-                                        <Button Content="{loc:StringResource Key='SaveChanges'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding SaveBackupSettingsCommand}"/>
-                                        <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding CancelBackupChangesCommand}"/>
+                                    <StackPanel>
+                                        <TextBlock Text="{loc:StringResource Key='BackupPath_Label'}" Margin="0,0,0,4"/>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Text="{Binding BackupPath, Mode=TwoWay}" IsReadOnly="True" Margin="0,0,8,0" HorizontalAlignment="Stretch"/>
+                                            <Button Grid.Column="1" Content="{loc:StringResource Key='Browse_Button'}" Command="{Binding BrowseBackupPathCommand}"/>
+                                        </Grid>
+                                        <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,8,0,0">
+                                            <Button Content="{loc:StringResource Key='DefaultPath_Button'}" Command="{Binding SetDefaultBackupPathCommand}" FontSize="12"/>
+                                            <Button Content="{loc:StringResource Key='OpenFolder_Button'}" Command="{Binding OpenBackupFolderCommand}" FontSize="12"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Grid>
-                                <TextBlock Text="{loc:StringResource Key='BackupPassword_Tooltip'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
-                            </StackPanel>
 
-                        </StackPanel>
+                                <MenuFlyoutSeparator />
+
+                                <!-- Settings Row -->
+                                <Grid ColumnSpacing="20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Frequency -->
+                                    <StackPanel>
+                                        <TextBlock Text="{loc:StringResource Key='BackupInterval_Label'}" Margin="0,0,0,4"/>
+                                        <ComboBox ItemsSource="{Binding BackupIntervals}" SelectedItem="{Binding SelectedBackupInterval, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                            <ComboBox.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock><Run Text="{Binding}"/> <Run Text="{loc:StringResource Key='Minute(-s)'}"/></TextBlock>
+                                                </DataTemplate>
+                                            </ComboBox.ItemTemplate>
+                                        </ComboBox>
+                                    </StackPanel>
+
+                                    <!-- Retention -->
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="{loc:StringResource Key='BackupRetention_Label'}" Margin="0,0,0,4"/>
+                                        <ComboBox SelectedItem="{Binding RetentionDays, Mode=TwoWay}" HorizontalAlignment="Stretch">
+                                            <x:Int32>1</x:Int32>
+                                            <x:Int32>7</x:Int32>
+                                            <x:Int32>14</x:Int32>
+                                            <x:Int32>28</x:Int32>
+                                        </ComboBox>
+                                        <TextBlock Text="{loc:StringResource Key='Day(-s)'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,2,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <MenuFlyoutSeparator />
+
+                                <!-- Password Row -->
+                                <StackPanel>
+                                    <TextBlock Text="{loc:StringResource Key='BackupPassword_Label'}" Margin="0,0,0,4"/>
+                                    <Grid ColumnSpacing="10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Text="{Binding BackupPassword, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsSpellCheckEnabled="False" HorizontalAlignment="Stretch"/>
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="10">
+                                            <Button Content="{loc:StringResource Key='SaveChanges'}" Style="{StaticResource AccentButtonStyle}" Command="{Binding SaveBackupSettingsCommand}"/>
+                                            <Button Content="{loc:StringResource Key='Cancel'}" Command="{Binding CancelBackupChangesCommand}"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <TextBlock Text="{loc:StringResource Key='BackupPassword_Tooltip'}" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Margin="0,4,0,0"/>
+                                </StackPanel>
+
+                            </StackPanel>
+                        </toolkit:SettingsCard>
                     </toolkit:SettingsExpander.Items>
                 </toolkit:SettingsExpander>
 

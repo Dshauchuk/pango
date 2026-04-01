@@ -22,7 +22,42 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
             return _cachedCustomPath;
         }
 
-        return ApplicationData.Current.RoamingFolder.Path;
+        try
+        {
+            string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            string pangoProgramData = Path.Combine(programDataPath, "Pango");
+
+            if (!Directory.Exists(pangoProgramData))
+            {
+                Directory.CreateDirectory(pangoProgramData);
+            }
+            return pangoProgramData;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            _logger?.LogWarning("No write permissions for ProgramData. Falling back to Documents folder.");
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Error accessing ProgramData. Falling back to Documents folder.");
+        }
+
+        try
+        {
+            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string pangoDocumentsData = Path.Combine(documentsPath, "Pango");
+
+            if (!Directory.Exists(pangoDocumentsData))
+            {
+                Directory.CreateDirectory(pangoDocumentsData);
+            }
+            return pangoDocumentsData;
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Error accessing Documents folder. Using local app data folder.");
+            return ApplicationData.Current.LocalFolder.Path;
+        }
     }
 
     public async Task<string?> TryGetCustomDataFolderPathAsync()
@@ -30,7 +65,6 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
         try
         {
             var futureAccessList = StorageApplicationPermissions.FutureAccessList;
-
             bool hasToken = false;
             foreach (var entry in futureAccessList.Entries)
             {
@@ -52,7 +86,7 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
         catch (Exception ex)
         {
             // folder deleted or is not available
-            _logger?.LogWarning(ex, "Failed to get custom data folder path. It may have been deleted or access was revoked. Falling back to default app data folder.");
+            _logger?.LogWarning(ex, "Failed to get custom data folder path. Falling back to default app data folder.");
             _cachedCustomPath = null;
             _customPathResolved = true;
         }
@@ -81,6 +115,7 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
 
         string[] pathSegments = new string[pathElements.Length + 1];
         pathSegments[0] = GetUserFolderPath(userName);
+
         for (int i = 1; i < pathSegments.Length; i++)
         {
             pathSegments[i] = pathElements[i - 1];
@@ -89,6 +124,6 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
         return Path.Combine(pathSegments);
     }
 
-    public string GetUserFolderPath(string userName)
-        => Path.Combine(GetAppDataFolderPath(), AppConstants.UsersFolderName, userName);
+    public string GetUserFolderPath(string userName) =>
+        Path.Combine(GetAppDataFolderPath(), AppConstants.UsersFolderName, userName);
 }
