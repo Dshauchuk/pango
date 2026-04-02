@@ -763,4 +763,7 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Сардэчна запрашаем у Pango</value>
   </data>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Паказаць Выбранае</value>
+  </data>
 </root>

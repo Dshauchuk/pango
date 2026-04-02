@@ -27,7 +27,8 @@ public static class DependencyInjection
     {
         TypeAdapterConfig<PangoPasswordListItemDto, PangoExplorerItem>
         .NewConfig()
-        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File)
+        .Map(dest => dest.IsStar, src => src.Star);
 
         return services;
     }

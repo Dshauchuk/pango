@@ -765,4 +765,7 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Welcome to Pango</value>
   </data>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Show favorites</value>
+  </data>
 </root>
