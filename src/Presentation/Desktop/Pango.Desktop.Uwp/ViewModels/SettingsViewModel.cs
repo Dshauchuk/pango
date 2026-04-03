@@ -65,6 +65,8 @@ public partial class SettingsViewModel : ViewModelBase
     private ImportDestination _selectedImportDestination;
     private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
     private string _selectedDataFolderPath;
+    private bool _isChangingDataFolder;
+    private string _dataFolderProgressText = string.Empty;
 
     // Backup Configuration
     private string _configPath = string.Empty;
@@ -171,12 +173,25 @@ public partial class SettingsViewModel : ViewModelBase
             }
         }
     }
+
+    #endregion
+
+    #region Properties - Data Storage
     public string SelectedDataFolderPath
     {
         get => _selectedDataFolderPath;
         set => SetProperty(ref _selectedDataFolderPath, value);
     }
-
+    public bool IsChangingDataFolder
+    {
+        get => _isChangingDataFolder;
+        set => SetProperty(ref _isChangingDataFolder, value);
+    }
+    public string DataFolderProgressText
+    {
+        get => _dataFolderProgressText;
+        set => SetProperty(ref _dataFolderProgressText, value);
+    }
     #endregion
 
     #region Properties - Security (Autolock)
@@ -355,28 +370,51 @@ public partial class SettingsViewModel : ViewModelBase
 
         if (folder == null) return;
 
+        bool confirmed = await ConfirmAsync(
+            ViewResourceLoader.GetString("ChangeDataFolder"),
+            ViewResourceLoader.GetString("ChangeDataFolder_Confirmation"));
+        if (!confirmed) return;
+
         string oldPath = _appDomainProvider.GetAppDataFolderPath();
         string newPath = folder.Path;
 
         if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
             return;
 
-        // save token
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace(
-            Constants.Settings.CustomDataFolderToken, folder);
+        try
+        {
+            IsChangingDataFolder = true;
+            DataFolderProgressText = ViewResourceLoader.GetString("CopyingData");
 
-        // migrate app's data
-        await _userStorageManager.MigrateDataAsync(oldPath, newPath);
+            // migrate app's data
+            await Task.Run(() => _userStorageManager.MigrateDataAsync(oldPath, newPath));
 
-        // update cash
-        await _appDomainProvider.TryGetCustomDataFolderPathAsync();
+            DataFolderProgressText = ViewResourceLoader.GetString("UpdatingConfiguration");
 
-        SelectedDataFolderPath = folder.Path;
+            // save token
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace(
+                Constants.Settings.CustomDataFolderToken, folder);
 
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(
-                ViewResourceLoader.GetString("DataFolderChanged"),
-                AppNotificationType.Success));
+            // update cash
+            await _appDomainProvider.TryGetCustomDataFolderPathAsync();
+            
+            SelectedDataFolderPath = folder.Path;
+
+            WeakReferenceMessenger.Default.Send(
+                new InAppNotificationMessage(
+                    ViewResourceLoader.GetString("DataFolderChanged"),
+                    AppNotificationType.Success));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to change data folder: {Message}", ex.Message);
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("DataFolderChangeFailed"), AppNotificationType.Warning));
+        }
+        finally
+        {
+            IsChangingDataFolder = false;
+            DataFolderProgressText = string.Empty;
+        }
     }
 
     private void ResetDataFolder()

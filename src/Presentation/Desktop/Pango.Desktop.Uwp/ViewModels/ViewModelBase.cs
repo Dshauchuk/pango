@@ -40,7 +40,8 @@ public abstract class ViewModelBase(ILogger logger) : ObservableObject, IViewMod
             Content = confirmationText,
             CloseButtonText = ViewResourceLoader.GetString("Cancel"),
             PrimaryButtonText = ViewResourceLoader.GetString("Yes"),
-            DefaultButton = ContentDialogButton.Primary
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = App.Current.CurrentWindow?.Content?.XamlRoot
         };
 
         ContentDialogResult result = await subscribeDialog.ShowAsync();

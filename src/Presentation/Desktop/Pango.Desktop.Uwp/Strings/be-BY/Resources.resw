@@ -763,4 +763,22 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Сардэчна запрашаем у Pango</value>
   </data>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Капіяванне дадзеных...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Абнаўленне канфігурацыі...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Не атрымалася змяніць тэчку з дадзенымі</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Калі ласка, не зачыняйце прыкладанне</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Змена тэчцы з дадзенымі</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Хочаце змяніць месца захоўвання дадзеных?</value>
+  </data>
 </root>
