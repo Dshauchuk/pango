@@ -32,6 +32,7 @@
                     <converters:BoolReverseConverter x:Key="BoolReverseConverter"/>
                     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
                     <converters:IntToStringConverter x:Key="IntToStringConverter"/>
+                    <converters:ExpirationStatusToVisibilityConverter x:Key="ExpirationStatusToVisibilityConverter"/>
                     
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>

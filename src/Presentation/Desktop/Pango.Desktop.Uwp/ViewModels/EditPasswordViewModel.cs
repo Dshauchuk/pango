@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 namespace Pango.Desktop.Uwp.ViewModels;
 
 [AppView(AppView.EditPassword)]
-public class EditPasswordViewModel : ViewModelBase
+public partial class EditPasswordViewModel : ViewModelBase
 {
     #region Fields
 
@@ -88,7 +88,7 @@ public class EditPasswordViewModel : ViewModelBase
         }
     }
 
-    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Any();
+    public bool HasCatalogs => AvailableCatalogs != null && AvailableCatalogs.Count != 0;
 
     #endregion
 
@@ -135,9 +135,23 @@ public class EditPasswordViewModel : ViewModelBase
                     PasswordValidator!.Password = passwordResult.Value.Value;
                     PasswordValidator!.SelectedCatalog = passwordResult.Value.CatalogPath;
 
-                    if (passwordResult.Value.Properties.ContainsKey(PasswordProperties.Notes))
+                    if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? value))
                     {
-                        PasswordValidator.Notes = passwordResult.Value.Properties[PasswordProperties.Notes];
+                        PasswordValidator.Notes = value;
+                    }
+
+                    if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
+                    {
+                        if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var expDate))
+                        {
+                            PasswordValidator.ExpirationDate = expDate;
+                            PasswordValidator.HasExpirationDate = true;
+                        }
+                        else
+                        {
+                            PasswordValidator.ExpirationDate = null;
+                            PasswordValidator.HasExpirationDate = false;
+                        }
                     }
                 }
             }
@@ -183,6 +197,13 @@ public class EditPasswordViewModel : ViewModelBase
 
         if (!PasswordValidator.HasErrors)
         {
+            var props = new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } };
+
+            if (PasswordValidator.HasExpirationDate && PasswordValidator.ExpirationDate.HasValue)
+            {
+                props.Add(PasswordProperties.ExpirationDate, PasswordValidator.ExpirationDate.Value.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+            }
+
             ErrorOr.ErrorOr<PangoPasswordDto> result;
 
             if (IsNew)
@@ -192,19 +213,21 @@ public class EditPasswordViewModel : ViewModelBase
                         new NewPasswordCommand(
                             PasswordValidator.Title, 
                             PasswordValidator.Login, 
-                            PasswordValidator.Password, 
-                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes }}) 
+                            PasswordValidator.Password,
+                            props) 
                         { 
                             CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
                         });
 
-                if(result.IsError)
+                if (result.IsError)
                 {
-                    Logger.LogError("Creating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
+                    if (Logger.IsEnabled(LogLevel.Error))
+                        Logger.LogError("Creating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
                 }
                 else
                 {
-                    Logger.LogDebug("Password \"{Title}\" successfully created", PasswordValidator.Title);
+                    if (Logger.IsEnabled(LogLevel.Debug))
+                        Logger.LogDebug("Password \"{Title}\" successfully created", PasswordValidator.Title);
                     WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
@@ -216,19 +239,21 @@ public class EditPasswordViewModel : ViewModelBase
                             PasswordValidator.Id!.Value, 
                             PasswordValidator.Title, 
                             PasswordValidator.Login, 
-                            PasswordValidator.Password, 
-                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } }) 
+                            PasswordValidator.Password,
+                            props) 
                         { 
                             CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
                         });
 
                 if (result.IsError)
                 {
-                    Logger.LogError("Updating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
+                    if (Logger.IsEnabled(LogLevel.Error))
+                        Logger.LogError("Updating password \"{Title}\" failed: {FirstError}", PasswordValidator.Title, result.FirstError);
                 }
                 else
                 {
-                    Logger.LogDebug("Password \"{Title}\" successfully updated", PasswordValidator.Title);
+                    if (Logger.IsEnabled(LogLevel.Debug))
+                        Logger.LogDebug("Password \"{Title}\" successfully updated", PasswordValidator.Title);
                     WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
@@ -243,7 +268,7 @@ public class EditPasswordViewModel : ViewModelBase
 
     private void OnOpenIndexView()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.PasswordsIndex, AppView.EditPassword)));
+        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new NavigationParameters(AppView.PasswordsIndex, AppView.EditPassword)));
     }
     private async void OnOpenGeneratePasswordDialog()
     {

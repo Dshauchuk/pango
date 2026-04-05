@@ -80,7 +80,7 @@ sealed partial class App : ApplicationBase
         await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
 
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
-        CurrentWindow.Activate();
+        CurrentWindow?.Activate();
     }
 
     public void RaiseLoginSucceeded(string userName)
