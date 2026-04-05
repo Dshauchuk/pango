@@ -1,4 +1,4 @@
-﻿ ﻿<abstract:PageBase
+﻿<abstract:PageBase
     x:Class="Pango.Desktop.Uwp.Views.SettingsView"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
