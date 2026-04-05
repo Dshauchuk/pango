@@ -362,8 +362,10 @@ public partial class SettingsViewModel : ViewModelBase
     #region Methods - Select data folder
     private async Task SelectDataFolderAsync()
     {
-        var picker = new FolderPicker();
-        picker.SuggestedStartLocation = PickerLocationId.Desktop;
+        var picker = new FolderPicker
+        {
+            SuggestedStartLocation = PickerLocationId.Desktop
+        };
         picker.FileTypeFilter.Add("*");
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.CurrentWindow);
