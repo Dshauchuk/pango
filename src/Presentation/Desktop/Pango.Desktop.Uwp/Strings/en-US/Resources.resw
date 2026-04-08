@@ -765,6 +765,23 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Welcome to Pango</value>
   </data>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Copying data...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Updating configuration...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Failed to change data folder</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Please don't close the app</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Change data folder</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Are you sure you want to change the data storage location?</value>
   <data name="ShowFavorites" xml:space="preserve">
     <value>Show favorites</value>
   </data>
