@@ -9,8 +9,6 @@ using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
-using Pango.Desktop.Uwp.Dialogs;
-using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.Linq;
@@ -34,6 +32,7 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     private bool _useSpecial = false;
     private bool _excludeAmbiguous = false;
     private PasswordStrength _strength;
+    private double _strengthBarWidth;
     private bool _isLoaded = false;
     #endregion
 
@@ -173,6 +172,11 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
             PasswordStrength.Strong => new SolidColorBrush(Colors.Green),
             _ => new SolidColorBrush(Colors.Gray)
         };
+    public double StrengthBarWidth
+    {
+        get => _strengthBarWidth;
+        set => SetProperty(ref _strengthBarWidth, value);
+    }
 
     #endregion
 
@@ -276,9 +280,13 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     {
         if (value < PasswordConstants.MinLength || value > PasswordConstants.MaxLength)
         {
-            LengthError = ViewResourceLoader.GetString("PasswordLength_OutOfRange");
+            LengthError = string.Format(
+            ViewResourceLoader.GetString("PasswordLength_OutOfRange"),
+            PasswordConstants.MinLength,
+            PasswordConstants.MaxLength);
             return false;
         }
+
         LengthError = string.Empty;
         return true;
     }
@@ -355,6 +363,7 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         ExcludeAmbiguous = false;
 
         Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
     }
 
     private static int CalculatePasswordStrength(string password)
@@ -387,6 +396,14 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         var password = GeneratedPassword ?? string.Empty;
         var score = CalculatePasswordStrength(password);
         Strength = GetPasswordStrength(score);
+
+        StrengthBarWidth = Strength switch
+        {
+            PasswordStrength.Weak => 120,  // 25%
+            PasswordStrength.Medium => 310,  // ~65%
+            PasswordStrength.Strong => 480,  // 100%
+            _ => 0
+        };
     }
 
     private static bool ContainsUpper(string s) => s.Any(char.IsUpper);

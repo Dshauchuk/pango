@@ -8,8 +8,11 @@ using Pango.Application.Common;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
 using Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
+using Pango.Application.UseCases.Password.Commands.ToggleStar;
+using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
+using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Extensions;
@@ -25,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
+using Windows.Storage;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -40,6 +44,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private bool _isLoaded;
     private bool _needsRefresh;
     private string? _pendingGeneratedPassword;
+    private bool _showOnlyStarred;
 
     public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
     {
@@ -58,6 +63,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         CopyPasswordToClipboardCommand = new RelayCommand<PangoExplorerItem>(OnCopyPasswordToClipboard);
         SeePasswordCommand = new RelayCommand<PangoExplorerItem>(OnSeePasswordCommand);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
+        ToggleStarCommand = new RelayCommand<PangoExplorerItem>(OnToggleStarAsync);
 
         App.Current.LoginSucceeded += Current_LoginSucceeded;
     }
@@ -72,6 +78,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     public RelayCommand<PangoExplorerItem> CopyPasswordToClipboardCommand { get; }
     public RelayCommand<PangoExplorerItem> SeePasswordCommand { get; }
     public RelayCommand UpdateListCommand { get; }
+    public RelayCommand<PangoExplorerItem> ToggleStarCommand { get; }
 
     #endregion
 
@@ -106,6 +113,15 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         get => _searchText;
         set => SetProperty(ref _searchText, value);
+    }
+    public bool ShowOnlyStarred
+    {
+        get => _showOnlyStarred;
+        set
+        {
+            if (SetProperty(ref _showOnlyStarred, value))
+                ApplyFilter();
+        }
     }
 
     #endregion
@@ -152,7 +168,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         {
             Logger.LogDebug("Import completed detected. Flagging passwords view for refresh.");
         }
-
         _needsRefresh = true;
     }
 
@@ -189,12 +204,14 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private async void OnCopyPasswordToClipboard(PangoExplorerItem? dto)
     {
         if (dto is null) return;
+
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
         if (!passwordResult.IsError)
         {
             DataPackage dataPackage = new() { RequestedOperation = DataPackageOperation.Copy };
             dataPackage.SetText(passwordResult.Value.Value?.ToString() ?? string.Empty);
             Clipboard.SetContent(dataPackage);
+
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordCopiedToClipboard")));
         }
     }
@@ -222,7 +239,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             if (Logger.IsEnabled(LogLevel.Error))
                 Logger.LogError("Deleting {ItemType} \"{ItemName}\" failed: {Error}", dto.Type == PangoExplorerItem.ExplorerItemType.File ? "password" : "catalog", dto.Name, result.FirstError);
 
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage, AppNotificationType.Error));
         }
         else
         {
@@ -230,13 +247,14 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             if (Logger.IsEnabled(LogLevel.Debug))
                 Logger.LogDebug("{ItemType} \"{ItemName}\" successfully deleted", dto.Type == PangoExplorerItem.ExplorerItemType.File ? "Password" : "Catalog", dto.Name);
 
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage, AppNotificationType.Success));
         }
     }
 
     private async void OnEditPasswordAsync(PangoExplorerItem? selected)
     {
         if (selected is null) return;
+
         if (selected.Type == PangoExplorerItem.ExplorerItemType.Folder)
         {
             await _dialogService.ShowNewCatalogDialogAsync(
@@ -255,11 +273,60 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
     private async void OnUpdateListAsync() => await ResetViewAsync();
 
+    private async void OnToggleStarAsync(PangoExplorerItem? item)
+    {
+        if (item is null || item.Type == PangoExplorerItem.ExplorerItemType.Folder)
+            return;
+
+        item.IsStar = !item.IsStar;
+
+        var result = await _sender.Send(
+            new TogglePasswordStarCommand(item.Id, item.IsStar));
+
+        if (result.IsError)
+        {
+            item.IsStar = !item.IsStar;
+            Logger.LogWarning("Failed to toggle star: {Error}", result.FirstError);
+        }
+    }
+    private void ApplyFilter()
+    {
+        foreach (var item in Passwords)
+        {
+            ApplyFilterRecursive(item);
+        }
+    }
+
+    private bool ApplyFilterRecursive(PangoExplorerItem item)
+    {
+        if (item.Type == PangoExplorerItem.ExplorerItemType.File)
+        {
+            item.IsVisible = !ShowOnlyStarred || item.IsStar;
+            return item.IsVisible;
+        }
+
+        // recursively check all the children
+        bool hasVisibleChild = false;
+        foreach (var child in item.Children)
+        {
+            if (ApplyFilterRecursive(child))
+                hasVisibleChild = true;
+        }
+
+        // Folder is visible only if there are visible children in it (or filter enabled)
+        item.IsVisible = !ShowOnlyStarred || hasVisibleChild;
+        return item.IsVisible;
+    }
+
     #endregion
 
     #region Public Methods
 
-    public async Task ShowPasswordDetailsAsync(PangoExplorerItem selectedPassword) => await _dialogService.ShowPasswordDetailsAsync(new PasswordDetailsParameters(selectedPassword.Id, GetAvailableCatalogs()));
+    /// <summary>
+    /// Opens the modal dialog showing the details of the selected password.
+    /// </summary>
+    public async Task ShowPasswordDetailsAsync(PangoExplorerItem selectedPassword)
+        => await _dialogService.ShowPasswordDetailsAsync(new PasswordDetailsParameters(selectedPassword.Id, GetAvailableCatalogs()));
 
     #endregion
 
@@ -274,6 +341,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         Func<PangoExplorerItem, bool> searchPredicate = string.IsNullOrWhiteSpace(searchText)
             ? (i) => true
             : (i) => i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
+
         foreach (PangoExplorerItem password in Passwords)
         {
             Filter(password, searchPredicate);
@@ -362,22 +430,39 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <returns></returns>
     private async Task<IEnumerable<PangoExplorerItem>> LoadPasswordsAsync()
     {
-        if (Logger.IsEnabled(LogLevel.Debug))
-            Logger.LogDebug("Loading passwords...");
+        if (Logger.IsEnabled(LogLevel.Debug)) Logger.LogDebug("Loading passwords...");
 
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
 
         if (queryResult.IsError)
         {
-            if (Logger.IsEnabled(LogLevel.Error))
-                Logger.LogError("Loaded passwords failed: {Error}", queryResult.FirstError);
+            if (Logger.IsEnabled(LogLevel.Error)) Logger.LogError("Loaded passwords failed: {Error}", queryResult.FirstError);
             return [];
         }
         else
         {
-            if (Logger.IsEnabled(LogLevel.Debug))
-                Logger.LogDebug("Loaded {Count} passwords", queryResult.Value.Count(p => !p.IsCatalog));
-            return queryResult.Value.Adapt<IEnumerable<PangoExplorerItem>>().OrderBy(i => i.NestingLevel);
+            var items = queryResult.Value.Adapt<IEnumerable<PangoExplorerItem>>().ToList();
+
+            foreach (var item in items)
+            {
+                var originalDto = queryResult.Value.FirstOrDefault(x => x.Id == item.Id);
+                if (originalDto != null && originalDto.Properties != null)
+                {
+                    item.Properties = originalDto.Properties;
+
+                    if (originalDto.Properties.TryGetValue(PasswordProperties.ExpirationDate, out var expStr))
+                    {
+                        if (DateTimeOffset.TryParse(expStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var expDate))
+                        {
+                            item.ExpirationDate = expDate;
+                        }
+                    }
+                }
+            }
+
+            if (Logger.IsEnabled(LogLevel.Debug)) Logger.LogDebug("Loaded {Count} passwords", items.Count(p => !p.IsFolder));
+
+            return items.OrderBy(i => i.NestingLevel);
         }
     }
 
@@ -389,7 +474,9 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         _originalList ??= [];
         if (_originalList.Count > 0) _originalList.Clear();
-        foreach (var pwd in passwords) AddPassword(_originalList, pwd, pwd.CatalogPath.ParseCatalogPath());
+
+        foreach (var pwd in passwords)
+            AddPassword(_originalList, pwd, pwd.CatalogPath.ParseCatalogPath());
     }
 
     /// <summary>
@@ -399,6 +486,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private void DisplayPasswordsInTree(IEnumerable<PangoExplorerItem> passwords, HashSet<string> expandedPaths)
     {
         Passwords.Clear();
+
         foreach (var pwd in passwords)
         {
             if (pwd.IsFolder)
@@ -407,6 +495,101 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                 if (expandedPaths.Contains(fullPath)) pwd.IsExpanded = true;
             }
             AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
+        }
+
+        int warningDays = 7;
+        if (ApplicationData.Current.LocalSettings.Values.TryGetValue(Constants.Settings.ExpirationWarningDays, out object? warningObj))
+        {
+            if (warningObj != null)
+            {
+                warningDays = Convert.ToInt32(warningObj);
+            }
+        }
+
+        var now = DateTime.Now.Date;
+
+        var allItems = new List<PangoExplorerItem>();
+        foreach (var root in Passwords)
+        {
+            allItems.Add(root);
+            allItems.AddRange(root.GetAllDescendants());
+        }
+
+        var datesCache = new List<string>();
+        int expired = 0;
+        int expiring = 0;
+
+        foreach (var item in allItems.Where(p => !p.IsFolder))
+        {
+            if (item.ExpirationDate.HasValue)
+            {
+                var expDate = item.ExpirationDate.Value.LocalDateTime.Date;
+                int daysLeft = (int)(expDate - now).TotalDays;
+
+                System.Diagnostics.Debug.WriteLine($"[DATE CHECK] {item.Name}: {expDate:dd/MM/yyyy}. Days left: {daysLeft}");
+
+                if (daysLeft < 0)
+                    item.ExpirationStatus = PasswordExpirationStatus.Expired;
+                else if (daysLeft <= warningDays)
+                    item.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+                else
+                    item.ExpirationStatus = PasswordExpirationStatus.Valid;
+            }
+            else
+            {
+                item.ExpirationStatus = PasswordExpirationStatus.Valid;
+            }
+        }
+
+        foreach (var folder in allItems.Where(p => p.IsFolder).OrderByDescending(p => p.NestingLevel))
+        {
+            if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.Expired))
+            {
+                folder.ExpirationStatus = PasswordExpirationStatus.Expired;
+            }
+            else if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.ExpiringSoon))
+            {
+                folder.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+            }
+            else
+            {
+                folder.ExpirationStatus = PasswordExpirationStatus.Valid;
+            }
+        }
+
+        UpdateExpirationCache(datesCache);
+
+        bool alertsEnabled = true;
+        if (ApplicationData.Current.LocalSettings.Values.TryGetValue(Constants.Settings.EnableExpirationAlerts, out object? alertsObj) && alertsObj is bool b)
+        {
+            alertsEnabled = b;
+        }
+
+        if (alertsEnabled)
+        {
+            if (expired > 0)
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("InApp_Expired_Message"), expired), AppNotificationType.Error));
+
+            if (expiring > 0)
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("InApp_Expiring_Message"), expiring), AppNotificationType.Warning));
+        }
+    }
+
+    /// <summary>
+    /// Saves the expiration dates cache to disk for the Background Notification Service to use.
+    /// </summary>
+    private void UpdateExpirationCache(List<string> dates)
+    {
+        try
+        {
+            string configDir = ApplicationData.Current.LocalFolder.Path;
+            string cacheFile = System.IO.Path.Combine(configDir, "expiration_cache.json");
+            System.IO.File.WriteAllText(cacheFile, System.Text.Json.JsonSerializer.Serialize(dates));
+        }
+        catch (Exception ex)
+        {
+            if (Logger.IsEnabled(LogLevel.Warning))
+                Logger.LogWarning(ex, "Cannot save expiration cache to disk");
         }
     }
 
@@ -455,6 +638,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             return;
         }
         int index = 0;
+
         if (passwordToInsert.Type == PangoExplorerItem.ExplorerItemType.File)
         {
             for (; index < sortedPasswordsList.Count; index++)
@@ -462,12 +646,14 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                 if (sortedPasswordsList[index].Type == PangoExplorerItem.ExplorerItemType.File) break;
             }
         }
+
         for (; index < sortedPasswordsList.Count; index++)
         {
             if (sortedPasswordsList[index].Type == PangoExplorerItem.ExplorerItemType.File && passwordToInsert.Type == PangoExplorerItem.ExplorerItemType.Folder) break;
             if (sortedPasswordsList[index].Name.CompareTo(passwordToInsert.Name) < 0) continue;
             else break;
         }
+
         sortedPasswordsList.Insert(index, passwordToInsert);
     }
 
@@ -486,6 +672,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         {
             var originalItemToRemove = _originalList.FirstOrDefault(p => p.Id.Equals(passwordToRemove.Id));
             if (originalItemToRemove != null) _originalList.Remove(originalItemToRemove);
+
             passwords.Remove(passwordToRemove);
             return true;
         }
@@ -570,6 +757,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private static PangoExplorerItem? FindPassword(IEnumerable<PangoExplorerItem> items, Func<PangoExplorerItem, bool> predicate)
     {
         if (items is null || !items.Any()) return null;
+
         foreach (var item in items)
         {
             if (predicate(item)) return item;

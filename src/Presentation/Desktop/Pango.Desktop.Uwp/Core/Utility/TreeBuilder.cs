@@ -20,7 +20,7 @@ public static class TreeBuilder
     /// <param name="previouslyExpandedPaths">A set of folder paths that were expanded before the refresh.</param>
     /// <returns>A hierarchical ObservableCollection ready for TreeView binding.</returns>
     public static async Task<ObservableCollection<PangoExplorerItem>> BuildTreeAsync(
-        List<PangoPassword> flatList,
+        List<PangoPassword> flatList, 
         HashSet<string>? previouslyExpandedPaths = null)
     {
         return await Task.Run(() =>
@@ -55,10 +55,19 @@ public static class TreeBuilder
                 }
                 else
                 {
+                    DateTimeOffset? expDate = null;
+                    if (item.Properties != null &&
+                        item.Properties.TryGetValue(PasswordProperties.ExpirationDate, out var dateStr) &&
+                        DateTimeOffset.TryParse(dateStr, out var parsedDate))
+                    {
+                        expDate = parsedDate;
+                    }
+
                     allFiles.Add(new PangoExplorerItem(item.Id, item.Name, PangoExplorerItem.ExplorerItemType.File)
                     {
                         CatalogPath = catalogPath,
-                        IsSelected = false
+                        IsSelected = false,
+                        ExpirationDate = expDate
                     });
                 }
             }
@@ -80,6 +89,7 @@ public static class TreeBuilder
             return new ObservableCollection<PangoExplorerItem>(rootItemsList);
         });
     }
+
     /// <summary>
     /// Recursively sorts the tree structure.
     /// </summary>

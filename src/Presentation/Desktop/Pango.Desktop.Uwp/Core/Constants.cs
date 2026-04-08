@@ -25,5 +25,9 @@ public static class Constants
         /// Contains key for FutureAccessList to persist user-selected data folder access
         /// </summary>
         public const string CustomDataFolderToken = "CustomDataFolderToken";
+
+        public const string EnableExpirationAlerts = "EnableExpirationAlerts";
+
+        public const string ExpirationWarningDays = "ExpirationWarningDays";
     }   
 }

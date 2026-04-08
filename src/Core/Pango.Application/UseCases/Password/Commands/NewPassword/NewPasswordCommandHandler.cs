@@ -6,6 +6,7 @@ using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
+using static Pango.Application.Common.ApplicationErrors;
 
 namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
@@ -43,6 +44,7 @@ public class NewPasswordCommandHandler
                 CreatedAt = DateTimeOffset.UtcNow,
                 CatalogPath = request.CatalogPath,
                 IsCatalog = request.IsCatalogHolder,
+                Star = request.Star
             };
 
             await _passwordRepository.CreateAsync(entity, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));

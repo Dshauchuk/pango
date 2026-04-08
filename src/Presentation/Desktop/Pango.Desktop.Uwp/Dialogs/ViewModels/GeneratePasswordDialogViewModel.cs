@@ -19,21 +19,21 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 {
     #region Fields
     private readonly ISender _sender;
     private readonly IPasswordGeneratorSettingsService _settingsService;
-
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
-    private string _lengthError;
-    private string _charsetsError;
+    private string _lengthError = string.Empty;
+    private string _charsetsError = string.Empty;
     private bool _useUppercase = true;
     private bool _useLowercase = true;
     private bool _useDigits = true;
     private bool _useSpecial = false;
     private bool _excludeAmbiguous = false;
+    private double _strengthBarWidth;
     private PasswordStrength _strength;
     #endregion
 
@@ -189,6 +189,11 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
             PasswordStrength.Strong => new SolidColorBrush(Colors.Green),
             _ => new SolidColorBrush(Colors.Gray)
         };
+    public double StrengthBarWidth
+    {
+        get => _strengthBarWidth;
+        set => SetProperty(ref _strengthBarWidth, value);
+    }
     public IDialogContext DialogContext { get; }
 
 
@@ -355,11 +360,12 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
         ExcludeAmbiguous = false;
 
         Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
 
         DialogContext.RaiseDialogContentChanged();
     }
 
-    private int CalculatePasswordStrength(string password)
+    private static int CalculatePasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password))
         {
@@ -379,7 +385,7 @@ public class GeneratePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
         return score;
     }
-    private PasswordStrength GetPasswordStrength(int score)
+    private static PasswordStrength GetPasswordStrength(int score)
     {
         if (score <= PasswordConstants.WeakThreshold) return PasswordStrength.Weak;
         if (score <= PasswordConstants.MediumThreshold) return PasswordStrength.Medium;

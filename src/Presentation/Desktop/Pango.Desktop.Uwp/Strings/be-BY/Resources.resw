@@ -763,4 +763,62 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Сардэчна запрашаем у Pango</value>
   </data>
+  <data name="Notifications_Header" xml:space="preserve">
+    <value>Апавяшчэнні</value>
+  </data>
+  <data name="ExpirationAlerts_Label" xml:space="preserve">
+    <value>Абвесткі аб заканчэнні тэрміну дзеяння</value>
+  </data>
+  <data name="ExpirationAlerts_Description" xml:space="preserve">
+    <value>Паказваць папярэджанні, калі тэрмін дзеяння пароляў мінае</value>
+  </data>
+  <data name="WarnBefore_Label" xml:space="preserve">
+    <value>Папярэджваць за</value>
+  </data>
+  <data name="ExpirationDate_Label" xml:space="preserve">
+    <value>Тэрмін дзеяння</value>
+  </data>
+  <data name="ExpirationDate_Placeholder" xml:space="preserve">
+    <value>Выберыце дату (неабавязкова)</value>
+  </data>
+  <data name="Status_ExpiringSoon" xml:space="preserve">
+    <value>Хутка мінае</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Пратэрмінаваны</value>
+  </data>
+  <data name="Status_Valid" xml:space="preserve">
+    <value>Сапраўдны</value>
+  </data>
+  <data name="Toast_Expiring_Title" xml:space="preserve">
+    <value>Тэрмін дзеяння пароляў хутка заканчваецца!</value>
+  </data>
+  <data name="Toast_Expiring_Body" xml:space="preserve">
+    <value>У вас ёсць паролі, якія трэба абнавіць. Адкрыйце Pango, каб праверыць.</value>
+  </data>
+  <data name="InApp_Expiring_Message" xml:space="preserve">
+    <value>Тэрмін дзеяння {0} пароля(-яў) хутка заканчваецца.</value>
+  </data>
+  <data name="InApp_Expired_Message" xml:space="preserve">
+    <value>Тэрмін дзеяння {0} пароля(-яў) ужо скончыўся!</value>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Капіяванне дадзеных...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Абнаўленне канфігурацыі...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Не атрымалася змяніць тэчку з дадзенымі</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Калі ласка, не зачыняйце прыкладанне</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Змена тэчцы з дадзенымі</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Хочаце змяніць месца захоўвання дадзеных?</value>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Паказаць Выбранае</value>
+  </data>
 </root>

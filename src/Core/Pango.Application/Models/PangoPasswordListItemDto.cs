@@ -2,11 +2,6 @@
 
 public class PangoPasswordListItemDto : DtoBase
 {
-    public PangoPasswordListItemDto(IEnumerable<PangoPasswordListItemDto> children)
-    {
-        CatalogPath = string.Empty;
-    }
-
     public PangoPasswordListItemDto()
     {
         CatalogPath = string.Empty;
@@ -26,6 +21,10 @@ public class PangoPasswordListItemDto : DtoBase
     /// 
     /// </summary>
     public string CatalogPath { get; set; }
+    /// <summary>
+    /// Is favorite password
+    /// </summary>
+    public bool Star { get; set; }
 
     /// <summary>
     /// 
@@ -36,4 +35,9 @@ public class PangoPasswordListItemDto : DtoBase
     /// 
     /// </summary>
     public DateTimeOffset LastModifiedAt { get; set; }
+
+    /// <summary>
+    /// Password entry properties
+    /// </summary>
+    public Dictionary<string, string> Properties { get; set; } = [];
 }

@@ -85,15 +85,17 @@ public sealed partial class Shell : ViewBase
 
     private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
     {
-        Notification notification = new()
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
         {
-            Message = message.Message,
-            Severity = CastSeverity(message.Type),
-            IsIconVisible = true,
-            Duration = TimeSpan.FromMilliseconds(Constants.InAppNotificationDuration)
-        };
-
-        InAppNotification.Show(notification);
+            Notification notification = new()
+            {
+                Message = message.Message,
+                Severity = CastSeverity(message.Type),
+                IsIconVisible = true,
+                Duration = TimeSpan.FromMilliseconds(Constants.InAppNotificationDuration)
+            };
+            InAppNotification.Show(notification);
+        });
     }
 
     private InfoBarSeverity CastSeverity(AppNotificationType notificationType)
