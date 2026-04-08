@@ -801,6 +801,7 @@
   </data>
   <data name="InApp_Expired_Message" xml:space="preserve">
     <value>Тэрмін дзеяння {0} пароля(-яў) ужо скончыўся!</value>
+  </data>
   <data name="CopyingData" xml:space="preserve">
     <value>Капіяванне дадзеных...</value>
   </data>
@@ -818,6 +819,7 @@
   </data>
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Хочаце змяніць месца захоўвання дадзеных?</value>
+  </data>
   <data name="ShowFavorites" xml:space="preserve">
     <value>Паказаць Выбранае</value>
   </data>

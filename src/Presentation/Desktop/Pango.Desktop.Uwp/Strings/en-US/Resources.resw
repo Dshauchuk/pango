@@ -803,6 +803,7 @@
   </data>
   <data name="InApp_Expired_Message" xml:space="preserve">
     <value>{0} password(s) have already expired!</value>
+  </data>
   <data name="CopyingData" xml:space="preserve">
     <value>Copying data...</value>
   </data>
@@ -820,6 +821,7 @@
   </data>
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Are you sure you want to change the data storage location?</value>
+  </data>
   <data name="ShowFavorites" xml:space="preserve">
     <value>Show favorites</value>
   </data>

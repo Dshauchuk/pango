@@ -82,7 +82,7 @@ sealed partial class App : ApplicationBase
     protected override async void OnLaunched(LaunchActivatedEventArgs e)
     {
         var appDomainProvider = Host.Services.GetRequiredService<IAppDomainProvider>();
-        await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
+		await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
 
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
         CurrentWindow?.Activate();
