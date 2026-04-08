@@ -24,7 +24,6 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     #region Fields
     private readonly ISender _sender;
     private readonly IPasswordGeneratorSettingsService _settingsService;
-
     private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError = string.Empty;
@@ -34,6 +33,7 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     private bool _useDigits = true;
     private bool _useSpecial = false;
     private bool _excludeAmbiguous = false;
+    private double _strengthBarWidth;
     private PasswordStrength _strength;
     #endregion
 
@@ -189,6 +189,11 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
             PasswordStrength.Strong => new SolidColorBrush(Colors.Green),
             _ => new SolidColorBrush(Colors.Gray)
         };
+    public double StrengthBarWidth
+    {
+        get => _strengthBarWidth;
+        set => SetProperty(ref _strengthBarWidth, value);
+    }
     public IDialogContext DialogContext { get; }
 
 
@@ -355,6 +360,7 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
         ExcludeAmbiguous = false;
 
         Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
 
         DialogContext.RaiseDialogContentChanged();
     }

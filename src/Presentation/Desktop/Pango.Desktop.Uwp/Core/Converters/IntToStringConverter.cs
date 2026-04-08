@@ -11,15 +11,12 @@ public sealed class IntToStringConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, string language)
     {
-        var text = value as string;
-
-        if (int.TryParse(text, out var parsed))
+        if (value is string str && int.TryParse(str, out int result))
         {
-            return parsed;
+            return result;
         }
 
-        // letters - don't touch vm
-        return DependencyProperty.UnsetValue;
+        return -1;
     }
 }
 
