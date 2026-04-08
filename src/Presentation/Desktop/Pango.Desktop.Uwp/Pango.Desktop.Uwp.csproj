@@ -15,7 +15,7 @@
 		<Nullable>enable</Nullable>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateThumbprint>4E9F427E9883A716B016C9FE10F5E0D9D69C8FD9</PackageCertificateThumbprint>
+		<PackageCertificateThumbprint>679B96D3AF7C38D5E9EF9D648708703CDFA397A6</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
@@ -24,6 +24,8 @@
 		<AppInstallerUri>D:\Projects\Pango\pango\src\Presentation\Desktop\Pango.Desktop.Uwp\AppPackages\Installer</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Title>Pango</Title>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
 	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
@@ -136,10 +138,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!--<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
 			<SubType>Designer</SubType>
-		</AppxManifest>-->
-		<AppxManifest Include="Package.Dev.appxmanifest">
+		</AppxManifest>
+		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
 			<SubType>Designer</SubType>
 		</AppxManifest>
 	</ItemGroup>
@@ -159,6 +161,12 @@
 	  <None Remove="Dialogs\Views\ImportDialog.xaml" />
 	  <None Remove="Views\ExportImportView.xaml" />
 	  <None Remove="Views\GeneratePasswordView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="..\..\..\..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
 	</ItemGroup>
 	<ItemGroup>
 	  <Content Update="Assets\logo.ico">
