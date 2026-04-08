@@ -130,26 +130,45 @@ public sealed partial class PasswordsView : PageBase
 
     private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
+        System.ArgumentNullException.ThrowIfNull(sender);
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
         PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
 
         if (viewModel is not null && item is not null)
         {
             PangoExplorerItem? newParent = args.NewParentItem as PangoExplorerItem;
+
+            if (newParent != null && IsDescendantOrSelf(item, newParent))
+            {
+                viewModel.UpdateListCommand.Execute(null);
+                return;
+            }
+
             if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
             {
-                newParent = MoveItemToParentOfFile(item, newParent, viewModel.Passwords);
-            }
-            else
-            {
-                // for File type items are alrady ordered
-                OrderByTypeAfterElementMoved(newParent?.Children ?? viewModel.Passwords, item);
+                newParent = newParent.Parent;
             }
 
-            SetNewParent(item, newParent);
+            item.Parent = newParent;
+            item.RecalculateCatalogPath();
 
             await viewModel.CommitPasswordMovementAsync(item, newParent);
+
+            viewModel.UpdateListCommand.Execute(null);
         }
+    }
+
+    private static bool IsDescendantOrSelf(PangoExplorerItem draggedItem, PangoExplorerItem targetParent)
+    {
+        if (draggedItem.Id == targetParent.Id) return true;
+
+        var current = targetParent.Parent;
+        while (current != null)
+        {
+            if (current.Id == draggedItem.Id) return true;
+            current = current.Parent;
+        }
+        return false;
     }
 
     #endregion

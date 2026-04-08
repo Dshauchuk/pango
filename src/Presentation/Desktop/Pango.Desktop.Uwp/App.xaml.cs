@@ -57,7 +57,12 @@ sealed partial class App : ApplicationBase
                         _ = configure
                             .SetMinimumLevel(LogLevel.Trace)
                             .AddSerilog()
-                            .AddDebug();
+                            .AddDebug()
+                            .AddEventLog(settings =>
+                            {
+                                settings.SourceName = "PangoApp";
+                                settings.LogName = "Application";
+                            });
                     })
                     .RegisterViewModels()
                     .AddApplicationServices()
@@ -80,7 +85,7 @@ sealed partial class App : ApplicationBase
         await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
 
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
-        CurrentWindow.Activate();
+        CurrentWindow?.Activate();
     }
 
     public void RaiseLoginSucceeded(string userName)

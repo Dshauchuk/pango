@@ -16,6 +16,7 @@ using Pango.Infrastructure.Services;
 using Pango.Persistence;
 using Pango.Persistence.File;
 using Serilog;
+using System;
 using System.IO;
 using Windows.Storage;
 
@@ -27,9 +28,22 @@ public static class DependencyInjection
     {
         TypeAdapterConfig<PangoPasswordListItemDto, PangoExplorerItem>
         .NewConfig()
-        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File)
+        .Map(dest => dest.ExpirationDate, src => GetExpirationDateFromProperties(src.Properties));
+        .Map(dest => dest.IsStar, src => src.Star);
 
         return services;
+    }
+
+    private static DateTimeOffset? GetExpirationDateFromProperties(System.Collections.Generic.Dictionary<string, string> properties)
+    {
+        if (properties != null &&
+            properties.TryGetValue(Application.Common.PasswordProperties.ExpirationDate, out var dateStr) &&
+            DateTimeOffset.TryParse(dateStr, out var parsedDate))
+        {
+            return parsedDate;
+        }
+        return null;
     }
 
     public static IServiceCollection RegisterViewModels(this IServiceCollection services)

@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using Pango.Application.Common;
+using Pango.Desktop.Uwp.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -20,6 +21,7 @@ public partial class PangoExplorerItem : ObservableObject
 
     private bool _isExpanded;
     private string _catalogPath = string.Empty;
+    private bool _isStar;
     private bool _isVisible = true;
     private bool _isSelected = false;
     private bool _isSettingSelection = false;
@@ -51,6 +53,8 @@ public partial class PangoExplorerItem : ObservableObject
     public bool IsFolder => Type == ExplorerItemType.Folder;
 
     public int NestingLevel { get; private set; }
+    
+    public Dictionary<string, string> Properties { get; set; } = [];
 
     public string CatalogPath
     {
@@ -62,6 +66,12 @@ public partial class PangoExplorerItem : ObservableObject
         }
     }
 
+    public bool IsStar
+    {
+        get => _isStar;
+        set => SetProperty(ref _isStar, value);
+    }
+
     public ExplorerItemType Type { get; set; }
 
     /// <summary>
@@ -71,20 +81,20 @@ public partial class PangoExplorerItem : ObservableObject
 
     public virtual ObservableCollection<PangoExplorerItem> Children
     {
-        get => _children;
+        get => _children; 
         set => SetProperty(ref _children, value);
     }
 
-    public bool IsExpanded
+    public bool IsExpanded 
     {
         get => _isExpanded;
         set => SetProperty(ref _isExpanded, value);
     }
 
-    public bool IsVisible
-    {
-        get => _isVisible;
-        set => SetProperty(ref _isVisible, value);
+    public bool IsVisible 
+    { 
+        get => _isVisible; 
+        set => SetProperty(ref _isVisible, value); 
     }
 
     public bool IsSelected
@@ -123,6 +133,32 @@ public partial class PangoExplorerItem : ObservableObject
         }
     }
 
+    private PasswordExpirationStatus _expirationStatus = PasswordExpirationStatus.Valid;
+    public PasswordExpirationStatus ExpirationStatus
+    {
+        get => _expirationStatus;
+        set => SetProperty(ref _expirationStatus, value);
+    }
+
+    public DateTimeOffset? ExpirationDate { get; set; }
+
+    /// <summary>
+    /// Recalculates the folder's expiration status based on its children
+    /// </summary>
+    public void RecalculateExpirationStatus()
+    {
+        if (IsFolder && Children.Any())
+        {
+            if (Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.Expired))
+                ExpirationStatus = PasswordExpirationStatus.Expired;
+            else if (Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.ExpiringSoon))
+                ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+            else
+                ExpirationStatus = PasswordExpirationStatus.Valid;
+
+            Parent?.RecalculateExpirationStatus();
+        }
+    }
     #endregion
 
     public void AddChild(PangoExplorerItem child)
@@ -144,21 +180,5 @@ public partial class PangoExplorerItem : ObservableObject
                 yield return descendant;
             }
         }
-    }
-
-    // Override Equals to ensure items with same ID are treated as one
-    public override bool Equals(object? obj)
-    {
-        if (obj is PangoExplorerItem item)
-        {
-            return Id == item.Id;
-        }
-        return false;
-    }
-
-    // Override GetHashCode to match Equals logic
-    public override int GetHashCode()
-    {
-        return Id.GetHashCode();
     }
 }

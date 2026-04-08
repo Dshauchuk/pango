@@ -765,4 +765,62 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Welcome to Pango</value>
   </data>
+  <data name="Notifications_Header" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="ExpirationAlerts_Label" xml:space="preserve">
+    <value>Password expiration alerts</value>
+  </data>
+  <data name="ExpirationAlerts_Description" xml:space="preserve">
+    <value>Show warnings when passwords are about to expire</value>
+  </data>
+  <data name="WarnBefore_Label" xml:space="preserve">
+    <value>Warn before</value>
+  </data>
+  <data name="ExpirationDate_Label" xml:space="preserve">
+    <value>Expiration Date</value>
+  </data>
+  <data name="ExpirationDate_Placeholder" xml:space="preserve">
+    <value>Select a date (optional)</value>
+  </data>
+  <data name="Status_ExpiringSoon" xml:space="preserve">
+    <value>Expiring soon</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Status_Valid" xml:space="preserve">
+    <value>Valid</value>
+  </data>
+  <data name="Toast_Expiring_Title" xml:space="preserve">
+    <value>Passwords expiring soon!</value>
+  </data>
+  <data name="Toast_Expiring_Body" xml:space="preserve">
+    <value>You have passwords that need to be updated. Open Pango to check them.</value>
+  </data>
+  <data name="InApp_Expiring_Message" xml:space="preserve">
+    <value>{0} password(s) will expire soon.</value>
+  </data>
+  <data name="InApp_Expired_Message" xml:space="preserve">
+    <value>{0} password(s) have already expired!</value>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Copying data...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Updating configuration...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Failed to change data folder</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Please don't close the app</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Change data folder</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Are you sure you want to change the data storage location?</value>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Show favorites</value>
+  </data>
 </root>

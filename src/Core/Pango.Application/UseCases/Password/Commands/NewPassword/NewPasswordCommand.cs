@@ -49,4 +49,8 @@ public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     /// Password entry properties
     /// </summary>
     public Dictionary<string, string> Properties { get; set; }
+    /// <summary>
+    /// Is the favorite password
+    /// </summary>
+    public bool Star { get; set; }
 }

@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Pango.Application.Common;
@@ -65,6 +64,10 @@ public partial class SettingsViewModel : ViewModelBase
     private ImportDestination _selectedImportDestination;
     private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
     private string _selectedDataFolderPath;
+    private bool _isExpirationAlertsEnabled;
+    private int _expirationWarningDays;
+    private bool _isChangingDataFolder;
+    private string _dataFolderProgressText = string.Empty;
 
     // Backup Configuration
     private string _configPath = string.Empty;
@@ -108,6 +111,9 @@ public partial class SettingsViewModel : ViewModelBase
         ];
 
         _selectedImportDestination = LoadImportSetting();
+
+        _isExpirationAlertsEnabled = (bool?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] ?? true;
+        _expirationWarningDays = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] ?? 7;
 
         InitializeDisplayResources();
 
@@ -171,12 +177,40 @@ public partial class SettingsViewModel : ViewModelBase
             }
         }
     }
+
+    #endregion
+
+    #region Properties - Data Storage
     public string SelectedDataFolderPath
     {
         get => _selectedDataFolderPath;
         set => SetProperty(ref _selectedDataFolderPath, value);
     }
 
+    public bool IsExpirationAlertsEnabled
+    {
+        get => _isExpirationAlertsEnabled;
+        set { if (SetProperty(ref _isExpirationAlertsEnabled, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] = value; }
+    }
+
+    public int ExpirationWarningDays
+    {
+        get => _expirationWarningDays;
+        set { if (SetProperty(ref _expirationWarningDays, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] = value; }
+    }
+
+    public ObservableCollection<int> ExpirationWarningDaysItems { get; } = [1, 7, 14, 28];
+
+    public bool IsChangingDataFolder
+    {
+        get => _isChangingDataFolder;
+        set => SetProperty(ref _isChangingDataFolder, value);
+    }
+    public string DataFolderProgressText
+    {
+        get => _dataFolderProgressText;
+        set => SetProperty(ref _dataFolderProgressText, value);
+    }
     #endregion
 
     #region Properties - Security (Autolock)
@@ -344,8 +378,10 @@ public partial class SettingsViewModel : ViewModelBase
     #region Methods - Select data folder
     private async Task SelectDataFolderAsync()
     {
-        var picker = new FolderPicker();
-        picker.SuggestedStartLocation = PickerLocationId.Desktop;
+        var picker = new FolderPicker
+        {
+            SuggestedStartLocation = PickerLocationId.Desktop
+        };
         picker.FileTypeFilter.Add("*");
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(App.Current.CurrentWindow);
@@ -355,28 +391,51 @@ public partial class SettingsViewModel : ViewModelBase
 
         if (folder == null) return;
 
+        bool confirmed = await ConfirmAsync(
+            ViewResourceLoader.GetString("ChangeDataFolder"),
+            ViewResourceLoader.GetString("ChangeDataFolder_Confirmation"));
+        if (!confirmed) return;
+
         string oldPath = _appDomainProvider.GetAppDataFolderPath();
         string newPath = folder.Path;
 
         if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
             return;
 
-        // save token
-        StorageApplicationPermissions.FutureAccessList.AddOrReplace(
-            Constants.Settings.CustomDataFolderToken, folder);
+        try
+        {
+            IsChangingDataFolder = true;
+            DataFolderProgressText = ViewResourceLoader.GetString("CopyingData");
 
-        // migrate app's data
-        await _userStorageManager.MigrateDataAsync(oldPath, newPath);
+            // migrate app's data
+            await Task.Run(() => _userStorageManager.MigrateDataAsync(oldPath, newPath));
 
-        // update cash
-        await _appDomainProvider.TryGetCustomDataFolderPathAsync();
+            DataFolderProgressText = ViewResourceLoader.GetString("UpdatingConfiguration");
 
-        SelectedDataFolderPath = folder.Path;
+            // save token
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace(
+                Constants.Settings.CustomDataFolderToken, folder);
 
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(
-                ViewResourceLoader.GetString("DataFolderChanged"),
-                AppNotificationType.Success));
+            // update cash
+            await _appDomainProvider.TryGetCustomDataFolderPathAsync();
+            
+            SelectedDataFolderPath = folder.Path;
+
+            WeakReferenceMessenger.Default.Send(
+                new InAppNotificationMessage(
+                    ViewResourceLoader.GetString("DataFolderChanged"),
+                    AppNotificationType.Success));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to change data folder: {Message}", ex.Message);
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("DataFolderChangeFailed"), AppNotificationType.Warning));
+        }
+        finally
+        {
+            IsChangingDataFolder = false;
+            DataFolderProgressText = string.Empty;
+        }
     }
 
     private void ResetDataFolder()

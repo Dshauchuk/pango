@@ -3,84 +3,112 @@ using Pango.Application.Common;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
+using static Pango.Application.Common.ApplicationErrors;
 
 namespace Pango.Persistence.File;
 
 /// <summary>
-/// <see cref="UserRepository"/> is a password vault repository and doesn't interact with the file system directly.
-/// All user data are stored in the file system, so need a separate file system based repository to interact with user data (remove user data)
+/// Repository for managing file-based user storage and data migration.
 /// </summary>
-public class UserFileStorageManager: IUserStorageManager
+public class UserFileStorageManager(
+    IPasswordRepository passwordRepository,
+    IContentEncoder contentEncoder,
+    IAppDomainProvider appDomainProvider,
+    IAppOptions appOptions,
+    IUserContextProvider userContextProvider,
+    IRepositoryContextFactory repositoryContextFactory,
+    ILogger<UserFileStorageManager> logger) : IUserStorageManager
 {
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly IContentEncoder _contentEncoder;
-    private readonly IAppDomainProvider _appDomainProvider;
-    private readonly IAppOptions _appOptions;
-    private readonly ILogger<UserFileStorageManager> _logger;
+    private readonly IPasswordRepository _passwordRepository = passwordRepository;
+    private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly IContentEncoder _contentEncoder = contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
+    private readonly IAppOptions _appOptions = appOptions;
+    private readonly ILogger<UserFileStorageManager> _logger = logger;
 
-    public UserFileStorageManager(IPasswordRepository passwordRepository,
-        IContentEncoder contentEncoder,
-        IAppDomainProvider appDomainProvider,
-        IAppOptions appOptions,
-        IUserContextProvider userContextProvider,
-        IRepositoryContextFactory repositoryContextFactory,
-        ILogger<UserFileStorageManager> logger)
-    {
-        _passwordRepository = passwordRepository;
-        _contentEncoder = contentEncoder;
-        _appDomainProvider = appDomainProvider;
-        _appOptions = appOptions;
-        _logger = logger;
-        _userContextProvider = userContextProvider;
-        _repositoryContextFactory = repositoryContextFactory;
-    }
-
-    /// <inheritdoc/>
+    /// <summary>
+    /// Deletes all user data for the specified user ID.
+    /// </summary>
+    /// <param name="userId">The user ID.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public Task DeleteAllUserDataAsync(string userId)
         => DeleteDataAsync(userId);
 
+    /// <summary>
+    /// Encrypts all user data with the specified encoding options and generates expiration cache.
+    /// </summary>
+    /// <param name="userId">The user ID.</param>
+    /// <param name="encodingOptions">The encoding options (key and salt).</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task EncryptDataWithAsync(string userId, EncodingOptions encodingOptions)
     {
-        _logger.LogDebug("Encrypting data of {UserId}...", userId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Encrypting data of {UserId}...", userId);
 
-        // read data
+        // Read all current data
         var all = await _passwordRepository.QueryAsync((a) => true, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
 
-        // 1. save data for temp user
-        string tmpUser = $"{userId}_{Guid.NewGuid()}_tmp";
+        // Save unencrypted expiration dates cache for background Windows Toast notifications
+        try
+        {
+            var expirations = all.Where(p => p.Properties != null && p.Properties.ContainsKey(PasswordProperties.ExpirationDate))
+                                 .Select(p => p.Properties[PasswordProperties.ExpirationDate])
+                                 .ToList();
+            string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            string cacheFile = Path.Combine(commonAppData, "Pango", "expiration_cache.json");
+            System.IO.File.WriteAllText(cacheFile, System.Text.Json.JsonSerializer.Serialize(expirations));
+        }
+        catch (Exception ex)
+        {
+            if (_logger.IsEnabled(LogLevel.Warning))
+                _logger.LogWarning(ex, "Cannot save expiration cache");
+        }
+
+        // 1.save data for temp user
+        string tempId = Guid.NewGuid().ToString();
+        string tmpUser = $"{userId}_{tempId}_tmp";
         string newFolderPath = _appDomainProvider.GetUserFolderPath(tmpUser);
         await _passwordRepository.CreateAsync(all, _repositoryContextFactory.Create(tmpUser, new EncodingOptions(encodingOptions.Key, encodingOptions.Salt)));
-        _logger.LogDebug("Copied data to a temp user {user} folder...", $"{userId}_{Guid.NewGuid()}_tmp");
+
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+                _logger.LogDebug("Copied data to a temp user {User} folder...", tmpUser);
 
         // 2. rename existing directory using timestamp
         string currentUserDirectoryPath = _appDomainProvider.GetUserFolderPath(userId);
         string copyUser = $"{userId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         string tmpUserDirectoryPath = currentUserDirectoryPath.Replace(userId, copyUser);
         Directory.Move(currentUserDirectoryPath, tmpUserDirectoryPath);
-        _logger.LogDebug("Moved data from {userFolder} folder to {tmpFolder}", currentUserDirectoryPath, tmpUserDirectoryPath);
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Moved data from {UserFolder} folder to {TmpFolder}", currentUserDirectoryPath, tmpUserDirectoryPath);
 
         // 3. rename the newly created & encrypted folder as actual 
         Directory.Move(newFolderPath, currentUserDirectoryPath);
-        _logger.LogDebug("Moved the just encrypted data from temp folder {tmpFolder} to the user folder {userFolder}", newFolderPath, currentUserDirectoryPath);
+
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Moved the just encrypted data from temp folder {TmpFolder} to the user folder {UserFolder}", newFolderPath, currentUserDirectoryPath);
 
         // 4. remove tmp user data
         await DeleteAllUserDataAsync(tmpUser);
-        _logger.LogDebug("Deleted the folder of temp user {tmpUser}", tmpUser);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Deleted the folder of temp user {TmpUser}", tmpUser);
 
         // 5. remove the copy
         await DeleteAllUserDataAsync(copyUser);
-        _logger.LogDebug("Deleted the folder of the user copy {copyUser}", copyUser);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Deleted the folder of the user copy {CopyUser}", copyUser);
 
-        _logger.LogDebug("Encryption of {UserId} user's data completed", userId);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Encryption of {UserId} user's data completed", userId);
     }
 
     /// <summary>
-    /// Deletes all files in the folder assigned to <paramref name="userName"/>
+    /// Physically deletes the data directory for the given user ID.
     /// </summary>
-    /// <param name="userName"></param>
-    /// <returns></returns>
+    /// <param name="userId">The user ID.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     private Task DeleteDataAsync(string userId)
     {
         string userFolderPath = _appDomainProvider.GetUserFolderPath(userId);
@@ -88,13 +116,19 @@ public class UserFileStorageManager: IUserStorageManager
 
         if (directory.Exists)
         {
-            // delete user's directory, all files and subdirectories
+            // Delete user's directory, all files and subdirectories
             return Task.Run(() => directory.Delete(true));
         }
 
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Recursively copies a directory to a new location.
+    /// </summary>
+    /// <param name="sourceDir">The source directory path.</param>
+    /// <param name="destinationDir">The destination directory path.</param>
+    /// <param name="recursive">Indicates whether to copy subdirectories.</param>
     private static void CopyDirectory(string sourceDir, string destinationDir, bool recursive)
     {
         // Get information about the source directory
@@ -127,6 +161,13 @@ public class UserFileStorageManager: IUserStorageManager
             }
         }
     }
+
+    /// <summary>
+    /// Migrates user data from an old base path to a new base path.
+    /// </summary>
+    /// <param name="oldBasePath">The old base path.</param>
+    /// <param name="newBasePath">The new base path.</param>
+    /// <returns>A task representing the asynchronous operation.</returns>
     public async Task MigrateDataAsync(string oldBasePath, string newBasePath)
     {
         string oldUsersDir = Path.Combine(oldBasePath, AppConstants.UsersFolderName);
@@ -142,7 +183,7 @@ public class UserFileStorageManager: IUserStorageManager
             Directory.Delete(oldUsersDir, recursive: true);
         });
 
-        _logger.LogDebug("Migrated user data from {Old} to {New}", oldUsersDir, newUsersDir);
+        if (_logger.IsEnabled(LogLevel.Debug))
+            _logger.LogDebug("Migrated user data from {Old} to {New}", oldUsersDir, newUsersDir);
     }
-
 }

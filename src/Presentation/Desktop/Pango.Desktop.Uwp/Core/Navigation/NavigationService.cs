@@ -9,7 +9,7 @@ namespace Pango.Desktop.Uwp.Core.Navigation;
 
 public class NavigationService : INavigationService
 {
-    private Frame _frame;
+    private Frame? _frame;
 
     // map AppView to Page type
     private readonly Dictionary<AppView, Type> _viewMap = new()
@@ -25,10 +25,10 @@ public class NavigationService : INavigationService
     {
         _frame = frame;
     }
-    public void Navigate(AppView view, object parameter = null)
+    public void Navigate(AppView view, object? parameter = null)
     {
         if (_frame is null) return;
-        if(_viewMap.TryGetValue(view, out var pageType))
+        if (_viewMap.TryGetValue(view, out var pageType))
         {
             _frame.Navigate(pageType, parameter);
         }
