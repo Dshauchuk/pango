@@ -65,6 +65,7 @@ public class PasswordFileRepository(
         pwdToUpdate.Value = password.Value;
         pwdToUpdate.Target = password.Target;
         pwdToUpdate.CatalogPath = password.CatalogPath;
+        pwdToUpdate.Star = password.Star;
         pwdToUpdate.IsCatalog = password.IsCatalog;
         pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
 

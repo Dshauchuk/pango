@@ -210,15 +210,16 @@ public class EditPasswordViewModel : ViewModelBase
             }
             else
             {
-                result = 
+                result =
                     await _sender.Send(
                         new UpdatePasswordCommand(
-                            PasswordValidator.Id!.Value, 
-                            PasswordValidator.Title, 
-                            PasswordValidator.Login, 
-                            PasswordValidator.Password, 
-                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } }) 
-                        { 
+                            PasswordValidator.Id!.Value,
+                            PasswordValidator.Title,
+                            PasswordValidator.Login,
+                            PasswordValidator.Password,
+                            PasswordValidator.Star,
+                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } })
+                        {
                             CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
                         });
 
