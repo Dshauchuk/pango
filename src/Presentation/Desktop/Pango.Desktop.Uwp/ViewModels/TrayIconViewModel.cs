@@ -1,11 +1,14 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Views;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Windows.ApplicationModel.Resources;
+using Windows.UI.Notifications;
 
 namespace Pango.Desktop.Uwp.ViewModels
 {
@@ -46,6 +49,8 @@ namespace Pango.Desktop.Uwp.ViewModels
             StartBackupCommand = new RelayCommand(StartBackup);
             StopBackupCommand = new RelayCommand(StopBackup);
             ExitCommand = new RelayCommand(Exit);
+
+            CheckExpirationsAndNotify();
         }
 
         public bool IsBackupRunning
@@ -189,6 +194,48 @@ namespace Pango.Desktop.Uwp.ViewModels
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Failed to kill backup process.");
+            }
+        }
+
+        /// <summary>
+        /// Checks the unencrypted cache for expiring passwords and shows a Windows Toast Notification
+        /// </summary>
+        private void CheckExpirationsAndNotify()
+        {
+            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+            bool alertsEnabled = localSettings.Values[Constants.Settings.EnableExpirationAlerts] as bool? ?? true;
+            if (!alertsEnabled) return;
+
+            int warningDays = localSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
+
+            string cacheFile = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
+
+            if (!File.Exists(cacheFile)) return;
+
+            try
+            {
+                var json = File.ReadAllText(cacheFile);
+                var dates = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(json);
+                if (dates == null || dates.Count == 0) return;
+
+                var now = DateTimeOffset.UtcNow.Date;
+                bool hasExpiring = dates.Any(d => DateTimeOffset.TryParse(d, out var parsedDate) && (parsedDate.Date - now).TotalDays <= warningDays);
+
+                if (hasExpiring)
+                {
+                    var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
+                    var textNodes = toastXml.GetElementsByTagName("text");
+
+                    textNodes[0].InnerText = _resourceLoader.GetString("Toast_Expiring_Title");
+                    textNodes[1].InnerText = _resourceLoader.GetString("Toast_Expiring_Body");
+
+                    var toast = new ToastNotification(toastXml);
+                    ToastNotificationManager.CreateToastNotifier().Show(toast);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to check expirations and show Toast.");
             }
         }
 

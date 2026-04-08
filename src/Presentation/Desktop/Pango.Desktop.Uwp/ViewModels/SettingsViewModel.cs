@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Pango.Application.Common;
@@ -65,6 +64,8 @@ public partial class SettingsViewModel : ViewModelBase
     private ImportDestination _selectedImportDestination;
     private ObservableCollection<ImportDestinationOption> _importDestinationOptions = [];
     private string _selectedDataFolderPath;
+    private bool _isExpirationAlertsEnabled;
+    private int _expirationWarningDays;
     private bool _isChangingDataFolder;
     private string _dataFolderProgressText = string.Empty;
 
@@ -110,6 +111,9 @@ public partial class SettingsViewModel : ViewModelBase
         ];
 
         _selectedImportDestination = LoadImportSetting();
+
+        _isExpirationAlertsEnabled = (bool?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] ?? true;
+        _expirationWarningDays = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] ?? 7;
 
         InitializeDisplayResources();
 
@@ -182,6 +186,21 @@ public partial class SettingsViewModel : ViewModelBase
         get => _selectedDataFolderPath;
         set => SetProperty(ref _selectedDataFolderPath, value);
     }
+
+    public bool IsExpirationAlertsEnabled
+    {
+        get => _isExpirationAlertsEnabled;
+        set { if (SetProperty(ref _isExpirationAlertsEnabled, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] = value; }
+    }
+
+    public int ExpirationWarningDays
+    {
+        get => _expirationWarningDays;
+        set { if (SetProperty(ref _expirationWarningDays, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] = value; }
+    }
+
+    public ObservableCollection<int> ExpirationWarningDaysItems { get; } = [1, 7, 14, 28];
+
     public bool IsChangingDataFolder
     {
         get => _isChangingDataFolder;

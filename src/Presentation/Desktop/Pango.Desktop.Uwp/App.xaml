@@ -32,6 +32,8 @@
                     <converters:BoolReverseConverter x:Key="BoolReverseConverter"/>
                     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
                     <converters:IntToStringConverter x:Key="IntToStringConverter"/>
+                    <converters:ExpirationStatusToVisibilityConverter x:Key="ExpirationStatusToVisibilityConverter"/>
+                    
                     <converters:BoolToStarGlyphConverter x:Key="BoolToStarGlyphConverter"/>
                     <converters:BoolToStarColorConverter x:Key="BoolToStarColorConverter"/>
 

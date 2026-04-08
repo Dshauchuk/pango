@@ -13,29 +13,24 @@ using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<PasswordDetailsDialogViewModel> logger) : ViewModelBase(logger), IDialogViewModel
 {
     #region Fields
     
-    private readonly ISender _sender;
+    private readonly ISender _sender = sender;
     private PasswordDetailsParameters? _parameters;
     private string _name = string.Empty;
     private string _login = string.Empty;
     private string _password = string.Empty;
     private string _catalog = string.Empty;
     private string _notes = string.Empty;
+    private string _expirationDate = string.Empty;
 
     #endregion
 
-    public PasswordDetailsDialogViewModel(ISender sender, ILogger<PasswordDetailsDialogViewModel> logger) : base(logger)
-    {
-        DialogContext = new DialogContext();
-        _sender = sender;
-    }
-
     #region Properties
 
-    public IDialogContext DialogContext { get; }
+    public IDialogContext DialogContext { get; } = new DialogContext();
 
     public Guid PasswordId { get; private set; }
 
@@ -69,6 +64,12 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
         set => SetProperty(ref _notes, value);
     }
 
+    public string ExpirationDate 
+    { 
+        get => _expirationDate; 
+        set => SetProperty(ref _expirationDate, value); 
+    }
+
     #endregion
 
     #region Overrides
@@ -97,9 +98,20 @@ public class PasswordDetailsDialogViewModel : ViewModelBase, IDialogViewModel
             Password = passwordResult.Value.Value;
             Catalog= passwordResult.Value.CatalogPath;
 
-            if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? value))
+            if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? notesVal))
             {
-                Notes = value;
+                Notes = notesVal;
+            }
+            if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
+            {
+                if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var expDate))
+                {
+                    ExpirationDate = expDate.LocalDateTime.ToString("dd/MM/yyyy");
+                }
+                else
+                {
+                    ExpirationDate = "-";
+                }
             }
         }
     }

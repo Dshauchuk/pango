@@ -46,6 +46,33 @@
                     </toolkit:SettingsCard>
                 </StackPanel>
 
+                <!-- Notifications Section -->
+                <TextBlock Text="{loc:StringResource Key='Notifications_Header'}"
+                           Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
+                <toolkit:SettingsExpander Header="{loc:StringResource Key='ExpirationAlerts_Label'}"
+                                          Description="{loc:StringResource Key='ExpirationAlerts_Description'}"
+                                          IsExpanded="{Binding IsExpirationAlertsEnabled, Mode=OneWay}"
+                                          Margin="{StaticResource ControlSectionMargin}">
+                    <ToggleSwitch IsOn="{Binding IsExpirationAlertsEnabled, Mode=TwoWay}"
+                                  OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
+                                  OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
+
+                    <toolkit:SettingsExpander.Items>
+                        <toolkit:SettingsCard Header="{loc:StringResource Key='WarnBefore_Label'}"
+                                              Visibility="{Binding IsExpirationAlertsEnabled, Converter={StaticResource BoolToVisibilityConvereter}}">
+                            <ComboBox ItemsSource="{Binding ExpirationWarningDaysItems}"
+                                      SelectedItem="{Binding ExpirationWarningDays, Mode=TwoWay}"
+                                      MinWidth="150" HorizontalAlignment="Right">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate>
+                                        <TextBlock><Run Text="{Binding}"/> <Run Text="{loc:StringResource Key='Day(-s)'}"/></TextBlock>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </toolkit:SettingsCard>
+                    </toolkit:SettingsExpander.Items>
+                </toolkit:SettingsExpander>
+                
                 <!-- Backup Section -->
                 <TextBlock Text="{loc:StringResource Key='BackupSettings_Header'}"
                            Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
@@ -242,3 +269,4 @@
         </Grid>
     </Grid>
 </abstract:PageBase>
+    
