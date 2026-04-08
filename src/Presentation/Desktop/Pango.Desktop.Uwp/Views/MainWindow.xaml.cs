@@ -47,7 +47,7 @@ public sealed partial class MainWindow : Window
         SetTitleBar(this.TitleBarBorder);
 
 #if DEBUG
-        WindowTitle.Text = Title = $"Pango Debug v.{GetAppVersion()}";
+        WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
 #else
         WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}";
 #endif
