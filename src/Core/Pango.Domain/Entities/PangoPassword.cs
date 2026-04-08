@@ -22,6 +22,7 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
         Properties = [];
         CatalogPath = string.Empty;
         LocationPath = string.Empty;
+        Star = false;
     }
 
 	/// <summary>
@@ -72,4 +73,8 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
 	/// Presents the path of the file where the password is located
 	/// </summary>
     public string LocationPath { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Star { get; set; }
 }

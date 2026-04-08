@@ -26,6 +26,10 @@ public class PangoPasswordListItemDto : DtoBase
     /// 
     /// </summary>
     public string CatalogPath { get; set; }
+    /// <summary>
+    /// Is favorite password
+    /// </summary>
+    public bool Star { get; set; }
 
     /// <summary>
     /// 

@@ -57,7 +57,12 @@ sealed partial class App : ApplicationBase
                         _ = configure
                             .SetMinimumLevel(LogLevel.Trace)
                             .AddSerilog()
-                            .AddDebug();
+                            .AddDebug()
+                            .AddEventLog(settings =>
+                            {
+                                settings.SourceName = "PangoApp";
+                                settings.LogName = "Application";
+                            });
                     })
                     .RegisterViewModels()
                     .AddApplicationServices()

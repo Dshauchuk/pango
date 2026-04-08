@@ -780,5 +780,7 @@
   </data>
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Хочаце змяніць месца захоўвання дадзеных?</value>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Паказаць Выбранае</value>
   </data>
 </root>

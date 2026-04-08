@@ -782,5 +782,7 @@
   </data>
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Are you sure you want to change the data storage location?</value>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Show favorites</value>
   </data>
 </root>
