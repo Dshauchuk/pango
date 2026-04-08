@@ -18,6 +18,7 @@ public class PangoPasswordDto : DtoBase, IDisposable
         UserName = string.Empty;
         Name = string.Empty;
         Login = string.Empty;
+        Star = false;
         Properties = [];
         CatalogPath = string.Empty;
         LocationPath = string.Empty;
@@ -61,7 +62,10 @@ public class PangoPasswordDto : DtoBase, IDisposable
     /// Indicates if this model is a dummy for keeping the catalog
     /// </summary>
     public bool IsCatalog { get; set; }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Star { get; set; }
     /// <summary>
     /// 
     /// </summary>

@@ -21,6 +21,7 @@ public partial class PangoExplorerItem : ObservableObject
 
     private bool _isExpanded;
     private string _catalogPath = string.Empty;
+    private bool _isStar;
     private bool _isVisible = true;
     private bool _isSelected = false;
     private bool _isSettingSelection = false;
@@ -63,6 +64,12 @@ public partial class PangoExplorerItem : ObservableObject
             SetProperty(ref _catalogPath, value);
             NestingLevel = string.IsNullOrEmpty(CatalogPath) ? 0 : CatalogPath.Count((c) => c == AppConstants.CatalogDelimeter) + 1;
         }
+    }
+
+    public bool IsStar
+    {
+        get => _isStar;
+        set => SetProperty(ref _isStar, value);
     }
 
     public ExplorerItemType Type { get; set; }

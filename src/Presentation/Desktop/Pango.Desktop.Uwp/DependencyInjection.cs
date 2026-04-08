@@ -30,6 +30,7 @@ public static class DependencyInjection
         .NewConfig()
         .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File)
         .Map(dest => dest.ExpirationDate, src => GetExpirationDateFromProperties(src.Properties));
+        .Map(dest => dest.IsStar, src => src.Star);
 
         return services;
     }

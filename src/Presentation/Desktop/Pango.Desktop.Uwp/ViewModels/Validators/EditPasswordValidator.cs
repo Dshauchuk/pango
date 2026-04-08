@@ -11,6 +11,7 @@ public partial class EditPasswordValidator : ObservableValidator
     private string _title = string.Empty;
     private string? _selectedCatalog;
     private string _notes = string.Empty;
+    private bool _isStar = false;
     private Guid? _id;
     private DateTimeOffset? _expirationDate = DateTimeOffset.Now;
     private bool _hasExpirationDate;
@@ -73,6 +74,11 @@ public partial class EditPasswordValidator : ObservableValidator
     {
         get => _selectedCatalog;
         set => SetProperty(ref _selectedCatalog, value);
+    }
+    public bool Star
+    {
+        get => _isStar;
+        set => SetProperty(ref _isStar, value);
     }
 
     public void Validate()

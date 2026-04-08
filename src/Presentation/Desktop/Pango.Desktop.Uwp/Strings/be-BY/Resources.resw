@@ -801,5 +801,24 @@
   </data>
   <data name="InApp_Expired_Message" xml:space="preserve">
     <value>Тэрмін дзеяння {0} пароля(-яў) ужо скончыўся!</value>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Капіяванне дадзеных...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Абнаўленне канфігурацыі...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Не атрымалася змяніць тэчку з дадзенымі</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Калі ласка, не зачыняйце прыкладанне</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Змена тэчцы з дадзенымі</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Хочаце змяніць месца захоўвання дадзеных?</value>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Паказаць Выбранае</value>
   </data>
 </root>
