@@ -825,4 +825,52 @@
   <data name="ShowFavorites" xml:space="preserve">
     <value>Show favorites</value>
   </data>
+  <data name="ExpirationAlert_Header" xml:space="preserve">
+    <value>User {0} has password(s) that are expired or about to expire:</value>
+  </data>
+  <data name="ExpirationAlert_Expired" xml:space="preserve">
+    <value>- {0}: Expired {1} days ago ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresToday" xml:space="preserve">
+    <value>- {0}: Expires today ({1}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresIn" xml:space="preserve">
+    <value>- {0}: Expires in {1} days ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_Title" xml:space="preserve">
+    <value>Password Expiration Alert</value>
+  </data>
+  <data name="WindowsNotifications_Label" xml:space="preserve">
+    <value>Windows notifications (Toast)</value>
+  </data>
+  <data name="ShowWindowOnStartup_Label" xml:space="preserve">
+    <value>Show alert window on startup</value>
+  </data>
+  <data name="Expiring_Summary_Header" xml:space="preserve">
+    <value>Passwords requiring attention for user {0}:</value>
+  </data>
+  <data name="Expiring_Summary_Expiring" xml:space="preserve">
+    <value>Expiring soon: {0}</value>
+  </data>
+  <data name="Expiring_Summary_Expired" xml:space="preserve">
+    <value>Already expired: {0}</value>
+  </data>
+  <data name="Expiring_Summary_LoginPrompt" xml:space="preserve">
+    <value>Log in to Pango to see the exact passwords requiring an update.</value>
+  </data>
+  <data name="Expiring_Detail_Header" xml:space="preserve">
+    <value>Your passwords ({0}):</value>
+  </data>
+  <data name="Expiring_Detail_Expired" xml:space="preserve">
+    <value>- {0} (Expired {1} days ago)</value>
+  </data>
+  <data name="Expiring_Detail_ExpiresToday" xml:space="preserve">
+    <value>- {0} (Expires TODAY)</value>
+  </data>
+  <data name="Expiring_Detail_Expiring" xml:space="preserve">
+    <value>- {0} (Expires in {1} days)</value>
+  </data>
+  <data name="ShowExpirationList_Button" xml:space="preserve">
+    <value>Show list of expiring passwords</value>
+  </data>
 </root>

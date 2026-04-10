@@ -135,14 +135,9 @@ public partial class EditPasswordViewModel : ViewModelBase
                     PasswordValidator!.Password = passwordResult.Value.Value;
                     PasswordValidator!.SelectedCatalog = passwordResult.Value.CatalogPath;
 
-                    if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? value))
-                    {
-                        PasswordValidator.Notes = value;
-                    }
-
                     if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
                     {
-                        if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var expDate))
+                        if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var expDate))
                         {
                             PasswordValidator.ExpirationDate = expDate;
                             PasswordValidator.HasExpirationDate = true;
@@ -152,6 +147,11 @@ public partial class EditPasswordViewModel : ViewModelBase
                             PasswordValidator.ExpirationDate = null;
                             PasswordValidator.HasExpirationDate = false;
                         }
+                    }
+                    else
+                    {
+                        PasswordValidator.ExpirationDate = null;
+                        PasswordValidator.HasExpirationDate = false;
                     }
                 }
             }
@@ -188,7 +188,17 @@ public partial class EditPasswordViewModel : ViewModelBase
 
     private void Clear()
     {
-        PasswordValidator = new EditPasswordValidator();
+        PasswordValidator ??= new EditPasswordValidator();
+
+        PasswordValidator.Id = null;
+        PasswordValidator.Title = string.Empty;
+        PasswordValidator.Login = string.Empty;
+        PasswordValidator.Password = string.Empty;
+        PasswordValidator.Notes = string.Empty;
+        PasswordValidator.SelectedCatalog = null;
+        PasswordValidator.Star = false;
+        PasswordValidator.HasExpirationDate = false;
+        PasswordValidator.ExpirationDate = null;
     }
 
     private async void OnSavePassword()
@@ -201,7 +211,7 @@ public partial class EditPasswordViewModel : ViewModelBase
 
             if (PasswordValidator.HasExpirationDate && PasswordValidator.ExpirationDate.HasValue)
             {
-                props.Add(PasswordProperties.ExpirationDate, PasswordValidator.ExpirationDate.Value.ToString("o", System.Globalization.CultureInfo.InvariantCulture));
+                props.Add(PasswordProperties.ExpirationDate, PasswordValidator.ExpirationDate.Value.ToString("O", System.Globalization.CultureInfo.InvariantCulture));
             }
 
             ErrorOr.ErrorOr<PangoPasswordDto> result;
@@ -241,7 +251,7 @@ public partial class EditPasswordViewModel : ViewModelBase
                             PasswordValidator.Login,
                             PasswordValidator.Password,
                             PasswordValidator.Star,
-                            new Dictionary<string, string>() { { PasswordProperties.Notes, PasswordValidator.Notes } })
+                            props)
                         {
                             CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
                         });
@@ -258,7 +268,7 @@ public partial class EditPasswordViewModel : ViewModelBase
                     WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(result.Value.Adapt<PangoPasswordListItemDto>()));
                 }
             }
-            
+
             OnOpenIndexView();
 
             string message = result.IsError ? ViewResourceLoader.GetString("CannotSavePassword") 

@@ -9,7 +9,8 @@ namespace Pango.Desktop.Uwp.Core.Utility;
 
 public class AppIdleService : IAppIdleService
 {
-    private readonly Dictionary<Guid, TimerAction> _timerActions = new();
+    private readonly Dictionary<Guid, TimerAction> _timerActions = [];
+    private DateTime _lastActivity = DateTime.MinValue;
 
     /// <inheritdoc/>
     public Guid StartAppIdle(TimeSpan timeOfIdle, Action onIdle)
@@ -57,6 +58,9 @@ public class AppIdleService : IAppIdleService
     /// </summary>
     private void RestartAllTimers()
     {
+        if ((DateTime.UtcNow - _lastActivity).TotalSeconds < 1) return;
+        _lastActivity = DateTime.UtcNow;
+
         foreach (TimerAction timerAction in _timerActions.Values)
         {
             timerAction.Timer.Stop();

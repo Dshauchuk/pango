@@ -31,11 +31,13 @@ public partial class EditPasswordValidator : ObservableValidator
         get => _hasExpirationDate;
         set
         {
-            SetProperty(ref _hasExpirationDate, value);
-            if (value && !ExpirationDate.HasValue)
-                ExpirationDate = DateTimeOffset.Now;
-            else if (!value)
-                ExpirationDate = null;
+            if (SetProperty(ref _hasExpirationDate, value))
+            {
+                if (value && !ExpirationDate.HasValue)
+                {
+                    ExpirationDate = DateTimeOffset.Now;
+                }
+            }
         }
     }
 

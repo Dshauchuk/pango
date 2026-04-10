@@ -30,12 +30,16 @@ public sealed partial class ValidationPasswordBox : ContentControl
     private ToggleButton? _revealButton;
     private Button? _copyButton;
     private INotifyDataErrorInfo? _oldDataContext;
+    private readonly DispatcherTimer _typingTimer;
 
     /// <summary>
     /// Initializes a new instance and sets up lifecycle event handlers to prevent memory leaks.
     /// </summary>
     public ValidationPasswordBox()
     {
+        _typingTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMilliseconds(300) };
+        _typingTimer.Tick += TypingTimer_Tick;
+
         DataContextChanged += ValidationPasswordBox_DataContextChanged;
         Unloaded += ValidationPasswordBox_Unloaded;
     }
@@ -58,10 +62,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
             _revealButton.Unchecked += RevealButton_Unchecked;
         }
 
-        if (_copyButton is not null)
-        {
-            _copyButton.Click += CopyBtn_Click;
-        }
+        _copyButton?.Click += CopyBtn_Click;
 
         _passwordBox.PasswordChanged += PasswordBox_TextChanged;
         GotFocus += ValidationPasswordBox_GotFocus;
@@ -74,11 +75,8 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void ValidationPasswordBox_Unloaded(object sender, RoutedEventArgs e)
     {
-        if (_oldDataContext is not null)
-        {
-            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
-            _oldDataContext = null;
-        }
+        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
+        _oldDataContext = null;
 
         if (_revealButton is not null)
         {
@@ -86,15 +84,9 @@ public sealed partial class ValidationPasswordBox : ContentControl
             _revealButton.Unchecked -= RevealButton_Unchecked;
         }
 
-        if (_copyButton is not null)
-        {
-            _copyButton.Click -= CopyBtn_Click;
-        }
+        _copyButton?.Click -= CopyBtn_Click;
 
-        if (_passwordBox is not null)
-        {
-            _passwordBox.PasswordChanged -= PasswordBox_TextChanged;
-        }
+        _passwordBox?.PasswordChanged -= PasswordBox_TextChanged;
 
         GotFocus -= ValidationPasswordBox_GotFocus;
         DataContextChanged -= ValidationPasswordBox_DataContextChanged;
@@ -233,10 +225,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void ValidationPasswordBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        if (_oldDataContext is not null)
-        {
-            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
-        }
+        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
         {
@@ -270,8 +259,18 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void PasswordBox_TextChanged(object sender, RoutedEventArgs e)
     {
-        Password = ((PasswordBox)sender).Password;
         TriggerActionButtonsVisibility();
+        _typingTimer.Stop();
+        _typingTimer.Start();
+    }
+
+    private void TypingTimer_Tick(object? sender, object e)
+    {
+        _typingTimer.Stop();
+        if (_passwordBox != null && Password != _passwordBox.Password)
+        {
+            Password = _passwordBox.Password;
+        }
     }
 
     /// <summary>

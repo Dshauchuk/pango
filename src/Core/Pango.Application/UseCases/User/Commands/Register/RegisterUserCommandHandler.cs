@@ -10,21 +10,14 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.User.Commands.Register;
 
-public class RegisterUserCommandHandler
+public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<RegisterUserCommandHandler> logger)
 : IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
 {
     private const int MaxUserCount = 5;
 
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHashProvider _passwordHashProvider;
-    private readonly ILogger<RegisterUserCommandHandler> _logger;
-
-    public RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<RegisterUserCommandHandler> logger)
-    {
-        _userRepository = userRepository;
-        _passwordHashProvider = passwordHashProvider;
-        _logger = logger;
-    }
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IPasswordHashProvider _passwordHashProvider = passwordHashProvider;
+    private readonly ILogger<RegisterUserCommandHandler> _logger = logger;
 
     public async Task<ErrorOr<PangoUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
@@ -36,7 +29,11 @@ public class RegisterUserCommandHandler
                 return Error.Validation(ApplicationErrors.User.TooManyUsers, $"Can't create more than {MaxUserCount} users");
             }
 
-            string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
+            var (passwordHash, salt) = await Task.Run(() =>
+            {
+                string hash = _passwordHashProvider.Hash(request.Password, out byte[] generatedSalt);
+                return (hash, generatedSalt);
+            });
 
             PangoUser user = new()
             {

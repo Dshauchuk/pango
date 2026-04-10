@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
@@ -20,6 +21,12 @@ public sealed partial class SettingsView : PageBase
         InitializeComponent();
         NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
         DataContext = App.Host.Services.GetRequiredService<SettingsViewModel>();
+    }
+
+    private void ShowExpirationList_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        WeakReferenceMessenger.Default.Send(
+            new Mvvm.Models.InAppNotificationMessage("SHOW_EXPIRATION_WINDOW"));
     }
 
     private async void BugRequestCard_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)

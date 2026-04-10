@@ -98,15 +98,12 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
             Password = passwordResult.Value.Value;
             Catalog= passwordResult.Value.CatalogPath;
 
-            if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? notesVal))
-            {
-                Notes = notesVal;
-            }
             if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
             {
-                if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var expDate))
+                if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var expDate) ||
+                    DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.RoundtripKind, out expDate))
                 {
-                    ExpirationDate = expDate.LocalDateTime.ToString("dd/MM/yyyy");
+                    ExpirationDate = expDate.LocalDateTime.ToString("d", System.Globalization.CultureInfo.CurrentCulture);
                 }
                 else
                 {

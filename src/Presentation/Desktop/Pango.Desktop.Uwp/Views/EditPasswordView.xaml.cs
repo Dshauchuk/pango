@@ -14,10 +14,9 @@ public sealed partial class EditPasswordView : ViewBase
 {
     public EditPasswordView()
     {
-        this.InitializeComponent();
+        InitializeComponent();
         TitleTextBox.Focus(FocusState.Programmatic);
         DataContext = App.Host.Services.GetRequiredService<EditPasswordViewModel>();
-
         Loaded += EditPasswordView_Loaded;
         KeyDown += EditPasswordView_KeyDown;
     }

@@ -3,7 +3,6 @@ using Pango.Application.Common;
 using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
-using static Pango.Application.Common.ApplicationErrors;
 
 namespace Pango.Persistence.File;
 
@@ -49,22 +48,6 @@ public class UserFileStorageManager(
         // Read all current data
         var all = await _passwordRepository.QueryAsync((a) => true, _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync()));
 
-        // Save unencrypted expiration dates cache for background Windows Toast notifications
-        try
-        {
-            var expirations = all.Where(p => p.Properties != null && p.Properties.ContainsKey(PasswordProperties.ExpirationDate))
-                                 .Select(p => p.Properties[PasswordProperties.ExpirationDate])
-                                 .ToList();
-            string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            string cacheFile = Path.Combine(commonAppData, "Pango", "expiration_cache.json");
-            System.IO.File.WriteAllText(cacheFile, System.Text.Json.JsonSerializer.Serialize(expirations));
-        }
-        catch (Exception ex)
-        {
-            if (_logger.IsEnabled(LogLevel.Warning))
-                _logger.LogWarning(ex, "Cannot save expiration cache");
-        }
-
         // 1.save data for temp user
         string tempId = Guid.NewGuid().ToString();
         string tmpUser = $"{userId}_{tempId}_tmp";
@@ -73,7 +56,7 @@ public class UserFileStorageManager(
 
 
         if (_logger.IsEnabled(LogLevel.Debug))
-                _logger.LogDebug("Copied data to a temp user {User} folder...", tmpUser);
+            _logger.LogDebug("Copied data to a temp user {User} folder...", tmpUser);
 
         // 2. rename existing directory using timestamp
         string currentUserDirectoryPath = _appDomainProvider.GetUserFolderPath(userId);

@@ -9,28 +9,20 @@ using Pango.Domain.Enums;
 
 namespace Pango.Persistence.File;
 
-public abstract class FileRepositoryBase<T>
+public abstract class FileRepositoryBase<T>(
+    IContentEncoder contentEncoder,
+    IAppDomainProvider appDomainProvider,
+    IAppOptions appOptions,
+    ILogger logger)
 {
-    private readonly IContentEncoder _contentEncoder;
-    private readonly IAppDomainProvider _appDomainProvider;
-    private readonly IAppOptions _appOptions;
-    private SemaphoreSlim _semaphore = new(1);
-
-    public FileRepositoryBase(
-        IContentEncoder contentEncoder,
-        IAppDomainProvider appDomainProvider,
-        IAppOptions appOptions,
-        ILogger logger)
-    {
-        _contentEncoder = contentEncoder;
-        _appDomainProvider = appDomainProvider;
-        _appOptions = appOptions;
-        Logger = logger;
-    }
+    private readonly IContentEncoder _contentEncoder = contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
+    private readonly IAppOptions _appOptions = appOptions;
+    private readonly SemaphoreSlim _semaphore = new(1);
 
     #region Properties
 
-    protected ILogger Logger { get; init; }
+    protected ILogger Logger { get; init; } = logger;
     protected abstract string DirectoryName { get; }
 
     #endregion
@@ -39,20 +31,17 @@ public abstract class FileRepositoryBase<T>
 
     protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(IEnumerable<string> filePaths, EncodingOptions encodingOptions)
     {
+        var tasks = filePaths.Select(file => ReadDataPackageAsync(file, encodingOptions.Key, encodingOptions.Salt));
+        var packages = await Task.WhenAll(tasks);
+
         List<T> items = [];
-
-        foreach (string file in filePaths)
+        foreach (var package in packages)
         {
-            var package = await ReadDataPackageAsync(file, encodingOptions.Key, encodingOptions.Salt);
-
-            if (package is null)
+            if (package != null)
             {
-                continue;
+                items.AddRange(await ProcessDataPackageAsync(package));
             }
-
-            items.AddRange(await ProcessDataPackageAsync(package));
         }
-
         return items;
     }
 
@@ -108,14 +97,14 @@ public abstract class FileRepositoryBase<T>
 
     #region Private Methods
 
-    private Task<IEnumerable<T>> ProcessDataPackageAsync(ContentPackage fileContent)
+    private static Task<IEnumerable<T>> ProcessDataPackageAsync(ContentPackage fileContent)
     {
         if(fileContent is null)
         {
             return Task.FromResult(Enumerable.Empty<T>());
         }
 
-        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
+        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? [];
 
         return Task.FromResult(data);
     }
@@ -176,8 +165,6 @@ public abstract class FileRepositoryBase<T>
     {
         try
         {
-            await _semaphore.WaitAsync();
-
             if (!System.IO.File.Exists(filePath))
             {
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
@@ -188,19 +175,18 @@ public abstract class FileRepositoryBase<T>
             using (FileStream stream = System.IO.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
                 result = new byte[stream.Length];
-                await stream.ReadAsync(result, 0, (int)stream.Length);
+                int bytesRead = await stream.ReadAsync(result.AsMemory());
+                if (bytesRead != result.Length)
+                {
+                    Logger.LogWarning("Expected to read {Expected} bytes but read {Actual}", result.Length, bytesRead);
+                }
             }
-
             return result;
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "An error occurred while reading data: {Message}", ex.Message);
             throw;
-        }
-        finally
-        {
-            _semaphore.Release();
         }
     }
 
@@ -218,7 +204,7 @@ public abstract class FileRepositoryBase<T>
 
             using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
             {
-                await sourceStream.WriteAsync(content, 0, content.Length);
+                await sourceStream.WriteAsync(content);
             };
         }
         catch (Exception ex)

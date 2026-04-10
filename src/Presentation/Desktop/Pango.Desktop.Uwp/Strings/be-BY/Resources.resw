@@ -823,4 +823,52 @@
   <data name="ShowFavorites" xml:space="preserve">
     <value>Паказаць Выбранае</value>
   </data>
+  <data name="ExpirationAlert_Header" xml:space="preserve">
+    <value>Карыстальнік {0} мае паролі, тэрмін дзеяння якіх скончыўся або хутка скончыцца:</value>
+  </data>
+  <data name="ExpirationAlert_Expired" xml:space="preserve">
+    <value>- {0}: Скончыўся {1} дзён таму ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresToday" xml:space="preserve">
+    <value>- {0}: Сканчаецца сёння ({1}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresIn" xml:space="preserve">
+    <value>- {0}: Сканчаецца праз {1} дзён ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_Title" xml:space="preserve">
+    <value>Абвестка аб заканчэнні тэрміну дзеяння пароля</value>
+  </data>
+  <data name="WindowsNotifications_Label" xml:space="preserve">
+    <value>Апавяшчэнні Windows (Toast)</value>
+  </data>
+  <data name="ShowWindowOnStartup_Label" xml:space="preserve">
+    <value>Паказваць акно з папярэджаннем пры запуску</value>
+  </data>
+  <data name="Expiring_Summary_Header" xml:space="preserve">
+    <value>Паролі, якія патрабуюць увагі для карыстальніка {0}:</value>
+  </data>
+  <data name="Expiring_Summary_Expiring" xml:space="preserve">
+    <value>Хутка мінаюць: {0}</value>
+  </data>
+  <data name="Expiring_Summary_Expired" xml:space="preserve">
+    <value>Ужо пратэрмінаваны: {0}</value>
+  </data>
+  <data name="Expiring_Summary_LoginPrompt" xml:space="preserve">
+    <value>Увайдзіце ў Pango, каб убачыць канкрэтныя паролі.</value>
+  </data>
+  <data name="Expiring_Detail_Header" xml:space="preserve">
+    <value>Вашы паролі ({0}):</value>
+  </data>
+  <data name="Expiring_Detail_Expired" xml:space="preserve">
+    <value>- {0} (Скончыўся {1} дзён таму)</value>
+  </data>
+  <data name="Expiring_Detail_ExpiresToday" xml:space="preserve">
+    <value>- {0} (Сканчаецца СЁННЯ)</value>
+  </data>
+  <data name="Expiring_Detail_Expiring" xml:space="preserve">
+    <value>- {0} (Сканчаецца праз {1} дзён)</value>
+  </data>
+  <data name="ShowExpirationList_Button" xml:space="preserve">
+    <value>Адкрыць спіс пароляў, якія патрабуюць увагі</value>
+  </data>
 </root>

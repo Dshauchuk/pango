@@ -68,6 +68,8 @@ public partial class SettingsViewModel : ViewModelBase
     private int _expirationWarningDays;
     private bool _isChangingDataFolder;
     private string _dataFolderProgressText = string.Empty;
+    private bool _showExpirationWindowOnStartup;
+    private bool _isWindowsNotificationsEnabled;
 
     // Backup Configuration
     private string _configPath = string.Empty;
@@ -114,6 +116,8 @@ public partial class SettingsViewModel : ViewModelBase
 
         _isExpirationAlertsEnabled = (bool?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] ?? true;
         _expirationWarningDays = (int?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] ?? 7;
+        _showExpirationWindowOnStartup = (bool?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.ShowExpirationWindowOnStartup] ?? true;
+        _isWindowsNotificationsEnabled = (bool?)ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableWindowsNotifications] ?? true;
 
         InitializeDisplayResources();
 
@@ -178,6 +182,32 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
+    public int ExpirationWarningDays
+    {
+        get => _expirationWarningDays;
+        set { if (SetProperty(ref _expirationWarningDays, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] = value; }
+    }
+
+    public bool ShowExpirationWindowOnStartup
+    {
+        get => _showExpirationWindowOnStartup;
+        set
+        {
+            if (SetProperty(ref _showExpirationWindowOnStartup, value))
+                ApplicationData.Current.LocalSettings.Values[Constants.Settings.ShowExpirationWindowOnStartup] = value;
+        }
+    }
+
+    public bool IsWindowsNotificationsEnabled
+    {
+        get => _isWindowsNotificationsEnabled;
+        set
+        {
+            if (SetProperty(ref _isWindowsNotificationsEnabled, value))
+                ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableWindowsNotifications] = value;
+        }
+    }
+
     #endregion
 
     #region Properties - Data Storage
@@ -191,12 +221,6 @@ public partial class SettingsViewModel : ViewModelBase
     {
         get => _isExpirationAlertsEnabled;
         set { if (SetProperty(ref _isExpirationAlertsEnabled, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.EnableExpirationAlerts] = value; }
-    }
-
-    public int ExpirationWarningDays
-    {
-        get => _expirationWarningDays;
-        set { if (SetProperty(ref _expirationWarningDays, value)) ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] = value; }
     }
 
     public ObservableCollection<int> ExpirationWarningDaysItems { get; } = [1, 7, 14, 28];
