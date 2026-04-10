@@ -408,7 +408,7 @@ public sealed partial class MainWindow : Window
     {
         if (_expirationWindow != null)
         {
-            if (_expirationWindow.Content is Grid root && root.Children.Count > 0 && root.Children[0] is ScrollViewer sv)
+            if (_expirationWindow.Content is Grid root && root.Children.Count > 1 && root.Children[1] is ScrollViewer sv)
             {
                 sv.Content = contentPanel;
             }
@@ -428,17 +428,26 @@ public sealed partial class MainWindow : Window
 
             var rootGrid = new Grid
             {
-                Padding = new Thickness(24, 40, 24, 24),
                 Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["ApplicationPageBackgroundThemeBrush"]
             };
+
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(32) });
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
             rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
 
-            var scrollViewer = new ScrollViewer { Margin = new Thickness(0, 0, 0, 20), Content = contentPanel };
-            Grid.SetRow(scrollViewer, 0);
+            var titleBar = new Border { Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent) };
+            var titlePanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Padding = new Thickness(16, 0, 0, 0) };
+            titlePanel.Children.Add(new Image { Source = new BitmapImage(new Uri("ms-appx:///Assets/logo.png")), Width = 16, Height = 16, VerticalAlignment = VerticalAlignment.Center });
+            titlePanel.Children.Add(new TextBlock { Text = "Pango: Expiration Alert", VerticalAlignment = VerticalAlignment.Center, FontSize = 12, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.White) });
+            titleBar.Child = titlePanel;
+            Grid.SetRow(titleBar, 0);
+            rootGrid.Children.Add(titleBar);
+
+            var scrollViewer = new ScrollViewer { Margin = new Thickness(24, 10, 24, 20), Content = contentPanel };
+            Grid.SetRow(scrollViewer, 1);
             rootGrid.Children.Add(scrollViewer);
 
-            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 12 };
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 12, Margin = new Thickness(0, 0, 24, 24) };
 
             var openPangoBtn = new Button
             {
@@ -458,10 +467,11 @@ public sealed partial class MainWindow : Window
             btnPanel.Children.Add(openPangoBtn);
             btnPanel.Children.Add(closeBtn);
 
-            Grid.SetRow(btnPanel, 1);
+            Grid.SetRow(btnPanel, 2);
             rootGrid.Children.Add(btnPanel);
 
             _expirationWindow.Content = rootGrid;
+            _expirationWindow.SetTitleBar(titleBar);
             _expirationWindow.Closed += (s, e) => _expirationWindow = null;
 
             var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);

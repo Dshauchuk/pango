@@ -187,10 +187,13 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
     {
-        AddPassword(Passwords, message.Value.Adapt<PangoExplorerItem>(), message.Value.CatalogPath?.ParseCatalogPath());
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync());
     }
 
-    private async void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message) => await ResetViewAsync();
+    private void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message)
+    {
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync());
+    }
 
     private void OnCreatePasswordFromGenerator(object recipient, CreatePasswordFromGeneratorMessage message)
     {
