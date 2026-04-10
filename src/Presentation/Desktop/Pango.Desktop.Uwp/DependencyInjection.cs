@@ -37,11 +37,13 @@ public static class DependencyInjection
 
     private static DateTimeOffset? GetExpirationDateFromProperties(System.Collections.Generic.Dictionary<string, string> properties)
     {
-        if (properties != null &&
-            properties.TryGetValue(Application.Common.PasswordProperties.ExpirationDate, out var dateStr) &&
-            DateTimeOffset.TryParse(dateStr, out var parsedDate))
+        if (properties != null && properties.TryGetValue(Application.Common.PasswordProperties.ExpirationDate, out var dateStr))
         {
-            return parsedDate;
+            if (DateTimeOffset.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedDate))
+                return parsedDate;
+
+            if (DateTimeOffset.TryParse(dateStr, System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.RoundtripKind, out parsedDate))
+                return parsedDate;
         }
         return null;
     }

@@ -29,10 +29,10 @@ sealed partial class App : ApplicationBase
     /// </summary>
     public App()
     {
-        this.InitializeComponent();
+        InitializeComponent();
         KeyboardHook = new KeyboardHook();
 
-        this.UnhandledException += App_UnhandledException;
+        UnhandledException += App_UnhandledException;
     }
 
     public event Action<string>? LoginSucceeded;
@@ -82,7 +82,10 @@ sealed partial class App : ApplicationBase
     protected override async void OnLaunched(LaunchActivatedEventArgs e)
     {
         var appDomainProvider = Host.Services.GetRequiredService<IAppDomainProvider>();
-		await (appDomainProvider as AppDomainProvider)?.InitializeAsync();
+        if (appDomainProvider is AppDomainProvider provider)
+        {
+            await provider.InitializeAsync();
+        }
 
         CurrentWindow = Host.Services.GetRequiredService<MainWindow>();
         CurrentWindow?.Activate();

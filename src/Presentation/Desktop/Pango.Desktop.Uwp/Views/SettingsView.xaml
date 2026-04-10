@@ -47,32 +47,99 @@
                 </StackPanel>
 
                 <!-- Notifications Section -->
-                <TextBlock Text="{loc:StringResource Key='Notifications_Header'}"
+                <TextBlock Text="{loc:StringResource Key='Notifications_Header'}" 
                            Style="{StaticResource SectionSubtitleTextBlockStyle}"/>
-                <toolkit:SettingsExpander Header="{loc:StringResource Key='ExpirationAlerts_Label'}"
-                                          Description="{loc:StringResource Key='ExpirationAlerts_Description'}"
-                                          IsExpanded="{Binding IsExpirationAlertsEnabled, Mode=OneWay}"
-                                          Margin="{StaticResource ControlSectionMargin}">
-                    <ToggleSwitch IsOn="{Binding IsExpirationAlertsEnabled, Mode=TwoWay}"
-                                  OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
-                                  OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
 
-                    <toolkit:SettingsExpander.Items>
-                        <toolkit:SettingsCard Header="{loc:StringResource Key='WarnBefore_Label'}"
-                                              Visibility="{Binding IsExpirationAlertsEnabled, Converter={StaticResource BoolToVisibilityConvereter}}">
-                            <ComboBox ItemsSource="{Binding ExpirationWarningDaysItems}"
-                                      SelectedItem="{Binding ExpirationWarningDays, Mode=TwoWay}"
-                                      MinWidth="150" HorizontalAlignment="Right">
+                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="8"
+                        Padding="16"
+                        Margin="{StaticResource ControlSectionMargin}"
+                        HorizontalAlignment="Stretch">
+                    <StackPanel HorizontalAlignment="Stretch">
+
+                        <TextBlock Text="{loc:StringResource Key='ExpirationAlerts_Label'}" 
+                                   Style="{StaticResource BodyStrongTextBlockStyle}" 
+                                   Margin="0,0,0,16"/>
+
+                        <Grid ColumnSpacing="24" 
+                              HorizontalAlignment="Stretch">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="2*"/>
+                                <ColumnDefinition Width="1*"/>
+                                <ColumnDefinition Width="1*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Row="0" 
+                                       Grid.Column="0" 
+                                       Text="{loc:StringResource Key='WarnBefore_Label'}" 
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" 
+                                       Margin="0,0,0,4" 
+                                       TextWrapping="Wrap" 
+                                       VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="0" 
+                                       Grid.Column="1" 
+                                       Text="{loc:StringResource Key='WindowsNotifications_Label'}" 
+                                       Style="{StaticResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Margin="0,0,0,4"
+                                       TextWrapping="Wrap" 
+                                       VerticalAlignment="Bottom"/>
+                            <TextBlock Grid.Row="0"
+                                       Grid.Column="2" 
+                                       Text="{loc:StringResource Key='ShowWindowOnStartup_Label'}" 
+                                       Style="{StaticResource CaptionTextBlockStyle}" 
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Margin="0,0,0,4" 
+                                       TextWrapping="Wrap" 
+                                       VerticalAlignment="Bottom"/>
+
+                            <ComboBox Grid.Row="1"
+                                      Grid.Column="0"
+                                      ItemsSource="{Binding ExpirationWarningDaysItems}"
+                                      SelectedItem="{Binding ExpirationWarningDays, Mode=TwoWay}" 
+                                      HorizontalAlignment="Stretch" 
+                                      VerticalAlignment="Top">
                                 <ComboBox.ItemTemplate>
                                     <DataTemplate>
                                         <TextBlock><Run Text="{Binding}"/> <Run Text="{loc:StringResource Key='Day(-s)'}"/></TextBlock>
                                     </DataTemplate>
                                 </ComboBox.ItemTemplate>
                             </ComboBox>
+
+                            <ToggleSwitch Grid.Row="1" 
+                                          Grid.Column="1"
+                                          IsOn="{Binding IsWindowsNotificationsEnabled, Mode=TwoWay}"
+                                          OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
+                                          OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"
+                                          Margin="0,-4,0,0"
+                                          VerticalAlignment="Top" 
+                                          HorizontalAlignment="Left"/>
+                            <ToggleSwitch Grid.Row="1" 
+                                          Grid.Column="2" 
+                                          IsOn="{Binding ShowExpirationWindowOnStartup, Mode=TwoWay}"
+                                          OnContent="{loc:StringResource Key='ToggleSwitch_On'}"
+                                          OffContent="{loc:StringResource Key='ToggleSwitch_Off'}" 
+                                          Margin="0,-4,0,0"
+                                          VerticalAlignment="Top" 
+                                          HorizontalAlignment="Left"/>
+                        </Grid>
+
+                        <toolkit:SettingsCard Header="{loc:StringResource Key='ShowExpirationList_Button'}" Margin="0,16,0,0" IsClickEnabled="True" Click="ShowExpirationList_Click">
+                            <toolkit:SettingsCard.ActionIcon>
+                                <FontIcon Glyph="&#xE8A7;" />
+                            </toolkit:SettingsCard.ActionIcon>
                         </toolkit:SettingsCard>
-                    </toolkit:SettingsExpander.Items>
-                </toolkit:SettingsExpander>
-                
+
+                    </StackPanel>
+                </Border>
+
                 <!-- Backup Section -->
                 <TextBlock Text="{loc:StringResource Key='BackupSettings_Header'}"
                            Style="{StaticResource SectionSubtitleTextBlockStyle}"/>

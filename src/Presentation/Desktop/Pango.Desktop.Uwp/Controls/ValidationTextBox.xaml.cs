@@ -23,12 +23,16 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     private FontIcon? _warningIcon;
     private INotifyDataErrorInfo? _oldDataContext;
+    private readonly DispatcherTimer _typingTimer;
 
     /// <summary>
     /// Initializes a new instance and sets up lifecycle event handlers to prevent memory leaks.
     /// </summary>
     public ValidationTextBox()
     {
+        _typingTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMilliseconds(300) };
+        _typingTimer.Tick += TypingTimer_Tick;
+
         DataContextChanged += ValidationTextBox_DataContextChanged;
         Unloaded += ValidationTextBox_Unloaded;
     }
@@ -52,16 +56,10 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     private void ValidationTextBox_Unloaded(object sender, RoutedEventArgs e)
     {
-        if (_oldDataContext is not null)
-        {
-            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
-            _oldDataContext = null;
-        }
+        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
+        _oldDataContext = null;
 
-        if (_textBox is not null)
-        {
-            _textBox.TextChanged -= TextBox_TextChanged;
-        }
+        _textBox?.TextChanged -= TextBox_TextChanged;
 
         GotFocus -= ValidationTextBox_GotFocus;
         DataContextChanged -= ValidationTextBox_DataContextChanged;
@@ -156,10 +154,7 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     private void ValidationTextBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
-        if (_oldDataContext is not null)
-        {
-            _oldDataContext.ErrorsChanged -= DataContext_ErrorsChanged;
-        }
+        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
         {
@@ -191,7 +186,17 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        Text = ((TextBox)sender).Text;
+        _typingTimer.Stop();
+        _typingTimer.Start();
+    }
+
+    private void TypingTimer_Tick(object? sender, object e)
+    {
+        _typingTimer.Stop();
+        if (_textBox != null && Text != _textBox.Text)
+        {
+            Text = _textBox.Text;
+        }
     }
 
     /// <summary>

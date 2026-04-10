@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Views;
 using System;
 using System.Diagnostics;
@@ -23,6 +24,7 @@ namespace Pango.Desktop.Uwp.ViewModels
 
         private bool _isBackupRunning = false;
         private bool _isAppVisible = true;
+        private static bool _hasShownWindowsToast = false;
         private ResourceLoader _resourceLoader;
 
         /// <summary>
@@ -202,41 +204,80 @@ namespace Pango.Desktop.Uwp.ViewModels
         /// </summary>
         private void CheckExpirationsAndNotify()
         {
-            var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
-            bool alertsEnabled = localSettings.Values[Constants.Settings.EnableExpirationAlerts] as bool? ?? true;
-            if (!alertsEnabled) return;
+            if (_hasShownWindowsToast) return;
 
-            int warningDays = localSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
-
-            string cacheFile = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
-
-            if (!File.Exists(cacheFile)) return;
-
-            try
+            _ = System.Threading.Tasks.Task.Run(async () =>
             {
-                var json = File.ReadAllText(cacheFile);
-                var dates = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.List<string>>(json);
-                if (dates == null || dates.Count == 0) return;
+                await System.Threading.Tasks.Task.Delay(5000);
 
-                var now = DateTimeOffset.UtcNow.Date;
-                bool hasExpiring = dates.Any(d => DateTimeOffset.TryParse(d, out var parsedDate) && (parsedDate.Date - now).TotalDays <= warningDays);
+                var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+                bool alertsEnabled = !localSettings.Values.TryGetValue(Constants.Settings.EnableExpirationAlerts, out var aVal) || (bool)aVal;
+                bool windowsAlertsEnabled = !localSettings.Values.TryGetValue(Constants.Settings.EnableWindowsNotifications, out var wVal) || (bool)wVal;
 
-                if (hasExpiring)
+                if (!alertsEnabled || !windowsAlertsEnabled) return;
+
+                int warningDays = localSettings.Values.TryGetValue(Constants.Settings.ExpirationWarningDays, out var daysVal) ? (int)daysVal : 7;
+                string cacheFile = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
+
+                if (!File.Exists(cacheFile)) return;
+
+                try
                 {
-                    var toastXml = ToastNotificationManager.GetTemplateContent(ToastTemplateType.ToastText02);
-                    var textNodes = toastXml.GetElementsByTagName("text");
+                    var json = File.ReadAllText(cacheFile).Trim();
 
-                    textNodes[0].InnerText = _resourceLoader.GetString("Toast_Expiring_Title");
-                    textNodes[1].InnerText = _resourceLoader.GetString("Toast_Expiring_Body");
+                    if (!json.StartsWith('{') || !json.EndsWith('}')) return;
 
-                    var toast = new ToastNotification(toastXml);
-                    ToastNotificationManager.CreateToastNotifier().Show(toast);
+                    System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<ExpirationCacheItem>> dates;
+                    try
+                    {
+                        var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        dates = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<ExpirationCacheItem>>>(json, options) ?? [];
+                    }
+                    catch (System.Text.Json.JsonException)
+                    {
+                        return;
+                    }
+
+                    if (dates.Count == 0) return;
+
+                    var now = DateTime.Now.Date;
+                    bool hasExpiring = false;
+
+                    foreach (var userCache in dates.Values)
+                    {
+                        if (userCache.Any(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays))
+                        {
+                            hasExpiring = true;
+                            break;
+                        }
+                    }
+
+                    if (hasExpiring)
+                    {
+                        _hasShownWindowsToast = true;
+
+                        string toastXmlString = $@"
+                        <toast>
+                            <visual>
+                                <binding template='ToastGeneric'>
+                                    <text>{_resourceLoader.GetString("Toast_Expiring_Title")}</text>
+                                    <text>{_resourceLoader.GetString("Toast_Expiring_Body")}</text>
+                                </binding>
+                            </visual>
+                        </toast>";
+
+                        var xmlDoc = new Windows.Data.Xml.Dom.XmlDocument();
+                        xmlDoc.LoadXml(toastXmlString);
+
+                        var toast = new ToastNotification(xmlDoc);
+                        ToastNotificationManager.CreateToastNotifier().Show(toast);
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Failed to check expirations and show Toast.");
-            }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to check expirations and show Toast.");
+                }
+            });
         }
 
         /// <summary>

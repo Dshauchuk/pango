@@ -9,25 +9,17 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.User.Commands.ChangePassword;
 
-public class ChangePasswordCommandHandler
-    : IRequestHandler<ChangePasswordCommand, ErrorOr<bool>>
+public class ChangePasswordCommandHandler(
+    IUserStorageManager userStorageManager,
+    IPasswordHashProvider passwordHashProvider,
+    IUserRepository userRepository,
+    ILogger<ChangePasswordCommandHandler> logger)
+        : IRequestHandler<ChangePasswordCommand, ErrorOr<bool>>
 {
-    private readonly IUserStorageManager _userStorageManager;
-    private readonly IPasswordHashProvider _passwordHashProvider;
-    private readonly IUserRepository _userRepository;
-    private readonly ILogger<ChangePasswordCommandHandler> _logger;
-
-    public ChangePasswordCommandHandler(
-        IUserStorageManager userStorageManager,
-        IPasswordHashProvider passwordHashProvider,
-        IUserRepository userRepository,
-        ILogger<ChangePasswordCommandHandler> logger)
-    {
-        _logger = logger;
-        _userStorageManager = userStorageManager;
-        _passwordHashProvider = passwordHashProvider;
-        _userRepository = userRepository;
-    }
+    private readonly IUserStorageManager _userStorageManager = userStorageManager;
+    private readonly IPasswordHashProvider _passwordHashProvider = passwordHashProvider;
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly ILogger<ChangePasswordCommandHandler> _logger = logger;
 
     async Task<ErrorOr<bool>> IRequestHandler<ChangePasswordCommand, ErrorOr<bool>>.Handle(ChangePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -36,7 +28,11 @@ public class ChangePasswordCommandHandler
         try
         {
             _logger.LogDebug("Hashing the new password...");
-            string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
+            var (passwordHash, salt) = await Task.Run(() =>
+            {
+                string hash = _passwordHashProvider.Hash(request.Password, out byte[] generatedSalt);
+                return (hash, generatedSalt);
+            });
             EncodingOptions encoding = new(passwordHash, Convert.ToBase64String(salt));
             _logger.LogDebug("Hashing completed");
             

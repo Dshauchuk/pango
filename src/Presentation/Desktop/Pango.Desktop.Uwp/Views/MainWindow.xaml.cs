@@ -1,17 +1,21 @@
-﻿using Microsoft.UI;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
-using System;
-using System.Runtime.InteropServices;
-using CommunityToolkit.Mvvm.Messaging;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
+using Pango.Desktop.Uwp.Core;
+using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -31,6 +35,8 @@ public sealed partial class MainWindow : Window
     private MenuFlyoutItem? _trayMenuStopBackup;
     private MenuFlyoutItem? _trayMenuExit;
     private readonly ILogger<MainWindow>? _logger;
+    private Window? _expirationWindow;
+    private string? _currentLoggedInUser;
 
     public TrayIconViewModel TrayViewModel { get; }
 
@@ -44,21 +50,21 @@ public sealed partial class MainWindow : Window
 
         SubClassing();
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(this.TitleBarBorder);
+        SetTitleBar(TitleBarBorder);
 
 #if DEBUG
-        WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
+            WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
 #else
         WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}";
 #endif
 
         TrayViewModel = new TrayIconViewModel(this, trayLogger);
         InitializeSystemTray();
-
-        this.AppWindow.Closing += AppWindow_Closing;
+        AppWindow.Closing += AppWindow_Closing;
 
         RegisterMessengers();
 
+        RootGrid.Loaded += RootGrid_Loaded;
         RootGrid.PointerMoved += RootGrid_PointerMoved;
         RootGrid.KeyDown += RootGrid_KeyDown;
 
@@ -66,6 +72,20 @@ public sealed partial class MainWindow : Window
         App.Current.SignedOut += Current_SignedOut;
 
         InitializeInitialBackupState();
+
+        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
+        timer.Tick += (s, e) =>
+        {
+            timer.Stop();
+            CheckAndShowExpirationWindow();
+        };
+        timer.Start();
+    }
+
+    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    {
+        RootGrid.Loaded -= RootGrid_Loaded;
+        CheckAndShowExpirationWindow();
     }
 
     /// <summary>
@@ -155,6 +175,20 @@ public sealed partial class MainWindow : Window
             TrayViewModel.UpdateTranslations();
             UpdateTrayMenuTexts();
         });
+
+        WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, (r, m) =>
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            if (m.Message == "SHOW_EXPIRATION_WINDOW")
+            {
+                DispatcherQueue.TryEnqueue(() => RefreshExpirationWindow(options, forceShow: true));
+            }
+            else if (m.Message == "CACHE_UPDATED" && _expirationWindow != null)
+            {
+                DispatcherQueue.TryEnqueue(() => RefreshExpirationWindow(options, forceShow: true));
+            }
+        });
     }
 
     /// <summary>
@@ -228,16 +262,220 @@ public sealed partial class MainWindow : Window
     {
         UserInfo_TitleBar.Visibility = Visibility.Collapsed;
         UserName_TitleBar.Text = string.Empty;
+        _currentLoggedInUser = null;
+
+        if (_expirationWindow != null)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            RefreshExpirationWindow(options, forceShow: true);
+        }
     }
 
     private void Current_LoginSucceeded(string userName)
     {
         UserInfo_TitleBar.Visibility = Visibility.Visible;
         UserName_TitleBar.Text = userName;
+        _currentLoggedInUser = userName;
+
+        if (_expirationWindow != null)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            RefreshExpirationWindow(options, forceShow: true);
+        }
     }
 
     private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e) => PointerMoved?.Invoke(sender, e);
     private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e) => KeyDown?.Invoke(sender, e);
+
+    private void CheckAndShowExpirationWindow()
+    {
+        var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+        bool alertsEnabled = localSettings.Values[Constants.Settings.EnableExpirationAlerts] as bool? ?? true;
+        bool showOnStartup = localSettings.Values[Constants.Settings.ShowExpirationWindowOnStartup] as bool? ?? true;
+
+        if (!alertsEnabled || !showOnStartup) return;
+
+        RefreshExpirationWindow(GetOptions());
+    }
+
+    private static System.Text.Json.JsonSerializerOptions GetOptions()
+    {
+        return new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+    }
+
+    private void RefreshExpirationWindow(System.Text.Json.JsonSerializerOptions options, bool forceShow = false)
+    {
+        string cacheFile = System.IO.Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
+        if (!System.IO.File.Exists(cacheFile) && !forceShow) return;
+
+        try
+        {
+            Dictionary<string, List<ExpirationCacheItem>> cache = [];
+            if (System.IO.File.Exists(cacheFile))
+            {
+                string json = System.IO.File.ReadAllText(cacheFile).Trim();
+                if (json.StartsWith('{') && json.EndsWith('}'))
+                {
+                    try { cache = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(json, options) ?? []; }
+                    catch { System.IO.File.Delete(cacheFile); }
+                }
+                else { System.IO.File.Delete(cacheFile); }
+            }
+
+            if (cache.Count == 0 && !forceShow) return;
+
+            int warningDays = Windows.Storage.ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
+            var now = DateTimeOffset.UtcNow.Date;
+            var stackPanel = new StackPanel { Spacing = 12 };
+            bool hasAnyExpiring = false;
+            var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+
+            if (!string.IsNullOrEmpty(_currentLoggedInUser) && cache.TryGetValue(_currentLoggedInUser, out var userItems))
+            {
+                var expiringItems = userItems.Where(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays).OrderBy(i => i.Date).ToList();
+                if (expiringItems.Count > 0)
+                {
+                    hasAnyExpiring = true;
+                    stackPanel.Children.Add(new TextBlock { Text = string.Format(resourceLoader.GetString("Expiring_Detail_Header"), _currentLoggedInUser), FontSize = 18, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 10) });
+
+                    foreach (var item in expiringItems)
+                    {
+                        int daysLeft = (int)(item.Date.LocalDateTime.Date - now).TotalDays;
+                        string statusText;
+                        if (daysLeft < 0) statusText = string.Format(resourceLoader.GetString("Expiring_Detail_Expired"), item.Name, -daysLeft);
+                        else if (daysLeft == 0) statusText = string.Format(resourceLoader.GetString("Expiring_Detail_ExpiresToday"), item.Name);
+                        else statusText = string.Format(resourceLoader.GetString("Expiring_Detail_Expiring"), item.Name, daysLeft);
+
+                        var color = daysLeft < 0 ? Colors.Red : Colors.DarkOrange;
+                        var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 0, 0, 6) };
+                        itemPanel.Children.Add(new FontIcon { Glyph = "\uE814", FontSize = 16, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color), VerticalAlignment = VerticalAlignment.Center });
+                        itemPanel.Children.Add(new TextBlock { Text = statusText, FontSize = 15, VerticalAlignment = VerticalAlignment.Center });
+                        stackPanel.Children.Add(itemPanel);
+                    }
+                }
+            }
+            else if (string.IsNullOrEmpty(_currentLoggedInUser))
+            {
+                foreach (var kvp in cache)
+                {
+                    var expiringCount = kvp.Value.Count(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays && (i.Date.LocalDateTime.Date - now).TotalDays >= 0);
+                    var expiredCount = kvp.Value.Count(i => (i.Date.LocalDateTime.Date - now).TotalDays < 0);
+
+                    if (expiringCount > 0 || expiredCount > 0)
+                    {
+                        hasAnyExpiring = true;
+                        var userPanel = new StackPanel
+                        {
+                            Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
+                            Padding = new Thickness(15),
+                            CornerRadius = new CornerRadius(8),
+                            Margin = new Thickness(0, 0, 0, 10),
+                            BorderBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardStrokeColorDefaultBrush"],
+                            BorderThickness = new Thickness(1)
+                        };
+
+                        userPanel.Children.Add(new TextBlock { Text = string.Format(resourceLoader.GetString("Expiring_Summary_Header"), kvp.Key), FontSize = 16, FontWeight = Microsoft.UI.Text.FontWeights.Bold, Margin = new Thickness(0, 0, 0, 5) });
+                        if (expiringCount > 0) userPanel.Children.Add(new TextBlock { Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expiring"), expiringCount), FontSize = 14, Margin = new Thickness(0, 2, 0, 0), Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.DarkOrange) });
+                        if (expiredCount > 0) userPanel.Children.Add(new TextBlock { Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expired"), expiredCount), FontSize = 14, Margin = new Thickness(0, 2, 0, 0), Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Red) });
+                        stackPanel.Children.Add(userPanel);
+                    }
+                }
+
+                if (hasAnyExpiring)
+                {
+                    stackPanel.Children.Add(new TextBlock { Text = resourceLoader.GetString("Expiring_Summary_LoginPrompt"), FontSize = 14, FontStyle = Windows.UI.Text.FontStyle.Italic, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 10, 0, 0) });
+                }
+            }
+
+            if (hasAnyExpiring || forceShow)
+            {
+                if (stackPanel.Children.Count == 0 && forceShow)
+                {
+                    stackPanel.Children.Add(new TextBlock { Text = resourceLoader.GetString("NoPasswordsFound") ?? "No passwords require attention.", FontSize = 15, FontStyle = Windows.UI.Text.FontStyle.Italic, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Gray) });
+                }
+                ShowOrUpdateAlertWindow(stackPanel);
+            }
+            else
+            {
+                _expirationWindow?.Close();
+                _expirationWindow = null;
+            }
+        }
+        catch (Exception ex) { _logger?.LogError(ex, "Failed to refresh expiration window."); }
+    }
+
+    private void ShowOrUpdateAlertWindow(StackPanel contentPanel)
+    {
+        if (_expirationWindow != null)
+        {
+            if (_expirationWindow.Content is Grid root && root.Children.Count > 0 && root.Children[0] is ScrollViewer sv)
+            {
+                sv.Content = contentPanel;
+            }
+            _expirationWindow.Activate();
+            return;
+        }
+
+        try
+        {
+            var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+
+            _expirationWindow = new Window
+            {
+                Title = "Pango: Expiration Alert",
+                ExtendsContentIntoTitleBar = true
+            };
+
+            var rootGrid = new Grid
+            {
+                Padding = new Thickness(24, 40, 24, 24),
+                Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["ApplicationPageBackgroundThemeBrush"]
+            };
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            var scrollViewer = new ScrollViewer { Margin = new Thickness(0, 0, 0, 20), Content = contentPanel };
+            Grid.SetRow(scrollViewer, 0);
+            rootGrid.Children.Add(scrollViewer);
+
+            var btnPanel = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Spacing = 12 };
+
+            var openPangoBtn = new Button
+            {
+                Content = resourceLoader.GetString("Tray_OpenPango") ?? "Open Pango",
+                Style = (Style)Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"],
+                Width = 140
+            };
+            openPangoBtn.Click += (s, e) => { ShowWindow(); };
+
+            var closeBtn = new Button
+            {
+                Content = resourceLoader.GetString("Cancel") ?? "Close",
+                Width = 100
+            };
+            closeBtn.Click += (s, e) => _expirationWindow.Close();
+
+            btnPanel.Children.Add(openPangoBtn);
+            btnPanel.Children.Add(closeBtn);
+
+            Grid.SetRow(btnPanel, 1);
+            rootGrid.Children.Add(btnPanel);
+
+            _expirationWindow.Content = rootGrid;
+            _expirationWindow.Closed += (s, e) => _expirationWindow = null;
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+            appWindow.Resize(new Windows.Graphics.SizeInt32(550, 400));
+
+            string iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
+            if (System.IO.File.Exists(iconPath)) appWindow.SetIcon(iconPath);
+
+            _expirationWindow.Activate();
+        }
+        catch (Exception ex) { _logger?.LogError(ex, "Failed to create Alert Window."); }
+    }
 
     #region Handle MINMAXINFO
 
@@ -250,11 +488,13 @@ public sealed partial class MainWindow : Window
     internal WinProc? newWndProc = null;
     internal IntPtr oldWndProc = IntPtr.Zero;
 
+#pragma warning disable SYSLIB1054
     [DllImport("user32")]
     private static extern IntPtr SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc);
 
     [DllImport("user32.dll")]
     static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam);
+#pragma warning restore SYSLIB1054
 
     private void SubClassing()
     {
@@ -269,6 +509,7 @@ public sealed partial class MainWindow : Window
 
     internal static class NativeMethods
     {
+#pragma warning disable SYSLIB1054
         // We have to handle the 32-bit and 64-bit functions separately.
         // 'SetWindowLongPtr' is the 64-bit version of 'SetWindowLong', and isn't available in user32.dll for 32-bit processes.
         [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
@@ -280,6 +521,7 @@ public sealed partial class MainWindow : Window
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static extern bool SetForegroundWindow(IntPtr hWnd);
+#pragma warning restore SYSLIB1054
 
         internal static IntPtr SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc)
         {

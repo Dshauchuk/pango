@@ -95,7 +95,7 @@ public sealed partial class PasswordsView : PageBase
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
 
-        if(viewModel is not null)
+        if (viewModel is not null)
         {
             viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreatePasswordCommand.Execute(null);
@@ -105,8 +105,8 @@ public sealed partial class PasswordsView : PageBase
     private void AddCatalog_CatalogContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        
-        if(viewModel is not null)
+
+        if (viewModel is not null)
         {
             viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
             viewModel.CreateCatalogCommand.Execute(null);
@@ -128,11 +128,15 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
+    /// <summary>
+    /// Handles the completion of a drag-and-drop operation in the tree view.
+    /// Includes validation for folder name collisions and defers the UI update to prevent TreeView corruption.
+    /// </summary>
     private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
         System.ArgumentNullException.ThrowIfNull(sender);
         PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
+        PangoExplorerItem? item = args.Items.Count > 0 ? args.Items[0] as PangoExplorerItem : null;
 
         if (viewModel is not null && item is not null)
         {
@@ -149,19 +153,31 @@ public sealed partial class PasswordsView : PageBase
                 newParent = newParent.Parent;
             }
 
-            item.Parent = newParent;
-            item.RecalculateCatalogPath();
+            if (item.IsFolder)
+            {
+                var siblings = newParent == null ? viewModel.Passwords : newParent.Children;
+                bool folderExists = siblings.Any(s => s.IsFolder && s.Id != item.Id && s.Name.Equals(item.Name, System.StringComparison.OrdinalIgnoreCase));
 
-            await viewModel.CommitPasswordMovementAsync(item, newParent);
+                if (folderExists)
+                {
+                    viewModel.UpdateListCommand.Execute(null);
+                    return;
+                }
+            }
 
-            viewModel.UpdateListCommand.Execute(null);
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                await viewModel.CommitPasswordMovementAsync(item, newParent);
+            });
         }
     }
 
+    /// <summary>
+    /// Checks if targetParent is a descendant of draggedItem to prevent cyclical moves.
+    /// </summary>
     private static bool IsDescendantOrSelf(PangoExplorerItem draggedItem, PangoExplorerItem targetParent)
     {
         if (draggedItem.Id == targetParent.Id) return true;
-
         var current = targetParent.Parent;
         while (current != null)
         {
@@ -172,82 +188,4 @@ public sealed partial class PasswordsView : PageBase
     }
 
     #endregion
-
-    /// <summary>
-    /// Sets new parent for the passed <paramref name="item"/>
-    /// </summary>
-    /// <param name="item">Item, for which new parent should be set</param>
-    /// <param name="newParent">New parent for the passed <paramref name="item"/></param>
-    private static void SetNewParent(PangoExplorerItem item, PangoExplorerItem? newParent)
-    {
-        item.Parent = newParent;
-        item.RecalculateCatalogPath();
-    }
-
-    /// <summary>
-    /// Orders passed <paramref name="movedElement"/> within the <paramref name="passwords"/> collection
-    /// </summary>
-    /// <param name="passwords">List of passwords (one of them is <paramref name="movedElement"/>)</param>
-    /// <param name="movedElement">Password, that was added to the <paramref name="passwords"/> collection and should be ordered within the collection</param>
-    private static void OrderByTypeAfterElementMoved(ObservableCollection<PangoExplorerItem> passwords, PangoExplorerItem movedElement)
-    {
-        int currentElementIndex = passwords.IndexOf(movedElement);
-
-        int orderedElementIndex = GetOrderedItemIndex(passwords, movedElement);
-
-        // don't use ObservableCollection.Move, because it doesn't triggers tree to redraw
-        passwords.RemoveAt(currentElementIndex);
-        passwords.Insert(orderedElementIndex, movedElement);
-    }
-
-    /// <summary>
-    /// Returns index of ordered <paramref name="item"/> within the passed <paramref name="passwords"/> collection
-    /// </summary>
-    /// <param name="passwords">List of passwords (one of them is <paramref name="item"/>)</param>
-    /// <param name="item"></param>
-    /// <returns>Index of ordered <paramref name="item"/> within the passed <paramref name="passwords"/> collection</returns>
-    private static int GetOrderedItemIndex(IEnumerable<PangoExplorerItem> passwords, PangoExplorerItem item)
-    {
-        int orderedElementIndex = passwords.OrderByDescending(p => p.Type, Comparer<PangoExplorerItem.ExplorerItemType>.Create((e1, e2) =>
-        {
-            if (e1 == PangoExplorerItem.ExplorerItemType.Folder && e2 == PangoExplorerItem.ExplorerItemType.File)
-            {
-                return 1;
-            }
-            if (e1 == PangoExplorerItem.ExplorerItemType.File && e2 == PangoExplorerItem.ExplorerItemType.Folder)
-            {
-                return -1;
-            }
-            return 0;
-        })).ThenBy(ps => ps.Name).ToList().IndexOf(item);
-
-        return orderedElementIndex == -1 ? 0 : orderedElementIndex;
-    }
-
-    /// <summary>
-    /// Move passed <paramref name="item"/> from <paramref name="file"/> to <paramref name="file"/>'s Parent item. If <paramref name="file"/> doesn't have Parent - move item to the <paramref name="itemsSource"/>
-    /// </summary>
-    /// <param name="item">Item to move</param>
-    /// <param name="file">File, from which <paramref name="item"/> should be moved</param>
-    /// <param name="itemsSource">Collection of all passwords in tree format</param>
-    /// <returns>New parent of a passed <paramref name="item"/></returns>
-    private static PangoExplorerItem? MoveItemToParentOfFile(PangoExplorerItem item, PangoExplorerItem file, ObservableCollection<PangoExplorerItem> itemsSource)
-    {
-        file.Children.Remove(item);
-
-        ObservableCollection<PangoExplorerItem> targetCollection;
-        if (file.Parent is null)
-        {
-            targetCollection = itemsSource;
-        }
-        else
-        {
-            targetCollection = file.Parent.Children;
-        }
-
-        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union([item]), item);
-        targetCollection.Insert(orderedElementIndex, item);
-
-        return file.Parent;
-    }
 }

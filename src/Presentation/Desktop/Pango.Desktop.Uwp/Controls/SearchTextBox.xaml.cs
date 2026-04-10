@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using System;
 using System.Windows.Input;
 
 namespace Pango.Desktop.Uwp.Controls;
@@ -11,7 +12,7 @@ namespace Pango.Desktop.Uwp.Controls;
 [TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
 [TemplatePart(Name = "PART_DeleteButton", Type = typeof(Button))]
 [TemplatePart(Name = "PART_FilterButton", Type = typeof(Button))]
-public sealed class SearchTextBox : ContentControl
+public sealed partial class SearchTextBox : ContentControl
 {
     /// <summary>
     /// The <see cref="TextBox"/> instance in use.
@@ -19,10 +20,12 @@ public sealed class SearchTextBox : ContentControl
     private TextBox? _textBox;
     private Button? _deleteButton;
     private Button? _searchButton;
+    private readonly DispatcherTimer _debounceTimer;
 
     public SearchTextBox()
     {
-
+        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _debounceTimer.Tick += DebounceTimer_Tick;
     }
 
     /// <inheritdoc/>
@@ -55,10 +58,10 @@ public sealed class SearchTextBox : ContentControl
     /// The <see cref="DependencyProperty"/> backing <see cref="Text"/>.
     /// </summary>
     public static readonly DependencyProperty SearchCommandProperty = DependencyProperty.Register(
-        nameof(SearchCommand),
-        typeof(ICommand),
-        typeof(SearchTextBox),
-        new PropertyMetadata(null));
+            nameof(SearchCommand), 
+            typeof(ICommand), 
+            typeof(SearchTextBox),
+            new PropertyMetadata(null));
 
     /// <summary>
     /// Gets or sets the <see cref="string"/> representing the text to display.
@@ -102,8 +105,9 @@ public sealed class SearchTextBox : ContentControl
 
     private void TextBox_KeyUp(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        if(e.Key == Windows.System.VirtualKey.Enter)
+        if (e.Key == Windows.System.VirtualKey.Enter)
         {
+            _debounceTimer.Stop();
             TriggerSearch();
         }
     }
@@ -114,27 +118,29 @@ public sealed class SearchTextBox : ContentControl
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         Text = ((TextBox)sender).Text;
+        _deleteButton?.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
 
-        if(_deleteButton is not null)
-        {
-            _deleteButton.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
-        }
+        _debounceTimer.Stop();
+        _debounceTimer.Start();
+    }
+
+    private void DebounceTimer_Tick(object? sender, object e)
+    {
+        _debounceTimer.Stop();
+        TriggerSearch();
     }
 
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
-        if(_textBox is not null)
-        {
-            _textBox.Text = string.Empty;
-        }
-
+        _textBox?.Text = string.Empty;
         Text = string.Empty;
-
+        _debounceTimer.Stop();
         TriggerSearch();
     }
 
     private void SearchButton_Click(object sender, RoutedEventArgs e)
     {
+        _debounceTimer.Stop();
         TriggerSearch();
     }
 

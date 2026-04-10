@@ -29,5 +29,9 @@ public static class Constants
         public const string EnableExpirationAlerts = "EnableExpirationAlerts";
 
         public const string ExpirationWarningDays = "ExpirationWarningDays";
+
+        public const string ShowExpirationWindowOnStartup = "ShowExpirationWindowOnStartup";
+
+        public const string EnableWindowsNotifications = "EnableWindowsNotifications";
     }   
 }

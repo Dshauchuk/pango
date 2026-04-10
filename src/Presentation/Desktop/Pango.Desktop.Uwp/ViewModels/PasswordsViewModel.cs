@@ -5,11 +5,10 @@ using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
+using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
 using Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
-using Pango.Application.UseCases.Password.Commands.ToggleStar;
-using Pango.Application.UseCases.Password.Commands.UpdatePassword;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core;
@@ -37,6 +36,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 {
     private readonly ISender _sender;
     private readonly IDialogService _dialogService;
+    private readonly IUserContextProvider _userContextProvider;
     private bool _hasPasswords;
     private PangoExplorerItem? _selectedItem;
     private ObservableCollection<PangoExplorerItem> _originalList;
@@ -46,10 +46,11 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private string? _pendingGeneratedPassword;
     private bool _showOnlyStarred;
 
-    public PasswordsViewModel(ISender sender, IDialogService dialogService, ILogger<PasswordsViewModel> logger) : base(logger)
+    public PasswordsViewModel(ISender sender, IDialogService dialogService, IUserContextProvider userContextProvider, ILogger<PasswordsViewModel> logger) : base(logger)
     {
         _sender = sender;
         _dialogService = dialogService;
+        _userContextProvider = userContextProvider;
 
         _originalList = [];
         Passwords = [];
@@ -63,7 +64,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         CopyPasswordToClipboardCommand = new RelayCommand<PangoExplorerItem>(OnCopyPasswordToClipboard);
         SeePasswordCommand = new RelayCommand<PangoExplorerItem>(OnSeePasswordCommand);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
-        ToggleStarCommand = new RelayCommand<PangoExplorerItem>(OnToggleStarAsync);
+        ToggleStarCommand = new RelayCommand<PangoExplorerItem>(_ => { });
 
         App.Current.LoginSucceeded += Current_LoginSucceeded;
     }
@@ -243,11 +244,11 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         }
         else
         {
-            RemovePassword(Passwords, dto);
             if (Logger.IsEnabled(LogLevel.Debug))
                 Logger.LogDebug("{ItemType} \"{ItemName}\" successfully deleted", dto.Type == PangoExplorerItem.ExplorerItemType.File ? "Password" : "Catalog", dto.Name);
 
             WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(completionMessage, AppNotificationType.Success));
+            await ResetViewAsync();
         }
     }
 
@@ -273,22 +274,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
     private async void OnUpdateListAsync() => await ResetViewAsync();
 
-    private async void OnToggleStarAsync(PangoExplorerItem? item)
-    {
-        if (item is null || item.Type == PangoExplorerItem.ExplorerItemType.Folder)
-            return;
-
-        item.IsStar = !item.IsStar;
-
-        var result = await _sender.Send(
-            new TogglePasswordStarCommand(item.Id, item.IsStar));
-
-        if (result.IsError)
-        {
-            item.IsStar = !item.IsStar;
-            Logger.LogWarning("Failed to toggle star: {Error}", result.FirstError);
-        }
-    }
     private void ApplyFilter()
     {
         foreach (var item in Passwords)
@@ -342,11 +327,22 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             ? (i) => true
             : (i) => i.Name.Contains(searchText, StringComparison.OrdinalIgnoreCase);
 
-        foreach (PangoExplorerItem password in Passwords)
+        Task.Run(() =>
         {
-            Filter(password, searchPredicate);
-        }
-        HasPasswords = Passwords.Any(p => p.IsVisible);
+            bool hasVisible = false;
+            foreach (PangoExplorerItem password in Passwords)
+            {
+                if (Filter(password, searchPredicate))
+                {
+                    hasVisible = true;
+                }
+            }
+
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+            {
+                HasPasswords = hasVisible;
+            });
+        });
     }
 
     /// <summary>
@@ -398,16 +394,15 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         SelectedItem = null;
         SearchText = string.Empty;
-
         var expandedPaths = new HashSet<string>();
+
         foreach (var item in Passwords)
         {
             SaveExpandedState(item, expandedPaths);
         }
 
         IEnumerable<PangoExplorerItem> passwords = await LoadPasswordsAsync();
-
-        DisplayPasswordsInTree(passwords, expandedPaths);
+        await DisplayPasswordsInTreeAsync(passwords, expandedPaths);
         SetOriginalList(passwords);
     }
 
@@ -467,129 +462,197 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Saves the list of <paramref name="passwords"/> into a buffer
+    /// Caches flat representation of passwords to drive initial screen visibility
     /// </summary>
-    /// <param name="passwords"></param>
     private void SetOriginalList(IEnumerable<PangoExplorerItem> passwords)
     {
         _originalList ??= [];
         if (_originalList.Count > 0) _originalList.Clear();
-
-        foreach (var pwd in passwords)
-            AddPassword(_originalList, pwd, pwd.CatalogPath.ParseCatalogPath());
+        foreach (var pwd in passwords) _originalList.Add(pwd);
     }
 
     /// <summary>
-    /// Displays <paramref name="passwords"/> in a tree view
+    /// Displays <paramref name="passwords"/> in a tree view and checks expirations safely
     /// </summary>
-    /// <param name="passwords"></param>
-    private void DisplayPasswordsInTree(IEnumerable<PangoExplorerItem> passwords, HashSet<string> expandedPaths)
+    private async Task DisplayPasswordsInTreeAsync(IEnumerable<PangoExplorerItem> passwords, HashSet<string> expandedPaths)
     {
-        Passwords.Clear();
-
-        foreach (var pwd in passwords)
-        {
-            if (pwd.IsFolder)
-            {
-                string fullPath = string.IsNullOrEmpty(pwd.CatalogPath) ? pwd.Name : $"{pwd.CatalogPath}{AppConstants.CatalogDelimeter}{pwd.Name}";
-                if (expandedPaths.Contains(fullPath)) pwd.IsExpanded = true;
-            }
-            AddPassword(Passwords, pwd, pwd.CatalogPath.ParseCatalogPath());
-        }
-
         int warningDays = 7;
-        if (ApplicationData.Current.LocalSettings.Values.TryGetValue(Constants.Settings.ExpirationWarningDays, out object? warningObj))
+        if (ApplicationData.Current.LocalSettings.Values.TryGetValue(Constants.Settings.ExpirationWarningDays, out object? warningObj) && warningObj != null)
         {
-            if (warningObj != null)
-            {
-                warningDays = Convert.ToInt32(warningObj);
-            }
+            warningDays = Convert.ToInt32(warningObj);
         }
-
         var now = DateTime.Now.Date;
 
-        var allItems = new List<PangoExplorerItem>();
-        foreach (var root in Passwords)
+        var (rootItems, userExpirations) = await Task.Run(() =>
         {
-            allItems.Add(root);
-            allItems.AddRange(root.GetAllDescendants());
-        }
+            var folderMap = new Dictionary<string, PangoExplorerItem>(StringComparer.OrdinalIgnoreCase);
+            var childrenMap = new Dictionary<string, List<PangoExplorerItem>>(StringComparer.OrdinalIgnoreCase);
+            var rootItemsList = new List<PangoExplorerItem>();
 
-        var datesCache = new List<string>();
-        int expired = 0;
-        int expiring = 0;
-
-        foreach (var item in allItems.Where(p => !p.IsFolder))
-        {
-            if (item.ExpirationDate.HasValue)
+            foreach (var pwd in passwords)
             {
-                var expDate = item.ExpirationDate.Value.LocalDateTime.Date;
-                int daysLeft = (int)(expDate - now).TotalDays;
+                if (pwd.IsFolder)
+                {
+                    string fullPath = string.IsNullOrEmpty(pwd.CatalogPath) ? pwd.Name : $"{pwd.CatalogPath}{AppConstants.CatalogDelimeter}{pwd.Name}";
+                    if (expandedPaths.Contains(fullPath)) pwd.IsExpanded = true;
+                    folderMap[fullPath] = pwd;
+                    if (!childrenMap.ContainsKey(fullPath)) childrenMap[fullPath] = [];
+                }
+            }
 
-                System.Diagnostics.Debug.WriteLine($"[DATE CHECK] {item.Name}: {expDate:dd/MM/yyyy}. Days left: {daysLeft}");
-
-                if (daysLeft < 0)
-                    item.ExpirationStatus = PasswordExpirationStatus.Expired;
-                else if (daysLeft <= warningDays)
-                    item.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+            foreach (var pwd in passwords)
+            {
+                if (string.IsNullOrEmpty(pwd.CatalogPath))
+                {
+                    rootItemsList.Add(pwd);
+                }
                 else
+                {
+                    if (childrenMap.TryGetValue(pwd.CatalogPath, out var list)) list.Add(pwd);
+                    else rootItemsList.Add(pwd);
+                }
+            }
+
+            SortAndBind(rootItemsList, childrenMap, null);
+
+            var allItems = new List<PangoExplorerItem>();
+            foreach (var root in rootItemsList)
+            {
+                allItems.Add(root);
+                allItems.AddRange(root.GetAllDescendants());
+            }
+
+            var expirationsCache = new List<ExpirationCacheItem>();
+            foreach (var item in allItems.Where(p => !p.IsFolder))
+            {
+                if (item.ExpirationDate.HasValue)
+                {
+                    var expDate = item.ExpirationDate.Value.LocalDateTime.Date;
+                    int daysLeft = (int)(expDate - now).TotalDays;
+                    string dateStr = expDate.ToString("d", System.Globalization.CultureInfo.CurrentCulture);
+
+                    if (daysLeft < 0)
+                    {
+                        item.ExpirationStatus = PasswordExpirationStatus.Expired;
+                        item.ExpirationTooltip = $"Expired {-daysLeft} days ago ({dateStr})";
+                    }
+                    else if (daysLeft <= warningDays)
+                    {
+                        item.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+                        item.ExpirationTooltip = $"Expires in {daysLeft} days ({dateStr})";
+                    }
+                    else
+                    {
+                        item.ExpirationStatus = PasswordExpirationStatus.Valid;
+                        item.ExpirationTooltip = $"Expires in {daysLeft} days ({dateStr})";
+                    }
+
+                    expirationsCache.Add(new ExpirationCacheItem { Name = item.Name, Date = item.ExpirationDate.Value });
+                }
+                else
+                {
                     item.ExpirationStatus = PasswordExpirationStatus.Valid;
+                    item.ExpirationTooltip = null;
+                }
             }
-            else
+
+            foreach (var folder in allItems.Where(p => p.IsFolder).OrderByDescending(p => p.NestingLevel))
             {
-                item.ExpirationStatus = PasswordExpirationStatus.Valid;
+                if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.Expired))
+                {
+                    folder.ExpirationStatus = PasswordExpirationStatus.Expired;
+                    folder.ExpirationTooltip = "Contains expired passwords";
+                }
+                else if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.ExpiringSoon))
+                {
+                    folder.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
+                    folder.ExpirationTooltip = "Contains passwords expiring soon";
+                }
+                else
+                {
+                    folder.ExpirationStatus = PasswordExpirationStatus.Valid;
+                    folder.ExpirationTooltip = null;
+                }
             }
+
+            return (rootItemsList, expirationsCache);
+        });
+
+        Passwords.Clear();
+        foreach (var rootItem in rootItems)
+        {
+            Passwords.Add(rootItem);
         }
 
-        foreach (var folder in allItems.Where(p => p.IsFolder).OrderByDescending(p => p.NestingLevel))
+        UpdateUserExpirationCache(userExpirations);
+    }
+
+    /// <summary>
+    /// Recursively sorts the tree structure and binds parents.
+    /// </summary>
+    private static void SortAndBind(List<PangoExplorerItem> items, Dictionary<string, List<PangoExplorerItem>> childrenMap, PangoExplorerItem? parent)
+    {
+        items.Sort((a, b) =>
         {
-            if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.Expired))
-            {
-                folder.ExpirationStatus = PasswordExpirationStatus.Expired;
-            }
-            else if (folder.Children.Any(c => c.ExpirationStatus == PasswordExpirationStatus.ExpiringSoon))
-            {
-                folder.ExpirationStatus = PasswordExpirationStatus.ExpiringSoon;
-            }
-            else
-            {
-                folder.ExpirationStatus = PasswordExpirationStatus.Valid;
-            }
-        }
+            if (a.Type != b.Type) return a.Type == PangoExplorerItem.ExplorerItemType.Folder ? -1 : 1;
+            return string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+        });
 
-        UpdateExpirationCache(datesCache);
-
-        bool alertsEnabled = true;
-        if (ApplicationData.Current.LocalSettings.Values.TryGetValue(Constants.Settings.EnableExpirationAlerts, out object? alertsObj) && alertsObj is bool b)
+        foreach (var item in items)
         {
-            alertsEnabled = b;
-        }
-
-        if (alertsEnabled)
-        {
-            if (expired > 0)
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("InApp_Expired_Message"), expired), AppNotificationType.Error));
-
-            if (expiring > 0)
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(string.Format(ViewResourceLoader.GetString("InApp_Expiring_Message"), expiring), AppNotificationType.Warning));
+            item.Parent = parent;
+            if (item.Type == PangoExplorerItem.ExplorerItemType.Folder)
+            {
+                string fullPath = string.IsNullOrEmpty(item.CatalogPath) ? item.Name : $"{item.CatalogPath}{AppConstants.CatalogDelimeter}{item.Name}";
+                if (childrenMap.TryGetValue(fullPath, out var children))
+                {
+                    SortAndBind(children, childrenMap, item);
+                    item.Children = new ObservableCollection<PangoExplorerItem>(children);
+                }
+            }
         }
     }
 
     /// <summary>
     /// Saves the expiration dates cache to disk for the Background Notification Service to use.
     /// </summary>
-    private void UpdateExpirationCache(List<string> dates)
+    private void UpdateUserExpirationCache(List<ExpirationCacheItem> newItems)
     {
         try
         {
             string configDir = ApplicationData.Current.LocalFolder.Path;
             string cacheFile = System.IO.Path.Combine(configDir, "expiration_cache.json");
-            System.IO.File.WriteAllText(cacheFile, System.Text.Json.JsonSerializer.Serialize(dates));
+            Dictionary<string, List<ExpirationCacheItem>> cache = [];
+
+            var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            if (System.IO.File.Exists(cacheFile))
+            {
+                try
+                {
+                    string existingJson = System.IO.File.ReadAllText(cacheFile).Trim();
+                    if (existingJson.StartsWith('{') && existingJson.EndsWith('}'))
+                    {
+                        cache = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(existingJson, options) ?? [];
+                    }
+                }
+                catch (System.Text.Json.JsonException)
+                {
+                }
+            }
+
+            string currentUser = _userContextProvider.GetUserName();
+            if (!string.IsNullOrEmpty(currentUser))
+            {
+                cache[currentUser] = newItems;
+                System.IO.File.WriteAllText(cacheFile, System.Text.Json.JsonSerializer.Serialize(cache, options));
+            }
+
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage("CACHE_UPDATED", AppNotificationType.Info));
         }
         catch (Exception ex)
         {
-            if (Logger.IsEnabled(LogLevel.Warning))
-                Logger.LogWarning(ex, "Cannot save expiration cache to disk");
+            if (Logger.IsEnabled(LogLevel.Warning)) Logger.LogWarning(ex, "Cannot save expiration cache to disk");
         }
     }
 
@@ -689,41 +752,19 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <summary>
     /// Updates passwords to commit movement of <paramref name="movedItem"/> to the <paramref name="newParent"/>
     /// </summary>
-    /// <param name="movedItem">Item to move</param>
-    /// <param name="newParent">New parent of the <paramref name="movedItem"/></param>
     public async Task CommitPasswordMovementAsync(PangoExplorerItem movedItem, PangoExplorerItem? newParent)
     {
+        movedItem.Parent = newParent;
+        movedItem.RecalculateCatalogPath();
+
         Dictionary<Guid, string> passwordItemsToUpdate = BuildPasswordAndCatalogPathPairs([movedItem]);
 
         if (passwordItemsToUpdate.Count > 0)
         {
             await _sender.Send(new MovePasswordsToCatalogCommand(passwordItemsToUpdate));
         }
-        MoveTreeItem(_originalList, movedItem.Id, newParent?.Id);
-    }
 
-    /// <summary>
-    /// Moves item with id <paramref name="itemToMoveId"/> to the parent item with id <paramref name="newParentId"/> within the passed <paramref name="items"/> collection
-    /// </summary>
-    /// <param name="items">Collection of items within which need to move password</param>
-    /// <param name="itemToMoveId">Id of item to move</param>
-    /// <param name="newParentId">Id of new parent item</param>
-    private static void MoveTreeItem(ObservableCollection<PangoExplorerItem> items, Guid itemToMoveId, Guid? newParentId)
-    {
-        PangoExplorerItem? itemToMove = FindPassword(items, p => p.Id == itemToMoveId);
-        if (itemToMove is null) return;
-
-        PangoExplorerItem? newParent = null;
-        if (newParentId.HasValue) newParent = FindPassword(items, p => p.Id == newParentId);
-
-        if (itemToMove.Parent is null) items.Remove(itemToMove);
-        else itemToMove.Parent.Children.Remove(itemToMove);
-
-        if (newParent is null) items.Add(itemToMove);
-        else newParent.Children.Add(itemToMove);
-
-        itemToMove.Parent = newParent;
-        itemToMove.RecalculateCatalogPath();
+        await ResetViewAsync();
     }
 
     /// <summary>

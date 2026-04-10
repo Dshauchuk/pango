@@ -159,6 +159,15 @@ public partial class PangoExplorerItem : ObservableObject
             Parent?.RecalculateExpirationStatus();
         }
     }
+
+    private string? _expirationTooltip;
+
+    public string? ExpirationTooltip
+    {
+        get => _expirationTooltip;
+        set => SetProperty(ref _expirationTooltip, value);
+    }
+
     #endregion
 
     public void AddChild(PangoExplorerItem child)
