@@ -11,8 +11,6 @@
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 		<UseWinUI>true</UseWinUI>
 		<EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
 		<PackageCertificateThumbprint>679B96D3AF7C38D5E9EF9D648708703CDFA397A6</PackageCertificateThumbprint>
@@ -111,15 +109,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.2.251219" />
-		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.2.251219" />
-		<PackageReference Include="H.NotifyIcon.WinUI" Version="2.4.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.5" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7175" />
-		<PackageReference Include="PInvoke.User32" Version="0.7.124" />
-		<PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" />
+		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+		<PackageReference Include="H.NotifyIcon.WinUI" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+		<PackageReference Include="PInvoke.User32" />
+		<PackageReference Include="Serilog.Extensions.Logging" />
+		<PackageReference Include="Serilog.Sinks.File" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 

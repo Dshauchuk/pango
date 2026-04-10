@@ -54,6 +54,10 @@ dotnet restore Pango.sln
 dotnet build Pango.sln -c Debug
 ```
 
+**NuGet:** package versions are centralized in [`Directory.Packages.props`](Directory.Packages.props) (SDK central package management). Shared compile defaults (`LangVersion`, nullable, implicit usings) live in [`Directory.Build.props`](Directory.Build.props). [`NuGet.config`](NuGet.config) pins restores to **nuget.org** with `packageSourceMapping` (add private feeds there if you need them).
+
+To check for outdated packages: `dotnet list Pango.sln package --outdated`.
+
 For packaging and debugging the WinUI app, open `Pango.sln` in Visual Studio and set **Pango.Desktop.Uwp** as the startup project.
 
 Tests:
@@ -95,6 +99,9 @@ src/
   Shared/          — Pango.Shared
 tests/             — unit tests; Pango.Persistence.File.IntegrationTests (file persistence)
 scripts/           — Generate-CoverageReport.ps1 (merged HTML coverage)
+Directory.Packages.props — central NuGet package versions
+Directory.Build.props    — shared MSBuild properties (CPM enabled)
+NuGet.config             — package sources / source mapping
 ```
 
 ## License
