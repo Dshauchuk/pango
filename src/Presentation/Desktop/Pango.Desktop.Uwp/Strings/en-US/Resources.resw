@@ -873,4 +873,7 @@
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Show list of expiring passwords</value>
   </data>
+  <data name="ToggleStar" xml:space="preserve">
+    <value>Toggle favorite</value>
+  </data>
 </root>
