@@ -34,5 +34,6 @@
   <Folder Name="/Tests/">
     <Project Path="tests/Pango.Application.Tests/Pango.Application.Tests.csproj" />
     <Project Path="tests/Pango.Infrastructure.Tests/Pango.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Pango.Persistence.File.IntegrationTests/Pango.Persistence.File.IntegrationTests.csproj" />
   </Folder>
 </Solution>

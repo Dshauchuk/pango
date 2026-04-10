@@ -62,6 +62,20 @@ Tests:
 dotnet test Pango.sln -c Debug
 ```
 
+- **Unit tests:** `Pango.Application.Tests`, `Pango.Infrastructure.Tests` (mocked dependencies).
+- **Integration tests:** `Pango.Persistence.File.IntegrationTests` — real `ContentEncoder` + `PasswordFileRepository` against a temporary on-disk folder.
+
+### Code coverage report (ReportGenerator)
+
+The repo includes a [local dotnet tool](https://www.nuget.org/packages/dotnet-reportgenerator-globaltool) (`dotnet-tools.json`). From the repository root:
+
+```bash
+dotnet tool restore
+./scripts/Generate-CoverageReport.ps1
+```
+
+This runs all tests with **Coverlet** (cobertura), merges assemblies, and writes HTML to `artifacts/coverage-report/index.html`. Ensure NuGet can restore the ReportGenerator package (use the public NuGet gallery if private feeds return 401).
+
 ## Backup service
 
 `Pango.BackupService` is a separate executable installed as a **Windows Service**. Configuration is read from:
@@ -79,7 +93,8 @@ src/
   Presentation/    — Pango.Desktop.Uwp
   Services/        — Pango.BackupService
   Shared/          — Pango.Shared
-tests/             — unit tests for Application and Infrastructure
+tests/             — unit tests; Pango.Persistence.File.IntegrationTests (file persistence)
+scripts/           — Generate-CoverageReport.ps1 (merged HTML coverage)
 ```
 
 ## License

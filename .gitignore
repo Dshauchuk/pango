@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+# Coverage HTML / raw cobertura (scripts/Generate-CoverageReport.ps1)
+artifacts/coverage-raw/
+artifacts/coverage-report/
