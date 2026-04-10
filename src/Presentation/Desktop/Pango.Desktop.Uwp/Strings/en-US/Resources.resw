@@ -765,6 +765,9 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Welcome to Pango</value>
   </data>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Show favorites</value>
+  </data>
   <data name="Notifications_Header" xml:space="preserve">
     <value>Notifications</value>
   </data>
@@ -822,9 +825,6 @@
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Are you sure you want to change the data storage location?</value>
   </data>
-  <data name="ShowFavorites" xml:space="preserve">
-    <value>Show favorites</value>
-  </data>
   <data name="ExpirationAlert_Header" xml:space="preserve">
     <value>User {0} has password(s) that are expired or about to expire:</value>
   </data>
@@ -872,5 +872,8 @@
   </data>
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Show list of expiring passwords</value>
+  </data>
+  <data name="AddToFavorites" xml:space="preserve">
+    <value>Add to favorites</value>
   </data>
 </root>

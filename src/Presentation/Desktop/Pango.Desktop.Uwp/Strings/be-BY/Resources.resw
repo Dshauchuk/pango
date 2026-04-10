@@ -763,6 +763,9 @@
   <data name="Home_WelcomeTitle" xml:space="preserve">
     <value>Сардэчна запрашаем у Pango</value>
   </data>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Паказаць Выбранае</value>
+  </data>
   <data name="Notifications_Header" xml:space="preserve">
     <value>Апавяшчэнні</value>
   </data>
@@ -820,9 +823,6 @@
   <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
     <value>Хочаце змяніць месца захоўвання дадзеных?</value>
   </data>
-  <data name="ShowFavorites" xml:space="preserve">
-    <value>Паказаць Выбранае</value>
-  </data>
   <data name="ExpirationAlert_Header" xml:space="preserve">
     <value>Карыстальнік {0} мае паролі, тэрмін дзеяння якіх скончыўся або хутка скончыцца:</value>
   </data>
@@ -870,5 +870,8 @@
   </data>
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Адкрыць спіс пароляў, якія патрабуюць увагі</value>
+  </data>
+  <data name="AddToFavorites" xml:space="preserve">
+    <value>Дадаць у абранае</value>
   </data>
 </root>
