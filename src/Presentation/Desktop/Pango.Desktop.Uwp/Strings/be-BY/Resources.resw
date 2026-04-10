@@ -871,4 +871,7 @@
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Адкрыць спіс пароляў, якія патрабуюць увагі</value>
   </data>
+  <data name="ToggleStar" xml:space="preserve">
+    <value>У абранае / Прыбраць з абранага</value>
+  </data>
 </root>

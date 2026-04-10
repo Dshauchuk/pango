@@ -9,6 +9,7 @@ using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.DeletePassword;
 using Pango.Application.UseCases.Password.Commands.MovePasswordsToCatalog;
+using Pango.Application.UseCases.Password.Commands.ToggleStar;
 using Pango.Application.UseCases.Password.Queries.FindUserPassword;
 using Pango.Application.UseCases.Password.Queries.UserPasswords;
 using Pango.Desktop.Uwp.Core;
@@ -64,7 +65,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         CopyPasswordToClipboardCommand = new RelayCommand<PangoExplorerItem>(OnCopyPasswordToClipboard);
         SeePasswordCommand = new RelayCommand<PangoExplorerItem>(OnSeePasswordCommand);
         UpdateListCommand = new RelayCommand(OnUpdateListAsync);
-        ToggleStarCommand = new RelayCommand<PangoExplorerItem>(_ => { });
+        ToggleStarCommand = new RelayCommand<PangoExplorerItem>(OnToggleStarAsync);
 
         App.Current.LoginSucceeded += Current_LoginSucceeded;
     }
@@ -319,6 +320,32 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     #endregion
 
     #region Private Methods
+
+    private async void OnToggleStarAsync(PangoExplorerItem? item)
+    {
+        if (item is null || item.IsFolder) return;
+
+        bool newStarState = !item.IsStar;
+        item.IsStar = newStarState;
+
+        var result = await _sender.Send(new TogglePasswordStarCommand(item.Id, newStarState));
+
+        if (result.IsError)
+        {
+            item.IsStar = !newStarState;
+            if (Logger.IsEnabled(LogLevel.Error))
+            {
+                Logger.LogError("Failed to toggle star for password {Name}: {Error}", item.Name, result.FirstError);
+            }
+        }
+        else
+        {
+            if (ShowOnlyStarred && !newStarState)
+            {
+                ApplyFilter();
+            }
+        }
+    }
 
     /// <summary>
     /// Handles the command to filter passwords content
