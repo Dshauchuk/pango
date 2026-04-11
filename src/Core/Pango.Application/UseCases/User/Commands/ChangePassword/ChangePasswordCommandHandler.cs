@@ -27,25 +27,29 @@ public class ChangePasswordCommandHandler(
 
         try
         {
+            _logger.LogDebug("Resolving user...");
+            PangoUser? currentUser = await _userRepository.FindAsync(request.UserId);
+            if (currentUser is null)
+            {
+                return Error.NotFound(
+                    ApplicationErrors.User.NotFound,
+                    $"User \"{request.UserId}\" not found");
+            }
+
             _logger.LogDebug("Hashing the new password...");
             var (passwordHash, salt) = await Task.Run(() =>
             {
                 string hash = _passwordHashProvider.Hash(request.Password, out byte[] generatedSalt);
                 return (hash, generatedSalt);
-            });
+            }, cancellationToken);
             EncodingOptions encoding = new(passwordHash, Convert.ToBase64String(salt));
             _logger.LogDebug("Hashing completed");
-            
+
             _logger.LogDebug("Encrypting data with new password...");
             await _userStorageManager.EncryptDataWithAsync(request.UserId, encoding);
-            _logger.LogDebug("New password applied");
+            _logger.LogDebug("New password applied to user data");
 
             _logger.LogDebug("Updating user's credentials...");
-            PangoUser? currentUser = await _userRepository.FindAsync(request.UserId);
-            if ((currentUser is null))
-            {
-                throw new PangoException(ApplicationErrors.User.NotFound, $"User \"{request.UserId}\" not found");
-            }
             await _userRepository.DeleteAsync(currentUser);
 
             currentUser.MasterPasswordHash = passwordHash;
@@ -55,10 +59,17 @@ public class ChangePasswordCommandHandler(
 
             return true;
         }
+        catch (PangoException ex)
+        {
+            _logger.LogError(ex, "ChangePasswordCommand failed with PangoException: {Code}", ex.Code);
+            return Error.Failure(ex.Code, ex.Message);
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "ChangePasswordCommand failed: {Message}", ex.Message);
-            return false;
+            return Error.Failure(
+                ApplicationErrors.User.ChangePasswordFailed,
+                $"Could not change password: {ex.Message}");
         }
     }
 }

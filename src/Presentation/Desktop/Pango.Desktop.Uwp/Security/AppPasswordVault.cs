@@ -52,12 +52,12 @@ public class AppPasswordVault : IPasswordVault
                     credential.RetrievePassword();
 
                     Dictionary<string, object> securedContent = 
-                        JsonConvert.DeserializeObject<Dictionary<string, object>>(credential.Password) ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password for user \"{userName}\"");
+                        JsonConvert.DeserializeObject<Dictionary<string, object>>(credential.Password) ?? throw new PangoException(ApplicationErrors.User.UnknownError, $"Cannot retrieve password for user \"{userName}\"");
 
                     return new AppCredentials(
                         credential.UserName, 
-                        securedContent[UserProperties.Password].ToString() ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password for user \"{userName}\""), 
-                        securedContent[UserProperties.PasswordSalt].ToString() ?? throw new PangoException(ApplicationErrors.User.UnkownError, $"Cannot retrieve password salt for user \"{userName}\""));
+                        securedContent[UserProperties.Password].ToString() ?? throw new PangoException(ApplicationErrors.User.UnknownError, $"Cannot retrieve password for user \"{userName}\""), 
+                        securedContent[UserProperties.PasswordSalt].ToString() ?? throw new PangoException(ApplicationErrors.User.UnknownError, $"Cannot retrieve password salt for user \"{userName}\""));
                 }
             }
         }

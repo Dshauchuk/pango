@@ -106,7 +106,7 @@ public sealed partial class Shell : ViewBase
             AppNotificationType.Warning => InfoBarSeverity.Warning,
             AppNotificationType.Error => InfoBarSeverity.Error,
             AppNotificationType.Success => InfoBarSeverity.Success,
-            _ => throw new InvalidCastException($"Unkown value of {nameof(AppNotificationType)}: {notificationType}")
+            _ => throw new InvalidCastException($"Unknown value of {nameof(AppNotificationType)}: {notificationType}")
         };
     }
 

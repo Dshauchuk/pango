@@ -167,7 +167,7 @@ public abstract class FileRepositoryBase<T>(
         {
             if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnknownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
                 System.IO.File.Create(filePath).Dispose();
             }
 
@@ -198,7 +198,7 @@ public abstract class FileRepositoryBase<T>(
         {
             if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while saving data: directory \"{filePath}\" cannot be created because of invalid path"));
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnknownError, $"An error occurred while saving data: directory \"{filePath}\" cannot be created because of invalid path"));
                 System.IO.File.Create(filePath).Dispose();
             }
 

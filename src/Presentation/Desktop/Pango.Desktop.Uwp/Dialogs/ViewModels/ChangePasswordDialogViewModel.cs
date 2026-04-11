@@ -107,7 +107,10 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
             if (result.IsError)
             {
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), Core.Enums.AppNotificationType.Warning));
+                string message = !string.IsNullOrWhiteSpace(result.FirstError.Description)
+                    ? result.FirstError.Description
+                    : ViewResourceLoader.GetString("PasswordIsNotCorrect");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, Core.Enums.AppNotificationType.Warning));
             }
             else
             {

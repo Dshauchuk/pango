@@ -36,14 +36,30 @@ public class ChangePasswordCommandHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ReturnsFalse_WhenUserNotFound()
+    public async Task Handle_ReturnsNotFound_WhenUserMissing()
     {
         _users.Setup(x => x.FindAsync("missing")).ReturnsAsync((PangoUser?)null);
 
         var handler = (IRequestHandler<ChangePasswordCommand, ErrorOr<bool>>)new ChangePasswordCommandHandler(_storage.Object, new FakePasswordHashProvider(), _users.Object, _logger.Object);
         var result = await handler.Handle(new ChangePasswordCommand("missing", "pw", "s"), CancellationToken.None);
 
-        Assert.False(result.IsError);
-        Assert.False(result.Value);
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.User.NotFound, result.FirstError.Code);
+        _storage.Verify(x => x.EncryptDataWithAsync(It.IsAny<string>(), It.IsAny<EncodingOptions>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsFailure_WhenEncryptThrows()
+    {
+        var user = new PangoUser { UserName = "alice" };
+        _users.Setup(x => x.FindAsync("alice")).ReturnsAsync(user);
+        _storage.Setup(x => x.EncryptDataWithAsync("alice", It.IsAny<EncodingOptions>()))
+            .ThrowsAsync(new InvalidOperationException("disk"));
+
+        var handler = (IRequestHandler<ChangePasswordCommand, ErrorOr<bool>>)new ChangePasswordCommandHandler(_storage.Object, new FakePasswordHashProvider(), _users.Object, _logger.Object);
+        var result = await handler.Handle(new ChangePasswordCommand("alice", "newpw", "s"), CancellationToken.None);
+
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.User.ChangePasswordFailed, result.FirstError.Code);
     }
 }
