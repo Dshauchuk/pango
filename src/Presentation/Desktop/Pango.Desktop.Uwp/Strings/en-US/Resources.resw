@@ -796,7 +796,7 @@
     <value>Passwords expiring soon!</value>
   </data>
   <data name="Toast_Expiring_Body" xml:space="preserve">
-    <value>You have passwords that need to be updated. Open Pango to check them.</value>
+    <value>You have passwords that require attention.</value>
   </data>
   <data name="InApp_Expiring_Message" xml:space="preserve">
     <value>{0} password(s) will expire soon.</value>
@@ -847,28 +847,28 @@
     <value>Show alert window on startup</value>
   </data>
   <data name="Expiring_Summary_Header" xml:space="preserve">
-    <value>Passwords requiring attention for user {0}:</value>
+    <value>{0}</value>
   </data>
   <data name="Expiring_Summary_Expiring" xml:space="preserve">
-    <value>Expiring soon: {0}</value>
+    <value>{0} expiring soon</value>
   </data>
   <data name="Expiring_Summary_Expired" xml:space="preserve">
-    <value>Already expired: {0}</value>
+    <value>{0} expired</value>
   </data>
   <data name="Expiring_Summary_LoginPrompt" xml:space="preserve">
-    <value>Log in to Pango to see the exact passwords requiring an update.</value>
+    <value>Please log in to view details.</value>
   </data>
   <data name="Expiring_Detail_Header" xml:space="preserve">
-    <value>Your passwords ({0}):</value>
+    <value>Expiring passwords</value>
   </data>
   <data name="Expiring_Detail_Expired" xml:space="preserve">
-    <value>- {0} (Expired {1} days ago)</value>
+    <value>{0} (Expired {1}d ago)</value>
   </data>
   <data name="Expiring_Detail_ExpiresToday" xml:space="preserve">
-    <value>- {0} (Expires TODAY)</value>
+    <value>{0} (Expires today)</value>
   </data>
   <data name="Expiring_Detail_Expiring" xml:space="preserve">
-    <value>- {0} (Expires in {1} days)</value>
+    <value>{0} (Expires in {1}d)</value>
   </data>
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Show list of expiring passwords</value>

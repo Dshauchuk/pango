@@ -794,7 +794,7 @@
     <value>Тэрмін дзеяння пароляў хутка заканчваецца!</value>
   </data>
   <data name="Toast_Expiring_Body" xml:space="preserve">
-    <value>У вас ёсць паролі, якія трэба абнавіць. Адкрыйце Pango, каб праверыць.</value>
+    <value>Некаторыя паролі патрабуюць увагі.</value>
   </data>
   <data name="InApp_Expiring_Message" xml:space="preserve">
     <value>Тэрмін дзеяння {0} пароля(-яў) хутка заканчваецца.</value>
@@ -845,28 +845,28 @@
     <value>Паказваць акно з папярэджаннем пры запуску</value>
   </data>
   <data name="Expiring_Summary_Header" xml:space="preserve">
-    <value>Паролі, якія патрабуюць увагі для карыстальніка {0}:</value>
+    <value>{0}</value>
   </data>
   <data name="Expiring_Summary_Expiring" xml:space="preserve">
-    <value>Хутка мінаюць: {0}</value>
+    <value>{0} хутка мінаюць</value>
   </data>
   <data name="Expiring_Summary_Expired" xml:space="preserve">
-    <value>Ужо пратэрмінаваны: {0}</value>
+    <value>{0} пратэрмінаваны</value>
   </data>
   <data name="Expiring_Summary_LoginPrompt" xml:space="preserve">
-    <value>Увайдзіце ў Pango, каб убачыць канкрэтныя паролі.</value>
+    <value>Калі ласка, увайдзіце, каб убачыць дэталі.</value>
   </data>
   <data name="Expiring_Detail_Header" xml:space="preserve">
-    <value>Вашы паролі ({0}):</value>
+    <value>Паролі, што мінаюць</value>
   </data>
   <data name="Expiring_Detail_Expired" xml:space="preserve">
-    <value>- {0} (Скончыўся {1} дзён таму)</value>
+    <value>{0} (Мінуў {1}д таму)</value>
   </data>
   <data name="Expiring_Detail_ExpiresToday" xml:space="preserve">
-    <value>- {0} (Сканчаецца СЁННЯ)</value>
+    <value>{0} (Мінае сёння)</value>
   </data>
   <data name="Expiring_Detail_Expiring" xml:space="preserve">
-    <value>- {0} (Сканчаецца праз {1} дзён)</value>
+    <value>{0} (Мінае праз {1}д)</value>
   </data>
   <data name="ShowExpirationList_Button" xml:space="preserve">
     <value>Адкрыць спіс пароляў, якія патрабуюць увагі</value>
