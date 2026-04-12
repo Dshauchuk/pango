@@ -9,6 +9,10 @@ using Pango.Infrastructure;
 using Pango.Persistence;
 using Serilog;
 using System;
+using System.Diagnostics;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading;
 using ApplicationBase = Microsoft.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
@@ -18,20 +22,30 @@ namespace Pango.Desktop.Uwp;
 /// </summary>
 sealed partial class App : ApplicationBase
 {
+    private static Mutex? _mutex;
     public MainWindow? CurrentWindow { get; private set; }
     public KeyboardHook? KeyboardHook { get; private set; }
 
     public static new App Current => (App)ApplicationBase.Current;
-    
+
     /// <summary>
     /// Initializes the singleton application object.  This is the first line of authored code
     /// executed, and as such is the logical equivalent of main() or WinMain().
     /// </summary>
     public App()
     {
+        const string appName = "PangoApp_SingleInstance_Mutex";
+        _mutex = new Mutex(true, appName, out bool createdNew);
+
+        if (!createdNew)
+        {
+            BringExistingInstanceToFront();
+            Environment.Exit(0);
+            return;
+        }
+
         InitializeComponent();
         KeyboardHook = new KeyboardHook();
-
         UnhandledException += App_UnhandledException;
     }
 
@@ -100,4 +114,37 @@ sealed partial class App : ApplicationBase
     {
         SignedOut?.Invoke();
     }
+
+    #region Single Instance Helpers
+
+#pragma warning disable SYSLIB1054
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+#pragma warning restore SYSLIB1054
+
+    private const int SW_RESTORE = 9;
+
+    private static void BringExistingInstanceToFront()
+    {
+        var currentProcess = Process.GetCurrentProcess();
+        var existingProcess = Process.GetProcessesByName(currentProcess.ProcessName)
+            .FirstOrDefault(p => p.Id != currentProcess.Id);
+
+        if (existingProcess != null)
+        {
+            IntPtr handle = existingProcess.MainWindowHandle;
+            if (handle != IntPtr.Zero)
+            {
+                ShowWindow(handle, SW_RESTORE);
+                SetForegroundWindow(handle);
+            }
+        }
+    }
+
+    #endregion
 }
