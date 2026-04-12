@@ -8,6 +8,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
@@ -15,6 +16,7 @@ using Pango.Desktop.Uwp.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Pango.Desktop.Uwp.Views;
@@ -252,11 +254,7 @@ public sealed partial class MainWindow : Window
     public event EventHandler<PointerRoutedEventArgs>? PointerMoved;
     public event EventHandler<KeyRoutedEventArgs>? KeyDown;
 
-    private static string GetAppVersion()
-    {
-        var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
-        return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
-    }
+    private static string GetAppVersion() => AppVersionFormatter.GetDisplayVersion(Assembly.GetEntryAssembly());
 
     private void Current_SignedOut()
     {

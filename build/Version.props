@@ -1,0 +1,22 @@
+<Project>
+  <!--
+    Single source of truth for Pango release and assembly versioning.
+    - Bump PangoVersionMajor/Minor/Patch (and PangoVersionBuild if needed) for each release.
+    - MSIX Identity Version is stamped at build time from $(AssemblyVersion) (see Pango.Desktop.Uwp).
+  -->
+  <PropertyGroup Label="Pango version">
+    <PangoVersionMajor>0</PangoVersionMajor>
+    <PangoVersionMinor>1</PangoVersionMinor>
+    <PangoVersionPatch>6</PangoVersionPatch>
+    <PangoVersionBuild>0</PangoVersionBuild>
+    <!-- NuGet / informational (semver-style, 3 segments) -->
+    <Version>$(PangoVersionMajor).$(PangoVersionMinor).$(PangoVersionPatch)</Version>
+    <!-- CLR assembly (4 segments) -->
+    <AssemblyVersion>$(PangoVersionMajor).$(PangoVersionMinor).$(PangoVersionPatch).$(PangoVersionBuild)</AssemblyVersion>
+    <FileVersion>$(AssemblyVersion)</FileVersion>
+    <InformationalVersion>$(Version)</InformationalVersion>
+    <!-- Packaged WinUI app (MSIX); Identity Version is stamped from AssemblyVersion at build -->
+    <ApplicationDisplayVersion>$(Version)</ApplicationDisplayVersion>
+    <ApplicationVersion>$(AssemblyVersion)</ApplicationVersion>
+  </PropertyGroup>
+</Project>

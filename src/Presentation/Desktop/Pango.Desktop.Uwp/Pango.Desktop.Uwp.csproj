@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<AssemblyTitle>Pango</AssemblyTitle>
+		<Product>Pango</Product>
+		<Company>The Cats Lab</Company>
+		<Copyright>Copyright © 2026 The Cats Lab</Copyright>
 		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
@@ -25,28 +29,23 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<Title>Pango</Title>
 	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	
@@ -136,12 +135,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<None Include="Package.appxmanifest">
 			<SubType>Designer</SubType>
-		</AppxManifest>
-		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
+		</None>
+		<None Include="Package.Dev.appxmanifest">
 			<SubType>Designer</SubType>
-		</AppxManifest>
+		</None>
 	</ItemGroup>
 	
 	<!-- Embed all "Resources.resw" files in the "Strings" folder to the output folder. -->

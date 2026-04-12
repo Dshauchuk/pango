@@ -58,6 +58,15 @@ dotnet build Pango.sln -c Debug
 
 To check for outdated packages: `dotnet list Pango.sln package --outdated`.
 
+### Versioning and release notes
+
+- **Product / assembly version** is defined once in [`build/Version.props`](build/Version.props) (`PangoVersionMajor` / `Minor` / `Patch`, optional `PangoVersionBuild`). That drives `Version`, `AssemblyVersion`, `FileVersion`, `InformationalVersion`, and MSIX-related `ApplicationVersion` / `ApplicationDisplayVersion` for the packaged app.
+- **MSIX `Identity Version`** (4-part) is **stamped at build** from `AssemblyVersion`: source manifests use a placeholder (`__PANGO_MSIX_VERSION__`); [`Directory.Build.targets`](src/Presentation/Desktop/Pango.Desktop.Uwp/Directory.Build.targets) writes `obj/.../Pango.Stamped.appxmanifest` and wires it as `@(AppxManifest)`. **Release** uses [`Package.appxmanifest`](src/Presentation/Desktop/Pango.Desktop.Uwp/Package.appxmanifest); **non-Release** (e.g. Debug) uses [`Package.Dev.appxmanifest`](src/Presentation/Desktop/Pango.Desktop.Uwp/Package.Dev.appxmanifest).
+- **User-visible build** and exports use `AssemblyInformationalVersion` when present (otherwise the 4-part assembly version). See [`AppMetaService`](src/Presentation/Desktop/Pango.Desktop.Uwp/Core/Utility/AppMetaService.cs).
+- **Release history:** [`CHANGELOG.md`](CHANGELOG.md) (Keep a Changelog). For git tags, a common pattern is `v0.1.6` matching `Version`.
+
+Optional next steps: wire **MinVer** or **GitVersion** to set `Version`/`InformationalVersion` from tags + commit height, and/or add `SourceRevisionId` for build metadata.
+
 For packaging and debugging the WinUI app, open `Pango.sln` in Visual Studio and set **Pango.Desktop.Uwp** as the startup project.
 
 Tests:
@@ -97,8 +106,10 @@ src/
   Presentation/    — Pango.Desktop.Uwp
   Services/        — Pango.BackupService
   Shared/          — Pango.Shared
+build/             — Version.props (product & assembly version)
 tests/             — unit tests; Pango.Persistence.File.IntegrationTests (file persistence)
 scripts/           — Generate-CoverageReport.ps1 (merged HTML coverage)
+CHANGELOG.md       — release notes
 Directory.Packages.props — central NuGet package versions
 Directory.Build.props    — shared MSBuild properties (CPM enabled)
 NuGet.config             — package sources / source mapping
