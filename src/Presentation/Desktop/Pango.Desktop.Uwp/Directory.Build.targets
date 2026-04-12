@@ -11,10 +11,9 @@
       <Code Type="Fragment" Language="cs">
         <![CDATA[
         var text = File.ReadAllText(SourcePath, Encoding.UTF8);
-        File.WriteAllText(
-          OutputPath,
-          text.Replace("__PANGO_MSIX_VERSION__", AssemblyVersion),
-          new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        // Only Identity uses this exact quad; Dependencies use e.g. 10.0.0.0 — do not replace those.
+        text = text.Replace("Version=\"0.0.0.0\"", "Version=\"" + AssemblyVersion + "\"");
+        File.WriteAllText(OutputPath, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
         ]]>
       </Code>
     </Task>

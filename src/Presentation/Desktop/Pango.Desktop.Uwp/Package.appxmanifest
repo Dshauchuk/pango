@@ -8,11 +8,11 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   IgnorableNamespaces="uap mp rescap">
 
-  <!-- Identity Version: placeholder replaced at build from build/Version.props (AssemblyVersion) -->
+  <!-- Identity Version: 0.0.0.0 is a valid placeholder; build replaces it with AssemblyVersion (see Directory.Build.targets) -->
   <Identity
     Name="IDL.Pango"
     Publisher="CN=dshauchuk"
-    Version="__PANGO_MSIX_VERSION__" />
+    Version="0.0.0.0" />
 
   <mp:PhoneIdentity PhoneProductId="58b534bb-d8d7-44ea-9a45-4bf1765be36b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
