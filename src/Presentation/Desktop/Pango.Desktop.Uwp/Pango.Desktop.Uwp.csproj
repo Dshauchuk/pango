@@ -3,8 +3,8 @@
 		<OutputType>WinExe</OutputType>
 		<AssemblyTitle>Pango</AssemblyTitle>
 		<Product>Pango</Product>
-		<Company>The Cats Lab</Company>
-		<Copyright>Copyright © 2026 The Cats Lab</Copyright>
+		<Company>ISI Division</Company>
+		<Copyright>Copyright © 2026 ISI Division</Copyright>
 		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
