@@ -1,9 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Persistence;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 
@@ -14,6 +11,12 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
     private string? _cachedCustomPath;
     private bool _customPathResolved;
     private readonly ILogger<AppDomainProvider>? _logger = logger;
+
+    public void ResetCache()
+    {
+        _cachedCustomPath = null;
+        _customPathResolved = false;
+    }
 
     public string GetAppDataFolderPath()
     {

@@ -4,8 +4,6 @@ using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.Views;
 using Pango.Desktop.Uwp.ViewModels;
-using System;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.Dialogs;
@@ -41,6 +39,7 @@ public class DialogService : IDialogService
     {
         return ShowAsync(new ExportCompletedDialog(dialogParameter));
     }
+
     public Task ShowGeneratePasswordDialogAsync(GeneratePasswordDialogParameters dialogParameter)
     {
         return ShowAsync(new GeneratePasswordDialog(dialogParameter));
@@ -55,9 +54,13 @@ public class DialogService : IDialogService
     public async Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText)
     {
         ResourceLoader viewResourceLoader = new();
+
+        var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
+
         ContentDialog subscribeDialog = new()
         {
             XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
+            RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
             Title = confirmationTitle,
             Content = confirmationText,
             CloseButtonText = viewResourceLoader.GetString("Cancel"),
@@ -74,9 +77,12 @@ public class DialogService : IDialogService
     {
         ResourceLoader viewResourceLoader = new();
 
+        var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
+
         ContentDialog contentDialog = new()
         {
             XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
+            RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
             Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
             Title = dialogContent.Title,
             PrimaryButtonText = string.IsNullOrEmpty(dialogContent.PrimaryButtonText) ? viewResourceLoader.GetString("Save") : dialogContent.PrimaryButtonText,
