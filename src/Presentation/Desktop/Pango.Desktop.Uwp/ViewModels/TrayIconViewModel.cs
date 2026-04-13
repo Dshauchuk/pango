@@ -1,13 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.Extensions.Logging;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Views;
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using Windows.ApplicationModel.Resources;
 using Windows.UI.Notifications;
 
@@ -51,6 +49,14 @@ namespace Pango.Desktop.Uwp.ViewModels
             StartBackupCommand = new RelayCommand(StartBackup);
             StopBackupCommand = new RelayCommand(StopBackup);
             ExitCommand = new RelayCommand(Exit);
+
+            WeakReferenceMessenger.Default.Register<Mvvm.Messages.BackupStateChangedMessage>(this, (r, m) =>
+            {
+                if (m.Value && !IsBackupRunning)
+                    StartBackupInternal();
+                else if (!m.Value && IsBackupRunning)
+                    StopBackupInternal();
+            });
 
             CheckExpirationsAndNotify();
         }
@@ -124,6 +130,24 @@ namespace Pango.Desktop.Uwp.ViewModels
         /// </summary>
         public void StartBackup()
         {
+            WeakReferenceMessenger.Default.Send(new Mvvm.Messages.TrayBackupToggleMessage(true));
+            StartBackupInternal();
+        }
+
+        /// <summary>
+        /// Instantly kills the background backup process, freeing memory (like End Task in Task Manager).
+        /// </summary>
+        public void StopBackup()
+        {
+            WeakReferenceMessenger.Default.Send(new Mvvm.Messages.TrayBackupToggleMessage(false));
+            StopBackupInternal();
+        }
+
+        /// <summary>
+        /// Starts the standalone backup service process executable.
+        /// </summary>
+        private void StartBackupInternal()
+        {
             try
             {
                 var processes = Process.GetProcessesByName(BackupProcessName);
@@ -139,13 +163,8 @@ namespace Pango.Desktop.Uwp.ViewModels
 
                 if (!File.Exists(exePath))
                 {
-                    _logger?.LogError("Backup Executable not found at path: {ExePath}. Ensure the BackupService is referenced and copied to the output directory.", exePath);
+                    _logger?.LogError("Backup Executable not found at path: {ExePath}.", exePath);
                     return;
-                }
-
-                if (_logger?.IsEnabled(LogLevel.Information) ?? false)
-                {
-                    _logger.LogInformation("Attempting to start backup service from: {ExePath}", exePath);
                 }
 
                 var psi = new ProcessStartInfo
@@ -158,7 +177,6 @@ namespace Pango.Desktop.Uwp.ViewModels
 
                 Process.Start(psi);
                 IsBackupRunning = true;
-                _logger?.LogInformation("Backup service started successfully.");
             }
             catch (Exception ex)
             {
@@ -168,29 +186,19 @@ namespace Pango.Desktop.Uwp.ViewModels
         }
 
         /// <summary>
-        /// Instantly kills the background backup process, freeing memory (like End Task in Task Manager).
+        /// Instantly kills the background backup process.
         /// </summary>
-        public void StopBackup()
+        private void StopBackupInternal()
         {
             try
             {
                 var processes = Process.GetProcessesByName(BackupProcessName);
-                if (processes.Length == 0)
-                {
-                    _logger?.LogInformation("No running backup processes found to kill.");
-                }
-
                 foreach (var process in processes)
                 {
-                    if (_logger?.IsEnabled(LogLevel.Information) ?? false)
-                    {
-                        _logger.LogInformation("Killing backup process with ID: {Id}", process.Id);
-                    }
                     process.Kill();
                     process.WaitForExit();
                     process.Dispose();
                 }
-
                 IsBackupRunning = false;
             }
             catch (Exception ex)
@@ -206,9 +214,9 @@ namespace Pango.Desktop.Uwp.ViewModels
         {
             if (_hasShownWindowsToast) return;
 
-            _ = System.Threading.Tasks.Task.Run(async () =>
+            _ = Task.Run(async () =>
             {
-                await System.Threading.Tasks.Task.Delay(5000);
+                await Task.Delay(5000);
 
                 var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
                 bool alertsEnabled = !localSettings.Values.TryGetValue(Constants.Settings.EnableExpirationAlerts, out var aVal) || (bool)aVal;
@@ -227,11 +235,11 @@ namespace Pango.Desktop.Uwp.ViewModels
 
                     if (!json.StartsWith('{') || !json.EndsWith('}')) return;
 
-                    System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<ExpirationCacheItem>> dates;
+                    Dictionary<string, List<ExpirationCacheItem>> dates;
                     try
                     {
                         var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-                        dates = System.Text.Json.JsonSerializer.Deserialize<System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<ExpirationCacheItem>>>(json, options) ?? [];
+                        dates = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(json, options) ?? [];
                     }
                     catch (System.Text.Json.JsonException)
                     {

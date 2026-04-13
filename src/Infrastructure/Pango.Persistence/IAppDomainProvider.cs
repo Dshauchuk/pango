@@ -34,4 +34,9 @@ public interface IAppDomainProvider
     /// </summary>
     /// <returns></returns>
     Task<string?> TryGetCustomDataFolderPathAsync();
+
+    /// <summary>
+    /// Clears the cached custom path to force a re-evaluation of the data folder location.
+    /// </summary>
+    void ResetCache();
 }

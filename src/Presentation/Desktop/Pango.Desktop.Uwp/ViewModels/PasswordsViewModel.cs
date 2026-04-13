@@ -22,11 +22,7 @@ using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 
@@ -143,7 +139,9 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
-        if (!_isLoaded || parameter != null || _needsRefresh)
+        bool isJustSwitchingTabs = parameter is NavigationParameters navParams && navParams.Parameter == null;
+
+        if (!_isLoaded || (parameter != null && !isJustSwitchingTabs) || _needsRefresh)
         {
             await ResetViewAsync();
             _isLoaded = true;
@@ -348,7 +346,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Handles the command to filter passwords content
+    /// Handles the command to filter passwords content safely on the UI thread
     /// </summary>
     /// <param name="searchText"></param>
     private void OnFilterAsync(string? searchText)
@@ -359,10 +357,12 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
         Task.Run(() =>
         {
+            var visibilityMap = new Dictionary<Guid, bool>();
             bool hasVisible = false;
+
             foreach (PangoExplorerItem password in Passwords)
             {
-                if (Filter(password, searchPredicate))
+                if (CalculateVisibility(password, searchPredicate, visibilityMap))
                 {
                     hasVisible = true;
                 }
@@ -370,9 +370,59 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
             App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
             {
+                ApplyVisibilityMap(Passwords, visibilityMap);
                 HasPasswords = hasVisible;
             });
         });
+    }
+
+    /// <summary>
+    /// Recursively calculates visibility without touching UI properties.
+    /// </summary>
+    private static bool CalculateVisibility(PangoExplorerItem node, Func<PangoExplorerItem, bool> searchPredicate, Dictionary<Guid, bool> visibilityMap)
+    {
+        if (node is null) return false;
+
+        if (node.Type == PangoExplorerItem.ExplorerItemType.File)
+        {
+            bool isVis = searchPredicate(node);
+            visibilityMap[node.Id] = isVis;
+            return isVis;
+        }
+        else
+        {
+            bool hasVisibleItems = false;
+            if (node.Children.Any())
+            {
+                foreach (PangoExplorerItem item in node.Children)
+                {
+                    if (CalculateVisibility(item, searchPredicate, visibilityMap))
+                        hasVisibleItems = true;
+                }
+            }
+
+            bool isFolderVis = hasVisibleItems || searchPredicate(node);
+            visibilityMap[node.Id] = isFolderVis;
+            return isFolderVis;
+        }
+    }
+
+    /// <summary>
+    /// Applies pre-calculated visibility to the Observable models safely on the UI thread.
+    /// </summary>
+    private static void ApplyVisibilityMap(IEnumerable<PangoExplorerItem> nodes, Dictionary<Guid, bool> visibilityMap)
+    {
+        foreach (var node in nodes)
+        {
+            if (visibilityMap.TryGetValue(node.Id, out bool isVis))
+            {
+                node.IsVisible = isVis;
+            }
+            if (node.Children.Any())
+            {
+                ApplyVisibilityMap(node.Children, visibilityMap);
+            }
+        }
     }
 
     /// <summary>

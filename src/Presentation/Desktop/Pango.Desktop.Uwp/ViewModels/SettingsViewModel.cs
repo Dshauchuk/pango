@@ -15,13 +15,8 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Views;
 using Pango.Persistence;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Text.Json;
-using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -138,9 +133,6 @@ public partial class SettingsViewModel : ViewModelBase
             _selectedLockOnIdleInMinutesItem = null;
             _allowAutolock = false;
         }
-
-        _ = InitializeBackupConfigAsync();
-        _ = CheckStartupStatusAsync();
     }
 
     #endregion
@@ -211,6 +203,7 @@ public partial class SettingsViewModel : ViewModelBase
     #endregion
 
     #region Properties - Data Storage
+
     public string SelectedDataFolderPath
     {
         get => _selectedDataFolderPath;
@@ -230,11 +223,13 @@ public partial class SettingsViewModel : ViewModelBase
         get => _isChangingDataFolder;
         set => SetProperty(ref _isChangingDataFolder, value);
     }
+
     public string DataFolderProgressText
     {
         get => _dataFolderProgressText;
         set => SetProperty(ref _dataFolderProgressText, value);
     }
+
     #endregion
 
     #region Properties - Security (Autolock)
@@ -312,7 +307,15 @@ public partial class SettingsViewModel : ViewModelBase
     public bool IsBackupServiceEnabled
     {
         get => _isBackupServiceEnabled;
-        set => SetProperty(ref _isBackupServiceEnabled, value);
+        set
+        {
+            if (SetProperty(ref _isBackupServiceEnabled, value))
+            {
+                WeakReferenceMessenger.Default.Send(new BackupStateChangedMessage(value));
+
+                _ = SaveBackupSettingsAsync(showNotification: false);
+            }
+        }
     }
 
     public string BackupPassword
@@ -342,11 +345,12 @@ public partial class SettingsViewModel : ViewModelBase
     #endregion
 
     #region Commands
+
     private RelayCommand? _selectDataFolderCommand;
     public RelayCommand SelectDataFolderCommand => _selectDataFolderCommand ??= new RelayCommand(async () => await SelectDataFolderAsync());
 
-    private RelayCommand? _resetDataFolderCommand;
-    public RelayCommand ResetDataFolderCommand => _resetDataFolderCommand ??= new RelayCommand(ResetDataFolder);
+    private IAsyncRelayCommand? _resetDataFolderCommand;
+    public IAsyncRelayCommand ResetDataFolderCommand => _resetDataFolderCommand ??= new AsyncRelayCommand(ResetDataFolderAsync);
 
     #endregion
 
@@ -400,6 +404,7 @@ public partial class SettingsViewModel : ViewModelBase
     #endregion
 
     #region Methods - Select data folder
+
     private async Task SelectDataFolderAsync()
     {
         var picker = new FolderPicker
@@ -431,18 +436,21 @@ public partial class SettingsViewModel : ViewModelBase
             IsChangingDataFolder = true;
             DataFolderProgressText = ViewResourceLoader.GetString("CopyingData");
 
-            // migrate app's data
+            // Migrate app's data to the new folder
             await Task.Run(() => _userStorageManager.MigrateDataAsync(oldPath, newPath));
+
+            // Clear the old path cache so the app recognizes the new location immediately
+            _appDomainProvider.ResetCache();
 
             DataFolderProgressText = ViewResourceLoader.GetString("UpdatingConfiguration");
 
-            // save token
+            // Save token to FutureAccessList for persistent access
             StorageApplicationPermissions.FutureAccessList.AddOrReplace(
                 Constants.Settings.CustomDataFolderToken, folder);
 
-            // update cash
+            // Update cache with the new custom data folder path
             await _appDomainProvider.TryGetCustomDataFolderPathAsync();
-            
+
             SelectedDataFolderPath = folder.Path;
 
             WeakReferenceMessenger.Default.Send(
@@ -462,22 +470,51 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    private void ResetDataFolder()
+    private async Task ResetDataFolderAsync()
     {
-        // remove the custom folder and the default folder will return
-        if (StorageApplicationPermissions.FutureAccessList.ContainsItem(
-                Constants.Settings.CustomDataFolderToken))
+        bool confirmed = await ConfirmAsync(
+            ViewResourceLoader.GetString("ChangeDataFolder"),
+            ViewResourceLoader.GetString("ChangeDataFolder_Confirmation"));
+
+        if (!confirmed) return;
+
+        string oldPath = _appDomainProvider.GetAppDataFolderPath();
+
+        if (StorageApplicationPermissions.FutureAccessList.ContainsItem(Constants.Settings.CustomDataFolderToken))
         {
-            StorageApplicationPermissions.FutureAccessList.Remove(
-                Constants.Settings.CustomDataFolderToken);
+            StorageApplicationPermissions.FutureAccessList.Remove(Constants.Settings.CustomDataFolderToken);
         }
 
-        SelectedDataFolderPath = ApplicationData.Current.RoamingFolder.Path;
+        _appDomainProvider.ResetCache();
+        string newPath = _appDomainProvider.GetAppDataFolderPath();
 
-        WeakReferenceMessenger.Default.Send(
-        new InAppNotificationMessage(
-            ViewResourceLoader.GetString("DataFolderChanged"),
-            AppNotificationType.Success));
+        if (string.Equals(oldPath, newPath, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        try
+        {
+            IsChangingDataFolder = true;
+            DataFolderProgressText = ViewResourceLoader.GetString("CopyingData");
+
+            await Task.Run(() => _userStorageManager.MigrateDataAsync(oldPath, newPath));
+
+            SelectedDataFolderPath = newPath;
+
+            WeakReferenceMessenger.Default.Send(
+                new InAppNotificationMessage(
+                    ViewResourceLoader.GetString("DataFolderChanged"),
+                    AppNotificationType.Success));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Failed to reset data folder: {Message}", ex.Message);
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("DataFolderChangeFailed"), AppNotificationType.Warning));
+        }
+        finally
+        {
+            IsChangingDataFolder = false;
+            DataFolderProgressText = string.Empty;
+        }
     }
 
     #endregion
@@ -613,11 +650,30 @@ public partial class SettingsViewModel : ViewModelBase
         }
     }
 
-    private async Task SaveBackupSettingsAsync()
+    public override async Task OnNavigatedToAsync(object? parameter)
+    {
+        await base.OnNavigatedToAsync(parameter);
+
+        await CheckStartupStatusAsync();
+        await InitializeBackupConfigAsync();
+    }
+
+    protected override void RegisterMessages()
+    {
+        base.RegisterMessages();
+        
+        WeakReferenceMessenger.Default.Register<TrayBackupToggleMessage>(this, async (r, m) =>
+        {
+            IsBackupServiceEnabled = m.Value;
+            await SaveBackupSettingsAsync();
+        });
+    }
+
+    private async Task SaveBackupSettingsAsync(bool showNotification = true)
     {
         if (string.IsNullOrWhiteSpace(BackupPath))
         {
-            SendNotification("BackupPathInvalid_Error", AppNotificationType.Error);
+            if (showNotification) SendNotification("BackupPathInvalid_Error", AppNotificationType.Error);
             return;
         }
 
@@ -652,13 +708,19 @@ public partial class SettingsViewModel : ViewModelBase
             if (!settings.Users.TryAdd(userName, userProfile))
                 settings.Users[userName] = userProfile;
 
-            await SaveSettingsToFileAsync(settings);
-            SendNotification("BackupSaved_Message", AppNotificationType.Success);
+            string newJson = JsonSerializer.Serialize(settings);
+            await File.WriteAllTextAsync(_configPath, newJson);
+
+            if (showNotification)
+            {
+                WeakReferenceMessenger.Default.Send(new BackupStateChangedMessage(IsBackupServiceEnabled));
+                SendNotification("BackupSaved_Message", AppNotificationType.Success);
+            }
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Failed to save backup settings");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Error: {ex.Message}", AppNotificationType.Error));
+            if (showNotification) WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Error: {ex.Message}", AppNotificationType.Error));
         }
     }
 

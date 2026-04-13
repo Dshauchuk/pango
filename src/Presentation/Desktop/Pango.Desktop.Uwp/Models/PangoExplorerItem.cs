@@ -113,13 +113,12 @@ public partial class PangoExplorerItem : ObservableObject
                     {
                         foreach (var child in Children)
                         {
-                            child.IsSelected = value;
+                            child.SetSelectedWithoutNotify(value);
                         }
                     }
 
                     if (value && Parent != null)
                     {
-                        // Check if all siblings are selected to update parent state if needed (optional logic could go here)
                         Parent.IsSelected = true;
                     }
 
@@ -129,6 +128,26 @@ public partial class PangoExplorerItem : ObservableObject
             finally
             {
                 _isSettingSelection = false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Sets selection state internally without broadcasting a global messenger event.
+    /// </summary>
+    public void SetSelectedWithoutNotify(bool value)
+    {
+        if (_isSelected != value)
+        {
+            _isSelected = value;
+            OnPropertyChanged(nameof(IsSelected));
+
+            if (IsFolder)
+            {
+                foreach (var child in Children)
+                {
+                    child.SetSelectedWithoutNotify(value);
+                }
             }
         }
     }

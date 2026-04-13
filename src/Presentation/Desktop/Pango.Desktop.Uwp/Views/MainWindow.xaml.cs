@@ -8,15 +8,10 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Pango.Desktop.Uwp.Core;
 using Pango.Desktop.Uwp.Core.Enums;
-using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace Pango.Desktop.Uwp.Views;
@@ -55,13 +50,14 @@ public sealed partial class MainWindow : Window
         SetTitleBar(TitleBarBorder);
 
 #if DEBUG
-            WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
+        WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
 #else
         WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}";
 #endif
 
         TrayViewModel = new TrayIconViewModel(this, trayLogger);
         InitializeSystemTray();
+
         AppWindow.Closing += AppWindow_Closing;
 
         RegisterMessengers();
@@ -74,20 +70,13 @@ public sealed partial class MainWindow : Window
         App.Current.SignedOut += Current_SignedOut;
 
         InitializeInitialBackupState();
-
-        var timer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(1500) };
-        timer.Tick += (s, e) =>
-        {
-            timer.Stop();
-            CheckAndShowExpirationWindow();
-        };
-        timer.Start();
     }
 
-    private void RootGrid_Loaded(object sender, RoutedEventArgs e)
+    private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
     {
         RootGrid.Loaded -= RootGrid_Loaded;
-        CheckAndShowExpirationWindow();
+        await Task.Delay(500);
+        await CheckAndShowExpirationWindowAsync();
     }
 
     /// <summary>
@@ -184,11 +173,11 @@ public sealed partial class MainWindow : Window
 
             if (m.Message == "SHOW_EXPIRATION_WINDOW")
             {
-                DispatcherQueue.TryEnqueue(() => RefreshExpirationWindow(options, forceShow: true));
+                DispatcherQueue.TryEnqueue(async () => await RefreshExpirationWindowAsync(options, forceShow: true));
             }
             else if (m.Message == "CACHE_UPDATED" && _expirationWindow != null)
             {
-                DispatcherQueue.TryEnqueue(() => RefreshExpirationWindow(options, forceShow: true));
+                DispatcherQueue.TryEnqueue(async () => await RefreshExpirationWindowAsync(options, forceShow: true));
             }
         });
     }
@@ -239,24 +228,28 @@ public sealed partial class MainWindow : Window
 
     public void ShowWindow()
     {
-        this.AppWindow.Show();
-        var hwnd = Win32Interop.GetWindowFromWindowId(this.AppWindow.Id);
+        AppWindow.Show();
+        var hwnd = Win32Interop.GetWindowFromWindowId(AppWindow.Id);
         NativeMethods.SetForegroundWindow(hwnd);
         TrayViewModel.IsAppVisible = true;
     }
 
     public void HideWindow()
     {
-        this.AppWindow.Hide();
+        AppWindow.Hide();
         TrayViewModel.IsAppVisible = false;
     }
 
     public event EventHandler<PointerRoutedEventArgs>? PointerMoved;
     public event EventHandler<KeyRoutedEventArgs>? KeyDown;
 
-    private static string GetAppVersion() => AppVersionFormatter.GetDisplayVersion(Assembly.GetEntryAssembly());
+    private static string GetAppVersion()
+    {
+        var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+        return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
+    }
 
-    private void Current_SignedOut()
+    private async void Current_SignedOut()
     {
         UserInfo_TitleBar.Visibility = Visibility.Collapsed;
         UserName_TitleBar.Text = string.Empty;
@@ -265,11 +258,11 @@ public sealed partial class MainWindow : Window
         if (_expirationWindow != null)
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            RefreshExpirationWindow(options, forceShow: true);
+            await RefreshExpirationWindowAsync(options, forceShow: true);
         }
     }
 
-    private void Current_LoginSucceeded(string userName)
+    private async void Current_LoginSucceeded(string userName)
     {
         UserInfo_TitleBar.Visibility = Visibility.Visible;
         UserName_TitleBar.Text = userName;
@@ -278,14 +271,14 @@ public sealed partial class MainWindow : Window
         if (_expirationWindow != null)
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-            RefreshExpirationWindow(options, forceShow: true);
+            await RefreshExpirationWindowAsync(options, forceShow: true);
         }
     }
 
     private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e) => PointerMoved?.Invoke(sender, e);
     private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e) => KeyDown?.Invoke(sender, e);
 
-    private void CheckAndShowExpirationWindow()
+    private async Task CheckAndShowExpirationWindowAsync()
     {
         var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
         bool alertsEnabled = localSettings.Values[Constants.Settings.EnableExpirationAlerts] as bool? ?? true;
@@ -293,7 +286,7 @@ public sealed partial class MainWindow : Window
 
         if (!alertsEnabled || !showOnStartup) return;
 
-        RefreshExpirationWindow(GetOptions());
+        await RefreshExpirationWindowAsync(GetOptions());
     }
 
     private static System.Text.Json.JsonSerializerOptions GetOptions()
@@ -301,24 +294,41 @@ public sealed partial class MainWindow : Window
         return new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
     }
 
-    private void RefreshExpirationWindow(System.Text.Json.JsonSerializerOptions options, bool forceShow = false)
+    /// <summary>
+    /// Reads and parses expiration data asynchronously to prevent UI thread freezing.
+    /// </summary>
+    private async Task RefreshExpirationWindowAsync(System.Text.Json.JsonSerializerOptions options, bool forceShow = false)
     {
-        string cacheFile = System.IO.Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
-        if (!System.IO.File.Exists(cacheFile) && !forceShow) return;
+        string cacheFile = Path.Combine(Windows.Storage.ApplicationData.Current.LocalFolder.Path, "expiration_cache.json");
+        if (!File.Exists(cacheFile) && !forceShow) return;
+
+        Dictionary<string, List<ExpirationCacheItem>> cache = [];
 
         try
         {
-            Dictionary<string, List<ExpirationCacheItem>> cache = [];
-            if (System.IO.File.Exists(cacheFile))
+            await Task.Run(async () =>
             {
-                string json = System.IO.File.ReadAllText(cacheFile).Trim();
-                if (json.StartsWith('{') && json.EndsWith('}'))
+                if (File.Exists(cacheFile))
                 {
-                    try { cache = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(json, options) ?? []; }
-                    catch { System.IO.File.Delete(cacheFile); }
+                    string json = await File.ReadAllTextAsync(cacheFile);
+                    json = json.Trim();
+                    if (json.StartsWith('{') && json.EndsWith('}'))
+                    {
+                        try
+                        {
+                            cache = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(json, options) ?? [];
+                        }
+                        catch
+                        {
+                            File.Delete(cacheFile);
+                        }
+                    }
+                    else
+                    {
+                        File.Delete(cacheFile);
+                    }
                 }
-                else { System.IO.File.Delete(cacheFile); }
-            }
+            });
 
             if (cache.Count == 0 && !forceShow) return;
 
@@ -453,7 +463,10 @@ public sealed partial class MainWindow : Window
                 _expirationWindow = null;
             }
         }
-        catch (Exception ex) { _logger?.LogError(ex, "Failed to refresh expiration window."); }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to refresh expiration window.");
+        }
     }
 
     private void ShowOrUpdateAlertWindow(StackPanel contentPanel, int itemCount)
@@ -562,15 +575,18 @@ public sealed partial class MainWindow : Window
                 appWindow.Resize(new Windows.Graphics.SizeInt32(width, calculatedHeight));
             }
 
-            string iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
-            if (System.IO.File.Exists(iconPath)) appWindow.SetIcon(iconPath);
+            string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
+            if (File.Exists(iconPath)) appWindow.SetIcon(iconPath);
 
             SubClassAlertWindow(hwnd);
 
             _expirationWindow.Activate();
             NativeMethods.SetForegroundWindow(hwnd);
         }
-        catch (Exception ex) { _logger?.LogError(ex, "Failed to create Alert Window."); }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to create Alert Window.");
+        }
     }
 
     #region Handle MINMAXINFO
