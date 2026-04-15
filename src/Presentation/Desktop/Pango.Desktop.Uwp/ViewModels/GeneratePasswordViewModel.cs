@@ -199,6 +199,12 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
         CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
         SaveAsCommand = new RelayCommand(SaveAs, CanSaveAs);
+
+        WeakReferenceMessenger.Default.Register<UserSignedOutMessage>(this, (_, _) =>
+        {
+            Clear();
+            _isLoaded = false;
+        });
     }
 
     #region Overrides
@@ -206,11 +212,10 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
-        if (!_isLoaded || parameter != null)
-        {
-            Clear();
-            _isLoaded = true;
-        }
+        GeneratedPassword = string.Empty;
+        Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
+
         // load user settings
         var s = _settingsService.Load();
 
@@ -221,7 +226,7 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         UseSpecial = s.UseSpecial;
         ExcludeAmbiguous = s.ExcludeAmbiguous;
 
-        //Clear();
+        _isLoaded = true;
     }
     #endregion
 

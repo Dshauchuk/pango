@@ -217,6 +217,11 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
         RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
         CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
         DialogContext = new DialogContext();
+
+        WeakReferenceMessenger.Default.Register<UserSignedOutMessage>(this, (_, _) =>
+        {
+            Clear();
+        });
     }
 
     #region Overrides
@@ -232,6 +237,10 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
         UseDigits = s.UseDigits;
         UseSpecial = s.UseSpecial;
         ExcludeAmbiguous = s.ExcludeAmbiguous;
+
+        GeneratedPassword = string.Empty;
+        Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
 
         if (parameter is GeneratePasswordDialogParameters p
             && !string.IsNullOrEmpty(p.GeneratedPassword))
