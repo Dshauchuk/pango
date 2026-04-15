@@ -238,6 +238,10 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
         UseSpecial = s.UseSpecial;
         ExcludeAmbiguous = s.ExcludeAmbiguous;
 
+        GeneratedPassword = string.Empty;
+        Strength = PasswordStrength.Weak;
+        StrengthBarWidth = 0;
+
         if (parameter is GeneratePasswordDialogParameters p
             && !string.IsNullOrEmpty(p.GeneratedPassword))
         {
