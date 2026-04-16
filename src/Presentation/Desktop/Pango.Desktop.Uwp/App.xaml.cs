@@ -8,11 +8,8 @@ using Pango.Desktop.Uwp.Views;
 using Pango.Infrastructure;
 using Pango.Persistence;
 using Serilog;
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading;
 using ApplicationBase = Microsoft.UI.Xaml.Application;
 
 namespace Pango.Desktop.Uwp;
@@ -69,14 +66,9 @@ sealed partial class App : ApplicationBase
                     .AddLogging(configure =>
                     {
                         _ = configure
-                            .SetMinimumLevel(LogLevel.Trace)
+                            .SetMinimumLevel(LogLevel.Information)
                             .AddSerilog()
-                            .AddDebug()
-                            .AddEventLog(settings =>
-                            {
-                                settings.SourceName = "PangoApp";
-                                settings.LogName = "Application";
-                            });
+                            .AddDebug();
                     })
                     .RegisterViewModels()
                     .AddApplicationServices()
@@ -86,6 +78,12 @@ sealed partial class App : ApplicationBase
                     .AddSingleton<MainWindow>();
             })
             .Build();
+    }
+
+    public void DisposeHook()
+    {
+        KeyboardHook?.Dispose();
+        KeyboardHook = null;
     }
 
     /// <summary>

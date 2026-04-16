@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.ApplicationModel.Resources;
 
@@ -37,11 +36,10 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     public ValidationPasswordBox()
     {
-        _typingTimer = new DispatcherTimer { Interval = System.TimeSpan.FromMilliseconds(300) };
+        _typingTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
         _typingTimer.Tick += TypingTimer_Tick;
 
         DataContextChanged += ValidationPasswordBox_DataContextChanged;
-        Unloaded += ValidationPasswordBox_Unloaded;
     }
 
     /// <summary>
@@ -64,33 +62,10 @@ public sealed partial class ValidationPasswordBox : ContentControl
 
         _copyButton?.Click += CopyBtn_Click;
 
-        _passwordBox.PasswordChanged += PasswordBox_TextChanged;
+        _passwordBox?.PasswordChanged += PasswordBox_TextChanged;
         GotFocus += ValidationPasswordBox_GotFocus;
 
         TriggerActionButtonsVisibility();
-    }
-
-    /// <summary>
-    /// Prevents memory leaks by unsubscribing from all events when the control is removed from the visual tree.
-    /// </summary>
-    private void ValidationPasswordBox_Unloaded(object sender, RoutedEventArgs e)
-    {
-        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
-        _oldDataContext = null;
-
-        if (_revealButton is not null)
-        {
-            _revealButton.Checked -= RevealButton_Checked;
-            _revealButton.Unchecked -= RevealButton_Unchecked;
-        }
-
-        _copyButton?.Click -= CopyBtn_Click;
-
-        _passwordBox?.PasswordChanged -= PasswordBox_TextChanged;
-
-        GotFocus -= ValidationPasswordBox_GotFocus;
-        DataContextChanged -= ValidationPasswordBox_DataContextChanged;
-        Unloaded -= ValidationPasswordBox_Unloaded;
     }
 
     /// <summary>
@@ -198,9 +173,13 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void CopyBtn_Click(object sender, RoutedEventArgs e)
     {
+        string textToCopy = _passwordBox?.Password ?? Password ?? string.Empty;
+        if (string.IsNullOrEmpty(textToCopy)) return;
+
         DataPackage dataPackage = new() { RequestedOperation = DataPackageOperation.Copy };
-        dataPackage.SetText(Password ?? string.Empty);
+        dataPackage.SetText(textToCopy);
         Clipboard.SetContent(dataPackage);
+        Clipboard.Flush();
         WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(new ResourceLoader().GetString("PasswordCopiedToClipboard")));
     }
 
@@ -249,9 +228,19 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void TriggerActionButtonsVisibility()
     {
-        _revealButton?.Visibility = string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
+        bool hasText = !string.IsNullOrEmpty(_passwordBox?.Password);
 
-        _copyButton?.Visibility = HideCopyButton || string.IsNullOrWhiteSpace(Password) ? Visibility.Collapsed : Visibility.Visible;
+        if (_revealButton != null)
+        {
+            _revealButton.IsEnabled = hasText;
+            _revealButton.Visibility = Visibility.Visible;
+        }
+
+        if (_copyButton != null)
+        {
+            _copyButton.IsEnabled = hasText;
+            _copyButton.Visibility = HideCopyButton ? Visibility.Collapsed : Visibility.Visible;
+        }
     }
 
     /// <summary>

@@ -2,12 +2,11 @@
 using Microsoft.UI.Xaml.Controls;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 
 namespace Pango.Desktop.Uwp.Controls;
 
 /// <summary>
-/// A simple control that acts as a container for a documentation block.
+/// A simple control that acts as a container for a validation text block.
 /// </summary>
 [TemplatePart(Name = "PART_TextBox", Type = typeof(TextBox))]
 [TemplatePart(Name = "PART_WarningIcon", Type = typeof(FontIcon))]
@@ -34,7 +33,6 @@ public sealed partial class ValidationTextBox : ContentControl
         _typingTimer.Tick += TypingTimer_Tick;
 
         DataContextChanged += ValidationTextBox_DataContextChanged;
-        Unloaded += ValidationTextBox_Unloaded;
     }
 
     /// <summary>
@@ -47,23 +45,8 @@ public sealed partial class ValidationTextBox : ContentControl
         _textBox = (TextBox)GetTemplateChild("PART_TextBox");
         _warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
 
-        _textBox.TextChanged += TextBox_TextChanged;
+        _textBox?.TextChanged += TextBox_TextChanged;
         GotFocus += ValidationTextBox_GotFocus;
-    }
-
-    /// <summary>
-    /// Prevents memory leaks by unsubscribing from all events.
-    /// </summary>
-    private void ValidationTextBox_Unloaded(object sender, RoutedEventArgs e)
-    {
-        _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
-        _oldDataContext = null;
-
-        _textBox?.TextChanged -= TextBox_TextChanged;
-
-        GotFocus -= ValidationTextBox_GotFocus;
-        DataContextChanged -= ValidationTextBox_DataContextChanged;
-        Unloaded -= ValidationTextBox_Unloaded;
     }
 
     /// <summary>

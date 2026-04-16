@@ -654,8 +654,11 @@ public partial class SettingsViewModel : ViewModelBase
     {
         await base.OnNavigatedToAsync(parameter);
 
-        await CheckStartupStatusAsync();
-        await InitializeBackupConfigAsync();
+        _ = Task.Run(async () =>
+        {
+            await CheckStartupStatusAsync();
+            await InitializeBackupConfigAsync();
+        });
     }
 
     protected override void RegisterMessages()

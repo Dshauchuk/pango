@@ -15,14 +15,11 @@ using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
 [AppView(AppView.User)]
-public class UserViewModel : ViewModelBase
+public partial class UserViewModel : ViewModelBase
 {
     private readonly ISender _sender;
     private readonly IUserContextProvider _userContext;
@@ -74,27 +71,37 @@ public class UserViewModel : ViewModelBase
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
-
         CurrentUserName = _userContext.GetUserName();
 
-        var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
-
-        if (!queryResult.IsError)
+        _ = Task.Run(async () =>
         {
-            UserContentInfo = string.Format(ViewResourceLoader.GetString("Content_FormattedValueLabel"), queryResult.Value.Count(p => !p.IsCatalog));
-        }
+            var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(new UserPasswordsQuery());
+
+            if (!queryResult.IsError)
+            {
+                var count = queryResult.Value.Count(p => !p.IsCatalog);
+                App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    UserContentInfo = string.Format(ViewResourceLoader.GetString("Content_FormattedValueLabel"), count);
+                });
+            }
+        });
     }
 
     #endregion
 
     private void OnOpenChangePasswordDialog()
     {
-        _dialogService.ShowPasswordChangeDialogAsync(new EmptyDialogParameter()); 
+        _dialogService.ShowPasswordChangeDialogAsync(new EmptyDialogParameter());
     }
 
     private void OnSignOut()
     {
-        _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
+        if (_logger.IsEnabled(LogLevel.Debug))
+        {
+            _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
+        }
+
         SecureUserSession.ClearUser();
         App.Current.RaiseSignedOut();
         WeakReferenceMessenger.Default.Send<UserSignedOutMessage>();
@@ -108,7 +115,7 @@ public class UserViewModel : ViewModelBase
 
         bool deletionConfirmed = await _dialogService.ConfirmAsync(confirmationTitle, confirmationDescription);
 
-        if(!deletionConfirmed)
+        if (!deletionConfirmed)
         {
             return;
         }
@@ -117,11 +124,17 @@ public class UserViewModel : ViewModelBase
 
         if (!result.IsError && result.Value)
         {
-            _logger.LogDebug("User \"{currentUserName}\" successfully deleted", _currentUserName);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("User \"{currentUserName}\" successfully deleted", _currentUserName);
+            }
         }
         else
         {
-            _logger.LogWarning("User deletion failed: {FirstError}", result.FirstError);
+            if (_logger.IsEnabled(LogLevel.Warning))
+            {
+                _logger.LogWarning("User deletion failed: {FirstError}", result.FirstError);
+            }
         }
         OnSignOut();
     }

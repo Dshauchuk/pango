@@ -3,10 +3,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media.Animation;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
-using System;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -24,6 +24,9 @@ public sealed partial class HomeView : Page
     public HomeView()
     {
         InitializeComponent();
+
+        NavigationCacheMode = NavigationCacheMode.Required;
+
         DataContext = App.Host.Services.GetRequiredService<HomeViewModel>();
     }
 

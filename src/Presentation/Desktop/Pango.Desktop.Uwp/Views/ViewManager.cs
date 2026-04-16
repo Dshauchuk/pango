@@ -6,9 +6,6 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Views.Abstract;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Pango.Desktop.Uwp.Views;
 
@@ -38,13 +35,13 @@ public class ViewManager
             return;
         }
 
-        ViewBase? sourceView = _views.ContainsKey(message.Value.SourceView) ? _views[message.Value.SourceView] : null;
+        ViewBase? sourceView = _views.TryGetValue(message.Value.SourceView, out var sView) ? sView : null;
         sourceView?.OnNavigatedFrom(message.Value);
 
-        ViewBase? targetView = _views.ContainsKey(message.Value.NavigatedView) ? _views[message.Value.NavigatedView] : null;
+        ViewBase? targetView = _views.TryGetValue(message.Value.NavigatedView, out var tView) ? tView : null;
         targetView?.OnNavigatedTo(message.Value);
 
-        _navigationService.Navigate(message.Value.NavigatedView);
+        _navigationService.Navigate(message.Value.NavigatedView, message.Value);
     }
 
     public void Register(ViewBase view)
@@ -52,14 +49,17 @@ public class ViewManager
         Type viewType = view.GetType();
 
         AppView? appView = ((viewType.GetCustomAttributes(true).FirstOrDefault(a => a.GetType() == typeof(AppViewAttribute)) as AppViewAttribute)?.View);
-            
-        if(appView == AppView.MainAppView || appView == AppView.SignIn)
+
+        if (appView == AppView.MainAppView || appView == AppView.SignIn)
         {
-            _logger.LogDebug("{appView} view should not be registered", appView);
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("{AppView} view should not be registered", appView.ToString());
+            }
             return;
         }
 
-        if(appView is null)
+        if (appView is null)
         {
             throw new InvalidCastException($"\"{viewType}\" view cannot be registered: {nameof(AppViewAttribute)} is missing");
         }
@@ -70,7 +70,10 @@ public class ViewManager
                 _views[appView.Value] = view;
             }
 
-            _logger.LogDebug($"{appView} view has been registered");
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                _logger.LogDebug("{AppView} view has been registered", appView.ToString());
+            }
         }
     }
 }

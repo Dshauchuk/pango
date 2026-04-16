@@ -222,6 +222,8 @@ public sealed partial class MainWindow : Window
     public void ForceExit()
     {
         _isForceExit = true;
+        App.Current.DisposeHook();
+        RemoveSubclassing();
         _trayIcon?.Dispose();
         Microsoft.UI.Xaml.Application.Current.Exit();
     }
@@ -259,6 +261,27 @@ public sealed partial class MainWindow : Window
         {
             var options = new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             await RefreshExpirationWindowAsync(options, forceShow: true);
+        }
+    }
+
+    private void RemoveSubclassing()
+    {
+        var windowId = AppWindow.Id;
+        var hwnd = Win32Interop.GetWindowFromWindowId(windowId);
+
+        if (hwnd != IntPtr.Zero && oldWndProc != IntPtr.Zero)
+        {
+            NativeMethods.RestoreWindowLong(hwnd, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, oldWndProc);
+            oldWndProc = IntPtr.Zero;
+            newWndProc = null;
+        }
+
+        if (_expirationWindow != null && _alertOldWndProc != IntPtr.Zero)
+        {
+            var hwndAlert = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+            NativeMethods.RestoreWindowLong(hwndAlert, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, _alertOldWndProc);
+            _alertOldWndProc = IntPtr.Zero;
+            _alertNewWndProc = null;
         }
     }
 

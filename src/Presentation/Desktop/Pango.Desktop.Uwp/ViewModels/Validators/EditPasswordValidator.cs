@@ -1,5 +1,4 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
 using System.ComponentModel.DataAnnotations;
 
 namespace Pango.Desktop.Uwp.ViewModels.Validators;
@@ -51,7 +50,7 @@ public partial class EditPasswordValidator : ObservableValidator
     public string Title
     {
         get => _title;
-        set => SetProperty(ref _title, value);  
+        set => SetProperty(ref _title, value);
     }
 
     public string Login
@@ -86,5 +85,24 @@ public partial class EditPasswordValidator : ObservableValidator
     public void Validate()
     {
         ValidateAllProperties();
+    }
+
+    public void ClearAllErrors()
+    {
+        ClearErrors();
+    }
+
+    public void Reset()
+    {
+        Id = null;
+        Title = string.Empty;
+        Login = string.Empty;
+        Password = string.Empty;
+        Notes = string.Empty;
+        SelectedCatalog = null;
+        Star = false;
+        HasExpirationDate = false;
+        ExpirationDate = null;
+        ClearAllErrors();
     }
 }
