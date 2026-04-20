@@ -9,13 +9,11 @@ public static class ListExtensions
     {
         if (chunkSize <= 0) throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunkSize));
 
-        var result = new List<List<T>>((source.Count / chunkSize) + 1);
-
+        var result = new List<List<T>>((source.Count + chunkSize - 1) / chunkSize);
         for (int i = 0; i < source.Count; i += chunkSize)
         {
             result.Add(source.GetRange(i, Math.Min(chunkSize, source.Count - i)));
         }
-
         return result;
     }
 }

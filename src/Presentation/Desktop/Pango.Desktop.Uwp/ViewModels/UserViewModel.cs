@@ -105,7 +105,7 @@ public partial class UserViewModel : ViewModelBase
         SecureUserSession.ClearUser();
         App.Current.RaiseSignedOut();
         WeakReferenceMessenger.Default.Send<UserSignedOutMessage>();
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
+        WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
     }
 
     private async void OnDeleteUser()

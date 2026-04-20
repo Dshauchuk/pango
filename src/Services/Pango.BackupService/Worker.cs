@@ -31,6 +31,22 @@ public class Worker : BackgroundService
     /// </summary>
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var args = Environment.GetCommandLineArgs();
+        if (args.Length > 1 && int.TryParse(args[1], out int parentPid))
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var parentProcess = System.Diagnostics.Process.GetProcessById(parentPid);
+                    await parentProcess.WaitForExitAsync(stoppingToken);
+                }
+                catch { }
+
+                Environment.Exit(0);
+            }, stoppingToken);
+        }
+
         while (!stoppingToken.IsCancellationRequested)
         {
             try

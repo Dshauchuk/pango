@@ -8,15 +8,13 @@ using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
-using System;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
 public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<PasswordDetailsDialogViewModel> logger) : ViewModelBase(logger), IDialogViewModel
 {
     #region Fields
-    
+
     private readonly ISender _sender = sender;
     private PasswordDetailsParameters? _parameters;
     private string _name = string.Empty;
@@ -35,9 +33,9 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
     public Guid PasswordId { get; private set; }
 
     public string Name
-    { 
+    {
         get => _name;
-        set => SetProperty(ref _name, value); 
+        set => SetProperty(ref _name, value);
     }
 
     public string Login
@@ -64,10 +62,10 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
         set => SetProperty(ref _notes, value);
     }
 
-    public string ExpirationDate 
-    { 
-        get => _expirationDate; 
-        set => SetProperty(ref _expirationDate, value); 
+    public string ExpirationDate
+    {
+        get => _expirationDate;
+        set => SetProperty(ref _expirationDate, value);
     }
 
     #endregion
@@ -96,7 +94,7 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
             Name = passwordResult.Value.Name;
             Login = passwordResult.Value.Login;
             Password = passwordResult.Value.Value;
-            Catalog= passwordResult.Value.CatalogPath;
+            Catalog = passwordResult.Value.CatalogPath;
 
             if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
             {
@@ -129,7 +127,7 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
 
     public Task OnSaveAsync()
     {
-        WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(false, null, _parameters?.PasswordId, _parameters?.AllAvailableCatalogs))));
+        WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(false, null, _parameters?.PasswordId, _parameters?.AllAvailableCatalogs))));
 
         return Task.CompletedTask;
     }

@@ -11,58 +11,47 @@ using Pango.Domain.Enums;
 
 namespace Pango.Application.UseCases.Data.Commands.Export;
 
-public class ExportDataCommandHandler
-    : IRequestHandler<ExportDataCommand, ErrorOr<ExportResult>>
+public class ExportDataCommandHandler(
+    ILogger<ExportDataCommandHandler> logger,
+    IDataExporter dataExporter,
+    IPasswordRepository passwordRepository,
+    IRepositoryContextFactory repositoryContextFactory,
+    IUserContextProvider userContextProvider,
+    IAppMetaService appMetaService)
+        : IRequestHandler<ExportDataCommand, ErrorOr<ExportResult>>
 {
-    private readonly ILogger _logger; 
-    private readonly IDataExporter _dataExporter;
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IAppMetaService _appMetaService;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-
-    public ExportDataCommandHandler(
-        ILogger<ExportDataCommandHandler> logger,
-        IDataExporter dataExporter,
-        IPasswordRepository passwordRepository,
-        IRepositoryContextFactory repositoryContextFactory,
-        IUserContextProvider userContextProvider,
-        IAppMetaService appMetaService)
-    {
-        _logger = logger;
-        _dataExporter = dataExporter;
-        _passwordRepository = passwordRepository;
-        _userContextProvider = userContextProvider;
-        _repositoryContextFactory = repositoryContextFactory;
-        _appMetaService = appMetaService;
-    }
+    private readonly ILogger _logger = logger;
+    private readonly IDataExporter _dataExporter = dataExporter;
+    private readonly IPasswordRepository _passwordRepository = passwordRepository;
+    private readonly IAppMetaService _appMetaService = appMetaService;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
 
     public async Task<ErrorOr<ExportResult>> Handle(ExportDataCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            Guid[] ids = request.ExportItems.Select(i => i.Id).ToArray();
+            Guid[] ids = [.. request.ExportItems.Select(i => i.Id)];
             IRepositoryActionContext context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), await _userContextProvider.GetEncodingOptionsAsync());
 
-            List<PangoPassword> passwords = (await _passwordRepository.QueryAsync(p => ids.Contains(p.Id), context)).ToList();
+            List<PangoPassword> passwords = [.. (await _passwordRepository.QueryAsync(p => ids.Contains(p.Id), context))];
 
-            var manifest = 
-                new PangoPackageManifest(
-                    _userContextProvider.GetUserName(), 
-                    DateTime.UtcNow.ToString("G"), 
-                    request.ExportOptions.Description, 
-                    new Dictionary<Domain.Enums.ContentType, int>() { { ContentType.Passwords, passwords.Count(p => !p.IsCatalog)} }
-                    );
+            var manifest = new PangoPackageManifest(
+                _userContextProvider.GetUserName(),
+                DateTime.UtcNow.ToString("G"),
+                request.ExportOptions.Description,
+                new Dictionary<ContentType, int> { { ContentType.Passwords, passwords.Count(p => !p.IsCatalog) } }
+            );
 
-            string path = await _dataExporter.ExportAsync(manifest, ExportDataCommandHandler.AsContent(passwords, request.ExportOptions.Description), request.ExportOptions);
-        
+            string path = await _dataExporter.ExportAsync(manifest, AsContent(passwords, request.ExportOptions.Description), request.ExportOptions);
+
             return new ExportResult(
-                path, 
-                new Dictionary<Domain.Enums.ContentType, int> { { Domain.Enums.ContentType.Passwords, passwords.Where(p => !p.IsCatalog).Count() } }, 
-                DateTime.Now, 
+                path,
+                new Dictionary<ContentType, int> { { ContentType.Passwords, passwords.Where(p => !p.IsCatalog).Count() } },
+                DateTime.Now,
                 _appMetaService.GetAppVersion());
         }
-        catch(PangoExportException pEx)
+        catch (PangoExportException pEx)
         {
             _logger.LogError(pEx, "Data export failed: {message}", pEx.Message);
             return Error.Failure(pEx.Code, pEx.Message);
@@ -76,15 +65,14 @@ public class ExportDataCommandHandler
 
     private static List<IContentPackage> AsContent(List<PangoPassword> passwords, string owner)
     {
-        List<IContentPackage> fileContents = new(100);
+        List<IContentPackage> fileContents = [];
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
         foreach (var chunk in passwords.ChunkBy(2))
         {
-            ContentPackage fileContent = new(owner, Domain.Enums.ContentType.Passwords, chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
+            ContentPackage fileContent = new(owner, ContentType.Passwords, chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
-
         return fileContents;
     }
 }

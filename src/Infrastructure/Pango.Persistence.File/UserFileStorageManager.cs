@@ -131,7 +131,9 @@ public class UserFileStorageManager(
         foreach (FileInfo file in dir.GetFiles())
         {
             string targetFilePath = Path.Combine(destinationDir, file.Name);
-            file.CopyTo(targetFilePath);
+            using var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+            using var targetStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            sourceStream.CopyTo(targetStream);
         }
 
         // If recursive and copying subdirectories, recursively call this method

@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Pango.Application.Common;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.Dialogs.Validators;
@@ -43,7 +42,6 @@ public partial class ExportDataValidator : ObservableValidator
     /// </summary>
     public ExportDataValidator()
     {
-        ValidateAllProperties();
     }
 
     /// <summary>

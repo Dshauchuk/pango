@@ -9,6 +9,7 @@ namespace Pango.Desktop.Uwp.Core.Utility;
 public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IAppDomainProvider
 {
     private string? _cachedCustomPath;
+    private string? _resolvedDefaultPath;
     private bool _customPathResolved;
     private readonly ILogger<AppDomainProvider>? _logger = logger;
 
@@ -20,46 +21,32 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
 
     public string GetAppDataFolderPath()
     {
-        if (_customPathResolved && _cachedCustomPath != null)
-        {
-            return _cachedCustomPath;
-        }
+        if (_customPathResolved && _cachedCustomPath != null) return _cachedCustomPath;
+        if (_resolvedDefaultPath != null) return _resolvedDefaultPath;
 
         try
         {
             string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             string pangoProgramData = Path.Combine(programDataPath, "Pango");
 
-            if (!Directory.Exists(pangoProgramData))
-            {
-                Directory.CreateDirectory(pangoProgramData);
-            }
-            return pangoProgramData;
+            if (!Directory.Exists(pangoProgramData)) Directory.CreateDirectory(pangoProgramData);
+            return _resolvedDefaultPath = pangoProgramData;
         }
-        catch (UnauthorizedAccessException)
-        {
-            _logger?.LogWarning("No write permissions for ProgramData. Falling back to Documents folder.");
-        }
-        catch (Exception ex)
-        {
-            _logger?.LogWarning(ex, "Error accessing ProgramData. Falling back to Documents folder.");
-        }
+        catch (UnauthorizedAccessException) { _logger?.LogWarning("No write permissions for ProgramData."); }
+        catch (Exception ex) { _logger?.LogWarning(ex, "Error accessing ProgramData."); }
 
         try
         {
             string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             string pangoDocumentsData = Path.Combine(documentsPath, "Pango");
 
-            if (!Directory.Exists(pangoDocumentsData))
-            {
-                Directory.CreateDirectory(pangoDocumentsData);
-            }
-            return pangoDocumentsData;
+            if (!Directory.Exists(pangoDocumentsData)) Directory.CreateDirectory(pangoDocumentsData);
+            return _resolvedDefaultPath = pangoDocumentsData;
         }
         catch (Exception ex)
         {
-            _logger?.LogError(ex, "Error accessing Documents folder. Using local app data folder.");
-            return ApplicationData.Current.LocalFolder.Path;
+            _logger?.LogError(ex, "Error accessing Documents.");
+            return _resolvedDefaultPath = ApplicationData.Current.LocalFolder.Path;
         }
     }
 

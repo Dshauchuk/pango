@@ -26,7 +26,7 @@ public sealed partial class EditPasswordView : ViewBase
         switch (e.Key)
         {
             case Windows.System.VirtualKey.Enter:
-                ((EditPasswordViewModel)DataContext).SavePasswordComand.Execute(null);
+                ((EditPasswordViewModel)DataContext).SavePasswordCommand.Execute(null);
                 break;
             default:
                 break;

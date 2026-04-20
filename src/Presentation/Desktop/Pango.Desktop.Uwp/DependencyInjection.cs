@@ -16,8 +16,6 @@ using Pango.Infrastructure.Services;
 using Pango.Persistence;
 using Pango.Persistence.File;
 using Serilog;
-using System;
-using System.IO;
 using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
@@ -59,16 +57,16 @@ public static class DependencyInjection
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<PasswordsViewModel>()
             .AddSingleton<SignInViewModel>()
-            .AddSingleton<EditPasswordCatalogDialogViewModel>()
-            .AddSingleton<PasswordDetailsDialogViewModel>()
-            .AddSingleton<ChangePasswordDialogViewModel>()
-            .AddSingleton<ExportDialogViewModel>()
-            .AddSingleton<ExportCompletedDialogViewModel>()
+            .AddTransient<EditPasswordCatalogDialogViewModel>()
+            .AddTransient<PasswordDetailsDialogViewModel>()
+            .AddTransient<ChangePasswordDialogViewModel>()
+            .AddTransient<ExportDialogViewModel>()
+            .AddTransient<ExportCompletedDialogViewModel>()
             .AddSingleton<ExportImportViewModel>()
-            .AddSingleton<ImportDialogViewModel>()
+            .AddTransient<ImportDialogViewModel>()
             .AddSingleton<UserViewModel>()
             .AddSingleton<GeneratePasswordViewModel>()
-            .AddSingleton<GeneratePasswordDialogViewModel>();
+            .AddTransient<GeneratePasswordDialogViewModel>();
 
         return services;
     }

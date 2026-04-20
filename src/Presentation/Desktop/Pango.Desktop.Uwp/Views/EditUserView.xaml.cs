@@ -14,10 +14,10 @@ public sealed partial class EditUserView : ViewBase
 {
     public EditUserView()
     {
-        this.InitializeComponent();
+        InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<EditUserViewModel>();
 
-        this.KeyDown += OnKeyDown;
+        KeyDown += OnKeyDown;
     }
 
     private void OnKeyDown(object sender, KeyRoutedEventArgs e)
@@ -25,7 +25,7 @@ public sealed partial class EditUserView : ViewBase
         switch (e.Key)
         {
             case Windows.System.VirtualKey.Enter:
-                ((EditUserViewModel)DataContext).SaveUserComand.Execute(null);
+                ((EditUserViewModel)DataContext).SaveUserCommand.Execute(null);
                 break;
             default:
                 break;

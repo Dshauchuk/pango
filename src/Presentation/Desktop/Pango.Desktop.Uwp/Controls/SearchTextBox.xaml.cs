@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System;
 using System.Windows.Input;
 
 namespace Pango.Desktop.Uwp.Controls;
@@ -24,8 +23,12 @@ public sealed partial class SearchTextBox : ContentControl
 
     public SearchTextBox()
     {
-        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
+        _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _debounceTimer.Tick += DebounceTimer_Tick;
+        Unloaded += (s, e) =>
+        {
+            _debounceTimer.Stop();
+        };
     }
 
     /// <inheritdoc/>
@@ -37,8 +40,20 @@ public sealed partial class SearchTextBox : ContentControl
         _searchButton = (Button)GetTemplateChild("PART_FilterButton");
         _deleteButton = (Button)GetTemplateChild("PART_DeleteButton");
 
-        _textBox.TextChanged += TextBox_TextChanged;
-        _textBox.KeyUp += TextBox_KeyUp;
+        if (_textBox != null)
+        {
+            _textBox.LostFocus += (s, e) =>
+            {
+                _debounceTimer.Stop();
+                if (!string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
+                {
+                    Text = _textBox.Text;
+                }
+            };
+            _textBox.TextChanged += TextBox_TextChanged;
+            _textBox.KeyUp += TextBox_KeyUp;
+        }
+
         _deleteButton.Click += DeleteButton_Click;
         _searchButton.Click += SearchButton_Click;
     }
@@ -58,8 +73,8 @@ public sealed partial class SearchTextBox : ContentControl
     /// The <see cref="DependencyProperty"/> backing <see cref="Text"/>.
     /// </summary>
     public static readonly DependencyProperty SearchCommandProperty = DependencyProperty.Register(
-            nameof(SearchCommand), 
-            typeof(ICommand), 
+            nameof(SearchCommand),
+            typeof(ICommand),
             typeof(SearchTextBox),
             new PropertyMetadata(null));
 
@@ -79,7 +94,19 @@ public sealed partial class SearchTextBox : ContentControl
         nameof(Text),
         typeof(string),
         typeof(SearchTextBox),
-        new PropertyMetadata(default(string)));
+        new PropertyMetadata(string.Empty, OnTextChanged));
+
+    private static void OnTextChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is SearchTextBox control && control._textBox != null)
+        {
+            string newValue = e.NewValue as string ?? string.Empty;
+            if (control._textBox.Text != newValue)
+            {
+                control._textBox.Text = newValue;
+            }
+        }
+    }
 
     /// <summary>
     /// Gets or sets the <see cref="string"/> representing the placeholder text to display.
@@ -108,6 +135,10 @@ public sealed partial class SearchTextBox : ContentControl
         if (e.Key == Windows.System.VirtualKey.Enter)
         {
             _debounceTimer.Stop();
+            if (_textBox != null && !string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
+            {
+                Text = _textBox.Text;
+            }
             TriggerSearch();
         }
     }
@@ -117,8 +148,7 @@ public sealed partial class SearchTextBox : ContentControl
     /// </summary>
     private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
     {
-        Text = ((TextBox)sender).Text;
-        _deleteButton?.Visibility = string.IsNullOrEmpty(Text) ? Visibility.Collapsed : Visibility.Visible;
+        _deleteButton!.Visibility = string.IsNullOrEmpty(_textBox?.Text) ? Visibility.Collapsed : Visibility.Visible;
 
         _debounceTimer.Stop();
         _debounceTimer.Start();
@@ -127,6 +157,10 @@ public sealed partial class SearchTextBox : ContentControl
     private void DebounceTimer_Tick(object? sender, object e)
     {
         _debounceTimer.Stop();
+        if (_textBox != null && !string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
+        {
+            Text = _textBox.Text;
+        }
         TriggerSearch();
     }
 

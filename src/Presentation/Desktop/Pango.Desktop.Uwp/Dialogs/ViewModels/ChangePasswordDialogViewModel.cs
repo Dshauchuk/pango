@@ -12,12 +12,10 @@ using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.Security;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Domain.Entities;
-using System;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 {
     #region Fields
 
@@ -74,9 +72,10 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
     public bool CanSave()
     {
-        Validator.Validate();
-
-        return !Validator.HasErrors;
+        return !string.IsNullOrWhiteSpace(Validator.CurrentPassword) &&
+               !string.IsNullOrWhiteSpace(Validator.NewPassword) &&
+               !string.IsNullOrWhiteSpace(Validator.Confirmation) &&
+               Validator.NewPassword == Validator.Confirmation;
     }
 
     public Task OnCancelAsync()
@@ -86,7 +85,7 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
 
     public async Task OnSaveAsync()
     {
-        Validator.Validate();
+        ChangePasswordValidator.Validate();
 
         if (!Validator.HasErrors)
         {
@@ -97,7 +96,7 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
             if (user is null)
                 return;
 
-            if(!_passwordHashProvider.VerifyPassword(Validator.CurrentPassword, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt)))
+            if (!_passwordHashProvider.VerifyPassword(Validator.CurrentPassword, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt)))
             {
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), Core.Enums.AppNotificationType.Warning));
                 return;
@@ -116,7 +115,7 @@ public class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewModel
             {
                 SecureUserSession.ClearUser();
                 App.Current.RaiseSignedOut();
-                WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
+                WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
                 WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), Core.Enums.AppNotificationType.Success));
             }
         }

@@ -334,7 +334,7 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         );
 
         WeakReferenceMessenger.Default.Send(
-            new NavigationRequstedMessage(
+            new NavigationRequestedMessage(
                 new NavigationParameters(AppView.PasswordsIndex, AppView.GeneratePassword, parameters)));
     }
 

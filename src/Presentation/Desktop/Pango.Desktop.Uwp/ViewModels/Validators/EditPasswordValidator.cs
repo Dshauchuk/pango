@@ -22,7 +22,7 @@ public partial class EditPasswordValidator : ObservableValidator
     public DateTimeOffset? ExpirationDate
     {
         get => _expirationDate;
-        set => SetProperty(ref _expirationDate, value);
+        set => SetProperty(ref _expirationDate, value, validate: false);
     }
 
     public bool HasExpirationDate
@@ -30,7 +30,7 @@ public partial class EditPasswordValidator : ObservableValidator
         get => _hasExpirationDate;
         set
         {
-            if (SetProperty(ref _hasExpirationDate, value))
+            if (SetProperty(ref _hasExpirationDate, value, validate: false))
             {
                 if (value && !ExpirationDate.HasValue)
                 {
@@ -43,43 +43,44 @@ public partial class EditPasswordValidator : ObservableValidator
     public Guid? Id
     {
         get => _id;
-        set => SetProperty(ref _id, value);
+        set => SetProperty(ref _id, value, validate: false);
     }
 
-    [Required()]
+    [Required]
     public string Title
     {
         get => _title;
-        set => SetProperty(ref _title, value);
+        set => SetProperty(ref _title, value, validate: false);
     }
 
     public string Login
     {
         get => _login;
-        set => SetProperty(ref _login, value);
+        set => SetProperty(ref _login, value, validate: false);
     }
 
     public string Password
     {
         get => _password;
-        set => SetProperty(ref _password, value);
+        set => SetProperty(ref _password, value, validate: false);
     }
 
     public string Notes
     {
         get => _notes;
-        set => SetProperty(ref _notes, value);
+        set => SetProperty(ref _notes, value, validate: false);
     }
 
     public string? SelectedCatalog
     {
         get => _selectedCatalog;
-        set => SetProperty(ref _selectedCatalog, value);
+        set => SetProperty(ref _selectedCatalog, value, validate: false);
     }
+
     public bool Star
     {
         get => _isStar;
-        set => SetProperty(ref _isStar, value);
+        set => SetProperty(ref _isStar, value, validate: false);
     }
 
     public void Validate()

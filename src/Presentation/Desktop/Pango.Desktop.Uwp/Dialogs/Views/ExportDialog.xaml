@@ -23,7 +23,7 @@
 
             <controls:ValidationTextBox Grid.Row="0" Margin="10"
                                         PropertyName="Description"
-                                        Text="{Binding Path=Description, Mode=TwoWay}"
+                                        Text="{Binding Path=Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         HeaderText="{loc:StringResource Key='Description'}"
                                         PlaceholderText="{loc:StringResource Key='AskForDescription_Label'}"/>
 
@@ -31,7 +31,6 @@
                                             PropertyName="MasterPassword"
                                             Password="{Binding Path=MasterPassword, Mode=TwoWay}"
                                             HeaderText="{loc:StringResource Key='Password'}"
-                                            HideCopyButton="True"
                                             PlaceholderText="{loc:StringResource Key='ArchiveEncryptionPassword_Placeholder'}"/>
 
             <controls:ValidationTextBox Grid.Row="2" Margin="10"

@@ -6,7 +6,7 @@ namespace Pango.Domain.Entities;
 /// <summary>
 /// Represents a user's password entry or catalog folder in the domain.
 /// </summary>
-public class PangoPassword : BaseAuditableEntity, ICataloguable
+public class PangoPassword : BaseAuditableEntity, ICataloguable, IDisposable
 {
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     private readonly RamProtectedString _protectedValue;
@@ -77,4 +77,10 @@ public class PangoPassword : BaseAuditableEntity, ICataloguable
     /// 
     /// </summary>
     public bool Star { get; set; }
+
+    public void Dispose()
+    {
+        _protectedValue?.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

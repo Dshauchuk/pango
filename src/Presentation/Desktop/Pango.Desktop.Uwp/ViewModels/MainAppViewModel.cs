@@ -6,23 +6,16 @@ using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using System;
-using System.Threading.Tasks;
 using Windows.Storage;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
 [AppView(AppView.MainAppView)]
-public sealed class MainAppViewModel : ViewModelBase
+public sealed partial class MainAppViewModel(IAppIdleService appIdleService, ILogger<MainAppViewModel> logger) : ViewModelBase(logger)
 {
-    private readonly IAppIdleService _appIdleService;
+    private readonly IAppIdleService _appIdleService = appIdleService;
 
     private Guid? _lockAppIdleId;
-
-    public MainAppViewModel(IAppIdleService appIdleService, ILogger<MainAppViewModel> logger) : base(logger)
-    {
-        _appIdleService = appIdleService;
-    }
 
     #region Overrides
 
@@ -83,6 +76,6 @@ public sealed class MainAppViewModel : ViewModelBase
     private void OnLockIdleTimerElapsed()
     {
         StopLockAppIdle();
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.MainAppView)));
+        WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.MainAppView)));
     }
 }

@@ -13,6 +13,11 @@ namespace Pango.Infrastructure.Services;
 /// </summary>
 public class ContentEncoder : IContentEncoder
 {
+    private static readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
+    {
+        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+    });
+
     /// <summary>
     /// Decrypts a byte array streaming directly to the JSON deserializer.
     /// </summary>
@@ -40,8 +45,7 @@ public class ContentEncoder : IContentEncoder
                 using StreamReader streamReader = new(cryptoStream);
                 using JsonTextReader jsonReader = new(streamReader);
 
-                var serializer = JsonSerializer.CreateDefault();
-                var deserializedObject = serializer.Deserialize<T>(jsonReader);
+                var deserializedObject = _serializer.Deserialize<T>(jsonReader);
 
                 if (deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
                 {
@@ -50,7 +54,7 @@ public class ContentEncoder : IContentEncoder
                         var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
                         if (dataType != null)
                         {
-                            encodedData.Data = jArray.ToObject(dataType, serializer);
+                            encodedData.Data = jArray.ToObject(dataType, _serializer);
                         }
                     }
                 }
@@ -89,12 +93,7 @@ public class ContentEncoder : IContentEncoder
                 using StreamWriter streamWriter = new(cryptoStream);
                 using JsonTextWriter jsonWriter = new(streamWriter);
 
-                var serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                });
-
-                serializer.Serialize(jsonWriter, content);
+                _serializer.Serialize(jsonWriter, content);
                 jsonWriter.Flush();
                 streamWriter.Flush();
                 cryptoStream.FlushFinalBlock();

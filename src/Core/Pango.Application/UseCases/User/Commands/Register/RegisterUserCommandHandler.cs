@@ -7,11 +7,12 @@ using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Domain.Entities;
+using System.Text.Json;
 
 namespace Pango.Application.UseCases.User.Commands.Register;
 
 public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<RegisterUserCommandHandler> logger)
-: IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
+    : IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
 {
     private const int MaxUserCount = 5;
 
@@ -24,7 +25,7 @@ public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswor
         try
         {
             var existingUsers = await _userRepository.ListAsync();
-            if(existingUsers.Count() >= MaxUserCount)
+            if (existingUsers.Count() >= MaxUserCount)
             {
                 return Error.Validation(ApplicationErrors.User.TooManyUsers, $"Can't create more than {MaxUserCount} users");
             }
@@ -43,6 +44,30 @@ public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswor
             };
 
             await _userRepository.CreateAsync(user);
+
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            var configPath = Path.Combine(appData, "Pango", "backup_config.json");
+            BackupSettings backupSettings = new();
+
+            if (File.Exists(configPath))
+            {
+                var json = await File.ReadAllTextAsync(configPath, cancellationToken);
+                backupSettings = JsonSerializer.Deserialize<BackupSettings>(json) ?? new BackupSettings();
+            }
+            else
+            {
+                backupSettings.TargetFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Pango", "Backup");
+                backupSettings.IsEnabled = true;
+            }
+
+            backupSettings.Users ??= [];
+            backupSettings.Users[user.UserName] = new UserBackupProfile
+            {
+                BackupPassword = Guid.NewGuid().ToString("N")[..12].ToUpper(),
+                SourceDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Pango", "users", user.UserName)
+            };
+
+            await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(backupSettings), cancellationToken);
 
             return user.Adapt<PangoUserDto>();
         }
