@@ -77,6 +77,22 @@ public sealed partial class ValidationPasswordBox : ContentControl
         _copyButton = GetTemplateChild("CopyButton") as Button;
         _revealButton = GetTemplateChild("RevealButton") as ToggleButton;
 
+        if (_passwordBox != null && !string.IsNullOrEmpty(Password))
+        {
+            _passwordBox.PasswordChanged -= PasswordBox_TextChanged;
+            _passwordBox.Password = Password;
+            _passwordBox.PasswordChanged += PasswordBox_TextChanged;
+        }
+
+        if (_passwordBox != null)
+        {
+            if (!string.IsNullOrEmpty(Password))
+            {
+                _passwordBox.Password = Password;
+            }
+            _passwordBox.PasswordChanged += PasswordBox_TextChanged;
+        }
+
         if (_revealButton is not null)
         {
             _revealButton.Checked += RevealButton_Checked;

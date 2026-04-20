@@ -44,11 +44,6 @@ public class UserPasswordsQueryHandler(
                     Properties = p.Properties != null ? new Dictionary<string, string>(p.Properties) : []
                 }).ToList();
 
-                foreach (var p in rawPasswords)
-                {
-                    p.Dispose();
-                }
-
                 return dtos;
             }, cancellationToken);
 
