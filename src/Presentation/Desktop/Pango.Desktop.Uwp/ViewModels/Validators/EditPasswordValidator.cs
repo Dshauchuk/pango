@@ -1,12 +1,12 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using Pango.Domain.Common;
 using System.ComponentModel.DataAnnotations;
 
 namespace Pango.Desktop.Uwp.ViewModels.Validators;
 
-public partial class EditPasswordValidator : ObservableValidator
+public partial class EditPasswordValidator : ObservableValidator, IDisposable
 {
     private string _login = string.Empty;
-    private string _password = string.Empty;
     private string _title = string.Empty;
     private string? _selectedCatalog;
     private string _notes = string.Empty;
@@ -14,6 +14,8 @@ public partial class EditPasswordValidator : ObservableValidator
     private Guid? _id;
     private DateTimeOffset? _expirationDate = DateTimeOffset.Now;
     private bool _hasExpirationDate;
+
+    private readonly RamProtectedString _protectedPassword = new(string.Empty);
 
     public EditPasswordValidator()
     {
@@ -61,8 +63,12 @@ public partial class EditPasswordValidator : ObservableValidator
 
     public string Password
     {
-        get => _password;
-        set => SetProperty(ref _password, value, validate: false);
+        get => _protectedPassword.GetDecryptedValue();
+        set
+        {
+            _protectedPassword.SetPlaintextValue(value);
+            OnPropertyChanged(nameof(Password));
+        }
     }
 
     public string Notes
@@ -105,5 +111,10 @@ public partial class EditPasswordValidator : ObservableValidator
         HasExpirationDate = false;
         ExpirationDate = null;
         ClearAllErrors();
+    }
+
+    public void Dispose()
+    {
+        _protectedPassword.Dispose();
     }
 }

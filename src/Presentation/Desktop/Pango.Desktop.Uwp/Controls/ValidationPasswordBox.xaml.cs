@@ -60,6 +60,14 @@ public sealed partial class ValidationPasswordBox : ContentControl
 
             _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
             _oldDataContext = null;
+
+            if (_passwordBox != null)
+            {
+                _passwordBox.PasswordChanged -= PasswordBox_TextChanged;
+                _passwordBox.Password = string.Empty;
+                _passwordBox.PasswordChanged += PasswordBox_TextChanged;
+            }
+            Password = string.Empty;
         };
     }
 
@@ -323,6 +331,8 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// <param name="args">Event arguments containing the new data context.</param>
     private void ValidationPasswordBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
+        if (ReferenceEquals(args.NewValue, _oldDataContext)) return;
+
         Log.Logger?.Debug("ValidationPasswordBox DataContextChanged: old={OldContext}, new={NewContext}",
             _oldDataContext?.GetType().Name ?? "null",
             args.NewValue?.GetType().Name ?? "null");

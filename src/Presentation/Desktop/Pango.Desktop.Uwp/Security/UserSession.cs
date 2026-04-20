@@ -1,8 +1,6 @@
-﻿using System;
-using System.Linq;
-using System.Runtime.InteropServices;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System.Runtime.InteropServices;
 using Windows.Security.Credentials;
 using Windows.Storage;
 
@@ -13,27 +11,21 @@ public class SecureUserSession
     private const string ResourceName = "Pango.Desktop.Uwp.Session";
     private const string SessionFlagKey = "Pango_SessionExists";
 
+    private static PasswordCredential? _cachedUser;
+
     private static ILogger<SecureUserSession>? _logger;
-    private static ILogger<SecureUserSession>? Logger
-    {
-        get
-        {
-            if (_logger == null && App.Host != null)
-            {
-                _logger = App.Host.Services.GetService<ILogger<SecureUserSession>>();
-            }
-            return _logger;
-        }
-    }
+    private static ILogger<SecureUserSession>? Logger => _logger ??= App.Host?.Services?.GetService<ILogger<SecureUserSession>>();
 
     public static void SaveUser(string username)
     {
         try
         {
             var vault = new PasswordVault();
-            vault.Add(new PasswordCredential(ResourceName, username, username));
+            var credential = new PasswordCredential(ResourceName, username, username);
+            vault.Add(credential);
 
             ApplicationData.Current.LocalSettings.Values[SessionFlagKey] = true;
+            _cachedUser = credential;
 
             Logger?.LogDebug("User session saved for user '{Username}'", username);
         }
@@ -45,12 +37,11 @@ public class SecureUserSession
 
     public static PasswordCredential? GetUser()
     {
+        if (_cachedUser != null)
+            return _cachedUser;
+
         var sessionExists = ApplicationData.Current.LocalSettings.Values[SessionFlagKey] as bool? ?? false;
-        if (!sessionExists)
-        {
-            Logger?.LogDebug("No active user session flag found. Skipping PasswordVault query.");
-            return null;
-        }
+        if (!sessionExists) return null;
 
         var vault = new PasswordVault();
         try
@@ -61,18 +52,14 @@ public class SecureUserSession
             if (credential != null)
             {
                 credential.RetrievePassword();
+                _cachedUser = credential;
                 Logger?.LogDebug("Active user session found for '{Username}'", credential.UserName);
                 return credential;
             }
         }
-        catch (COMException ex) when ((uint)ex.HResult == 0x80070490)
+        catch (COMException)
         {
             ApplicationData.Current.LocalSettings.Values[SessionFlagKey] = false;
-            Logger?.LogDebug("Session flag was true, but vault is empty. Resetting flag.");
-        }
-        catch (Exception ex)
-        {
-            Logger?.LogError(ex, "An unexpected error occurred while retrieving the user session.");
         }
 
         return null;
@@ -80,6 +67,8 @@ public class SecureUserSession
 
     public static void ClearUser()
     {
+        _cachedUser = null;
+
         var sessionExists = ApplicationData.Current.LocalSettings.Values[SessionFlagKey] as bool? ?? false;
         if (!sessionExists) return;
 
@@ -90,16 +79,9 @@ public class SecureUserSession
             foreach (var credential in credentials)
             {
                 vault.Remove(credential);
-                Logger?.LogDebug("User session cleared for '{Username}'", credential.UserName);
             }
         }
-        catch (COMException ex) when ((uint)ex.HResult == 0x80070490)
-        {
-        }
-        catch (Exception ex)
-        {
-            Logger?.LogError(ex, "An unexpected error occurred while clearing the user session.");
-        }
+        catch { }
         finally
         {
             ApplicationData.Current.LocalSettings.Values[SessionFlagKey] = false;

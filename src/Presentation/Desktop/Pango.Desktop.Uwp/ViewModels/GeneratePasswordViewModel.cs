@@ -12,6 +12,8 @@ using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Domain.Common;
+using Serilog;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -22,7 +24,6 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
 
     private readonly ISender _sender;
     private readonly IPasswordGeneratorSettingsService _settingsService;
-    private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError = string.Empty;
     private string _charsetsError = string.Empty;
@@ -35,21 +36,25 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     private double _strengthBarWidth;
     private AppView _sourceView = AppView.Home;
 
+    private readonly RamProtectedString _protectedGeneratedPassword = new(string.Empty);
+
     #endregion
 
     #region Properties
+
     public string GeneratedPassword
     {
-        get => _generatedPassword;
+        get => _protectedGeneratedPassword.GetDecryptedValue();
         private set
         {
-            if (_generatedPassword == value) return;
+            if (_protectedGeneratedPassword.GetDecryptedValue() == value) return;
 
-            _generatedPassword = value;
+            _protectedGeneratedPassword.SetPlaintextValue(value);
             OnPropertyChanged(nameof(GeneratedPassword));
             UpdateStrength();
             CopyPasswordCommand.NotifyCanExecuteChanged();
-            SaveAsCommand.NotifyCanExecuteChanged();
+
+            SaveAsCommand?.NotifyCanExecuteChanged();
         }
     }
 
@@ -235,6 +240,15 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         UseDigits = s.UseDigits;
         UseSpecial = s.UseSpecial;
         ExcludeAmbiguous = s.ExcludeAmbiguous;
+    }
+
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        Log.Logger?.Debug("GeneratePasswordViewModel navigated from - Wiping RAM");
+
+        Clear();
+
+        await base.OnNavigatedFromAsync(parameter);
     }
 
     #endregion

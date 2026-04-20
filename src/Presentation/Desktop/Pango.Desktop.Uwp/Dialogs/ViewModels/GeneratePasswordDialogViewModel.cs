@@ -13,6 +13,7 @@ using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
+using Pango.Domain.Common;
 using Serilog;
 using Windows.ApplicationModel.DataTransfer;
 
@@ -27,7 +28,6 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
 
     private readonly ISender _sender;
     private readonly IPasswordGeneratorSettingsService _settingsService;
-    private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError = string.Empty;
     private string _charsetsError = string.Empty;
@@ -39,6 +39,8 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     private double _strengthBarWidth;
     private PasswordStrength _strength;
 
+    private readonly RamProtectedString _protectedGeneratedPassword = new(string.Empty);
+
     #endregion
 
     #region Properties
@@ -48,15 +50,15 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     /// </summary>
     public string GeneratedPassword
     {
-        get => _generatedPassword;
+        get => _protectedGeneratedPassword.GetDecryptedValue();
         private set
         {
-            if (_generatedPassword == value) return;
-            _generatedPassword = value;
+            if (_protectedGeneratedPassword.GetDecryptedValue() == value) return;
+
+            _protectedGeneratedPassword.SetPlaintextValue(value);
             OnPropertyChanged(nameof(GeneratedPassword));
             UpdateStrength();
             CopyPasswordCommand.NotifyCanExecuteChanged();
-            Log.Logger?.Debug("GeneratedPassword updated: length {Length}", value?.Length ?? 0);
         }
     }
 

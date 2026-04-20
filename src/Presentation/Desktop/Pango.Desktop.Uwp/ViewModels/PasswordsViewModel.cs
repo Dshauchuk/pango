@@ -331,8 +331,22 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="message">Password updated message.</param>
     private void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message)
     {
-        Log.Logger?.Information("PasswordUpdatedMessage received: refreshing view");
-        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync());
+        Log.Logger?.Information("PasswordUpdatedMessage received: updating local item");
+
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            var existingItem = Passwords.FindItems(p => p.Id == message.Value.Id).FirstOrDefault();
+
+            if (existingItem != null)
+            {
+                existingItem.Name = message.Value.Name;
+                existingItem.IsStar = message.Value.Star;
+            }
+            else
+            {
+                _ = ResetViewAsync();
+            }
+        });
     }
 
     /// <summary>
@@ -524,7 +538,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
             App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () =>
             {
-                await ApplyVisibilityMapAsync(Passwords, visibilityMap);
+                ApplyVisibilityMap(Passwords, visibilityMap);
                 HasPasswords = hasVisible;
             });
         });
@@ -617,8 +631,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             await _sender.Send(new MovePasswordsToCatalogCommand(passwordItemsToUpdate));
             Log.Logger?.Debug("MovePasswordsToCatalogCommand sent for {Count} items", passwordItemsToUpdate.Count);
         }
-
-        await ResetViewAsync();
     }
 
     #endregion
@@ -693,7 +705,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
             App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () =>
             {
-                await ApplyVisibilityMapAsync(Passwords, visibilityMap);
+                ApplyVisibilityMap(Passwords, visibilityMap);
                 HasPasswords = hasVisible;
                 Log.Logger?.Debug("Filter applied: HasPasswords={HasPasswords}", hasVisible);
             });
@@ -741,28 +753,20 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="nodes">Collection of tree nodes to update.</param>
     /// <param name="visibilityMap">Dictionary containing pre-calculated visibility values.</param>
-    private static async Task ApplyVisibilityMapAsync(
+    private static void ApplyVisibilityMap(
             IEnumerable<PangoExplorerItem> nodes,
             Dictionary<Guid, bool> visibilityMap)
     {
-        int count = 0;
         foreach (var node in nodes)
         {
             if (visibilityMap.TryGetValue(node.Id, out bool isVis) && node.IsVisible != isVis)
             {
                 node.IsVisible = isVis;
-                count++;
             }
 
             if (node.Children?.Count > 0)
             {
-                await ApplyVisibilityMapAsync(node.Children, visibilityMap);
-            }
-
-            if (count > 30)
-            {
-                count = 0;
-                await Task.Delay(1);
+                ApplyVisibilityMap(node.Children, visibilityMap);
             }
         }
     }
@@ -1027,13 +1031,14 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             HasPasswords = Passwords.Count > 0;
             UpdateUserExpirationCache(userExpirations);
 
-            foreach (var item in oldItems)
+            Task.Run(() =>
             {
-                item.ReleaseReferences();
-            }
-            oldItems.Clear();
-
-            Log.Logger?.Debug("DisplayPasswordsInTreeAsync: UI updated with {Count} root items", rootItems.Count);
+                foreach (var item in oldItems)
+                {
+                    item.ReleaseReferences();
+                }
+                oldItems.Clear();
+            });
         });
     }
 
@@ -1077,8 +1082,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="newItems">List of expiration cache items for current user.</param>
     private void UpdateUserExpirationCache(List<ExpirationCacheItem> newItems)
     {
-        Log.Logger?.Debug("UpdateUserExpirationCache: saving {Count} items to disk", newItems.Count);
-
         Task.Run(async () =>
         {
             await _cacheFileLock.WaitAsync();
@@ -1100,26 +1103,24 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                             cache = JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(existingJson, options) ?? [];
                         }
                     }
-                    catch (JsonException ex)
-                    {
-                        Log.Logger?.Warning(ex, "Failed to parse existing expiration cache JSON");
-                    }
+                    catch (JsonException) { }
                 }
 
                 string currentUser = _userContextProvider.GetUserName();
                 if (!string.IsNullOrEmpty(currentUser))
                 {
-                    cache[currentUser] = newItems;
-                    await File.WriteAllTextAsync(cacheFile, JsonSerializer.Serialize(cache, options));
-                    WeakReferenceMessenger.Default.Send(new ExpirationCacheUpdatedMessage());
-                    Log.Logger?.Information("Expiration cache saved for user: {UserName}", currentUser);
-                }
+                    var oldItems = cache.GetValueOrDefault(currentUser, []);
+                    string oldHash = JsonSerializer.Serialize(oldItems, options);
+                    string newHash = JsonSerializer.Serialize(newItems, options);
 
-                WeakReferenceMessenger.Default.Send(new ExpirationCacheUpdatedMessage());
-            }
-            catch (Exception ex)
-            {
-                Log.Logger?.Warning(ex, "Cannot save expiration cache to disk");
+                    if (oldHash != newHash)
+                    {
+                        Log.Logger?.Debug("UpdateUserExpirationCache: saving {Count} items to disk", newItems.Count);
+                        cache[currentUser] = newItems;
+                        await File.WriteAllTextAsync(cacheFile, JsonSerializer.Serialize(cache, options));
+                        WeakReferenceMessenger.Default.Send(new ExpirationCacheUpdatedMessage());
+                    }
+                }
             }
             finally
             {

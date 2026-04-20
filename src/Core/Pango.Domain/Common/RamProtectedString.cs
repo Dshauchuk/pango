@@ -11,7 +11,6 @@ public class RamProtectedString : IDisposable
     private static readonly byte[] SessionKey = new byte[32];
     private byte[]? _encryptedData;
     private byte[]? _iv;
-    private string? _cachedDecrypted;
 
     /// <summary>
     /// Initializes the static session key securely once per application run.
@@ -39,15 +38,8 @@ public class RamProtectedString : IDisposable
     /// </summary>
     public void SetPlaintextValue(string? plainText)
     {
-        _cachedDecrypted = plainText;
-
-        if (string.IsNullOrEmpty(plainText))
-        {
-            ClearMemory();
-            return;
-        }
-
         ClearMemory();
+        if (string.IsNullOrEmpty(plainText)) return;
 
         _iv = new byte[16];
         using var rng = RandomNumberGenerator.Create();
@@ -74,7 +66,6 @@ public class RamProtectedString : IDisposable
     /// </summary>
     public string GetDecryptedValue()
     {
-        if (_cachedDecrypted != null) return _cachedDecrypted;
         if (_encryptedData == null || _iv == null) return string.Empty;
 
         using var aes = Aes.Create();
@@ -86,22 +77,17 @@ public class RamProtectedString : IDisposable
         try
         {
             plainBytes = decryptor.TransformFinalBlock(_encryptedData, 0, _encryptedData.Length);
-            _cachedDecrypted = Encoding.UTF8.GetString(plainBytes);
-            return _cachedDecrypted;
+            return Encoding.UTF8.GetString(plainBytes);
         }
         finally
         {
             if (plainBytes != null)
-            {
                 CryptographicOperations.ZeroMemory(plainBytes);
-            }
         }
     }
 
     private void ClearMemory()
     {
-        _cachedDecrypted = null;
-
         if (_encryptedData != null)
         {
             CryptographicOperations.ZeroMemory(_encryptedData);

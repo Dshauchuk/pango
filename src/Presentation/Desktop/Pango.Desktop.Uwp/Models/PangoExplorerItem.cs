@@ -111,7 +111,6 @@ public partial class PangoExplorerItem : ObservableObject
                 NestingLevel = string.IsNullOrEmpty(CatalogPath)
                     ? 0
                     : CatalogPath.Count(c => c == AppConstants.CatalogDelimeter) + 1;
-                Log.Logger?.Debug("CatalogPath updated for {ItemName}: level {Level}", Name, NestingLevel);
             }
         }
     }
@@ -122,14 +121,9 @@ public partial class PangoExplorerItem : ObservableObject
     public bool IsStar
     {
         get => _isStar;
-        set
-        {
-            if (SetProperty(ref _isStar, value))
-            {
-                Log.Logger?.Debug("Star status changed for {ItemName}: {IsStar}", Name, value);
-            }
-        }
+        set => SetProperty(ref _isStar, value);
     }
+
 
     /// <summary>
     /// Gets or sets the type of this explorer item.
@@ -140,10 +134,7 @@ public partial class PangoExplorerItem : ObservableObject
         set
         {
             if (SetProperty(ref _type, value))
-            {
                 OnPropertyChanged(nameof(IsFolder));
-                Log.Logger?.Debug("Type changed for {ItemName}: {Type}", Name, value);
-            }
         }
     }
 
@@ -334,8 +325,6 @@ public partial class PangoExplorerItem : ObservableObject
     /// </summary>
     public void ReleaseReferences()
     {
-        Log.Logger?.Debug("Releasing references for {ItemName}", Name);
-
         if (Children != null)
         {
             foreach (var child in Children)

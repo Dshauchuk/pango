@@ -204,6 +204,8 @@ public sealed partial class ValidationTextBox : ContentControl
     /// <param name="args">Event arguments containing the new data context.</param>
     private void ValidationTextBox_DataContextChanged(FrameworkElement sender, DataContextChangedEventArgs args)
     {
+        if (ReferenceEquals(args.NewValue, _oldDataContext)) return;
+
         Log.Logger?.Debug("ValidationTextBox DataContextChanged: old={OldContext}, new={NewContext}",
             _oldDataContext?.GetType().Name ?? "null",
             args.NewValue?.GetType().Name ?? "null");

@@ -156,6 +156,8 @@ public partial class EditPasswordViewModel : ViewModelBase
 
         await base.OnNavigatedToAsync(parameter);
 
+        Clear();
+
         var navParams = parameter as NavigationParameters;
 
         if (navParams != null)
@@ -254,6 +256,15 @@ public partial class EditPasswordViewModel : ViewModelBase
         }
     }
 
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        Log.Logger?.Debug("EditPasswordViewModel navigated from - Wiping RAM");
+
+        Clear();
+
+        await base.OnNavigatedFromAsync(parameter);
+    }
+
     /// <summary>
     /// Registers message subscriptions for password generation events.
     /// </summary>
@@ -276,14 +287,9 @@ public partial class EditPasswordViewModel : ViewModelBase
     {
         Log.Logger?.Debug("Clear: resetting PasswordValidator");
 
-        if (PasswordValidator == null)
-        {
-            PasswordValidator = new EditPasswordValidator();
-        }
-        else
-        {
-            PasswordValidator.Reset();
-        }
+        PasswordValidator?.Dispose();
+
+        PasswordValidator = new EditPasswordValidator();
 
         OnPropertyChanged(nameof(PasswordValidator));
     }
@@ -353,21 +359,19 @@ public partial class EditPasswordViewModel : ViewModelBase
             if (!result.IsError)
             {
                 Log.Logger?.Information("Password {Action} successfully: {Title}", IsNew ? "created" : "updated", PasswordValidator.Title);
-
                 var entity = result.Value.Adapt<PangoPasswordListItemDto>();
 
-                if (IsNew)
-                    WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
-                else
-                    WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
+                if (IsNew) WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
+                else WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
 
                 Clear();
 
-                WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
-                    new NavigationParameters(AppView.PasswordsIndex, AppView.EditPassword)));
-
-                WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
-
+                App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
+                    WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
+                        new NavigationParameters(AppView.PasswordsIndex, AppView.EditPassword)));
+                });
             }
             else
             {

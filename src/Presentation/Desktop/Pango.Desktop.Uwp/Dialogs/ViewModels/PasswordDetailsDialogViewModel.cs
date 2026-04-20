@@ -8,6 +8,7 @@ using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
+using Pango.Domain.Common;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
@@ -19,10 +20,11 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
     private PasswordDetailsParameters? _parameters;
     private string _name = string.Empty;
     private string _login = string.Empty;
-    private string _password = string.Empty;
     private string _catalog = string.Empty;
     private string _notes = string.Empty;
     private string _expirationDate = string.Empty;
+
+    private readonly RamProtectedString _protectedPassword = new(string.Empty);
 
     #endregion
 
@@ -46,8 +48,12 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
 
     public string Password
     {
-        get => _password;
-        set => SetProperty(ref _password, value);
+        get => _protectedPassword.GetDecryptedValue();
+        set
+        {
+            _protectedPassword.SetPlaintextValue(value);
+            OnPropertyChanged(nameof(Password));
+        }
     }
 
     public string Catalog
@@ -127,12 +133,17 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
 
     public Task OnCancelAsync()
     {
+        _protectedPassword.SetPlaintextValue(string.Empty);
         return Task.CompletedTask;
     }
 
     public Task OnSaveAsync()
     {
-        WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex, new EditPasswordParameters(false, null, _parameters?.PasswordId, _parameters?.AllAvailableCatalogs))));
+        _protectedPassword.SetPlaintextValue(string.Empty);
+
+        WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
+            new Mvvm.Models.NavigationParameters(Core.Enums.AppView.EditPassword, AppView.PasswordsIndex,
+            new EditPasswordParameters(false, null, _parameters?.PasswordId, _parameters?.AllAvailableCatalogs))));
 
         return Task.CompletedTask;
     }
