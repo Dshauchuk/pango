@@ -4,7 +4,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Dialogs.ViewModels;
-using System;
 
 namespace Pango.Desktop.Uwp.Dialogs.Views;
 
@@ -16,8 +15,8 @@ public sealed partial class ExportDialog : DialogPage
     // Constructor: Initializes the export dialog with parameters and sets up the view model
     public ExportDialog(ExportDataParameters parameter) : base(parameter)
     {
-        this.InitializeComponent();
-        this.SetViewModel(App.Host.Services.GetRequiredService<ExportDialogViewModel>());
+        InitializeComponent();
+        SetViewModel(App.Host.Services.GetRequiredService<ExportDialogViewModel>());
     }
 
     // Gets the title for the export dialog from resources
@@ -44,10 +43,14 @@ public sealed partial class ExportDialog : DialogPage
         Windows.Storage.StorageFolder folder = await folderPicker.PickSingleFolderAsync();
         if (folder != null)
         {
-            if (this.DataContext is ExportDialogViewModel viewModel)
+            if (DataContext is ExportDialogViewModel viewModel)
             {
-                viewModel.Validator.ExportFolderPath = folder.Path;
-                viewModel.ExportFolderPath = folder.Path;
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    viewModel.ExportFolderPath = folder.Path;
+                    viewModel.Validator.Validate();
+                    viewModel.DialogContext.RaiseDialogContentChanged();
+                });
             }
         }
     }

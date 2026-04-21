@@ -11,11 +11,8 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
-using System;
-using System.IO;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
@@ -73,7 +70,7 @@ public partial class ExportDialogViewModel(
 
     // Determines if the dialog can save based on validator errors
     public bool CanSave() => !Validator.HasErrors;
-    
+
     // Handles the cancel action (no-op in this implementation)
     public Task OnCancelAsync() => Task.CompletedTask;
 
@@ -122,7 +119,10 @@ public partial class ExportDialogViewModel(
                     var sourcePath = result.Value.Path;
                     string fullDestinationPath = Path.Combine(exportPath, $"{fileName}{AppConstants.ExportFileExtension}");
 
-                    File.Copy(sourcePath, fullDestinationPath, true);
+                    var folder = await Windows.Storage.StorageFolder.GetFolderFromPathAsync(exportPath);
+                    var sourceFile = await Windows.Storage.StorageFile.GetFileFromPathAsync(sourcePath);
+                    await sourceFile.CopyAsync(folder, $"{fileName}{AppConstants.ExportFileExtension}", Windows.Storage.NameCollisionOption.ReplaceExisting);
+
                     if (File.Exists(sourcePath)) File.Delete(sourcePath);
 
                     var finalResult = new ExportResult(fullDestinationPath, result.Value.Contents, result.Value.GeneratedAt, result.Value.AppVersion);
@@ -211,10 +211,7 @@ public partial class ExportDialogViewModel(
     // Resets the dialog state to initial configuration
     private void ResetDialog()
     {
-        if (Validator != null)
-        {
-            Validator.ErrorsChanged -= Validator_ErrorsChanged;
-        }
+        Validator?.ErrorsChanged -= Validator_ErrorsChanged;
 
         Validator = new();
         Validator.ErrorsChanged += Validator_ErrorsChanged;

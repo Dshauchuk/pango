@@ -3,19 +3,16 @@ using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
-using Pango.Application.Models;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels.Validators;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
 [AppView(AppView.EditUser)]
-public sealed class EditUserViewModel : ViewModelBase
+public sealed partial class EditUserViewModel : ViewModelBase
 {
     #region Fields
 
@@ -25,13 +22,13 @@ public sealed class EditUserViewModel : ViewModelBase
 
     #endregion
 
-    public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger): base(logger)
+    public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger) : base(logger)
     {
         _sender = sender;
         _userValidator = new();
 
         OpenSignInViewCommand = new RelayCommand(OnOpenSignInView);
-        SaveUserComand = new RelayCommand(OnSaveUser);
+        SaveUserCommand = new RelayCommand(OnSaveUser);
     }
 
     #region Properties
@@ -47,7 +44,7 @@ public sealed class EditUserViewModel : ViewModelBase
     #region Commands
 
     public RelayCommand OpenSignInViewCommand { get; }
-    public RelayCommand SaveUserComand { get; }
+    public RelayCommand SaveUserCommand { get; }
 
     #endregion
 
@@ -86,7 +83,7 @@ public sealed class EditUserViewModel : ViewModelBase
 
             if (result.IsError)
             {
-                if(result.Errors.Any(e => e.Code == ApplicationErrors.User.TooManyUsers))
+                if (result.Errors.Any(e => e.Code == ApplicationErrors.User.TooManyUsers))
                 {
                     WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("TooManyUsers"), AppNotificationType.Warning));
                 }
@@ -103,7 +100,7 @@ public sealed class EditUserViewModel : ViewModelBase
 
     private void OnOpenSignInView()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn, AppView.EditUser)));
+        WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new NavigationRequestedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn, AppView.EditUser)));
     }
 
     #endregion

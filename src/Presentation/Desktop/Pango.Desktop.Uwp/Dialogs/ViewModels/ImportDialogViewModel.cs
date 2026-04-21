@@ -8,9 +8,6 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using ImportDataValidator = Pango.Desktop.Uwp.Dialogs.Validators.ImportDataValidator;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
@@ -92,7 +89,7 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
             var selectiveParams = new ImportDataParametersWithPassword(_parameters.FilePath, password, allItems);
 
             // Request navigation to the Selection Dialog
-            WeakReferenceMessenger.Default.Send(new NavigationRequstedMessage(
+            WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
                 new NavigationParameters(Core.Enums.AppView.ExportImport, Core.Enums.AppView.ExportImport, selectiveParams)
             ));
 
@@ -112,7 +109,7 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private void ResetDialog()
     {
-        if (Validator != null) Validator.ErrorsChanged -= Validator_ErrorsChanged;
+        Validator?.ErrorsChanged -= Validator_ErrorsChanged;
         Validator = new();
         Validator.ErrorsChanged += Validator_ErrorsChanged;
 

@@ -201,8 +201,11 @@
                 </MenuFlyout>
             </TreeViewItem.ContextFlyout>
             <StackPanel Orientation="Horizontal">
-                <Image Width="20"
-                       Source="../Assets/folder.png"/>
+                <Image Source="{StaticResource SharedFolderImage}" 
+                       Width="20" 
+                       Height="20" 
+                       VerticalAlignment="Center" 
+                       Stretch="Uniform"/>
                 <TextBlock Margin="0,0,10,0"/>
                 <TextBlock Text="{Binding Name}" />
             </StackPanel>

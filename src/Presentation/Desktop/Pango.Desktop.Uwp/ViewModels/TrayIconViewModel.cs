@@ -172,7 +172,8 @@ namespace Pango.Desktop.Uwp.ViewModels
                     FileName = exePath,
                     WorkingDirectory = appDir,
                     UseShellExecute = false,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    Arguments = Environment.ProcessId.ToString()
                 };
 
                 Process.Start(psi);
@@ -196,7 +197,6 @@ namespace Pango.Desktop.Uwp.ViewModels
                 foreach (var process in processes)
                 {
                     process.Kill();
-                    process.WaitForExit();
                     process.Dispose();
                 }
                 IsBackupRunning = false;
@@ -231,7 +231,7 @@ namespace Pango.Desktop.Uwp.ViewModels
 
                 try
                 {
-                    var json = File.ReadAllText(cacheFile).Trim();
+                    var json = (await File.ReadAllTextAsync(cacheFile)).Trim();
 
                     if (!json.StartsWith('{') || !json.EndsWith('}')) return;
 

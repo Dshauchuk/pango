@@ -13,37 +13,42 @@ using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using System;
-using System.Linq;
+using Serilog;
 
-// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409  
+// The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
 namespace Pango.Desktop.Uwp.Views;
 
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// Main shell page that serves as the application container and handles navigation, theming, and messaging.
 /// </summary>
 [AppView(AppView.Shell)]
 public sealed partial class Shell : ViewBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Shell"/> class.
+    /// </summary>
     public Shell()
     {
         InitializeComponent();
         DataContext = App.Host.Services.GetRequiredService<ShellViewModel>();
 
         SetApplicationLanguage();
-        NavigateInitialPage();
+        NavigateInitialPageAsync();
         RegisterMessages();
     }
 
     #region Overrides
 
+    /// <summary>
+    /// Registers message subscriptions for notifications, navigation, theme, and language changes.
+    /// </summary>
     protected override void RegisterMessages()
     {
         base.RegisterMessages();
 
         WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, HandleAppNotificationMessage);
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+        WeakReferenceMessenger.Default.Register<NavigationRequestedMessage>(this, OnNavigationRequested);
         WeakReferenceMessenger.Default.Register<AppThemeChangedMessage>(this, OnAppThemeChanged);
         WeakReferenceMessenger.Default.Register<AppLanguageChangedMessage>(this, OnAppLanguageChanged);
     }
@@ -52,28 +57,37 @@ public sealed partial class Shell : ViewBase
 
     #region Event Handlers
 
+    /// <summary>
+    /// Handles application theme change messages and updates UI colors accordingly.
+    /// </summary>
+    /// <param name="recipient">The message recipient instance.</param>
+    /// <param name="message">The theme change message containing the new theme value.</param>
     private void OnAppThemeChanged(object recipient, AppThemeChangedMessage message)
     {
         ShellRootElement.RequestedTheme = message.Value;
 
-        if(message.Value == ElementTheme.Dark)
-        {
-            TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, Colors.Black);
-        }
-        else
-        {
-            TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, Colors.White);
-        }
+        var buttonColor = message.Value == ElementTheme.Dark ? Colors.Black : Colors.White;
+        TitleBarHelper.SetCaptionButtonColors(App.Current.CurrentWindow, buttonColor);
     }
 
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    /// <summary>
+    /// Handles navigation requests and redirects to initial page if sign-in is requested.
+    /// </summary>
+    /// <param name="recipient">The message recipient instance.</param>
+    /// <param name="message">The navigation request message.</param>
+    private void OnNavigationRequested(object recipient, NavigationRequestedMessage message)
     {
         if (message.Value.NavigatedView == AppView.SignIn)
         {
-            NavigateInitialPage();
+            NavigateInitialPageAsync();
         }
     }
 
+    /// <summary>
+    /// Handles application language change messages and updates the content view.
+    /// </summary>
+    /// <param name="recipient">The message recipient instance.</param>
+    /// <param name="message">The language change message containing the new language.</param>
     private void OnAppLanguageChanged(object recipient, AppLanguageChangedMessage message)
     {
         if (message.Value is null)
@@ -82,12 +96,16 @@ public sealed partial class Shell : ViewBase
         AppContent.Content = new MainAppView(message.Value);
     }
 
-
+    /// <summary>
+    /// Handles in-app notification messages and displays them via the notification control.
+    /// </summary>
+    /// <param name="recipient">The message recipient instance.</param>
+    /// <param name="message">The notification message containing content and severity.</param>
     private void HandleAppNotificationMessage(object recipient, InAppNotificationMessage message)
     {
         App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
         {
-            Notification notification = new()
+            var notification = new Notification
             {
                 Message = message.Message,
                 Severity = CastSeverity(message.Type),
@@ -98,6 +116,12 @@ public sealed partial class Shell : ViewBase
         });
     }
 
+    /// <summary>
+    /// Converts application notification type to InfoBar severity enum value.
+    /// </summary>
+    /// <param name="notificationType">The source notification type.</param>
+    /// <returns>Corresponding <see cref="InfoBarSeverity"/> value.</returns>
+    /// <exception cref="InvalidCastException">Thrown when an unknown notification type is provided.</exception>
     private InfoBarSeverity CastSeverity(AppNotificationType notificationType)
     {
         return notificationType switch
@@ -110,10 +134,15 @@ public sealed partial class Shell : ViewBase
         };
     }
 
-    private void SignInViewModel_SignInSuceeded(string userId)
+    /// <summary>
+    /// Handles successful sign-in event: unsubscribes and navigates to main application view.
+    /// </summary>
+    /// <param name="userId">The authenticated user identifier.</param>
+    private void SignInViewModel_SignInSucceeded(string userId)
     {
-        App.Current.LoginSucceeded -= SignInViewModel_SignInSuceeded;
+        Log.Logger?.Information("User signed in successfully: {UserId}", userId);
 
+        App.Current.LoginSucceeded -= SignInViewModel_SignInSucceeded;
         AppContent.Content = new MainAppView();
     }
 
@@ -121,28 +150,39 @@ public sealed partial class Shell : ViewBase
 
     #region Private Methods
 
+    /// <summary>
+    /// Applies the currently configured application language on startup.
+    /// </summary>
     private static void SetApplicationLanguage()
     {
-        AppLanguageHelper.ApplyApplicationLanguage(AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First());
+        var language = AppLanguageHelper.GetAppliedAppLanguage() ?? AppLanguage.GetAppLanguageCollection().First();
+        AppLanguageHelper.ApplyApplicationLanguage(language);
     }
 
-    private async void NavigateInitialPage()
+    /// <summary>
+    /// Navigates to the initial sign-in page asynchronously and wires up login success handler.
+    /// </summary>
+    private async void NavigateInitialPageAsync()
     {
-        SignInView signInView = new();
+        var signInView = new SignInView();
 
         if (signInView.DataContext is SignInViewModel signInViewModel)
         {
-            App.Current.LoginSucceeded += SignInViewModel_SignInSuceeded;
+            App.Current.LoginSucceeded += SignInViewModel_SignInSucceeded;
 
             AppContent.Content = signInView;
             await signInViewModel.OnNavigatedToAsync(null);
         }
     }
 
-    // Select the introduction item when the shell is loaded
+    /// <summary>
+    /// Handles the Loaded event of the Shell control; currently reserved for future initialization logic.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="routedEventArgs">Event data.</param>
     private void Shell_OnLoaded(object sender, RoutedEventArgs routedEventArgs)
     {
-
+        Log.Logger?.Debug("Shell view loaded");
     }
 
     #endregion

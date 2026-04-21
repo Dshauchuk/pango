@@ -9,10 +9,11 @@ using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Application.UseCases.Password.Commands.GeneratePassword;
 using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using System.Linq;
-using System.Threading.Tasks;
+using Pango.Domain.Common;
+using Serilog;
 using Windows.ApplicationModel.DataTransfer;
 
 namespace Pango.Desktop.Uwp.ViewModels;
@@ -20,9 +21,9 @@ namespace Pango.Desktop.Uwp.ViewModels;
 public sealed partial class GeneratePasswordViewModel : ViewModelBase
 {
     #region Fields
+
     private readonly ISender _sender;
     private readonly IPasswordGeneratorSettingsService _settingsService;
-    private string _generatedPassword = string.Empty;
     private int _length = PasswordConstants.SafeLength;
     private string _lengthError = string.Empty;
     private string _charsetsError = string.Empty;
@@ -33,22 +34,27 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     private bool _excludeAmbiguous = false;
     private PasswordStrength _strength;
     private double _strengthBarWidth;
-    private bool _isLoaded = false;
+    private AppView _sourceView = AppView.Home;
+
+    private readonly RamProtectedString _protectedGeneratedPassword = new(string.Empty);
+
     #endregion
 
     #region Properties
+
     public string GeneratedPassword
     {
-        get => _generatedPassword;
+        get => _protectedGeneratedPassword.GetDecryptedValue();
         private set
         {
-            if (_generatedPassword == value) return;
+            if (_protectedGeneratedPassword.GetDecryptedValue() == value) return;
 
-            _generatedPassword = value;
+            _protectedGeneratedPassword.SetPlaintextValue(value);
             OnPropertyChanged(nameof(GeneratedPassword));
             UpdateStrength();
             CopyPasswordCommand.NotifyCanExecuteChanged();
-            SaveAsCommand.NotifyCanExecuteChanged();
+
+            SaveAsCommand?.NotifyCanExecuteChanged();
         }
     }
 
@@ -203,14 +209,23 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Register<UserSignedOutMessage>(this, (_, _) =>
         {
             Clear();
-            _isLoaded = false;
         });
     }
 
     #region Overrides
+
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
+
+        if (parameter is NavigationParameters navParams)
+        {
+            _sourceView = navParams.SourceView;
+        }
+        else
+        {
+            _sourceView = AppView.Home;
+        }
 
         GeneratedPassword = string.Empty;
         Strength = PasswordStrength.Weak;
@@ -225,9 +240,17 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         UseDigits = s.UseDigits;
         UseSpecial = s.UseSpecial;
         ExcludeAmbiguous = s.ExcludeAmbiguous;
-
-        _isLoaded = true;
     }
+
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        Log.Logger?.Debug("GeneratePasswordViewModel navigated from - Wiping RAM");
+
+        Clear();
+
+        await base.OnNavigatedFromAsync(parameter);
+    }
+
     #endregion
 
     private void SaveSettings()
@@ -250,35 +273,20 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         if (!ValidateLength(Length)) return;
         if (!ValidateCharsets()) return;
 
-        var command = new GeneratePasswordCommand(
-            Length,
-            UseUppercase,
-            UseLowercase,
-            UseDigits,
-            UseSpecial,
-            ExcludeAmbiguous);
-
+        var command = new GeneratePasswordCommand(Length, UseUppercase, UseLowercase, UseDigits, UseSpecial, ExcludeAmbiguous);
         var result = await _sender.Send(command);
 
         if (result.IsError)
         {
             Logger.LogError("Password generation failed: {Errors}", string.Join(", ", result.Errors));
-
             var message = result.FirstError.Description ?? ViewResourceLoader.GetString("PasswordGenerationFailed");
-
-            WeakReferenceMessenger.Default.Send(
-                new InAppNotificationMessage(message, AppNotificationType.Error));
-
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, AppNotificationType.Error));
             return;
         }
 
         GeneratedPassword = result.Value;
-
         SaveSettings();
-
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(
-                ViewResourceLoader.GetString("PasswordGeneratedSuccessfully")));
+        WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordGeneratedSuccessfully")));
     }
 
     private bool ValidateLength(int value)
@@ -317,27 +325,12 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
         var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
         dataPackage.SetText(GeneratedPassword);
         Clipboard.SetContent(dataPackage);
+        Clipboard.Flush();
 
         WeakReferenceMessenger.Default.Send(
             new InAppNotificationMessage(
                 ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
                 AppNotificationType.Success));
-    }
-
-    private void Apply()
-    {
-        if (Logger.IsEnabled(LogLevel.Information))
-        {
-            Logger.LogInformation("Apply password clicked with value length {Length}", GeneratedPassword?.Length ?? 0);
-        }
-    }
-
-    private void Cancel()
-    {
-        if (Logger.IsEnabled(LogLevel.Information))
-        {
-            Logger.LogInformation("Cancel password generation clicked.");
-        }
     }
 
     private bool CanSaveAs() => !string.IsNullOrEmpty(GeneratedPassword);
@@ -346,13 +339,17 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     {
         if (string.IsNullOrEmpty(GeneratedPassword)) return;
 
-        // navigation on PasswordsIndex
-        WeakReferenceMessenger.Default.Send(
-            new NavigationRequstedMessage(
-                new NavigationParameters(AppView.PasswordsIndex, AppView.GeneratePassword)));
+        var parameters = new EditPasswordParameters(
+            isNew: true,
+            catalog: string.Empty,
+            selectedPasswordId: null,
+            availableCatalogs: null,
+            generatedPassword: GeneratedPassword
+        );
 
-        // separate message - create new password with generated value
-        WeakReferenceMessenger.Default.Send(new CreatePasswordFromGeneratorMessage(GeneratedPassword));
+        WeakReferenceMessenger.Default.Send(
+            new NavigationRequestedMessage(
+                new NavigationParameters(AppView.PasswordsIndex, AppView.GeneratePassword, parameters)));
     }
 
     private void Clear()
@@ -374,18 +371,14 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     private static int CalculatePasswordStrength(string password)
     {
         if (string.IsNullOrEmpty(password)) return 0;
-
         int score = 0;
-
         if (password.Length >= 8) score += 2;
         if (password.Length >= 12) score += 2;
         if (password.Length >= 16) score += 2;
-
         if (ContainsUpper(password)) score += 1;
         if (ContainsLower(password)) score += 1;
         if (ContainsDigit(password)) score += 1;
         if (ContainsSpecial(password)) score += 1;
-
         return score;
     }
 

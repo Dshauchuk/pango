@@ -8,7 +8,7 @@ using Pango.Desktop.Uwp.Dialogs.ViewModels;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using System;
+using Serilog;
 using Windows.Storage.Pickers;
 
 // To learn more about WinUI, the WinUI project structure,
@@ -17,81 +17,130 @@ using Windows.Storage.Pickers;
 namespace Pango.Desktop.Uwp.Views;
 
 /// <summary>
-/// An empty page that can be used on its own or navigated to within a Frame.
+/// View for handling export and import operations of password data.
 /// </summary>
 [AppView(Core.Enums.AppView.ExportImport)]
 public sealed partial class ExportImportView : PageBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ExportImportView"/> class.
+    /// </summary>
     public ExportImportView()
-    : base(App.Host.Services.GetRequiredService<ILogger<ExportImportView>>())
+        : base(App.Host.Services.GetRequiredService<ILogger<ExportImportView>>())
     {
         InitializeComponent();
         NavigationCacheMode = NavigationCacheMode.Required;
         DataContext = App.Host.Services.GetRequiredService<ExportImportViewModel>();
 
-        // Subscribe to ItemInvoked events for checkbox toggle logic
-        PasswordsTreeView.ItemInvoked += OnTreeViewItemInvoked;
-        ImportTreeView.ItemInvoked += OnTreeViewItemInvoked;
+        Log.Logger?.Debug("ExportImportView initialized");
     }
 
+    /// <summary>
+    /// Called when the page becomes the current frame content: registers event handlers and message subscriptions.
+    /// </summary>
+    /// <param name="e">Event data for the navigation event.</param>
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        Log.Logger?.Debug("ExportImportView navigated to");
 
-        // Safe registration
+        PasswordsTreeView.ItemInvoked += OnTreeViewItemInvoked;
+        ImportTreeView.ItemInvoked += OnTreeViewItemInvoked;
+
+        // Safe registration with UI thread dispatch and error handling
         WeakReferenceMessenger.Default.Register<ImportPreviewReadyMessage>(this, (r, m) =>
         {
-            // Check if page is still valid
-            if (XamlRoot == null) return;
-
-            // Dispatch to UI thread to avoid threading issues
-            DispatcherQueue.TryEnqueue(() =>
+            if (XamlRoot == null)
             {
-                if (ViewModel is ExportImportViewModel vm)
+                Log.Logger?.Warning("ImportPreviewReadyMessage received but XamlRoot is null");
+                return;
+            }
+
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                try
                 {
-                    _ = vm.HandleImportPreviewAsync(m.Value);
+                    if (ViewModel is ExportImportViewModel vm)
+                    {
+                        await vm.HandleImportPreviewAsync(m.Value);
+                        Log.Logger?.Information("Import preview handled successfully");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Failed to handle import preview.");
                 }
             });
         });
     }
 
+    /// <summary>
+    /// Called when the page is no longer the current frame content: cleans up event handlers and message subscriptions.
+    /// </summary>
+    /// <param name="e">Event data for the navigation event.</param>
     protected override void OnNavigatedFrom(NavigationEventArgs e)
     {
+        Log.Logger?.Debug("ExportImportView navigated from: cleaning up resources");
+
         base.OnNavigatedFrom(e);
         WeakReferenceMessenger.Default.UnregisterAll(this);
+        PasswordsTreeView.ItemInvoked -= OnTreeViewItemInvoked;
+        ImportTreeView.ItemInvoked -= OnTreeViewItemInvoked;
     }
 
-    // Handle TreeView item clicks to toggle checkbox selection
+    /// <summary>
+    /// Handles TreeView item invocation: toggles selection state and notifies command state changes.
+    /// </summary>
+    /// <param name="sender">The TreeView that raised the event.</param>
+    /// <param name="args">Event data containing the invoked item.</param>
     private void OnTreeViewItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
     {
-        if (args.InvokedItem is PangoExplorerItem item)
-        {
-            // Toggle selection state
-            item.IsSelected = !item.IsSelected;
+        if (args.InvokedItem is not PangoExplorerItem item)
+            return;
 
-            // Notify commands about selection change
-            if (ViewModel is ExportImportViewModel vm)
+        item.IsSelected = !item.IsSelected;
+        Log.Logger?.Debug("TreeView item '{ItemName}' selection toggled: {IsSelected}", item.Name, item.IsSelected);
+
+        if (ViewModel is ExportImportViewModel vm)
+        {
+            if (sender == PasswordsTreeView)
             {
-                if (sender == PasswordsTreeView)
-                    vm.ExportDataCommand.NotifyCanExecuteChanged();
-                else if (sender == ImportTreeView)
-                    vm.FinalizeImportCommand.NotifyCanExecuteChanged();
+                vm.ExportDataCommand.NotifyCanExecuteChanged();
+                Log.Logger?.Debug("ExportDataCommand state refreshed");
+            }
+            else if (sender == ImportTreeView)
+            {
+                vm.FinalizeImportCommand.NotifyCanExecuteChanged();
+                Log.Logger?.Debug("FinalizeImportCommand state refreshed");
             }
         }
     }
 
-    // Handles picking the .pngx file
-    private async void PickPngxFileButton_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    /// <summary>
+    /// Handles file picker button click: allows user to select a .pngx file for import asynchronously.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event arguments.</param>
+    private async void PickPngxFileButton_ClickAsync(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
     {
-        if (ViewModel is not ExportImportViewModel viewModel) return;
+        Log.Logger?.Debug("PickPngxFileButton clicked");
+
+        if (ViewModel is not ExportImportViewModel viewModel)
+        {
+            Log.Logger?.Warning("ViewModel is not ExportImportViewModel");
+            return;
+        }
 
         try
         {
             var openPicker = new FileOpenPicker();
-
-            // Get window handle safely
             var window = App.Current.CurrentWindow;
-            if (window == null) return;
+
+            if (window == null)
+            {
+                Log.Logger?.Error("Current window is null, cannot initialize file picker");
+                return;
+            }
 
             var hWnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
             WinRT.Interop.InitializeWithWindow.Initialize(openPicker, hWnd);
@@ -101,14 +150,28 @@ public sealed partial class ExportImportView : PageBase
             openPicker.FileTypeFilter.Add(".pngx");
 
             var file = await openPicker.PickSingleFileAsync();
+
             if (file != null)
             {
-                viewModel.ImportFilePath = file.Path;
+                Log.Logger?.Information("File selected for import: {FileName}", file.Name);
+
+                var tempFolder = Windows.Storage.ApplicationData.Current.LocalCacheFolder;
+                var copiedFile = await file.CopyAsync(
+                    tempFolder,
+                    file.Name,
+                    Windows.Storage.NameCollisionOption.ReplaceExisting);
+
+                DispatcherQueue.TryEnqueue(() => viewModel.ImportFilePath = copiedFile.Path);
+                Log.Logger?.Information("File copied to cache and path assigned to ViewModel");
+            }
+            else
+            {
+                Log.Logger?.Debug("File picker cancelled by user");
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error picking file");
+            Logger.LogError(ex, "Error picking file for import");
         }
     }
 }

@@ -197,22 +197,15 @@
             </Setter>
         </Style>
 
-        <DataTemplate x:Name="FolderTemplate" x:DataType="local:PangoExplorerItem">
-            <TreeViewItem IsExpanded="{Binding IsExpanded, Mode=TwoWay}" 
-                          ItemsSource="{Binding Children}"
-                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
-                <StackPanel Orientation="Horizontal" Spacing="8">
-                    <CheckBox IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                              MinWidth="0" Margin="0,0,8,0"/>
-                    <Image Width="20" Source="../Assets/folder.png"/>
-                    <TextBlock Text="{Binding Name}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </TreeViewItem>
-        </DataTemplate>
+        <DataTemplate x:Key="UniversalExportImportItemTemplate" x:DataType="local:PangoExplorerItem">
+            <TreeViewItem ItemsSource="{Binding Children}" 
+                          IsExpanded="{Binding IsExpanded, Mode=TwoWay}"
+                          Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}"
+                          AutomationProperties.Name="{Binding Name}"
+                          HorizontalAlignment="Stretch"
+                          HorizontalContentAlignment="Stretch">
 
-        <DataTemplate x:Name="FileTemplate" x:DataType="local:PangoExplorerItem">
-            <TreeViewItem Visibility="{Binding IsVisible, Converter={StaticResource BoolToVisibilityConvereter}}">
-                <Grid>
+                <Grid HorizontalAlignment="Stretch">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
@@ -221,17 +214,18 @@
 
                     <CheckBox Grid.Column="0" 
                               IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
-                              MinWidth="0" Margin="0,0,8,0"/>
+                              MinWidth="0" Margin="0,0,8,0" VerticalAlignment="Center"/>
 
-                    <FontIcon Grid.Column="1" Glyph="&#xE8D7;" FontSize="{StaticResource FontIconSize}" Margin="0,0,8,0"/>
-                    <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center"/>
+                    <Image Grid.Column="1" Source="{StaticResource SharedFolderImage}" Width="20" Height="20" VerticalAlignment="Center" Stretch="Uniform" Margin="0,0,8,0"
+                           Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConvereter}}"/>
+
+                    <FontIcon Grid.Column="1" Glyph="&#xE8D7;" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"
+                              Visibility="{Binding IsFolder, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}"/>
+
+                    <TextBlock Grid.Column="2" Text="{Binding Name}" VerticalAlignment="Center" />
                 </Grid>
             </TreeViewItem>
         </DataTemplate>
-
-        <templateselectors:PasswordExplorerItemTemplateSelector x:Name="PasswordExplorerItemTemplateSelector"
-                                                                FolderTemplate="{StaticResource FolderTemplate}"
-                                                                FileTemplate="{StaticResource FileTemplate}" />
     </Page.Resources>
 
     <Grid>
@@ -287,7 +281,7 @@
                             <TreeView x:Name="PasswordsTreeView" 
                                       SelectionMode="None" 
                                       ItemsSource="{Binding Passwords}" 
-                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}"/>
+                                      ItemTemplate="{StaticResource UniversalExportImportItemTemplate}"/>
                         </Grid>
 
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
@@ -313,7 +307,7 @@
                         <TextBlock Text="{loc:StringResource Key='SelectFile_Title'}" Style="{StaticResource SubtitleTextBlockStyle}"/>
                         <TextBlock Grid.Row="1" Text="{loc:StringResource Key='SelectFile_Hint'}" Style="{StaticResource BodyTextBlockStyle}" Margin="0,5,0,0"/>
                         <StackPanel Grid.Row="2" Margin="0,20,0,0" Orientation="Horizontal" Spacing="10">
-                            <Button Content="{loc:StringResource Key='Select_Button'}" Click="PickPngxFileButton_Click"/>
+                            <Button Content="{loc:StringResource Key='Select_Button'}" Click="PickPngxFileButton_ClickAsync"/>
                             <StackPanel Orientation="Horizontal" Visibility="{Binding Text, ElementName=PickPngxFileOutputTextBlock, Converter={StaticResource NullOrEmptyToCollapsedConverter}}">
                                 <FontIcon Glyph="&#xE8E5;" FontSize="{StaticResource FontIconSize}" VerticalAlignment="Center"/>
                                 <TextBlock x:Name="PickPngxFileOutputTextBlock" Text="{Binding ImportFilePath}" VerticalAlignment="Center" Margin="5,0,0,0"/>
@@ -344,7 +338,7 @@
                             <TreeView x:Name="ImportTreeView" 
                                       SelectionMode="None"
                                       ItemsSource="{Binding ImportItems}"                                      
-                                      ItemTemplateSelector="{StaticResource PasswordExplorerItemTemplateSelector}">
+                                      ItemTemplate="{StaticResource UniversalExportImportItemTemplate}">
                             </TreeView>
                         </Grid>
 

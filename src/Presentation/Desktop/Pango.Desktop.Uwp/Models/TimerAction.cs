@@ -1,4 +1,3 @@
-using System;
 using Microsoft.UI.Xaml;
 
 namespace Pango.Desktop.Uwp.Models;
@@ -6,14 +5,8 @@ namespace Pango.Desktop.Uwp.Models;
 /// <summary>
 /// Class to unit timer with its Tick event handler
 /// </summary>
-internal class TimerAction
+internal class TimerAction(DispatcherTimer timer, EventHandler<object> timerTickHandler)
 {
-    public TimerAction(DispatcherTimer timer, EventHandler<object> timerTickHadler)
-    {
-        Timer = timer;
-        TimerTickHadler = timerTickHadler;
-    }
-
-    public DispatcherTimer Timer { get; private set; }
-    public EventHandler<object> TimerTickHadler { get; private set; }
+    public DispatcherTimer Timer { get; private set; } = timer;
+    public EventHandler<object> TimerTickHandler { get; private set; } = timerTickHandler;
 }

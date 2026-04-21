@@ -38,11 +38,8 @@ public class RamProtectedString : IDisposable
     /// </summary>
     public void SetPlaintextValue(string? plainText)
     {
-        if (string.IsNullOrEmpty(plainText))
-        {
-            ClearMemory();
-            return;
-        }
+        ClearMemory();
+        if (string.IsNullOrEmpty(plainText)) return;
 
         _iv = new byte[16];
         using var rng = RandomNumberGenerator.Create();
@@ -85,9 +82,7 @@ public class RamProtectedString : IDisposable
         finally
         {
             if (plainBytes != null)
-            {
                 CryptographicOperations.ZeroMemory(plainBytes);
-            }
         }
     }
 

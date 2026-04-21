@@ -1,10 +1,7 @@
 ﻿using Pango.Application.Common;
 using Pango.Desktop.Uwp.Models;
 using Pango.Domain.Entities;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
@@ -25,9 +22,10 @@ public static class TreeBuilder
     {
         return await Task.Run(() =>
         {
-            var folderMap = new Dictionary<string, PangoExplorerItem>(StringComparer.OrdinalIgnoreCase);
-            var childrenMap = new Dictionary<string, List<PangoExplorerItem>>(StringComparer.OrdinalIgnoreCase);
-            var rootItemsList = new List<PangoExplorerItem>();
+            int estimatedSize = Math.Max(flatList.Count, 16);
+            var folderMap = new Dictionary<string, PangoExplorerItem>(estimatedSize, StringComparer.OrdinalIgnoreCase);
+            var childrenMap = new Dictionary<string, List<PangoExplorerItem>>(estimatedSize, StringComparer.OrdinalIgnoreCase);
+            var rootItemsList = new List<PangoExplorerItem>(estimatedSize);
 
             foreach (var item in flatList)
             {

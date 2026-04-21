@@ -1,4 +1,5 @@
-﻿using Pango.Application.Common;
+﻿using Microsoft.Extensions.Logging.Abstractions;
+using Pango.Application.Common;
 using Pango.Infrastructure.Services;
 
 namespace Pango.Infrastructure.Tests
@@ -9,10 +10,10 @@ namespace Pango.Infrastructure.Tests
 
         public PasswordGeneratorTests()
         {
-            _passwordGenerator = new PasswordGenerator();
+            _passwordGenerator = new PasswordGenerator(NullLogger<PasswordGenerator>.Instance);
         }
 
-        private PasswordGenerationOptions CreateOptions(
+        private static PasswordGenerationOptions CreateOptions(
             int length = 16,
             bool useUpper = true,
             bool useLower = true,

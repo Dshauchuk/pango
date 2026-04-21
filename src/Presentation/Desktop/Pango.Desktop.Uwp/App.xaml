@@ -37,6 +37,8 @@
                     <converters:BoolToStarGlyphConverter x:Key="BoolToStarGlyphConverter"/>
                     <converters:BoolToStarColorConverter x:Key="BoolToStarColorConverter"/>
 
+                    <BitmapImage x:Key="SharedFolderImage" UriSource="ms-appx:///Assets/folder.png" DecodePixelWidth="24" DecodePixelHeight="24" />
+                    
                     <!--  Misc resources  -->
                     <Thickness x:Key="DocumentationPageContentPadding">20</Thickness>
                 </ResourceDictionary>

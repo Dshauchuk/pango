@@ -5,8 +5,6 @@ using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using System;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
@@ -38,7 +36,7 @@ public sealed partial class HomeViewModel : ObservableRecipient, IViewModel
         if (Enum.TryParse<AppView>(viewName, out var targetView))
         {
             WeakReferenceMessenger.Default.Send(
-                new NavigationRequstedMessage(
+                new NavigationRequestedMessage(
                     new NavigationParameters(targetView, AppView.Home)));
         }
     }

@@ -1,5 +1,4 @@
 ﻿using ErrorOr;
-using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
@@ -30,9 +29,22 @@ public class UserPasswordsQueryHandler(
             var encodingOptions = await _userContextProvider.GetEncodingOptionsAsync();
             var context = _repositoryContextFactory.Create(_userContextProvider.GetUserName(), encodingOptions);
             var rawPasswords = await _passwordRepository.QueryAsync(p => true, context);
+
             var result = await Task.Run(() =>
             {
-                return rawPasswords.Select(p => p.Adapt<PangoPasswordListItemDto>()).ToList();
+                var dtos = rawPasswords.Select(p => new PangoPasswordListItemDto
+                {
+                    Id = p.Id,
+                    Name = p.Name,
+                    IsCatalog = p.IsCatalog,
+                    CatalogPath = p.CatalogPath,
+                    Star = p.Star,
+                    CreatedAt = p.CreatedAt,
+                    LastModifiedAt = p.LastModifiedAt,
+                    Properties = p.Properties != null ? new Dictionary<string, string>(p.Properties) : []
+                }).ToList();
+
+                return dtos;
             }, cancellationToken);
 
             return result;
