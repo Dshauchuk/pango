@@ -215,13 +215,9 @@ public partial class EditPasswordViewModel : ViewModelBase
                         PasswordValidator.Password = passwordResult.Value.Value;
                         PasswordValidator.SelectedCatalog = passwordResult.Value.CatalogPath;
 
-                        if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? notes))
-                        {
-                            PasswordValidator.Notes = notes;
-                        }
-
-                        if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr) &&
-                            DateTimeOffset.TryParse(expDateStr, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var expDate))
+                    if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
+                    {
+                        if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var expDate))
                         {
                             PasswordValidator.ExpirationDate = expDate;
                             PasswordValidator.HasExpirationDate = true;
