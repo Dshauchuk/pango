@@ -36,6 +36,7 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     private bool _useDigits = true;
     private bool _useSpecial = false;
     private bool _excludeAmbiguous = false;
+    private bool _isGenerating;
     private double _strengthBarWidth;
     private PasswordStrength _strength;
 
@@ -271,8 +272,8 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
         _sender = sender;
         _settingsService = settingsService;
 
-        GenerateCommand = new AsyncRelayCommand(GenerateAsync);
-        RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync);
+        GenerateCommand = new AsyncRelayCommand(GenerateAsync, () => !_isGenerating);
+        RegeneratePasswordCommand = new AsyncRelayCommand(GenerateAsync, () => !_isGenerating);
         CopyPasswordCommand = new RelayCommand(CopyPassword, CanCopyPassword);
         DialogContext = new DialogContext();
 
@@ -343,40 +344,48 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     /// </summary>
     private async Task GenerateAsync()
     {
-        Log.Logger?.Information("GenerateAsync: generating password with length {Length}", Length);
+        if (_isGenerating) return;
+        _isGenerating = true;
 
-        if (!ValidateLength(Length) || !ValidateCharsets())
+        GenerateCommand.NotifyCanExecuteChanged();
+        RegeneratePasswordCommand.NotifyCanExecuteChanged();
+
+        try
         {
-            Log.Logger?.Warning("GenerateAsync: validation failed");
-            return;
+            Log.Logger?.Information("GenerateAsync: generating password with length {Length}", Length);
+
+            if (!ValidateLength(Length) || !ValidateCharsets())
+            {
+                Log.Logger?.Warning("GenerateAsync: validation failed");
+                return;
+            }
+
+            await Task.Delay(50);
+
+            var command = new GeneratePasswordCommand(
+                Length, UseUppercase, UseLowercase, UseDigits, UseSpecial, ExcludeAmbiguous);
+
+            var result = await _sender.Send(command);
+
+            if (result.IsError)
+            {
+                Logger.LogError("Password generation failed: {Errors}", string.Join(", ", result.Errors));
+                var message = result.FirstError.Description ?? ViewResourceLoader.GetString("PasswordGenerationFailed");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, AppNotificationType.Error));
+                return;
+            }
+
+            GeneratedPassword = result.Value;
+            SaveSettings();
+
+            DialogContext.RaiseDialogContentChanged();
         }
-
-        var command = new GeneratePasswordCommand(
-            Length,
-            UseUppercase,
-            UseLowercase,
-            UseDigits,
-            UseSpecial,
-            ExcludeAmbiguous);
-
-        var result = await _sender.Send(command);
-
-        if (result.IsError)
+        finally
         {
-            Log.Logger?.Error("Password generation failed: {Errors}", string.Join(", ", result.Errors));
-            var message = result.FirstError.Description ?? ViewResourceLoader.GetString("PasswordGenerationFailed");
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, AppNotificationType.Error));
-            return;
+            _isGenerating = false;
+            GenerateCommand.NotifyCanExecuteChanged();
+            RegeneratePasswordCommand.NotifyCanExecuteChanged();
         }
-
-        GeneratedPassword = result.Value;
-        SaveSettings();
-        DialogContext.RaiseDialogContentChanged();
-
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordGeneratedSuccessfully")));
-
-        Log.Logger?.Information("Password generated successfully: length {Length}", result.Value.Length);
     }
 
     /// <summary>
@@ -424,22 +433,29 @@ public partial class GeneratePasswordDialogViewModel : ViewModelBase, IDialogVie
     /// </summary>
     private void CopyPassword()
     {
-        if (string.IsNullOrEmpty(GeneratedPassword))
-        {
-            Log.Logger?.Warning("CopyPassword called with empty password");
-            return;
-        }
+        if (string.IsNullOrEmpty(GeneratedPassword)) return;
 
         Log.Logger?.Debug("Copying password to clipboard: length {Length}", GeneratedPassword.Length);
 
-        var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
-        dataPackage.SetText(GeneratedPassword);
-        Clipboard.SetContent(dataPackage);
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            try
+            {
+                var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+                dataPackage.SetText(GeneratedPassword);
+                Clipboard.SetContent(dataPackage);
+                Clipboard.Flush();
 
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(
-                ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
-                AppNotificationType.Success));
+                WeakReferenceMessenger.Default.Send(
+                    new InAppNotificationMessage(
+                        ViewResourceLoader.GetString("PasswordCopiedToClipboard"),
+                        AppNotificationType.Success));
+            }
+            catch (Exception ex)
+            {
+                Log.Logger?.Error(ex, "Clipboard error in GeneratePassword");
+            }
+        });
     }
 
     /// <summary>

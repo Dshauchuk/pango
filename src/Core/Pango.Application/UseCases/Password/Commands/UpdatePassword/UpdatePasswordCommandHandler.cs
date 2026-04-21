@@ -10,25 +10,17 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.Password.Commands.UpdatePassword;
 
-public class UpdatePasswordCommandHandler
+public class UpdatePasswordCommandHandler(
+    IPasswordRepository passwordRepository,
+    IUserContextProvider userContextProvider,
+    IRepositoryContextFactory repositoryContextFactory,
+    ILogger<UpdatePasswordCommandHandler> logger)
 : IRequestHandler<UpdatePasswordCommand, ErrorOr<PangoPasswordDto>>
 {
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private readonly ILogger<UpdatePasswordCommandHandler> _logger;
-
-    public UpdatePasswordCommandHandler(
-        IPasswordRepository passwordRepository, 
-        IUserContextProvider userContextProvider,
-        IRepositoryContextFactory repositoryContextFactory,
-        ILogger<UpdatePasswordCommandHandler> logger)
-    {
-        _passwordRepository = passwordRepository;
-        _userContextProvider = userContextProvider;
-        _repositoryContextFactory = repositoryContextFactory;
-        _logger = logger;
-    }
+    private readonly IPasswordRepository _passwordRepository = passwordRepository;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
+    private readonly ILogger<UpdatePasswordCommandHandler> _logger = logger;
 
     public async Task<ErrorOr<PangoPasswordDto>> Handle(UpdatePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -40,7 +32,7 @@ public class UpdatePasswordCommandHandler
 
             if (password is null)
             {
-                return Error.Failure(ApplicationErrors.Password.NotFound, $"Password with id {request.PasswordId} cannot be deleted: password not found");
+                return Error.Failure(ApplicationErrors.Password.NotFound, $"Password with id {request.PasswordId} cannot be modified: password not found");
             }
 
             if (password.IsCatalog)
@@ -53,11 +45,17 @@ public class UpdatePasswordCommandHandler
                 {
                     string newCatalogPath = request.CatalogPath + (string.IsNullOrEmpty(request.CatalogPath) ? string.Empty : AppConstants.CatalogDelimeter) + request.Name;
 
+                    var passwordsToUpdate = new List<PangoPassword>();
                     foreach (var pwd in catalogPasswords)
                     {
                         string suffix = pwd.CatalogPath[oldCatalogPath.Length..];
                         pwd.CatalogPath = newCatalogPath + suffix;
-                        await _passwordRepository.UpdateAsync(pwd, context);
+                        passwordsToUpdate.Add(pwd);
+                    }
+
+                    if (passwordsToUpdate.Count != 0)
+                    {
+                        await _passwordRepository.UpdateAsync(passwordsToUpdate, context);
                     }
                 }
             }

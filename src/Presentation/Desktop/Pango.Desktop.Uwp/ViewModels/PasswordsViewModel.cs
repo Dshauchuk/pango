@@ -1,7 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
-using Mapster;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
@@ -47,6 +46,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private ObservableCollection<PangoExplorerItem> _originalList = [];
     private ObservableCollection<PangoExplorerItem> _passwords = [];
     private CancellationTokenSource? _searchCts;
+    private CancellationTokenSource? _filterCts;
     private string _searchText = string.Empty;
     private bool _isLoaded;
     private bool _needsRefresh;
@@ -78,7 +78,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         EditPasswordCommand = new RelayCommand<PangoExplorerItem>(OnEditPasswordAsync, CanEdit);
         CopyPasswordToClipboardCommand = new RelayCommand<PangoExplorerItem>(OnCopyPasswordToClipboardAsync);
         SeePasswordCommand = new RelayCommand<PangoExplorerItem>(OnSeePasswordCommandAsync);
-        UpdateListCommand = new RelayCommand(OnUpdateListAsync);
+        UpdateListCommand = new AsyncRelayCommand(OnUpdateListAsync);
         ToggleStarCommand = new RelayCommand<PangoExplorerItem>(OnToggleStarAsync);
 
         App.Current.LoginSucceeded += Current_LoginSucceededAsync;
@@ -126,7 +126,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <summary>
     /// Command for refreshing the passwords list.
     /// </summary>
-    public RelayCommand UpdateListCommand { get; }
+    public IAsyncRelayCommand UpdateListCommand { get; }
 
     /// <summary>
     /// Command for toggling the starred status of a password.
@@ -355,29 +355,34 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="dto">Password item to copy or null.</param>
     private async void OnCopyPasswordToClipboardAsync(PangoExplorerItem? dto)
     {
-        if (dto is null)
-        {
-            Log.Logger?.Warning("CopyPasswordToClipboardAsync called with null item");
-            return;
-        }
+        if (dto is null) return;
 
         Log.Logger?.Debug("Copying password to clipboard for: {ItemName}", dto.Name);
 
         var passwordResult = await _sender.Send(new FindUserPasswordQuery(dto.Id));
         if (!passwordResult.IsError)
         {
-            var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
-            dataPackage.SetText(passwordResult.Value.Value?.ToString() ?? string.Empty);
-            Clipboard.SetContent(dataPackage);
+            var passwordValue = passwordResult.Value.Value?.ToString() ?? string.Empty;
 
-            WeakReferenceMessenger.Default.Send(
-                new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordCopiedToClipboard")));
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+            {
+                try
+                {
+                    var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+                    dataPackage.SetText(passwordValue);
+                    Clipboard.SetContent(dataPackage);
+                    Clipboard.Flush();
 
-            Log.Logger?.Information("Password copied to clipboard: {ItemName}", dto.Name);
-        }
-        else
-        {
-            Log.Logger?.Warning("Failed to fetch password for clipboard: {ItemName}", dto.Name);
+                    WeakReferenceMessenger.Default.Send(
+                        new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordCopiedToClipboard")));
+
+                    Log.Logger?.Information("Password copied to clipboard: {ItemName}", dto.Name);
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger?.Error(ex, "Clipboard error");
+                }
+            });
         }
     }
 
@@ -510,8 +515,9 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <summary>
     /// Refreshes the password list asynchronously.
     /// </summary>
-    private async void OnUpdateListAsync()
+    private async Task OnUpdateListAsync()
     {
+        if (_isReloading) return;
         Log.Logger?.Information("UpdateList command executed: resetting view");
         await ResetViewAsync();
     }
@@ -523,25 +529,41 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         Log.Logger?.Debug("ApplyFilter called: ShowOnlyStarred={ShowOnlyStarred}", ShowOnlyStarred);
 
+        _filterCts?.Cancel();
+        _filterCts = new CancellationTokenSource();
+        var token = _filterCts.Token;
+
         var snapshot = Passwords.ToList();
 
-        Task.Run(() =>
+        Task.Run(async () =>
         {
-            var visibilityMap = new Dictionary<Guid, bool>();
-            bool hasVisible = false;
-
-            foreach (var item in snapshot)
+            try
             {
-                if (CalculateStarredVisibility(item, visibilityMap))
-                    hasVisible = true;
+                await Task.Delay(250, token);
+
+                var visibilityMap = new Dictionary<Guid, bool>();
+                bool hasVisible = false;
+
+                foreach (var item in snapshot)
+                {
+                    if (token.IsCancellationRequested) return;
+                    if (CalculateStarredVisibility(item, visibilityMap))
+                        hasVisible = true;
+                }
+
+                if (token.IsCancellationRequested) return;
+
+                App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (token.IsCancellationRequested) return;
+
+                    ApplyVisibilityMap(Passwords, visibilityMap);
+
+                    HasPasswords = hasVisible;
+                });
             }
-
-            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () =>
-            {
-                ApplyVisibilityMap(Passwords, visibilityMap);
-                HasPasswords = hasVisible;
-            });
-        });
+            catch (TaskCanceledException) { }
+        }, token);
     }
 
     private bool CalculateStarredVisibility(PangoExplorerItem node, Dictionary<Guid, bool> visibilityMap)
@@ -689,26 +711,34 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
         var snapshot = Passwords.ToList();
 
-        Task.Run(() =>
+        Task.Run(async () =>
         {
-            var visibilityMap = new Dictionary<Guid, bool>();
-            bool hasVisible = false;
-
-            foreach (PangoExplorerItem password in snapshot)
+            try
             {
+                await Task.Delay(300, token);
+
+                var visibilityMap = new Dictionary<Guid, bool>();
+                bool hasVisible = false;
+
+                foreach (PangoExplorerItem password in snapshot)
+                {
+                    if (token.IsCancellationRequested) return;
+                    if (CalculateVisibility(password, searchPredicate, visibilityMap))
+                        hasVisible = true;
+                }
+
                 if (token.IsCancellationRequested) return;
-                if (CalculateVisibility(password, searchPredicate, visibilityMap))
-                    hasVisible = true;
+
+                App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+                {
+                    if (token.IsCancellationRequested) return;
+
+                    ApplyVisibilityMap(Passwords, visibilityMap);
+
+                    HasPasswords = hasVisible;
+                });
             }
-
-            if (token.IsCancellationRequested) return;
-
-            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () =>
-            {
-                ApplyVisibilityMap(Passwords, visibilityMap);
-                HasPasswords = hasVisible;
-                Log.Logger?.Debug("Filter applied: HasPasswords={HasPasswords}", hasVisible);
-            });
+            catch (TaskCanceledException) { }
         }, token);
     }
 
@@ -792,6 +822,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         if (_isReloading) return;
         _isReloading = true;
+        IsBusy = true;
 
         try
         {
@@ -815,6 +846,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         finally
         {
             _isReloading = false;
+            IsBusy = false;
         }
     }
 

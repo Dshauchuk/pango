@@ -76,6 +76,13 @@ public sealed partial class MainAppViewModel(IAppIdleService appIdleService, ILo
     private void OnLockIdleTimerElapsed()
     {
         StopLockAppIdle();
+
+        var passwordRepo = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<Application.Common.Interfaces.Persistence.IPasswordRepository>(App.Host.Services);
+        passwordRepo.ClearCache();
+
+        Security.SecureUserSession.ClearUser();
+        App.Current.RaiseSignedOut();
+
         WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.MainAppView)));
     }
 }
