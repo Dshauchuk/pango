@@ -107,9 +107,6 @@ public partial class PasswordDetailsDialogViewModel(ISender sender, ILogger<Pass
                 Notes = notes;
             }
 
-            Notes = passwordResult.Value.Properties.TryGetValue(
-                PasswordProperties.Notes, out string? notes) ? notes : string.Empty;
-
             if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.ExpirationDate, out string? expDateStr))
             {
                 if (DateTimeOffset.TryParse(expDateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var expDate) ||
