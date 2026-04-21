@@ -53,6 +53,12 @@ public sealed partial class MainWindow : Window
         _logger = App.Host?.Services?.GetService<ILogger<MainWindow>>();
         var trayLogger = App.Host?.Services?.GetService<ILogger<TrayIconViewModel>>();
 
+        string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+
         SubClassing();
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(TitleBarBorder);
@@ -499,200 +505,10 @@ public sealed partial class MainWindow : Window
                 return;
             }
 
-            int warningDays = Windows.Storage.ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
-            var now = DateTimeOffset.UtcNow.Date;
-
-            var stackPanel = new StackPanel { Spacing = 12 };
-            bool hasAnyExpiring = false;
-            int visualItemsCount = 0;
-            var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
-
-            var textPrimaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"];
-            var textSecondaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorSecondaryBrush"];
-            var cardBackgroundBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
-            var cardBorderBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardStrokeColorDefaultBrush"];
-
-            if (!string.IsNullOrEmpty(_currentLoggedInUser) && cache.TryGetValue(_currentLoggedInUser, out var userItems))
+            DispatcherQueue.TryEnqueue(() =>
             {
-                var expiringItems = userItems
-                    .Where(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays)
-                    .OrderBy(i => i.Date)
-                    .ToList();
-
-                if (expiringItems.Count > 0)
-                {
-                    hasAnyExpiring = true;
-                    stackPanel.Children.Add(new TextBlock
-                    {
-                        Text = string.Format(resourceLoader.GetString("Expiring_Detail_Header"), _currentLoggedInUser),
-                        FontSize = 20,
-                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                        Foreground = textPrimaryBrush,
-                        Margin = new Thickness(0, 0, 0, 12)
-                    });
-
-                    var itemsToShow = expiringItems.Take(15).ToList();
-
-                    foreach (var item in itemsToShow)
-                    {
-                        visualItemsCount++;
-                        int daysLeft = (int)(item.Date.LocalDateTime.Date - now).TotalDays;
-                        string statusText = daysLeft switch
-                        {
-                            < 0 => string.Format(resourceLoader.GetString("Expiring_Detail_Expired"), item.Name, -daysLeft),
-                            0 => string.Format(resourceLoader.GetString("Expiring_Detail_ExpiresToday"), item.Name),
-                            _ => string.Format(resourceLoader.GetString("Expiring_Detail_Expiring"), item.Name, daysLeft)
-                        };
-
-                        var color = daysLeft <= 0 ? Colors.Red : Colors.DarkOrange;
-
-                        var itemCard = new Border
-                        {
-                            Background = cardBackgroundBrush,
-                            BorderBrush = cardBorderBrush,
-                            BorderThickness = new Thickness(1),
-                            CornerRadius = new CornerRadius(8),
-                            Padding = new Thickness(16),
-                            Margin = new Thickness(0, 0, 0, 6)
-                        };
-
-                        var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
-                        itemPanel.Children.Add(new FontIcon
-                        {
-                            Glyph = "\uE814",
-                            FontSize = 18,
-                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color),
-                            VerticalAlignment = VerticalAlignment.Center
-                        });
-                        itemPanel.Children.Add(new TextBlock
-                        {
-                            Text = statusText,
-                            FontSize = 16,
-                            Foreground = textPrimaryBrush,
-                            VerticalAlignment = VerticalAlignment.Center
-                        });
-                        itemCard.Child = itemPanel;
-
-                        stackPanel.Children.Add(itemCard);
-                    }
-
-                    if (expiringItems.Count > 15)
-                    {
-                        stackPanel.Children.Add(new TextBlock
-                        {
-                            Text = $"... and {expiringItems.Count - 15} more",
-                            FontSize = 14,
-                            Foreground = textSecondaryBrush,
-                            FontStyle = Windows.UI.Text.FontStyle.Italic,
-                            Margin = new Thickness(0, 0, 0, 6)
-                        });
-                        visualItemsCount++;
-                    }
-                }
-            }
-            else if (string.IsNullOrEmpty(_currentLoggedInUser))
-            {
-                foreach (var kvp in cache)
-                {
-                    var expiringCount = kvp.Value.Count(i =>
-                        (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays &&
-                        (i.Date.LocalDateTime.Date - now).TotalDays >= 0);
-                    var expiredCount = kvp.Value.Count(i => (i.Date.LocalDateTime.Date - now).TotalDays < 0);
-
-                    if (expiringCount > 0 || expiredCount > 0)
-                    {
-                        hasAnyExpiring = true;
-                        visualItemsCount++;
-
-                        var userPanel = new StackPanel
-                        {
-                            Background = cardBackgroundBrush,
-                            Padding = new Thickness(20),
-                            CornerRadius = new CornerRadius(8),
-                            Margin = new Thickness(0, 0, 0, 12),
-                            BorderBrush = cardBorderBrush,
-                            BorderThickness = new Thickness(1)
-                        };
-
-                        var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 0, 0, 8) };
-                        headerPanel.Children.Add(new FontIcon
-                        {
-                            Glyph = "\uE77B",
-                            FontSize = 20,
-                            Foreground = textPrimaryBrush,
-                            VerticalAlignment = VerticalAlignment.Center
-                        });
-                        headerPanel.Children.Add(new TextBlock
-                        {
-                            Text = string.Format(resourceLoader.GetString("Expiring_Summary_Header"), kvp.Key),
-                            FontSize = 18,
-                            FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
-                            Foreground = textPrimaryBrush,
-                            VerticalAlignment = VerticalAlignment.Center
-                        });
-                        userPanel.Children.Add(headerPanel);
-
-                        if (expiringCount > 0)
-                            userPanel.Children.Add(new TextBlock
-                            {
-                                Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expiring"), expiringCount),
-                                FontSize = 15,
-                                Margin = new Thickness(30, 4, 0, 0),
-                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.DarkOrange)
-                            });
-
-                        if (expiredCount > 0)
-                            userPanel.Children.Add(new TextBlock
-                            {
-                                Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expired"), expiredCount),
-                                FontSize = 15,
-                                Margin = new Thickness(30, 4, 0, 0),
-                                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Red)
-                            });
-
-                        stackPanel.Children.Add(userPanel);
-                    }
-                }
-
-                if (hasAnyExpiring)
-                {
-                    visualItemsCount++;
-                    stackPanel.Children.Add(new TextBlock
-                    {
-                        Text = resourceLoader.GetString("Expiring_Summary_LoginPrompt"),
-                        FontSize = 15,
-                        FontStyle = Windows.UI.Text.FontStyle.Italic,
-                        Foreground = textSecondaryBrush,
-                        TextWrapping = TextWrapping.Wrap,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 16, 0, 0)
-                    });
-                }
-            }
-
-            if (hasAnyExpiring || forceShow)
-            {
-                if (stackPanel.Children.Count == 0 && forceShow)
-                {
-                    visualItemsCount = 1;
-                    stackPanel.Children.Add(new TextBlock
-                    {
-                        Text = resourceLoader.GetString("NoPasswordsFound") ?? "No passwords require attention.",
-                        FontSize = 15,
-                        FontStyle = Windows.UI.Text.FontStyle.Italic,
-                        Foreground = textSecondaryBrush,
-                        HorizontalAlignment = HorizontalAlignment.Center,
-                        Margin = new Thickness(0, 20, 0, 0)
-                    });
-                }
-                ShowOrUpdateAlertWindow(stackPanel, visualItemsCount);
-            }
-            else
-            {
-                _expirationWindow?.Close();
-                _expirationWindow = null;
-                Log.Logger?.Debug("No expiring items: expiration window closed");
-            }
+                BuildAndShowExpirationUi(cache, forceShow);
+            });
         }
         catch (Exception ex)
         {
@@ -701,6 +517,207 @@ public sealed partial class MainWindow : Window
         finally
         {
             _isAlertRefreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// Executed strictly in the UI thread for safe creation of controls.
+    /// </summary>
+    private void BuildAndShowExpirationUi(Dictionary<string, List<ExpirationCacheItem>> cache, bool forceShow)
+    {
+        int warningDays = Windows.Storage.ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
+        var now = DateTimeOffset.UtcNow.Date;
+
+        var stackPanel = new StackPanel { Spacing = 12 };
+        bool hasAnyExpiring = false;
+        int visualItemsCount = 0;
+        var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+
+        var textPrimaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"];
+        var textSecondaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorSecondaryBrush"];
+        var cardBackgroundBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
+        var cardBorderBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardStrokeColorDefaultBrush"];
+
+        if (!string.IsNullOrEmpty(_currentLoggedInUser) && cache.TryGetValue(_currentLoggedInUser, out var userItems))
+        {
+            var expiringItems = userItems
+                .Where(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays)
+                .OrderBy(i => i.Date)
+                .ToList();
+
+            if (expiringItems.Count > 0)
+            {
+                hasAnyExpiring = true;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = string.Format(resourceLoader.GetString("Expiring_Detail_Header"), _currentLoggedInUser),
+                    FontSize = 20,
+                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                    Foreground = textPrimaryBrush,
+                    Margin = new Thickness(0, 0, 0, 12)
+                });
+
+                var itemsToShow = expiringItems.Take(15).ToList();
+
+                foreach (var item in itemsToShow)
+                {
+                    visualItemsCount++;
+                    int daysLeft = (int)(item.Date.LocalDateTime.Date - now).TotalDays;
+                    string statusText = daysLeft switch
+                    {
+                        < 0 => string.Format(resourceLoader.GetString("Expiring_Detail_Expired"), item.Name, -daysLeft),
+                        0 => string.Format(resourceLoader.GetString("Expiring_Detail_ExpiresToday"), item.Name),
+                        _ => string.Format(resourceLoader.GetString("Expiring_Detail_Expiring"), item.Name, daysLeft)
+                    };
+
+                    var color = daysLeft <= 0 ? Colors.Red : Colors.DarkOrange;
+
+                    var itemCard = new Border
+                    {
+                        Background = cardBackgroundBrush,
+                        BorderBrush = cardBorderBrush,
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(8),
+                        Padding = new Thickness(16),
+                        Margin = new Thickness(0, 0, 0, 6)
+                    };
+
+                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
+                    itemPanel.Children.Add(new FontIcon
+                    {
+                        Glyph = "\uE814",
+                        FontSize = 18,
+                        Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    itemPanel.Children.Add(new TextBlock
+                    {
+                        Text = statusText,
+                        FontSize = 16,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    itemCard.Child = itemPanel;
+
+                    stackPanel.Children.Add(itemCard);
+                }
+
+                if (expiringItems.Count > 15)
+                {
+                    stackPanel.Children.Add(new TextBlock
+                    {
+                        Text = $"... and {expiringItems.Count - 15} more",
+                        FontSize = 14,
+                        Foreground = textSecondaryBrush,
+                        FontStyle = Windows.UI.Text.FontStyle.Italic,
+                        Margin = new Thickness(0, 0, 0, 6)
+                    });
+                    visualItemsCount++;
+                }
+            }
+        }
+        else if (string.IsNullOrEmpty(_currentLoggedInUser))
+        {
+            foreach (var kvp in cache)
+            {
+                var expiringCount = kvp.Value.Count(i =>
+                    (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays &&
+                    (i.Date.LocalDateTime.Date - now).TotalDays >= 0);
+                var expiredCount = kvp.Value.Count(i => (i.Date.LocalDateTime.Date - now).TotalDays < 0);
+
+                if (expiringCount > 0 || expiredCount > 0)
+                {
+                    hasAnyExpiring = true;
+                    visualItemsCount++;
+
+                    var userPanel = new StackPanel
+                    {
+                        Background = cardBackgroundBrush,
+                        Padding = new Thickness(20),
+                        CornerRadius = new CornerRadius(8),
+                        Margin = new Thickness(0, 0, 0, 12),
+                        BorderBrush = cardBorderBrush,
+                        BorderThickness = new Thickness(1)
+                    };
+
+                    var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 0, 0, 8) };
+                    headerPanel.Children.Add(new FontIcon
+                    {
+                        Glyph = "\uE77B",
+                        FontSize = 20,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    headerPanel.Children.Add(new TextBlock
+                    {
+                        Text = string.Format(resourceLoader.GetString("Expiring_Summary_Header"), kvp.Key),
+                        FontSize = 18,
+                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    userPanel.Children.Add(headerPanel);
+
+                    if (expiringCount > 0)
+                        userPanel.Children.Add(new TextBlock
+                        {
+                            Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expiring"), expiringCount),
+                            FontSize = 15,
+                            Margin = new Thickness(30, 4, 0, 0),
+                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.DarkOrange)
+                        });
+
+                    if (expiredCount > 0)
+                        userPanel.Children.Add(new TextBlock
+                        {
+                            Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expired"), expiredCount),
+                            FontSize = 15,
+                            Margin = new Thickness(30, 4, 0, 0),
+                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Red)
+                        });
+
+                    stackPanel.Children.Add(userPanel);
+                }
+            }
+
+            if (hasAnyExpiring)
+            {
+                visualItemsCount++;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = resourceLoader.GetString("Expiring_Summary_LoginPrompt"),
+                    FontSize = 15,
+                    FontStyle = Windows.UI.Text.FontStyle.Italic,
+                    Foreground = textSecondaryBrush,
+                    TextWrapping = TextWrapping.Wrap,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 16, 0, 0)
+                });
+            }
+        }
+
+        if (hasAnyExpiring || forceShow)
+        {
+            if (stackPanel.Children.Count == 0 && forceShow)
+            {
+                visualItemsCount = 1;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = resourceLoader.GetString("NoPasswordsFound") ?? "No passwords require attention.",
+                    FontSize = 15,
+                    FontStyle = Windows.UI.Text.FontStyle.Italic,
+                    Foreground = textSecondaryBrush,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 20, 0, 0)
+                });
+            }
+            ShowOrUpdateAlertWindow(stackPanel, visualItemsCount);
+        }
+        else
+        {
+            _expirationWindow?.Close();
+            _expirationWindow = null;
+            Log.Logger?.Debug("No expiring items: expiration window closed");
         }
     }
 

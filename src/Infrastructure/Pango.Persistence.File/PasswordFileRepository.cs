@@ -139,6 +139,68 @@ public class PasswordFileRepository(
     }
 
     /// <summary>
+    /// Updates multiple password records and persists the changes exactly ONCE.
+    /// </summary>
+    public async Task UpdateAsync(IEnumerable<PangoPassword> passwords, IRepositoryActionContext context)
+    {
+        if (context is not FileRepositoryActionContext ctx)
+            throw new ArgumentException($"Invalid context type.", nameof(context));
+
+        var pwdArray = passwords.ToArray();
+        if (pwdArray.Length == 0) return;
+
+        logger.LogDebug("Batch updating {Count} passwords for user {UserId}.", pwdArray.Length, ctx.UserId);
+
+        var passwordList = await GetOrLoadCacheAsync(ctx);
+        bool hasChanges = false;
+
+        foreach (var password in pwdArray)
+        {
+            var pwdToUpdate = passwordList.FirstOrDefault(p => p.Id == password.Id);
+            if (pwdToUpdate != null)
+            {
+                pwdToUpdate.Name = password.Name;
+                pwdToUpdate.Login = password.Login;
+                pwdToUpdate.Properties = password.Properties;
+                pwdToUpdate.Value = password.Value;
+                pwdToUpdate.Target = password.Target;
+                pwdToUpdate.CatalogPath = password.CatalogPath;
+                pwdToUpdate.Star = password.Star;
+                pwdToUpdate.IsCatalog = password.IsCatalog;
+                pwdToUpdate.LastModifiedAt = DateTimeOffset.UtcNow;
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+        {
+            await FlushCacheToDiskAsync(ctx);
+            logger.LogInformation("Successfully batch updated {Count} passwords.", pwdArray.Length);
+        }
+    }
+
+    /// <summary>
+    /// Wipes the decrypted RAM cache securely.
+    /// </summary>
+    public void ClearCache()
+    {
+        lock (_cacheLock)
+        {
+            if (_sessionCache != null)
+            {
+                foreach (var pwd in _sessionCache)
+                {
+                    pwd.Dispose();
+                }
+                _sessionCache.Clear();
+                _sessionCache = null;
+            }
+            _cachedUserId = null;
+        }
+        logger.LogInformation("Password RAM cache wiped securely.");
+    }
+
+    /// <summary>
     /// Deletes a password record by its ID and persists the removal.
     /// </summary>
     public async Task DeleteAsync(PangoPassword password, IRepositoryActionContext context)

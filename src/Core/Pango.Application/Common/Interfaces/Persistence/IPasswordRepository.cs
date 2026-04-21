@@ -44,9 +44,16 @@ public interface IPasswordRepository
     Task<PangoPassword> UpdateAsync(PangoPassword password, IRepositoryActionContext context);
 
     /// <summary>
+    /// Updates a collection of passwords in a single transaction/file operation.
+    /// </summary>
+    Task UpdateAsync(IEnumerable<PangoPassword> passwords, IRepositoryActionContext context);
+
+    /// <summary>
     /// 
     /// </summary>
     /// <param name="password"></param>
     /// <returns></returns>
     Task DeleteAsync(PangoPassword password, IRepositoryActionContext context);
+
+    void ClearCache();
 }

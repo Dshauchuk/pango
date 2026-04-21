@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using ErrorOr;
 using MediatR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
@@ -98,9 +99,10 @@ public partial class UserViewModel : ViewModelBase
     private void OnSignOut()
     {
         if (_logger.IsEnabled(LogLevel.Debug))
-        {
             _logger.LogDebug("User \"{currentUserName}\" logged out", _currentUserName);
-        }
+
+        var passwordRepo = App.Host.Services.GetRequiredService<IPasswordRepository>();
+        passwordRepo.ClearCache();
 
         SecureUserSession.ClearUser();
         App.Current.RaiseSignedOut();

@@ -13,6 +13,8 @@ namespace Pango.Desktop.Uwp.Dialogs;
 /// </summary>
 public class DialogService : IDialogService
 {
+    private static readonly SemaphoreSlim _dialogSemaphore = new(1, 1);
+
     /// <summary>
     /// Shows the new catalog creation/edit dialog asynchronously.
     /// </summary>
@@ -91,27 +93,45 @@ public class DialogService : IDialogService
     /// <returns>True if the user clicked the primary (Yes) button; false otherwise.</returns>
     public async Task<bool> ConfirmAsync(string confirmationTitle, string confirmationText)
     {
-        Log.Logger?.Debug("Showing confirmation dialog: {Title}", confirmationTitle);
-
-        var resourceLoader = new ResourceLoader();
-        var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
-
-        var confirmDialog = new ContentDialog
+        if (!_dialogSemaphore.Wait(0))
         {
-            XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
-            RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
-            Title = confirmationTitle,
-            Content = confirmationText,
-            CloseButtonText = resourceLoader.GetString("Cancel"),
-            PrimaryButtonText = resourceLoader.GetString("Yes"),
-            DefaultButton = ContentDialogButton.Primary
-        };
+            Log.Logger?.Warning("Confirmation dialog ignored because another dialog is already open.");
+            return false;
+        }
 
-        var result = await confirmDialog.ShowAsync();
-        var accepted = result == ContentDialogResult.Primary;
+        try
+        {
+            Log.Logger?.Debug("Showing confirmation dialog: {Title}", confirmationTitle);
 
-        Log.Logger?.Debug("Confirmation dialog result: {Accepted}", accepted);
-        return accepted;
+            var resourceLoader = new ResourceLoader();
+            var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
+
+            var confirmDialog = new ContentDialog
+            {
+                XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
+                RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
+                Title = confirmationTitle,
+                Content = confirmationText,
+                CloseButtonText = resourceLoader.GetString("Cancel"),
+                PrimaryButtonText = resourceLoader.GetString("Yes"),
+                DefaultButton = ContentDialogButton.Primary
+            };
+
+            var result = await confirmDialog.ShowAsync();
+            var accepted = result == ContentDialogResult.Primary;
+
+            Log.Logger?.Debug("Confirmation dialog result: {Accepted}", accepted);
+            return accepted;
+        }
+        catch (Exception ex)
+        {
+            Log.Logger?.Error(ex, "Failed to show confirmation dialog");
+            return false;
+        }
+        finally
+        {
+            _dialogSemaphore.Release();
+        }
     }
 
     /// <summary>
@@ -120,119 +140,136 @@ public class DialogService : IDialogService
     /// <param name="dialogContent">The dialog content implementing IContentDialog with ViewModel.</param>
     private async Task ShowAsync(IContentDialog dialogContent)
     {
-        Log.Logger?.Debug("Showing dialog: {DialogType}", dialogContent.GetType().Name);
-
-        var resourceLoader = new ResourceLoader();
-        var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
-
-        var contentDialog = new ContentDialog
+        if (!_dialogSemaphore.Wait(0))
         {
-            XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
-            RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
-            Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
-            Title = dialogContent.Title,
-            PrimaryButtonText = string.IsNullOrEmpty(dialogContent.PrimaryButtonText)
-                ? resourceLoader.GetString("Save")
-                : dialogContent.PrimaryButtonText,
-            CloseButtonText = string.IsNullOrEmpty(dialogContent.CancelButtonText)
-                ? resourceLoader.GetString("Cancel")
-                : dialogContent.CancelButtonText,
-            DefaultButton = ContentDialogButton.Primary,
-            Content = dialogContent,
-            IsPrimaryButtonEnabled = dialogContent.ViewModel?.CanSave() ?? false
-        };
-
-        contentDialog.PrimaryButtonClick += async (s, e) =>
-        {
-            Log.Logger?.Debug("Dialog primary button clicked");
-
-            var deferral = e.GetDeferral();
-            try
-            {
-                if (dialogContent.ViewModel != null)
-                {
-                    await dialogContent.ViewModel.OnSaveAsync();
-                    if (!dialogContent.ViewModel.CanSave())
-                    {
-                        Log.Logger?.Debug("Save validation failed, keeping dialog open");
-                        e.Cancel = true;
-                    }
-                    else
-                    {
-                        Log.Logger?.Information("Dialog save completed successfully");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Logger?.Error(ex, "Error during dialog save operation");
-                e.Cancel = true;
-            }
-            finally
-            {
-                deferral.Complete();
-            }
-        };
-
-        contentDialog.CloseButtonClick += async (s, e) =>
-        {
-            Log.Logger?.Debug("Dialog close/cancel button clicked");
-
-            var deferral = e.GetDeferral();
-            try
-            {
-                if (dialogContent.ViewModel != null)
-                {
-                    await dialogContent.ViewModel.OnCancelAsync();
-                    Log.Logger?.Debug("Dialog cancel completed");
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.Logger?.Error(ex, "Error during dialog cancel operation");
-            }
-            finally
-            {
-                deferral.Complete();
-            }
-        };
-
-        // Subscribe to content changes to update button state dynamically
-        if (dialogContent.ViewModel?.DialogContext != null)
-        {
-            dialogContent.ViewModel.DialogContext.OnContentChanged += DialogContext_OnContentChanged;
+            Log.Logger?.Warning("ShowAsync ignored for {DialogType} because another dialog is already open.", dialogContent.GetType().Name);
+            return;
         }
-
-        void DialogContext_OnContentChanged(object? sender, EventArgs eventArgs)
-        {
-            contentDialog.IsPrimaryButtonEnabled = dialogContent.ViewModel?.CanSave() ?? false;
-            Log.Logger?.Debug("Dialog content changed: primary button enabled = {Enabled}", contentDialog.IsPrimaryButtonEnabled);
-        }
-
-        // Initialize ViewModel if it implements navigation interface
-        if (dialogContent.ViewModel is ViewModelBase viewModelBase)
-        {
-            await viewModelBase.OnNavigatedToAsync(dialogContent.GetDialogParameter());
-            Log.Logger?.Debug("ViewModel OnNavigatedToAsync completed");
-        }
-
-        contentDialog.Opened += dialogContent.DialogOpened;
 
         try
         {
-            // Wait for the dialog to close
-            await contentDialog.ShowAsync();
-            Log.Logger?.Debug("Dialog closed");
+            Log.Logger?.Debug("Showing dialog: {DialogType}", dialogContent.GetType().Name);
+
+            var resourceLoader = new ResourceLoader();
+            var rootElement = App.Current.CurrentWindow?.Content as FrameworkElement;
+
+            var contentDialog = new ContentDialog
+            {
+                XamlRoot = App.Current.CurrentWindow!.Content.XamlRoot,
+                RequestedTheme = rootElement?.RequestedTheme ?? ElementTheme.Default,
+                Style = Microsoft.UI.Xaml.Application.Current.Resources["DefaultContentDialogStyle"] as Style,
+                Title = dialogContent.Title,
+                PrimaryButtonText = string.IsNullOrEmpty(dialogContent.PrimaryButtonText)
+                    ? resourceLoader.GetString("Save")
+                    : dialogContent.PrimaryButtonText,
+                CloseButtonText = string.IsNullOrEmpty(dialogContent.CancelButtonText)
+                    ? resourceLoader.GetString("Cancel")
+                    : dialogContent.CancelButtonText,
+                DefaultButton = ContentDialogButton.Primary,
+                Content = dialogContent,
+                IsPrimaryButtonEnabled = dialogContent.ViewModel?.CanSave() ?? false
+            };
+
+            contentDialog.PrimaryButtonClick += async (s, e) =>
+            {
+                Log.Logger?.Debug("Dialog primary button clicked");
+
+                var deferral = e.GetDeferral();
+                try
+                {
+                    if (dialogContent.ViewModel != null)
+                    {
+                        await dialogContent.ViewModel.OnSaveAsync();
+                        if (!dialogContent.ViewModel.CanSave())
+                        {
+                            Log.Logger?.Debug("Save validation failed, keeping dialog open");
+                            e.Cancel = true;
+                        }
+                        else
+                        {
+                            Log.Logger?.Information("Dialog save completed successfully");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger?.Error(ex, "Error during dialog save operation");
+                    e.Cancel = true;
+                }
+                finally
+                {
+                    deferral.Complete();
+                }
+            };
+
+            contentDialog.CloseButtonClick += async (s, e) =>
+            {
+                Log.Logger?.Debug("Dialog close/cancel button clicked");
+
+                var deferral = e.GetDeferral();
+                try
+                {
+                    if (dialogContent.ViewModel != null)
+                    {
+                        await dialogContent.ViewModel.OnCancelAsync();
+                        Log.Logger?.Debug("Dialog cancel completed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger?.Error(ex, "Error during dialog cancel operation");
+                }
+                finally
+                {
+                    deferral.Complete();
+                }
+            };
+
+            // Subscribe to content changes to update button state dynamically
+            void DialogContext_OnContentChanged(object? sender, EventArgs eventArgs)
+            {
+                contentDialog.IsPrimaryButtonEnabled = dialogContent.ViewModel?.CanSave() ?? false;
+                Log.Logger?.Debug("Dialog content changed: primary button enabled = {Enabled}", contentDialog.IsPrimaryButtonEnabled);
+            }
+
+            if (dialogContent.ViewModel?.DialogContext != null)
+            {
+                dialogContent.ViewModel.DialogContext.OnContentChanged += DialogContext_OnContentChanged;
+            }
+
+            // Initialize ViewModel if it implements navigation interface
+            if (dialogContent.ViewModel is ViewModelBase viewModelBase)
+            {
+                await viewModelBase.OnNavigatedToAsync(dialogContent.GetDialogParameter());
+                Log.Logger?.Debug("ViewModel OnNavigatedToAsync completed");
+            }
+
+            contentDialog.Opened += dialogContent.DialogOpened;
+
+            try
+            {
+                // Wait for the dialog to close
+                await contentDialog.ShowAsync();
+                Log.Logger?.Debug("Dialog closed");
+            }
+            catch (Exception ex)
+            {
+                Log.Logger?.Error(ex, "Failed to show dialog");
+            }
+            finally
+            {
+                // Clean up event subscriptions to prevent memory leaks
+                if (dialogContent.ViewModel?.DialogContext != null)
+                {
+                    dialogContent.ViewModel.DialogContext.OnContentChanged -= DialogContext_OnContentChanged;
+                }
+                contentDialog.Opened -= dialogContent.DialogOpened;
+                Log.Logger?.Debug("Dialog event handlers unsubscribed");
+            }
         }
         finally
         {
-            // Clean up event subscriptions to prevent memory leaks
-            if (dialogContent.ViewModel?.DialogContext != null)
-            {
-                dialogContent.ViewModel.DialogContext.OnContentChanged -= DialogContext_OnContentChanged;
-            }
-            contentDialog.Opened -= dialogContent.DialogOpened;
-            Log.Logger?.Debug("Dialog event handlers unsubscribed");
+            _dialogSemaphore.Release();
         }
     }
 }
