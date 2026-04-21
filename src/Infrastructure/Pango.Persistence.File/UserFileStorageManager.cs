@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
-using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 
@@ -11,9 +10,7 @@ namespace Pango.Persistence.File;
 /// </summary>
 public class UserFileStorageManager(
     IPasswordRepository passwordRepository,
-    IContentEncoder contentEncoder,
     IAppDomainProvider appDomainProvider,
-    IAppOptions appOptions,
     IUserContextProvider userContextProvider,
     IRepositoryContextFactory repositoryContextFactory,
     ILogger<UserFileStorageManager> logger) : IUserStorageManager
@@ -21,10 +18,10 @@ public class UserFileStorageManager(
     private readonly IPasswordRepository _passwordRepository = passwordRepository;
     private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
     private readonly IUserContextProvider _userContextProvider = userContextProvider;
-    private readonly IContentEncoder _contentEncoder = contentEncoder;
     private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
-    private readonly IAppOptions _appOptions = appOptions;
     private readonly ILogger<UserFileStorageManager> _logger = logger;
+
+    private const int FileStreamBufferSize = 4096;
 
     /// <summary>
     /// Deletes all user data for the specified user ID.
@@ -131,8 +128,8 @@ public class UserFileStorageManager(
         foreach (FileInfo file in dir.GetFiles())
         {
             string targetFilePath = Path.Combine(destinationDir, file.Name);
-            using var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
-            using var targetStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true);
+            using var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileStreamBufferSize, true);
+            using var targetStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None, FileStreamBufferSize, true);
             sourceStream.CopyTo(targetStream);
         }
 

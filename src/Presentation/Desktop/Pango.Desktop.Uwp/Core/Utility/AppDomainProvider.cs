@@ -26,8 +26,7 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
 
         try
         {
-            string programDataPath = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            string pangoProgramData = Path.Combine(programDataPath, "Pango");
+            string pangoProgramData = AppPaths.CommonAppData;
 
             if (!Directory.Exists(pangoProgramData)) Directory.CreateDirectory(pangoProgramData);
             return _resolvedDefaultPath = pangoProgramData;
@@ -37,8 +36,7 @@ public class AppDomainProvider(ILogger<AppDomainProvider>? logger = null) : IApp
 
         try
         {
-            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string pangoDocumentsData = Path.Combine(documentsPath, "Pango");
+            string pangoDocumentsData = AppPaths.MyDocuments;
 
             if (!Directory.Exists(pangoDocumentsData)) Directory.CreateDirectory(pangoDocumentsData);
             return _resolvedDefaultPath = pangoDocumentsData;

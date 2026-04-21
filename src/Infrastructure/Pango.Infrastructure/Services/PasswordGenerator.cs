@@ -27,7 +27,7 @@ public class PasswordGenerator(ILogger<PasswordGenerator> logger) : IPasswordGen
             }
 
             // Collect active sets of symbols based on user options
-            var charSets = new List<string>();
+            var charSets = new List<string>(4);
             if (options.UseUppercase) charSets.Add(PasswordConstants.Uppercase);
             if (options.UseLowercase) charSets.Add(PasswordConstants.Lowercase);
             if (options.UseDigits) charSets.Add(PasswordConstants.Digits);

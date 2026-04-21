@@ -45,8 +45,7 @@ public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswor
 
             await _userRepository.CreateAsync(user);
 
-            var appData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-            var configPath = Path.Combine(appData, "Pango", "backup_config.json");
+            var configPath = AppPaths.BackupConfigPath;
             BackupSettings backupSettings = new();
 
             if (File.Exists(configPath))
@@ -56,7 +55,7 @@ public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswor
             }
             else
             {
-                backupSettings.TargetFolderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Pango", "Backup");
+                backupSettings.TargetFolderPath = AppPaths.DefaultBackupTarget;
                 backupSettings.IsEnabled = true;
             }
 
@@ -64,7 +63,7 @@ public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswor
             backupSettings.Users[user.UserName] = new UserBackupProfile
             {
                 BackupPassword = Guid.NewGuid().ToString("N")[..12].ToUpper(),
-                SourceDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "Pango", "users", user.UserName)
+                SourceDataPath = AppPaths.GetUserFolder(user.UserName)
             };
 
             await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(backupSettings), cancellationToken);

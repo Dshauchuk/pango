@@ -7,24 +7,14 @@ namespace Pango.BackupService;
 /// <summary>
 /// Background worker service that handles the automated data backup cycle.
 /// </summary>
-public class Worker : BackgroundService
+/// <remarks>
+/// Initializes the Worker with required services and paths.
+/// </remarks>
+public class Worker(ILogger<Worker> logger, IBackupManager backupManager) : BackgroundService
 {
-    private readonly ILogger<Worker> _logger;
-    private readonly IBackupManager _backupManager;
-    private readonly string _configPath;
-
-    /// <summary>
-    /// Initializes the Worker with required services and paths.
-    /// </summary>
-    public Worker(ILogger<Worker> logger, IBackupManager backupManager)
-    {
-        _logger = logger;
-        _backupManager = backupManager;
-
-        // Path to config in ProgramData (accessible by Service)
-        string commonAppData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
-        _configPath = Path.Combine(commonAppData, "Pango", "backup_config.json");
-    }
+    private readonly ILogger<Worker> _logger = logger;
+    private readonly IBackupManager _backupManager = backupManager;
+    private readonly string _configPath = AppPaths.BackupConfigPath;
 
     /// <summary>
     /// Main execution loop running continuously in the background until cancellation is requested.
