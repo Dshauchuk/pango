@@ -12,7 +12,7 @@ public record UpdatePasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
 {
     private readonly RamProtectedString _protectedValue;
 
-    public UpdatePasswordCommand(Guid id, string name, string login, string value, bool star = false, Dictionary<string, string>? properties = null)
+    public UpdatePasswordCommand(Guid id, string name, string login, string value, bool? star = null, Dictionary<string, string>? properties = null)
     {
         PasswordId = id;
         Name = name;
@@ -57,5 +57,5 @@ public record UpdatePasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     /// <summary>
     /// Is the favorite password
     /// </summary>
-    public bool Star { get; set; }
+    public bool? Star { get; set; }
 }
