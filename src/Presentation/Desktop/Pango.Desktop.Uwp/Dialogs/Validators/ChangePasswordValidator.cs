@@ -57,8 +57,9 @@ public partial class ChangePasswordValidator : ObservableValidator
 
     #endregion
 
-    public static void Validate()
+    public void Validate()
     {
+        ValidateAllProperties();        
     }
 
     public static ValidationResult? ValidatePassword(string confirmation, ValidationContext context)

@@ -72,10 +72,8 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
     public bool CanSave()
     {
-        return !string.IsNullOrWhiteSpace(Validator.CurrentPassword) &&
-               !string.IsNullOrWhiteSpace(Validator.NewPassword) &&
-               !string.IsNullOrWhiteSpace(Validator.Confirmation) &&
-               Validator.NewPassword == Validator.Confirmation;
+        Validator.Validate();
+        return !Validator.HasErrors;
     }
 
     public Task OnCancelAsync()
@@ -85,7 +83,7 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
     public async Task OnSaveAsync()
     {
-        ChangePasswordValidator.Validate();
+        Validator.Validate();
 
         if (!Validator.HasErrors)
         {
