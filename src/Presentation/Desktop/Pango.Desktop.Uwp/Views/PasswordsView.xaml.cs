@@ -25,7 +25,7 @@ public sealed partial class PasswordsView : PageBase
     /// Initializes a new instance of the <see cref="PasswordsView"/> class.
     /// </summary>
     public PasswordsView()
-        : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
+            : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
         InitializeComponent();
         NavigationCacheMode = NavigationCacheMode.Required;
@@ -108,9 +108,7 @@ public sealed partial class PasswordsView : PageBase
     {
         if (DataContext is PasswordsViewModel viewModel &&
             ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
-        {
             viewModel.EditPasswordCommand.Execute(item);
-        }
     }
 
     /// <summary>
@@ -120,11 +118,9 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="e">Event data.</param>
     private void SeeContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PasswordsViewModel viewModel &&
+        if (DataContext is PasswordsViewModel viewModel && 
             ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
-        {
             viewModel.SeePasswordCommand.Execute(item);
-        }
     }
 
     /// <summary>
@@ -134,11 +130,9 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="e">Event data.</param>
     private void DeleteContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PasswordsViewModel viewModel &&
+        if (DataContext is PasswordsViewModel viewModel && 
             ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
-        {
             viewModel.DeleteCommand.Execute(item);
-        }
     }
 
     /// <summary>
@@ -148,7 +142,7 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="e">Event data.</param>
     private void AddPassword_CatalogContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PasswordsViewModel viewModel &&
+        if (DataContext is PasswordsViewModel viewModel && 
             ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
         {
             viewModel.SelectedItem = item;
@@ -178,10 +172,37 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="e">Event data.</param>
     private void CopyPassword_PasswordContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        if (DataContext is PasswordsViewModel viewModel &&
-            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
-        {
+        if (DataContext is PasswordsViewModel viewModel && ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
             viewModel.CopyPasswordToClipboardCommand.Execute(item);
+    }
+
+    private void ToggleStarButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (sender is Button btn && btn.DataContext is PangoExplorerItem item && DataContext is PasswordsViewModel viewModel)
+            {
+                viewModel.ToggleStarCommand.Execute(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Logger?.Error(ex, "ToggleStarButton_Click crashed");
+        }
+    }
+
+    private void CopyPasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (sender is Button btn && btn.DataContext is PangoExplorerItem item && DataContext is PasswordsViewModel viewModel)
+            {
+                viewModel.CopyPasswordToClipboardCommand.Execute(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Logger?.Error(ex, "CopyPasswordButton_Click crashed");
         }
     }
 
@@ -190,8 +211,7 @@ public sealed partial class PasswordsView : PageBase
     /// </summary>
     private void Password_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        if (sender is FrameworkElement { DataContext: PangoExplorerItem item } &&
-            DataContext is PasswordsViewModel viewModel)
+        if (sender is FrameworkElement { DataContext: PangoExplorerItem item } && DataContext is PasswordsViewModel viewModel)
         {
             viewModel.SelectedItem = item;
         }
@@ -204,10 +224,16 @@ public sealed partial class PasswordsView : PageBase
     /// <param name="e">Double-tap event arguments.</param>
     private async void Password_DoubleTappedAsync(object _, DoubleTappedRoutedEventArgs e)
     {
-        if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item } &&
-            DataContext is PasswordsViewModel viewModel)
+        try
         {
-            await viewModel.ShowPasswordDetailsAsync(item);
+            if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item } && DataContext is PasswordsViewModel viewModel)
+            {
+                await viewModel.ShowPasswordDetailsAsync(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Logger?.Error(ex, "Exception in Password_DoubleTappedAsync");
         }
     }
 
@@ -216,57 +242,41 @@ public sealed partial class PasswordsView : PageBase
     /// </summary>
     /// <param name="sender">The source TreeView control.</param>
     /// <param name="args">Event data containing dragged items and new parent.</param>
-    private async void PasswordsTreeView_DragItemsCompletedAsync(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    private void PasswordsTreeView_DragItemsCompletedAsync(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
     {
-        ArgumentNullException.ThrowIfNull(sender);
-        Log.Logger?.Debug("Drag-and-drop completed: {ItemCount} item(s)", args.Items.Count);
-
-        if (DataContext is not PasswordsViewModel viewModel || args.Items.Count == 0)
-            return;
-
-        if (args.Items[0] is not PangoExplorerItem item)
-            return;
-
-        var newParent = args.NewParentItem as PangoExplorerItem;
-
-        // Prevent cyclical moves: item cannot be dropped into itself or its descendants
-        if (newParent != null && IsDescendantOrSelf(item, newParent))
+        try
         {
-            Log.Logger?.Warning("Invalid drop: target is descendant of dragged item");
-            viewModel.UpdateListCommand.Execute(null);
-            return;
-        }
+            if (args.Items.Count == 0 || DataContext is not PasswordsViewModel viewModel) return;
+            if (args.Items[0] is not PangoExplorerItem item) return;
 
-        // If dropped on a file, use its parent folder instead
-        if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
-        {
-            newParent = newParent.Parent;
-        }
+            var newParent = args.NewParentItem as PangoExplorerItem;
 
-        // Validate folder name uniqueness when moving/creating folders
-        if (item.IsFolder && newParent != null)
-        {
-            var siblings = newParent?.Children ?? viewModel.Passwords;
-            bool folderExists = siblings.Any(s =>
-                s.IsFolder &&
-                s.Id != item.Id &&
-                s.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
-
-            if (folderExists)
+            if (newParent != null && IsDescendantOrSelf(item, newParent))
             {
-                Log.Logger?.Warning("Folder with name '{FolderName}' already exists in target location", item.Name);
                 viewModel.UpdateListCommand.Execute(null);
                 return;
             }
-        }
 
-        // Defer UI update to prevent TreeView corruption during reordering
-        DispatcherQueue.TryEnqueue(async () =>
+            if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
+                newParent = newParent.Parent;
+
+            DispatcherQueue.TryEnqueue(async () =>
+            {
+                try
+                {
+                    await Task.Delay(150);
+                    await viewModel.CommitPasswordMovementAsync(item, newParent);
+                }
+                catch (Exception ex)
+                {
+                    Log.Logger?.Error(ex, "Drag and drop commit failed");
+                }
+            });
+        }
+        catch (Exception ex)
         {
-            await Task.Delay(150);
-            await viewModel.CommitPasswordMovementAsync(item, newParent);
-            Log.Logger?.Information("Password item '{ItemName}' moved successfully", item.Name);
-        });
+            Log.Logger?.Error(ex, "DragItemsCompletedAsync handler failed");
+        }
     }
 
     /// <summary>
@@ -277,14 +287,11 @@ public sealed partial class PasswordsView : PageBase
     /// <returns>True if targetParent is the draggedItem or its descendant; otherwise, false.</returns>
     private static bool IsDescendantOrSelf(PangoExplorerItem draggedItem, PangoExplorerItem targetParent)
     {
-        if (draggedItem.Id == targetParent.Id)
-            return true;
-
+        if (draggedItem.Id == targetParent.Id) return true;
         var current = targetParent.Parent;
         while (current != null)
         {
-            if (current.Id == draggedItem.Id)
-                return true;
+            if (current.Id == draggedItem.Id) return true;
             current = current.Parent;
         }
         return false;

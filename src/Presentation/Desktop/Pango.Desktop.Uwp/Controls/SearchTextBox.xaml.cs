@@ -20,6 +20,7 @@ public sealed partial class SearchTextBox : ContentControl
     private Button? _deleteButton;
     private Button? _searchButton;
     private readonly DispatcherTimer _debounceTimer;
+    private bool _isInternalChange;
 
     public SearchTextBox()
     {
@@ -100,10 +101,14 @@ public sealed partial class SearchTextBox : ContentControl
     {
         if (d is SearchTextBox control && control._textBox != null)
         {
+            if (control._isInternalChange) return;
+
             string newValue = e.NewValue as string ?? string.Empty;
             if (control._textBox.Text != newValue)
             {
+                control._isInternalChange = true;
                 control._textBox.Text = newValue;
+                control._isInternalChange = false;
             }
         }
     }
@@ -150,6 +155,13 @@ public sealed partial class SearchTextBox : ContentControl
     {
         _deleteButton!.Visibility = string.IsNullOrEmpty(_textBox?.Text) ? Visibility.Collapsed : Visibility.Visible;
 
+        if (!_isInternalChange && _textBox != null && Text != _textBox.Text)
+        {
+            _isInternalChange = true;
+            Text = _textBox.Text;
+            _isInternalChange = false;
+        }
+
         _debounceTimer.Stop();
         _debounceTimer.Start();
     }
@@ -157,17 +169,15 @@ public sealed partial class SearchTextBox : ContentControl
     private void DebounceTimer_Tick(object? sender, object e)
     {
         _debounceTimer.Stop();
-        if (_textBox != null && !string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
-        {
-            Text = _textBox.Text;
-        }
         TriggerSearch();
     }
 
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
         _textBox?.Text = string.Empty;
+        _isInternalChange = true;
         Text = string.Empty;
+        _isInternalChange = false;
         _debounceTimer.Stop();
         TriggerSearch();
     }

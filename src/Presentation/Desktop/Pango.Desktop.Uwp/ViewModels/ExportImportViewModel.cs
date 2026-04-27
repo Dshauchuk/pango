@@ -39,6 +39,8 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     private string _importFilePath = string.Empty;
     private string _decryptedPasswordCache = string.Empty;
     private bool _isLoaded;
+    private bool _isDataDirty = true;
+    private bool _isResetting;
 
     #endregion
 
@@ -300,17 +302,23 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     /// </summary>
     private async Task ResetViewAsync()
     {
-        Log.Logger?.Debug("ResetViewAsync started");
+        if (_isResetting) return;
+        _isResetting = true;
 
-        await OnNavigateToOptionAsync(0);
-        _decryptedPasswordCache = string.Empty;
-        ImportItems.Clear();
-        ImportFilePath = string.Empty;
+        try
+        {
+            await OnNavigateToOptionAsync(0);
+            _decryptedPasswordCache = string.Empty;
+            ImportItems.Clear();
+            ImportFilePath = string.Empty;
 
-        var passwords = await LoadPasswordsAsync();
-        DisplayPasswordsInTree(passwords);
-
-        Log.Logger?.Information("ResetViewAsync completed");
+            _isDataDirty = true;
+        }
+        finally
+        {
+            _isLoaded = true;
+            _isResetting = false;
+        }
     }
 
     /// <summary>
@@ -386,8 +394,10 @@ public sealed partial class ExportImportViewModel : ViewModelBase
             else
             {
                 Log.Logger?.Information("Import completed successfully");
-                WeakReferenceMessenger.Default.Send(
-                    new InAppNotificationMessage(ViewResourceLoader.GetString("ImportCompleted_Message")));
+
+                string msg = string.Format(ViewResourceLoader.GetString("ImportCompleted_Message"), selectedIds.Count);
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(msg));
+
                 WeakReferenceMessenger.Default.Send(new ImportCompletedMessage(result.Value));
                 WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
                     new NavigationParameters(AppView.PasswordsIndex, AppView.ExportImport)));
@@ -430,17 +440,15 @@ public sealed partial class ExportImportViewModel : ViewModelBase
             {
                 if (item.IsSelected)
                 {
-                    if (!item.IsFolder)
-                    {
-                        result.Add(new ExportItem(Domain.Enums.ContentType.Passwords, item.Id));
-                        Log.Logger?.Debug("Added password {ItemName} to export list", item.Name);
-                    }
-                    else
+                    result.Add(new ExportItem(Domain.Enums.ContentType.Passwords, item.Id));
+                    Log.Logger?.Debug("Added item {ItemName} to export list", item.Name);
+
+                    if (item.IsFolder)
                     {
                         CollectFiles(item.Children);
                     }
                 }
-                else
+                else if (item.IsFolder)
                 {
                     CollectFiles(item.Children);
                 }
@@ -481,26 +489,22 @@ public sealed partial class ExportImportViewModel : ViewModelBase
     /// <param name="option">Target tab index: 0=general, 1=export, 2=import file, 3=import selection.</param>
     private async Task OnNavigateToOptionAsync(int option)
     {
-        Log.Logger?.Debug("OnNavigateToOptionAsync: navigating to option {Option}", option);
         SelectedOption = option;
 
         switch (option)
         {
             case 0:
-                Log.Logger?.Debug("Navigated to general tab");
                 break;
             case 1:
-                Log.Logger?.Debug("Navigated to export tab: loading passwords");
-                await OnNavigatedToExportAsync();
+                if (_isDataDirty || Passwords.Count == 0)
+                {
+                    await OnNavigatedToExportAsync();
+                    _isDataDirty = false;
+                }
                 break;
             case 2:
-                Log.Logger?.Debug("Navigated to import file tab");
                 break;
             case 3:
-                Log.Logger?.Debug("Navigated to import selection tab");
-                break;
-            default:
-                Log.Logger?.Warning("Unknown navigation option: {Option}", option);
                 break;
         }
     }

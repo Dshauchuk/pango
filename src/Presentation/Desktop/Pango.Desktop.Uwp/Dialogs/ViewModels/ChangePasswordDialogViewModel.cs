@@ -85,20 +85,24 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
     public async Task OnSaveAsync()
     {
+        Logger.LogInformation("Attempting to change user password.");
         ChangePasswordValidator.Validate();
 
         if (!Validator.HasErrors)
         {
             string currentUser = _userContextProvider.GetUserName();
-
             PangoUser? user = await _userRepository.FindAsync(currentUser);
 
             if (user is null)
+            {
+                Logger.LogWarning("Change password failed: User {User} not found.", currentUser);
                 return;
+            }
 
             if (!_passwordHashProvider.VerifyPassword(Validator.CurrentPassword, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt)))
             {
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), Core.Enums.AppNotificationType.Warning));
+                Logger.LogWarning("Change password failed: Invalid current password provided.");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordIsNotCorrect"), AppNotificationType.Warning));
                 return;
             }
 
@@ -106,17 +110,23 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
             if (result.IsError)
             {
+                Logger.LogError("Password change command returned an error.");
                 string message = !string.IsNullOrWhiteSpace(result.FirstError.Description)
                     ? result.FirstError.Description
                     : ViewResourceLoader.GetString("PasswordIsNotCorrect");
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, Core.Enums.AppNotificationType.Warning));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, AppNotificationType.Warning));
             }
             else
             {
+                Logger.LogInformation("Password successfully changed. Clearing session and logging out.");
                 SecureUserSession.ClearUser();
+
+                var passwordRepo = Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService<IPasswordRepository>(App.Host.Services);
+                passwordRepo.ClearCache();
+
                 App.Current.RaiseSignedOut();
                 WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), Core.Enums.AppNotificationType.Success));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), AppNotificationType.Success));
             }
         }
     }

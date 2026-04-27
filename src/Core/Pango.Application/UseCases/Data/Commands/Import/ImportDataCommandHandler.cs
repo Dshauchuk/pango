@@ -50,28 +50,11 @@ public class ImportDataCommandHandler(
     {
         if (request.ImportToSeparateFolder)
         {
-            var culture = CultureInfo.CurrentUICulture.Name;
-            string baseFolderName = culture.StartsWith("be", StringComparison.OrdinalIgnoreCase) ? "Імпартаванае" : "Imported";
+            string baseFolderName = "Imported";
             return await CreateUniqueRootFolderAsync(baseFolderName, context);
         }
-        else
-        {
-            string? sourceRootName = null;
-            foreach (IContentPackage package in result.ContentPackages)
-            {
-                if (package.ContentType == Domain.Enums.ContentType.Passwords && package.Data is IEnumerable<PangoPassword> importedItems)
-                {
-                    var rootItems = importedItems.Where(x => string.IsNullOrEmpty(x.CatalogPath)).ToList();
-                    if (rootItems.Count != 0) { sourceRootName = rootItems.First().Name; break; }
-                }
-            }
 
-            if (!string.IsNullOrEmpty(sourceRootName))
-            {
-                return await CreateUniqueRootFolderAsync(sourceRootName, context);
-            }
-        }
-
+        ArgumentNullException.ThrowIfNull(result);
         return null;
     }
 
@@ -200,7 +183,19 @@ public class ImportDataCommandHandler(
         var result = new List<PangoPassword>(itemsToSave.Count);
         foreach (var item in itemsToSave)
         {
-            var newItem = item.Adapt<PangoPassword>();
+            var newItem = new PangoPassword
+            {
+                Id = item.Id,
+                Name = item.Name,
+                Login = item.Login,
+                Value = item.Value,
+                Target = item.Target,
+                UserName = item.UserName,
+                IsCatalog = item.IsCatalog,
+                Star = item.Star,
+                Properties = item.Properties != null ? new Dictionary<string, string>(item.Properties) : []
+            };
+
             if (!string.IsNullOrEmpty(forcedRoot))
             {
                 newItem.CatalogPath = string.IsNullOrEmpty(item.CatalogPath) ? forcedRoot : $"{forcedRoot}{AppConstants.CatalogDelimeter}{item.CatalogPath}";

@@ -216,6 +216,9 @@ public class PasswordFileRepository(
         if (pwdToRemove != null)
         {
             passwordList.Remove(pwdToRemove);
+
+            pwdToRemove.Dispose();
+
             await FlushCacheToDiskAsync(ctx);
             logger.LogInformation("Password {PasswordId} deleted successfully.", password.Id);
         }

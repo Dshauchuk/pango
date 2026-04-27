@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.ViewModels;
@@ -23,17 +24,19 @@ public sealed partial class EditPasswordView : ViewBase
 
     private void EditPasswordView_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
     {
-        switch (e.Key)
+        if (e.Key == Windows.System.VirtualKey.Enter)
         {
-            case Windows.System.VirtualKey.Enter:
-                ((EditPasswordViewModel)DataContext).SavePasswordCommand.Execute(null);
-                break;
-            default:
-                break;
+            if (e.OriginalSource is TextBox textBox && textBox.AcceptsReturn)
+            {
+                return;
+            }
+
+            ((EditPasswordViewModel)DataContext).SavePasswordCommand.Execute(null);
+            e.Handled = true;
         }
     }
 
-    private void EditPasswordView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    private void EditPasswordView_Loaded(object sender, RoutedEventArgs e)
     {
         TitleTextBox.Focus(FocusState.Programmatic);
     }

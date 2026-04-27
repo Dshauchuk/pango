@@ -105,14 +105,21 @@ public sealed partial class Shell : ViewBase
     {
         App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
         {
-            var notification = new Notification
+            try
             {
-                Message = message.Message,
-                Severity = CastSeverity(message.Type),
-                IsIconVisible = true,
-                Duration = TimeSpan.FromMilliseconds(Constants.InAppNotificationDuration)
-            };
-            InAppNotification.Show(notification);
+                var notification = new Notification
+                {
+                    Message = message.Message,
+                    Severity = CastSeverity(message.Type),
+                    IsIconVisible = true,
+                    Duration = TimeSpan.FromMilliseconds(Constants.InAppNotificationDuration)
+                };
+                InAppNotification.Show(notification);
+            }
+            catch (Exception ex)
+            {
+                Log.Logger?.Error(ex, "Failed to show InAppNotification");
+            }
         });
     }
 

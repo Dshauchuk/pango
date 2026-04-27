@@ -60,8 +60,6 @@ public sealed partial class EditUserViewModel : ViewModelBase
     public override async Task OnNavigatedFromAsync(object? parameter)
     {
         await base.OnNavigatedFromAsync(parameter);
-
-        Clear();
     }
 
     #endregion

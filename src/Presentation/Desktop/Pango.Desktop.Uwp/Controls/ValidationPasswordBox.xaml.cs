@@ -3,7 +3,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Pango.Desktop.Uwp.Mvvm.Models;
-using Serilog;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using Windows.ApplicationModel.DataTransfer;
@@ -27,24 +26,21 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// The <see cref="FontIcon"/> instance used for validation warnings.
     /// </summary>
     private FontIcon? _warningIcon;
-
     private ToggleButton? _revealButton;
     private Button? _copyButton;
     private INotifyDataErrorInfo? _oldDataContext;
+    private string? _lastErrorMessage;
+    private bool _isSyncing;
 
     /// <summary>
     /// Initializes a new instance and sets up lifecycle event handlers to prevent memory leaks.
     /// </summary>
     public ValidationPasswordBox()
     {
-        Log.Logger?.Debug("ValidationPasswordBox constructor called");
-
         DataContextChanged += ValidationPasswordBox_DataContextChanged;
 
         Loaded += (s, e) =>
         {
-            Log.Logger?.Debug("ValidationPasswordBox Loaded event fired");
-
             if (DataContext is INotifyDataErrorInfo dataContext && !ReferenceEquals(_oldDataContext, dataContext))
             {
                 _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
@@ -56,18 +52,8 @@ public sealed partial class ValidationPasswordBox : ContentControl
 
         Unloaded += (s, e) =>
         {
-            Log.Logger?.Debug("ValidationPasswordBox Unloaded event fired: cleaning up resources");
-
             _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
             _oldDataContext = null;
-
-            if (_passwordBox != null)
-            {
-                _passwordBox.PasswordChanged -= PasswordBox_TextChanged;
-                _passwordBox.Password = string.Empty;
-                _passwordBox.PasswordChanged += PasswordBox_TextChanged;
-            }
-            Password = string.Empty;
         };
     }
 
@@ -76,8 +62,6 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     protected override void OnApplyTemplate()
     {
-        Log.Logger?.Debug("ValidationPasswordBox OnApplyTemplate called");
-
         base.OnApplyTemplate();
 
         _passwordBox = (PasswordBox)GetTemplateChild("PART_PasswordBox");
@@ -85,18 +69,13 @@ public sealed partial class ValidationPasswordBox : ContentControl
         _copyButton = GetTemplateChild("CopyButton") as Button;
         _revealButton = GetTemplateChild("RevealButton") as ToggleButton;
 
-        if (_passwordBox != null && !string.IsNullOrEmpty(Password))
-        {
-            _passwordBox.PasswordChanged -= PasswordBox_TextChanged;
-            _passwordBox.Password = Password;
-            _passwordBox.PasswordChanged += PasswordBox_TextChanged;
-        }
-
         if (_passwordBox != null)
         {
             if (!string.IsNullOrEmpty(Password))
             {
+                _isSyncing = true;
                 _passwordBox.Password = Password;
+                _isSyncing = false;
             }
             _passwordBox.PasswordChanged += PasswordBox_TextChanged;
         }
@@ -108,13 +87,9 @@ public sealed partial class ValidationPasswordBox : ContentControl
         }
 
         _copyButton?.Click += CopyBtn_Click;
-        _passwordBox?.PasswordChanged += PasswordBox_TextChanged;
 
         GotFocus += ValidationPasswordBox_GotFocus;
-
         TriggerActionButtonsVisibility();
-
-        Log.Logger?.Debug("ValidationPasswordBox template applied successfully");
     }
 
     /// <summary>
@@ -144,15 +119,30 @@ public sealed partial class ValidationPasswordBox : ContentControl
     {
         if (d is ValidationPasswordBox control && control._passwordBox != null)
         {
-            string newValue = e.NewValue as string ?? string.Empty;
+            if (control._isSyncing) return;
 
+            string newValue = e.NewValue as string ?? string.Empty;
             if (!string.Equals(control._passwordBox.Password, newValue, StringComparison.Ordinal))
             {
-                control._passwordBox.PasswordChanged -= control.PasswordBox_TextChanged;
+                control._isSyncing = true;
                 control._passwordBox.Password = newValue;
                 control.TriggerActionButtonsVisibility();
-                control._passwordBox.PasswordChanged += control.PasswordBox_TextChanged;
+                control._isSyncing = false;
             }
+        }
+    }
+
+    private void PasswordBox_TextChanged(object sender, RoutedEventArgs e)
+    {
+        TriggerActionButtonsVisibility();
+
+        if (_isSyncing) return;
+
+        if (_passwordBox != null && !string.Equals(Password, _passwordBox.Password, StringComparison.Ordinal))
+        {
+            _isSyncing = true;
+            Password = _passwordBox.Password;
+            _isSyncing = false;
         }
     }
 
@@ -170,7 +160,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     public static readonly DependencyProperty HeaderTextProperty = DependencyProperty.Register(
         nameof(HeaderText),
-        typeof(string),
+        typeof(string), 
         typeof(ValidationPasswordBox),
         new PropertyMetadata(default(string)));
 
@@ -189,7 +179,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     public static readonly DependencyProperty IsReadOnlyProperty = DependencyProperty.Register(
         nameof(IsReadOnly),
         typeof(bool),
-        typeof(ValidationPasswordBox),
+        typeof(ValidationPasswordBox), 
         new PropertyMetadata(default(bool)));
 
     /// <summary>
@@ -205,7 +195,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// The <see cref="DependencyProperty"/> backing <see cref="HideCopyButton"/>.
     /// </summary>
     public static readonly DependencyProperty HideCopyButtonProperty = DependencyProperty.Register(
-        nameof(HideCopyButton),
+        nameof(HideCopyButton), 
         typeof(bool),
         typeof(ValidationPasswordBox),
         new PropertyMetadata(default(bool), OnHideCopyButtonChanged));
@@ -253,12 +243,10 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// <param name="e">Event arguments containing old and new values.</param>
     private static void OnHideCopyButtonChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
     {
-        if (((ValidationPasswordBox)sender)._copyButton is not null)
+        if (((ValidationPasswordBox)sender)._copyButton is Button copyBtn)
         {
             bool hide = (bool)e.NewValue;
-            ((ValidationPasswordBox)sender)._copyButton!.Visibility = hide ? Visibility.Collapsed : Visibility.Visible;
-            Log.Logger?.Debug("OnHideCopyButtonChanged: copy button visibility set to {Visibility}",
-                hide ? "Collapsed" : "Visible");
+            copyBtn.Visibility = hide ? Visibility.Collapsed : Visibility.Visible;
         }
     }
 
@@ -270,10 +258,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     private static void OnPropertyNamePropertyChanged(object sender, DependencyPropertyChangedEventArgs args)
     {
         if (args.NewValue is string { Length: > 0 })
-        {
-            Log.Logger?.Debug("PropertyName changed to: '{PropertyName}'", args.NewValue);
             ((ValidationPasswordBox)sender).RefreshErrors();
-        }
     }
 
     /// <summary>
@@ -283,23 +268,23 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// <param name="e">Routed event arguments.</param>
     private void CopyBtn_Click(object sender, RoutedEventArgs e)
     {
-        string textToCopy = _passwordBox?.Password ?? Password ?? string.Empty;
-
-        if (string.IsNullOrEmpty(textToCopy))
+        try
         {
-            Log.Logger?.Warning("CopyBtn_Click: no password to copy");
-            return;
+            string textToCopy = _passwordBox?.Password ?? Password ?? string.Empty;
+            if (string.IsNullOrEmpty(textToCopy)) return;
+
+            var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
+            dataPackage.SetText(textToCopy);
+            Clipboard.SetContent(dataPackage);
+            Clipboard.Flush();
+
+            WeakReferenceMessenger.Default.Send(
+                new InAppNotificationMessage(new ResourceLoader().GetString("PasswordCopiedToClipboard")));
         }
-
-        Log.Logger?.Debug("CopyBtn_Click: copying password to clipboard");
-
-        var dataPackage = new DataPackage { RequestedOperation = DataPackageOperation.Copy };
-        dataPackage.SetText(textToCopy);
-        Clipboard.SetContent(dataPackage);
-        Clipboard.Flush();
-
-        WeakReferenceMessenger.Default.Send(
-            new InAppNotificationMessage(new ResourceLoader().GetString("PasswordCopiedToClipboard")));
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Clipboard copy failed: {ex.Message}");
+        }
     }
 
     /// <summary>
@@ -307,22 +292,14 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     /// <param name="sender">The sender instance.</param>
     /// <param name="e">Routed event arguments.</param>
-    private void RevealButton_Unchecked(object sender, RoutedEventArgs e)
-    {
-        Log.Logger?.Debug("RevealButton_Unchecked: hiding password");
-        _passwordBox?.PasswordRevealMode = PasswordRevealMode.Hidden;
-    }
+    private void RevealButton_Unchecked(object sender, RoutedEventArgs e) => _passwordBox!.PasswordRevealMode = PasswordRevealMode.Hidden;
 
     /// <summary>
     /// Reveals the plain text password by setting reveal mode to Visible.
     /// </summary>
     /// <param name="sender">The sender instance.</param>
     /// <param name="e">Routed event arguments.</param>
-    private void RevealButton_Checked(object sender, RoutedEventArgs e)
-    {
-        Log.Logger?.Debug("RevealButton_Checked: revealing password");
-        _passwordBox?.PasswordRevealMode = PasswordRevealMode.Visible;
-    }
+    private void RevealButton_Checked(object sender, RoutedEventArgs e) => _passwordBox!.PasswordRevealMode = PasswordRevealMode.Visible;
 
     /// <summary>
     /// Updates bindings and securely manages event subscriptions when the data context changes.
@@ -333,10 +310,6 @@ public sealed partial class ValidationPasswordBox : ContentControl
     {
         if (ReferenceEquals(args.NewValue, _oldDataContext)) return;
 
-        Log.Logger?.Debug("ValidationPasswordBox DataContextChanged: old={OldContext}, new={NewContext}",
-            _oldDataContext?.GetType().Name ?? "null",
-            args.NewValue?.GetType().Name ?? "null");
-
         _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
@@ -344,7 +317,6 @@ public sealed partial class ValidationPasswordBox : ContentControl
             _oldDataContext = dataContext;
             _oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
         }
-
         RefreshErrors();
     }
 
@@ -353,11 +325,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     /// <param name="sender">The sender instance.</param>
     /// <param name="e">Event arguments containing the property name with errors.</param>
-    private void DataContext_ErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
-    {
-        Log.Logger?.Debug("DataContext_ErrorsChanged for property: '{PropertyName}'", e.PropertyName);
-        RefreshErrors();
-    }
+    private void DataContext_ErrorsChanged(object? sender, DataErrorsChangedEventArgs e) => RefreshErrors();
 
     /// <summary>
     /// Updates the visibility of the internal action buttons based on the password content.
@@ -380,21 +348,6 @@ public sealed partial class ValidationPasswordBox : ContentControl
     }
 
     /// <summary>
-    /// Updates the bound password value when the internal text changes with debouncing.
-    /// </summary>
-    /// <param name="sender">The sender instance.</param>
-    /// <param name="e">Routed event arguments.</param>
-    private void PasswordBox_TextChanged(object sender, RoutedEventArgs e)
-    {
-        TriggerActionButtonsVisibility();
-
-        if (_passwordBox != null && !string.Equals(Password, _passwordBox.Password, StringComparison.Ordinal))
-        {
-            Password = _passwordBox.Password;
-        }
-    }
-
-    /// <summary>
     /// Focuses the internal password box programmatically when the control receives focus.
     /// </summary>
     /// <param name="sender">The sender instance.</param>
@@ -402,10 +355,7 @@ public sealed partial class ValidationPasswordBox : ContentControl
     private void ValidationPasswordBox_GotFocus(object sender, RoutedEventArgs e)
     {
         if (ReferenceEquals(e.OriginalSource, this))
-        {
-            Log.Logger?.Debug("ValidationPasswordBox_GotFocus: focusing internal PasswordBox");
             _passwordBox?.Focus(FocusState.Programmatic);
-        }
     }
 
     /// <summary>
@@ -413,32 +363,27 @@ public sealed partial class ValidationPasswordBox : ContentControl
     /// </summary>
     private void RefreshErrors()
     {
-        if (_warningIcon is not FontIcon warningIcon)
-        {
-            Log.Logger?.Debug("RefreshErrors: warning icon not found in template");
-            return;
-        }
+        if (_warningIcon == null) return;
 
         if (string.IsNullOrEmpty(PropertyName) || DataContext is not INotifyDataErrorInfo dataContext)
         {
-            warningIcon.Visibility = Visibility.Collapsed;
-            ToolTipService.SetToolTip(warningIcon, null);
+            if (_lastErrorMessage != null)
+            {
+                _warningIcon.Visibility = Visibility.Collapsed;
+                ToolTipService.SetToolTip(_warningIcon, null);
+                _lastErrorMessage = null;
+            }
             return;
         }
 
         var result = dataContext.GetErrors(PropertyName).OfType<ValidationResult>().FirstOrDefault();
-        warningIcon.Visibility = result is not null ? Visibility.Visible : Visibility.Collapsed;
+        string? newError = result?.ErrorMessage;
 
-        if (result is not null)
+        if (_lastErrorMessage != newError)
         {
-            ToolTipService.SetToolTip(warningIcon, result.ErrorMessage);
-            Log.Logger?.Debug("RefreshErrors: validation error shown for '{PropertyName}': {ErrorMessage}",
-                PropertyName, result.ErrorMessage);
-        }
-        else
-        {
-            ToolTipService.SetToolTip(warningIcon, null);
-            Log.Logger?.Debug("RefreshErrors: no validation errors for '{PropertyName}'", PropertyName);
+            _warningIcon.Visibility = result != null ? Visibility.Visible : Visibility.Collapsed;
+            ToolTipService.SetToolTip(_warningIcon, newError);
+            _lastErrorMessage = newError;
         }
     }
 }
