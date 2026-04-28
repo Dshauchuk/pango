@@ -15,7 +15,7 @@ public class GeneratePasswordCommandHandlerTests
     public async Task Handle_ReturnsError_WhenLengthOutOfRange()
     {
         var handler = new GeneratePasswordCommandHandler(_generator.Object, _logger.Object);
-        var shortCmd = new GeneratePasswordCommand(4, true, true, true, true, false);
+        var shortCmd = new GeneratePasswordCommand(2, true, true, true, true, false);
         var longCmd = new GeneratePasswordCommand(128, true, true, true, true, false);
 
         var r1 = await handler.Handle(shortCmd, CancellationToken.None);
