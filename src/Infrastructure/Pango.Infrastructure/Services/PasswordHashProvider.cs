@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
 using System.Security.Cryptography;
 
@@ -19,13 +20,13 @@ public class PasswordHashProvider : IPasswordHashProvider
             password: password,
             salt: salt,
             prf: KeyDerivationPrf.HMACSHA256,
-            iterationCount: Iterations,
-            numBytesRequested: 32));
+            iterationCount: AppConstants.Security.Pbkdf2HashIterations,
+            numBytesRequested: AppConstants.Security.AesKeySize));
     }
 
     public string Hash(string password, out byte[] salt)
     {
-        salt = new byte[16];
+        salt = new byte[AppConstants.Security.AesIvSize];
         using (var rng = RandomNumberGenerator.Create())
         {
             rng.GetBytes(salt);
@@ -51,7 +52,7 @@ public class PasswordHashProvider : IPasswordHashProvider
             salt: salt,
             prf: KeyDerivationPrf.HMACSHA256,
             iterationCount: Iterations,
-            numBytesRequested: 32);
+            numBytesRequested: AppConstants.Security.AesKeySize);
 
         var expectedHash = Convert.FromBase64String(hash);
 

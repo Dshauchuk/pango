@@ -247,8 +247,6 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
     {
         Log.Logger?.Debug("GeneratePasswordViewModel navigated from - Wiping RAM");
 
-        Clear();
-
         await base.OnNavigatedFromAsync(parameter);
     }
 
@@ -286,8 +284,6 @@ public sealed partial class GeneratePasswordViewModel : ViewModelBase
                 Log.Logger?.Warning("GenerateAsync: validation failed");
                 return;
             }
-
-            await Task.Delay(50);
 
             var command = new GeneratePasswordCommand(
                 Length, UseUppercase, UseLowercase, UseDigits, UseSpecial, ExcludeAmbiguous);

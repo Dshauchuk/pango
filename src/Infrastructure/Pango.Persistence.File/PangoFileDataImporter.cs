@@ -26,7 +26,6 @@ public class PangoFileDataImporter(
     private const int DelayMilliseconds = 1000;
     private const string PackageFileExtension = ".pngx";
     private const string DataFileExtension = ".pngdat";
-    private const string StaticSaltStr = "PangoStaticExportSalt";
 
     /// <summary>
     /// Orchestrates the import process by securing access and reading data.
@@ -46,7 +45,8 @@ public class PangoFileDataImporter(
             {
                 _logger.LogInformation("File is encrypted. Decrypting once...");
                 tempDecryptedPath = Path.Combine(_appDomainProvider.GetTempFolderPath(), Guid.NewGuid().ToString("N") + ".tmp");
-                await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                bool success = await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                if (!success) return null!;
                 workingFilePath = tempDecryptedPath;
             }
 
@@ -80,7 +80,8 @@ public class PangoFileDataImporter(
             if (isEncryptedBackup)
             {
                 tempDecryptedPath = Path.Combine(_appDomainProvider.GetTempFolderPath(), Guid.NewGuid().ToString("N") + ".tmp");
-                await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                bool success = await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                if (!success) return default;
                 workingFilePath = tempDecryptedPath;
             }
 
@@ -110,7 +111,8 @@ public class PangoFileDataImporter(
             if (isEncryptedBackup)
             {
                 tempDecryptedPath = Path.Combine(_appDomainProvider.GetTempFolderPath(), Guid.NewGuid().ToString("N") + ".tmp");
-                await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                bool success = await DecryptBackupFileAsync(filePath, tempDecryptedPath, importOptions.EncodingOptions.Key);
+                if (!success) return [];
                 workingFilePath = tempDecryptedPath;
             }
 
@@ -136,7 +138,7 @@ public class PangoFileDataImporter(
                 if (_logger.IsEnabled(LogLevel.Debug))
                     _logger.LogDebug("Reading manifest from {filePath}", workingFilePath);
 
-                await using var fs = new FileStream(workingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+                await using var fs = new FileStream(workingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, AppConstants.Security.FileStreamBufferSize, FileOptions.Asynchronous);
                 using (var archive = new ZipArchive(fs, ZipArchiveMode.Read))
                 {
                     foreach (var entry in archive.Entries)
@@ -157,11 +159,6 @@ public class PangoFileDataImporter(
                 }
 
                 return new PangoPackageManifest(_userContextProvider.GetUserName(), DateTime.UtcNow.ToString("G"), "Restored from Backup", []);
-            }
-            catch (PangoDataDecryptionException ex)
-            {
-                _logger.LogError(ex, "Failed to decrypt manifest data.");
-                throw;
             }
             catch (IOException e)
             {
@@ -186,7 +183,7 @@ public class PangoFileDataImporter(
                 if (_logger.IsEnabled(LogLevel.Debug))
                     _logger.LogDebug("Extracting content from {filePath}", workingFilePath);
 
-                var fs = new FileStream(workingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+                var fs = new FileStream(workingFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, AppConstants.Security.FileStreamBufferSize, FileOptions.Asynchronous);
                 using (var archive = new ZipArchive(fs, ZipArchiveMode.Read))
                 {
                     foreach (var entry in archive.Entries)
@@ -211,11 +208,6 @@ public class PangoFileDataImporter(
 
                 await fs.DisposeAsync();
                 break;
-            }
-            catch (PangoDataDecryptionException ex)
-            {
-                _logger.LogError(ex, "Critical decryption failure during content extraction.");
-                throw;
             }
             catch (IOException e)
             {
@@ -248,7 +240,7 @@ public class PangoFileDataImporter(
         {
             try
             {
-                await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, 4096, FileOptions.Asynchronous);
+                await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete, AppConstants.Security.FileStreamBufferSize, FileOptions.Asynchronous);
                 byte[] header = new byte[4];
                 int bytesRead = await fs.ReadAsync(header.AsMemory(0, 4));
 
@@ -286,58 +278,75 @@ public class PangoFileDataImporter(
         {
             byte[] derivedBytes = await Task.Run(() =>
             {
-                byte[] staticSalt = Encoding.UTF8.GetBytes(StaticSaltStr);
-                return Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(options.Key), staticSalt, 50000, HashAlgorithmName.SHA256, 48);
+                byte[] staticSalt = Encoding.UTF8.GetBytes(PasswordConstants.StaticExportSalt);
+                return Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(options.Key), staticSalt, AppConstants.Security.Pbkdf2Iterations, HashAlgorithmName.SHA256, AppConstants.Security.DerivationOutputSize);
             });
             keyBase64 = Convert.ToBase64String(derivedBytes[0..32]);
             saltBase64 = Convert.ToBase64String(derivedBytes[32..48]);
         }
 
-        try
-        {
-            return await _contentEncoder.DecryptAsync<T>(data, keyBase64, saltBase64);
-        }
-        catch (PangoDataDecryptionException ex)
-        {
-            _logger.LogError(ex, "Decryption failed for internal data block.");
-            throw;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Decryption of an entry failed: {Message}", ex.Message);
-            return default;
-        }
+        return await _contentEncoder.DecryptAsync<T>(data, keyBase64, saltBase64);
     }
 
     /// <summary>
     /// Decrypts the entire backup file using AES-256 and writes to output.
     /// </summary>
-    private static async Task DecryptBackupFileAsync(string inputFile, string outputFile, string password)
+    private static Task<bool> DecryptBackupFileAsync(string inputFile, string outputFile, string password)
     {
-        await using var fsInput = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, 4096, true);
-        byte[] salt = new byte[16];
-        if (await fsInput.ReadAsync(salt.AsMemory(0, 16)) < 16) throw new IOException("Invalid header");
-
-        byte[] iv = new byte[16];
-        if (await fsInput.ReadAsync(iv.AsMemory(0, 16)) < 16) throw new IOException("Invalid header");
-
-        byte[] key = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, 50000, HashAlgorithmName.SHA256, 32);
-
-        using var aes = Aes.Create();
-        aes.Key = key;
-        aes.IV = iv;
-        aes.Padding = PaddingMode.PKCS7;
-
-        await using var fsOutput = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite, 4096, true);
-        await using var cs = new CryptoStream(fsInput, aes.CreateDecryptor(), CryptoStreamMode.Read);
-        try
+        return Task.Run(() =>
         {
-            await cs.CopyToAsync(fsOutput);
-        }
-        catch (CryptographicException ex)
-        {
-            throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Invalid backup password.", ex);
-        }
+            try
+            {
+                using var fsInput = new FileStream(inputFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+                if (fsInput.Length < 48) return false;
+
+                byte[] salt = new byte[AppConstants.Security.AesIvSize];
+                if (fsInput.Read(salt, 0, AppConstants.Security.AesIvSize) < AppConstants.Security.AesIvSize) return false;
+
+                byte[] iv = new byte[AppConstants.Security.AesIvSize];
+                if (fsInput.Read(iv, 0, AppConstants.Security.AesIvSize) < AppConstants.Security.AesIvSize) return false;
+
+                byte[] key = Rfc2898DeriveBytes.Pbkdf2(Encoding.UTF8.GetBytes(password), salt, AppConstants.Security.Pbkdf2Iterations, HashAlgorithmName.SHA256, AppConstants.Security.AesKeySize);
+                byte[] firstBlockCipher = new byte[AppConstants.Security.AesIvSize];
+                if (fsInput.Read(firstBlockCipher, 0, 16) < 16) return false;
+
+                using (var testAes = Aes.Create())
+                {
+                    testAes.Key = key;
+                    testAes.IV = iv;
+                    testAes.Padding = PaddingMode.None;
+                    testAes.Mode = CipherMode.CBC;
+
+                    using var blockDecryptor = testAes.CreateDecryptor();
+                    byte[] firstPlain = blockDecryptor.TransformFinalBlock(firstBlockCipher, 0, 16);
+
+                    if (firstPlain[0] != 0x50 || firstPlain[1] != 0x4B || firstPlain[2] != 0x03 || firstPlain[3] != 0x04)
+                    {
+                        return false;
+                    }
+                }
+
+                fsInput.Position = 32;
+
+                using var aes = Aes.Create();
+                aes.Key = key;
+                aes.IV = iv;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.CBC;
+
+                using var fsOutput = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.ReadWrite);
+                using var decryptor = aes.CreateDecryptor();
+                using var cs = new CryptoStream(fsInput, decryptor, CryptoStreamMode.Read);
+
+                cs.CopyTo(fsOutput);
+                return true;
+            }
+            catch
+            {
+                if (System.IO.File.Exists(outputFile)) { try { System.IO.File.Delete(outputFile); } catch { } }
+                return false;
+            }
+        });
     }
 
     /// <summary>

@@ -32,7 +32,8 @@ public class MovePasswordsToCatalogCommandHandler(
             var passwordList = passwords.ToList();
             if (passwordList.Count != request.PasswordIdCatalogPathPairs.Keys.Count)
             {
-                return Error.Failure(ApplicationErrors.Password.NotFound, "Some passwords to move were not found.");
+                var missingIds = string.Join(", ", request.PasswordIdCatalogPathPairs.Keys.Except(passwordList.Select(p => p.Id)));
+                return Error.Failure(ApplicationErrors.Password.NotFound, $"Some passwords to move were not found: {missingIds}");
             }
 
             foreach (PangoPassword passwordToUpdate in passwordList)

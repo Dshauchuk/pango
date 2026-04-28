@@ -15,7 +15,7 @@ public class GeneratePasswordCommandHandlerTests
     public async Task Handle_ReturnsError_WhenLengthOutOfRange()
     {
         var handler = new GeneratePasswordCommandHandler(_generator.Object, _logger.Object);
-        var shortCmd = new GeneratePasswordCommand(4, true, true, true, true, false);
+        var shortCmd = new GeneratePasswordCommand(2, true, true, true, true, false);
         var longCmd = new GeneratePasswordCommand(128, true, true, true, true, false);
 
         var r1 = await handler.Handle(shortCmd, CancellationToken.None);
@@ -43,7 +43,7 @@ public class GeneratePasswordCommandHandlerTests
     public async Task Handle_ReturnsGeneratedPassword_WhenValid()
     {
         _generator.Setup(x => x.GeneratePasswordAsync(It.IsAny<PasswordGenerationOptions>()))
-            .Returns(ValueTask.FromResult("Generated!1"));
+            .ReturnsAsync("Generated!1");
 
         var handler = new GeneratePasswordCommandHandler(_generator.Object, _logger.Object);
         var cmd = new GeneratePasswordCommand(16, true, true, true, true, true);
@@ -52,5 +52,23 @@ public class GeneratePasswordCommandHandlerTests
 
         Assert.False(result.IsError);
         Assert.Equal("Generated!1", result.Value);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsError_WhenGeneratorThrowsException()
+    {
+        // Arrange
+        _generator.Setup(x => x.GeneratePasswordAsync(It.IsAny<PasswordGenerationOptions>()))
+            .ThrowsAsync(new Exception("Crypto failure"));
+
+        var handler = new GeneratePasswordCommandHandler(_generator.Object, _logger.Object);
+        var cmd = new GeneratePasswordCommand(16, true, true, true, true, true);
+
+        // Act
+        var result = await handler.Handle(cmd, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.Password.CreationFailed, result.FirstError.Code);
     }
 }

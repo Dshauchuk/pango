@@ -36,7 +36,7 @@ public class MovePasswordsToCatalogCommandHandlerTests
     public async Task Handle_ShouldReturnTrue_WhenCommandIsEmpty()
     {
         // Arrange
-        var command = new MovePasswordsToCatalogCommand(new Dictionary<Guid, string>());
+        var command = new MovePasswordsToCatalogCommand([]);
         var handler = GetHandler();
 
         // Act
@@ -61,7 +61,7 @@ public class MovePasswordsToCatalogCommandHandlerTests
         // Setup repository to return empty list (password not found)
         _mockPasswordRepository
             .Setup(x => x.QueryAsync(It.IsAny<Func<PangoPassword, bool>>(), _mockContext.Object))
-            .ReturnsAsync(new List<PangoPassword>());
+            .ReturnsAsync([]);
 
         var handler = GetHandler();
 
@@ -89,7 +89,7 @@ public class MovePasswordsToCatalogCommandHandlerTests
         var existingPassword = new PangoPassword { Id = id1 };
         _mockPasswordRepository
             .Setup(x => x.QueryAsync(It.IsAny<Func<PangoPassword, bool>>(), _mockContext.Object))
-            .ReturnsAsync(new List<PangoPassword> { existingPassword });
+            .ReturnsAsync([existingPassword]);
 
         var handler = GetHandler();
 
@@ -122,7 +122,7 @@ public class MovePasswordsToCatalogCommandHandlerTests
 
         _mockPasswordRepository
             .Setup(x => x.QueryAsync(It.IsAny<Func<PangoPassword, bool>>(), _mockContext.Object))
-            .ReturnsAsync(new List<PangoPassword> { pwd1, pwd2 });
+            .ReturnsAsync([pwd1, pwd2]);
 
         var handler = GetHandler();
 
@@ -138,8 +138,7 @@ public class MovePasswordsToCatalogCommandHandlerTests
         Assert.Equal(newPath2, pwd2.CatalogPath);
 
         // Verify UpdateAsync was called for both
-        _mockPasswordRepository.Verify(x => x.UpdateAsync(pwd1, _mockContext.Object), Times.Once);
-        _mockPasswordRepository.Verify(x => x.UpdateAsync(pwd2, _mockContext.Object), Times.Once);
+        _mockPasswordRepository.Verify(x => x.UpdateAsync(It.Is<IEnumerable<PangoPassword>>(list => list.Count() == 2), _mockContext.Object), Times.Once);
     }
 
     [Fact]
@@ -156,10 +155,10 @@ public class MovePasswordsToCatalogCommandHandlerTests
 
         _mockPasswordRepository
             .Setup(x => x.QueryAsync(It.IsAny<Func<PangoPassword, bool>>(), _mockContext.Object))
-            .ReturnsAsync(new List<PangoPassword> { pwd1 });
+            .ReturnsAsync([pwd1]);
 
         _mockPasswordRepository
-            .Setup(x => x.UpdateAsync(It.IsAny<PangoPassword>(), _mockContext.Object))
+            .Setup(x => x.UpdateAsync(It.IsAny<IEnumerable<PangoPassword>>(), _mockContext.Object))
             .ThrowsAsync(new Exception("Database error"));
 
         var handler = GetHandler();

@@ -72,8 +72,10 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
     public bool CanSave()
     {
-        Validator.Validate();
-        return !Validator.HasErrors;
+        return !string.IsNullOrWhiteSpace(Validator.CurrentPassword) &&
+               !string.IsNullOrWhiteSpace(Validator.NewPassword) &&
+               !string.IsNullOrWhiteSpace(Validator.Confirmation) &&
+               Validator.NewPassword == Validator.Confirmation;
     }
 
     public Task OnCancelAsync()
@@ -83,7 +85,7 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
 
     public async Task OnSaveAsync()
     {
-        Validator.Validate();
+        Logger.LogInformation("Attempting to change user password.");
 
         if (!Validator.HasErrors)
         {
@@ -107,14 +109,14 @@ public partial class ChangePasswordDialogViewModel : ViewModelBase, IDialogViewM
                 string message = !string.IsNullOrWhiteSpace(result.FirstError.Description)
                     ? result.FirstError.Description
                     : ViewResourceLoader.GetString("PasswordIsNotCorrect");
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, Core.Enums.AppNotificationType.Warning));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(message, AppNotificationType.Warning));
             }
             else
             {
                 SecureUserSession.ClearUser();
                 App.Current.RaiseSignedOut();
                 WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new(new NavigationParameters(AppView.SignIn, AppView.User)));
-                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), Core.Enums.AppNotificationType.Success));
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("PasswordHasBeenChanged"), AppNotificationType.Success));
             }
         }
     }

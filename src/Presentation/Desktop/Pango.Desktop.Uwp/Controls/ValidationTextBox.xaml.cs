@@ -22,22 +22,20 @@ public sealed partial class ValidationTextBox : ContentControl
     /// The <see cref="FontIcon"/> instance used for validation warnings.
     /// </summary>
     private FontIcon? _warningIcon;
-
     private INotifyDataErrorInfo? _oldDataContext;
+    private string? _lastErrorMessage;
+    private bool _isSyncing;
 
     /// <summary>
     /// Initializes a new instance and sets up lifecycle event handlers to prevent memory leaks.
     /// </summary>
     public ValidationTextBox()
     {
-        Log.Logger?.Debug("ValidationTextBox constructor called");
-
+        Log.Logger?.Debug("ValidationTextBox initialized");
         DataContextChanged += ValidationTextBox_DataContextChanged;
 
         Loaded += (s, e) =>
         {
-            Log.Logger?.Debug("ValidationTextBox Loaded event fired");
-
             if (DataContext is INotifyDataErrorInfo dataContext && !ReferenceEquals(_oldDataContext, dataContext))
             {
                 _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
@@ -49,8 +47,6 @@ public sealed partial class ValidationTextBox : ContentControl
 
         Unloaded += (s, e) =>
         {
-            Log.Logger?.Debug("ValidationTextBox Unloaded event fired: cleaning up resources");
-
             _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
             _oldDataContext = null;
         };
@@ -61,18 +57,23 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     protected override void OnApplyTemplate()
     {
-        Log.Logger?.Debug("ValidationTextBox OnApplyTemplate called");
-
         base.OnApplyTemplate();
 
         _textBox = (TextBox)GetTemplateChild("PART_TextBox");
         _warningIcon = (FontIcon)GetTemplateChild("PART_WarningIcon");
 
-        _textBox?.TextChanged += TextBox_TextChanged;
+        if (_textBox != null)
+        {
+            _textBox.TextChanged += TextBox_TextChanged;
+            if (!string.IsNullOrEmpty(Text))
+            {
+                _isSyncing = true;
+                _textBox.Text = Text;
+                _isSyncing = false;
+            }
+        }
 
         GotFocus += ValidationTextBox_GotFocus;
-
-        Log.Logger?.Debug("ValidationTextBox template applied successfully");
     }
 
     /// <summary>
@@ -102,12 +103,42 @@ public sealed partial class ValidationTextBox : ContentControl
     {
         if (d is ValidationTextBox control && control._textBox != null)
         {
-            string newValue = e.NewValue as string ?? string.Empty;
+            if (control._isSyncing) return;
 
+            string newValue = e.NewValue as string ?? string.Empty;
             if (!string.Equals(control._textBox.Text, newValue, StringComparison.Ordinal))
             {
+                control._isSyncing = true;
+
+                int start = control._textBox.SelectionStart;
+                int length = control._textBox.SelectionLength;
+
                 control._textBox.Text = newValue;
+
+                if (start <= newValue.Length)
+                {
+                    control._textBox.SelectionStart = start;
+                    control._textBox.SelectionLength = length;
+                }
+                else
+                {
+                    control._textBox.SelectionStart = newValue.Length;
+                }
+
+                control._isSyncing = false;
             }
+        }
+    }
+
+    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_isSyncing) return;
+
+        if (_textBox != null && !string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
+        {
+            _isSyncing = true;
+            Text = _textBox.Text;
+            _isSyncing = false;
         }
     }
 
@@ -191,10 +222,7 @@ public sealed partial class ValidationTextBox : ContentControl
     private static void OnPropertyNamePropertyChanged(object sender, DependencyPropertyChangedEventArgs args)
     {
         if (args.NewValue is string { Length: > 0 })
-        {
-            Log.Logger?.Debug("PropertyName changed to: '{PropertyName}'", args.NewValue);
             ((ValidationTextBox)sender).RefreshErrors();
-        }
     }
 
     /// <summary>
@@ -206,10 +234,6 @@ public sealed partial class ValidationTextBox : ContentControl
     {
         if (ReferenceEquals(args.NewValue, _oldDataContext)) return;
 
-        Log.Logger?.Debug("ValidationTextBox DataContextChanged: old={OldContext}, new={NewContext}",
-            _oldDataContext?.GetType().Name ?? "null",
-            args.NewValue?.GetType().Name ?? "null");
-
         _oldDataContext?.ErrorsChanged -= DataContext_ErrorsChanged;
 
         if (args.NewValue is INotifyDataErrorInfo dataContext)
@@ -217,7 +241,6 @@ public sealed partial class ValidationTextBox : ContentControl
             _oldDataContext = dataContext;
             _oldDataContext.ErrorsChanged += DataContext_ErrorsChanged;
         }
-
         RefreshErrors();
     }
 
@@ -228,7 +251,6 @@ public sealed partial class ValidationTextBox : ContentControl
     /// <param name="e">Event arguments containing the property name with errors.</param>
     private void DataContext_ErrorsChanged(object? sender, DataErrorsChangedEventArgs e)
     {
-        Log.Logger?.Debug("DataContext_ErrorsChanged for property: '{PropertyName}'", e.PropertyName);
         RefreshErrors();
     }
 
@@ -240,25 +262,7 @@ public sealed partial class ValidationTextBox : ContentControl
     private void ValidationTextBox_GotFocus(object sender, RoutedEventArgs e)
     {
         if (ReferenceEquals(e.OriginalSource, this))
-        {
-            Log.Logger?.Debug("ValidationTextBox_GotFocus: focusing internal TextBox");
             _textBox?.Focus(FocusState.Programmatic);
-        }
-    }
-
-    /// <summary>
-    /// Updates the bound text value when the internal text changes with debouncing.
-    /// </summary>
-    /// <param name="sender">The sender instance.</param>
-    /// <param name="e">Text changed event arguments.</param>
-    private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        if (_textBox != null && !string.Equals(Text, _textBox.Text, StringComparison.Ordinal))
-        {
-
-            Text = _textBox.Text;
-
-        }
     }
 
     /// <summary>
@@ -266,32 +270,27 @@ public sealed partial class ValidationTextBox : ContentControl
     /// </summary>
     private void RefreshErrors()
     {
-        if (_warningIcon is not FontIcon warningIcon)
-        {
-            Log.Logger?.Debug("RefreshErrors: warning icon not found in template");
-            return;
-        }
+        if (_warningIcon == null) return;
 
         if (string.IsNullOrEmpty(PropertyName) || DataContext is not INotifyDataErrorInfo dataContext)
         {
-            warningIcon.Visibility = Visibility.Collapsed;
-            ToolTipService.SetToolTip(warningIcon, null);
+            if (_lastErrorMessage != null)
+            {
+                _warningIcon.Visibility = Visibility.Collapsed;
+                ToolTipService.SetToolTip(_warningIcon, null);
+                _lastErrorMessage = null;
+            }
             return;
         }
 
         var result = dataContext.GetErrors(PropertyName).OfType<ValidationResult>().FirstOrDefault();
-        warningIcon.Visibility = result is not null ? Visibility.Visible : Visibility.Collapsed;
+        string? newError = result?.ErrorMessage;
 
-        if (result is not null)
+        if (_lastErrorMessage != newError)
         {
-            ToolTipService.SetToolTip(warningIcon, result.ErrorMessage);
-            Log.Logger?.Debug("RefreshErrors: validation error shown for '{PropertyName}': {ErrorMessage}",
-                PropertyName, result.ErrorMessage);
-        }
-        else
-        {
-            ToolTipService.SetToolTip(warningIcon, null);
-            Log.Logger?.Debug("RefreshErrors: no validation errors for '{PropertyName}'", PropertyName);
+            _warningIcon.Visibility = result != null ? Visibility.Visible : Visibility.Collapsed;
+            ToolTipService.SetToolTip(_warningIcon, newError);
+            _lastErrorMessage = newError;
         }
     }
 }

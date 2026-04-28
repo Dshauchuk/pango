@@ -1,10 +1,9 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Data;
-using System;
 
 namespace Pango.Desktop.Uwp.Core.Converters;
 
-public class BoolToVisibilityConvereter : IValueConverter
+public partial class BoolToVisibilityConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

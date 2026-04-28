@@ -876,4 +876,7 @@
   <data name="ToggleStar" xml:space="preserve">
     <value>Toggle favorite</value>
   </data>
+  <data name="CannotDropIntoPassword" xml:space="preserve">
+    <value>Cannot drop items into a password</value>
+  </data>
 </root>

@@ -67,6 +67,7 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     public async Task OnSaveAsync()
     {
+        Logger.LogInformation("Validating import archive password.");
         if (_parameters is null) return;
 
         string password = Validator.MasterPassword?.Trim() ?? string.Empty;
@@ -78,11 +79,24 @@ public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
             var options = new ImportOptions(encoding);
             var content = await _dataImporter.ExtractContentAsync(_parameters.FilePath, options);
 
+            if (content == null || content.Count == 0)
+            {
+                Logger.LogWarning("Import failed: Invalid password or corrupted archive.");
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
+                    "Invalid password or corrupted archive", Core.Enums.AppNotificationType.Error));
+                return;
+            }
+
             List<Domain.Entities.PangoPassword> allItems = [];
             foreach (var package in content)
             {
                 if (package.Data is IEnumerable<Domain.Entities.PangoPassword> items)
                     allItems.AddRange(items);
+                else if (package.Data is Newtonsoft.Json.Linq.JArray jArray)
+                {
+                    var fallback = jArray.ToObject<List<Domain.Entities.PangoPassword>>();
+                    if (fallback != null) allItems.AddRange(fallback);
+                }
             }
 
             // Create parameters with decrypted content and password

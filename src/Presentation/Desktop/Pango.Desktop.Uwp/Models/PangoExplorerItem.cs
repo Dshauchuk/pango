@@ -3,10 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using Pango.Application.Common;
 using Pango.Desktop.Uwp.Core.Enums;
 using Serilog;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace Pango.Desktop.Uwp.Models;
 
@@ -199,7 +196,6 @@ public partial class PangoExplorerItem : ObservableObject
                     {
                         child.SetSelectedWithoutNotify(value);
                     }
-                    Log.Logger?.Debug("Propagated selection to {Count} children of {ItemName}", Children.Count, Name);
                 }
 
                 WeakReferenceMessenger.Default.Send(new SelectionChangedMessage());

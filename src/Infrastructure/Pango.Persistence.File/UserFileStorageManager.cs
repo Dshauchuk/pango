@@ -21,8 +21,6 @@ public class UserFileStorageManager(
     private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
     private readonly ILogger<UserFileStorageManager> _logger = logger;
 
-    private const int FileStreamBufferSize = 4096;
-
     /// <summary>
     /// Deletes all user data for the specified user ID.
     /// </summary>
@@ -51,14 +49,13 @@ public class UserFileStorageManager(
         string newFolderPath = _appDomainProvider.GetUserFolderPath(tmpUser);
         await _passwordRepository.CreateAsync(all, _repositoryContextFactory.Create(tmpUser, new EncodingOptions(encodingOptions.Key, encodingOptions.Salt)));
 
-
         if (_logger.IsEnabled(LogLevel.Debug))
             _logger.LogDebug("Copied data to a temp user {User} folder...", tmpUser);
 
         // 2. rename existing directory using timestamp
         string currentUserDirectoryPath = _appDomainProvider.GetUserFolderPath(userId);
         string copyUser = $"{userId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        string tmpUserDirectoryPath = currentUserDirectoryPath.Replace(userId, copyUser);
+        string tmpUserDirectoryPath = _appDomainProvider.GetUserFolderPath(copyUser);
         Directory.Move(currentUserDirectoryPath, tmpUserDirectoryPath);
 
         if (_logger.IsEnabled(LogLevel.Debug))
@@ -128,8 +125,8 @@ public class UserFileStorageManager(
         foreach (FileInfo file in dir.GetFiles())
         {
             string targetFilePath = Path.Combine(destinationDir, file.Name);
-            using var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, FileStreamBufferSize, true);
-            using var targetStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None, FileStreamBufferSize, true);
+            using var sourceStream = new FileStream(file.FullName, FileMode.Open, FileAccess.Read, FileShare.Read, AppConstants.Security.FileStreamBufferSize, true);
+            using var targetStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write, FileShare.None, AppConstants.Security.FileStreamBufferSize, true);
             sourceStream.CopyTo(targetStream);
         }
 

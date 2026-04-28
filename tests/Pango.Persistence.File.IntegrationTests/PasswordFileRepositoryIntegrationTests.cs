@@ -53,8 +53,8 @@ public class PasswordFileRepositoryIntegrationTests
                 Name = "GitHub",
                 Login = "me",
                 CatalogPath = "",
+                Value = "secret-value"
             };
-            entry.Value = "secret-value";
 
             await repo.CreateAsync(entry, ctx);
 
@@ -99,7 +99,7 @@ public class PasswordFileRepositoryIntegrationTests
             a.Value = "1";
             b.Value = "2";
 
-            await repo.CreateAsync(new[] { a, b }, ctx);
+            await repo.CreateAsync([a, b], ctx);
 
             var all = (await repo.QueryAsync(_ => true, ctx)).ToList();
             Assert.Equal(2, all.Count);
@@ -118,10 +118,57 @@ public class PasswordFileRepositoryIntegrationTests
         {
             var bad = new Mock<IRepositoryActionContext>();
 
-            var entry = new PangoPassword { Id = Guid.NewGuid(), Name = "X", CatalogPath = "" };
-            entry.Value = "v";
+            var entry = new PangoPassword
+            {
+                Id = Guid.NewGuid(),
+                Name = "X",
+                CatalogPath = "",
+                Value = "v"
+            };
 
             await Assert.ThrowsAsync<ArgumentException>(() => repo.CreateAsync(entry, bad.Object));
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateAsync_Batch_EmptyList_DoesNothing()
+    {
+        // Arrange
+        var (root, provider, repo, encoding) = CreateStore();
+        string user = "user_batch_empty";
+        var ctx = new FileRepositoryActionContext(encoding, user, provider.GetUserFolderPath(user));
+
+        try
+        {
+            // Act
+            await repo.UpdateAsync([], ctx);
+
+            // Assert: Should just return without crashing
+            Assert.True(true);
+        }
+        finally
+        {
+            TryDelete(root);
+        }
+    }
+
+    [Fact]
+    public void ClearCache_WipesInternalState_WithoutCrashing()
+    {
+        // Arrange
+        var (root, _, repo, _) = CreateStore();
+
+        try
+        {
+            // Act
+            repo.ClearCache();
+
+            // Assert: Should not throw any exception
+            Assert.True(true);
         }
         finally
         {

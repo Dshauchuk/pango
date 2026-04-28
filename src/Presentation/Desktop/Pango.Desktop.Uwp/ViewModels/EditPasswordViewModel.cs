@@ -36,6 +36,7 @@ public partial class EditPasswordViewModel : ViewModelBase
     private EditPasswordValidator? _passwordValidator;
     private string _title = string.Empty;
     private AppView _sourceView = AppView.PasswordsIndex;
+    private bool _isSaving;
 
     #endregion
 
@@ -57,8 +58,6 @@ public partial class EditPasswordViewModel : ViewModelBase
         OpenIndexViewCommand = new RelayCommand(OnOpenIndexView);
         SavePasswordCommand = new AsyncRelayCommand(OnSavePasswordAsync);
         OpenGeneratePasswordDialogCommand = new RelayCommand(OnOpenGeneratePasswordDialogAsync);
-
-        Log.Logger?.Debug("EditPasswordViewModel initialized");
     }
 
     #region Properties
@@ -78,13 +77,7 @@ public partial class EditPasswordViewModel : ViewModelBase
     public EditPasswordValidator? PasswordValidator
     {
         get => _passwordValidator;
-        set
-        {
-            if (SetProperty(ref _passwordValidator, value))
-            {
-                Log.Logger?.Debug("PasswordValidator updated");
-            }
-        }
+        set => SetProperty(ref _passwordValidator, value);
     }
 
     /// <summary>
@@ -98,7 +91,6 @@ public partial class EditPasswordViewModel : ViewModelBase
             if (SetProperty(ref _isNew, value))
             {
                 Title = value ? ViewResourceLoader.GetString("NewPassword") : ViewResourceLoader.GetString("EditPassword");
-                Log.Logger?.Debug("IsNew changed to: {Value}, Title set to: {Title}", value, Title);
             }
         }
     }
@@ -152,25 +144,20 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// <param name="parameter">Optional navigation parameters containing edit context.</param>
     public override async Task OnNavigatedToAsync(object? parameter)
     {
-        Log.Logger?.Debug("EditPasswordViewModel navigated to");
-
         await base.OnNavigatedToAsync(parameter);
 
         Clear();
 
         var navParams = parameter as NavigationParameters;
-
         if (navParams != null)
         {
             _sourceView = navParams.SourceView;
-            Log.Logger?.Debug("Source view set to: {SourceView}", _sourceView);
         }
 
         bool isReturningToExistingEdit = navParams?.SourceView == AppView.GeneratePassword && navParams.Parameter == null;
 
         if (!isReturningToExistingEdit)
         {
-            Log.Logger?.Debug("Clearing form and initializing parameters");
             Clear();
 
             if (navParams?.Parameter is EditPasswordParameters parameters)
@@ -180,7 +167,6 @@ public partial class EditPasswordViewModel : ViewModelBase
 
                 if (AvailableCatalogs == null || AvailableCatalogs.Count == 0)
                 {
-                    Log.Logger?.Debug("Loading available catalogs from application layer");
                     var queryResult = await _sender.Send(
                         new Application.UseCases.Password.Queries.UserPasswords.UserPasswordsQuery());
 
@@ -195,7 +181,6 @@ public partial class EditPasswordViewModel : ViewModelBase
                             .ToList();
 
                         catalogs.AddRange(existingCatalogs);
-                        Log.Logger?.Debug("Loaded {Count} existing catalogs", existingCatalogs.Count);
                     }
                     AvailableCatalogs = catalogs;
                 }
@@ -203,8 +188,6 @@ public partial class EditPasswordViewModel : ViewModelBase
                 if (!IsNew && parameters.SelectedPasswordId != null)
                 {
                     Guid passwordId = parameters.SelectedPasswordId.Value;
-                    Log.Logger?.Debug("Loading existing password: {PasswordId}", passwordId);
-
                     var passwordResult = await _sender.Send(new FindUserPasswordQuery(passwordId));
 
                     if (!passwordResult.IsError)
@@ -214,6 +197,7 @@ public partial class EditPasswordViewModel : ViewModelBase
                         PasswordValidator.Title = passwordResult.Value.Name;
                         PasswordValidator.Password = passwordResult.Value.Value;
                         PasswordValidator.SelectedCatalog = passwordResult.Value.CatalogPath;
+                        PasswordValidator.Star = passwordResult.Value.Star;
 
                         if (passwordResult.Value.Properties.TryGetValue(PasswordProperties.Notes, out string? notes))
                         {
@@ -225,12 +209,7 @@ public partial class EditPasswordViewModel : ViewModelBase
                         {
                             PasswordValidator.ExpirationDate = expDate;
                             PasswordValidator.HasExpirationDate = true;
-                            Log.Logger?.Debug("Expiration date loaded: {ExpirationDate}", expDate);
                         }
-                    }
-                    else
-                    {
-                        Log.Logger?.Warning("Failed to load password {PasswordId}: {Error}", passwordId, passwordResult.FirstError);
                     }
                 }
                 else
@@ -240,28 +219,18 @@ public partial class EditPasswordViewModel : ViewModelBase
                     if (!string.IsNullOrEmpty(parameters.GeneratedPassword))
                     {
                         PasswordValidator.Password = parameters.GeneratedPassword;
-                        Log.Logger?.Debug("Pre-filled generated password");
                     }
                 }
             }
             else
             {
-                Log.Logger?.Debug("No parameters provided: defaulting to new password creation");
                 IsNew = true;
             }
-        }
-        else
-        {
-            Log.Logger?.Debug("Returning from GeneratePassword: preserving form state");
         }
     }
 
     public override async Task OnNavigatedFromAsync(object? parameter)
     {
-        Log.Logger?.Debug("EditPasswordViewModel navigated from - Wiping RAM");
-
-        Clear();
-
         await base.OnNavigatedFromAsync(parameter);
     }
 
@@ -271,8 +240,6 @@ public partial class EditPasswordViewModel : ViewModelBase
     protected override void RegisterMessages()
     {
         base.RegisterMessages();
-        Log.Logger?.Debug("Registering message subscriptions");
-
         WeakReferenceMessenger.Default.Register<PasswordGeneratedForEditMessage>(this, OnPasswordGeneratedForEdit);
     }
 
@@ -285,12 +252,8 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// </summary>
     private void Clear()
     {
-        Log.Logger?.Debug("Clear: resetting PasswordValidator");
-
         PasswordValidator?.Dispose();
-
         PasswordValidator = new EditPasswordValidator();
-
         OnPropertyChanged(nameof(PasswordValidator));
     }
 
@@ -299,92 +262,93 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// </summary>
     private async Task OnSavePasswordAsync()
     {
-        Log.Logger?.Information("OnSavePasswordAsync: validating and saving password");
+        if (_isSaving) return;
+        _isSaving = true;
 
-        PasswordValidator!.Validate();
-
-        if (!PasswordValidator.HasErrors)
+        try
         {
-            var props = new Dictionary<string, string> { { PasswordProperties.Notes, PasswordValidator.Notes } };
+            Log.Logger?.Information("OnSavePasswordAsync: validating and saving password");
 
-            if (PasswordValidator.HasExpirationDate && PasswordValidator.ExpirationDate.HasValue)
-            {
-                props.Add(
-                    PasswordProperties.ExpirationDate,
-                    PasswordValidator.ExpirationDate.Value.ToString("O", CultureInfo.InvariantCulture));
-            }
+            PasswordValidator!.Validate();
 
-            ErrorOr.ErrorOr<PangoPasswordDto> result;
+            if (!PasswordValidator.HasErrors)
+            {
+                var props = new Dictionary<string, string> { { PasswordProperties.Notes, PasswordValidator.Notes } };
 
-            if (IsNew)
-            {
-                Log.Logger?.Debug("Creating new password: {Title}", PasswordValidator.Title);
-                result = await _sender.Send(
-                    new NewPasswordCommand(
-                        PasswordValidator.Title,
-                        PasswordValidator.Login,
-                        PasswordValidator.Password,
-                        props)
-                    {
-                        CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
-                    });
-            }
-            else
-            {
-                Log.Logger?.Debug("Updating existing password: {Id}", PasswordValidator.Id);
-                result = await _sender.Send(
-                    new UpdatePasswordCommand(
+                if (PasswordValidator.HasExpirationDate && PasswordValidator.ExpirationDate.HasValue)
+                {
+                    props.Add(
+                        PasswordProperties.ExpirationDate,
+                        PasswordValidator.ExpirationDate.Value.ToString("O", CultureInfo.InvariantCulture));
+                }
+
+                ErrorOr.ErrorOr<PangoPasswordDto> result;
+
+                if (IsNew)
+                {
+                    result = await _sender.Send(
+                        new NewPasswordCommand(
+                            PasswordValidator.Title,
+                            PasswordValidator.Login,
+                            PasswordValidator.Password,
+                            props)
+                        {
+                            CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
+                        });
+                }
+                else
+                {
+                    result = await _sender.Send(
+                        new UpdatePasswordCommand(
                         PasswordValidator.Id!.Value,
                         PasswordValidator.Title,
                         PasswordValidator.Login,
                         PasswordValidator.Password,
                         PasswordValidator.Star,
                         props)
-                    {
-                        CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
-                    });
-            }
+                        {
+                            CatalogPath = PasswordValidator.SelectedCatalog ?? string.Empty
+                        });
+                }
 
-            string message = result.IsError
-                ? ViewResourceLoader.GetString("CannotSavePassword")
-                : IsNew
-                    ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title)
-                    : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
+                string message = result.IsError
+                    ? ViewResourceLoader.GetString("CannotSavePassword")
+                    : IsNew
+                        ? string.Format(ViewResourceLoader.GetString("PasswordCreated"), PasswordValidator.Title)
+                        : string.Format(ViewResourceLoader.GetString("PasswordModified"), PasswordValidator.Title);
 
-            WeakReferenceMessenger.Default.Send(
-                new InAppNotificationMessage(
-                    message,
+                WeakReferenceMessenger.Default.Send(
+                    new InAppNotificationMessage(
+                        message,
                     result.IsError ? AppNotificationType.Error : AppNotificationType.Success));
 
-            if (!result.IsError)
-            {
-                Log.Logger?.Information("Password {Action} successfully: {Title}", IsNew ? "created" : "updated", PasswordValidator.Title);
-                var entity = result.Value.Adapt<PangoPasswordListItemDto>();
-
-                if (IsNew) WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
-                else WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
-
-                Clear();
-
-                App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+                if (!result.IsError)
                 {
-                    WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
-                    WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
-                        new NavigationParameters(AppView.PasswordsIndex, AppView.EditPassword)));
-                });
+                    Log.Logger?.Information("Password {Action} successfully: {Title}", IsNew ? "created" : "updated", PasswordValidator.Title);
+                    var entity = result.Value.Adapt<PangoPasswordListItemDto>();
+
+                    App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(
+                        Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,
+                        () =>
+                        {
+                            Clear();
+
+                            WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
+
+                            if (IsNew) WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
+                            else WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
+                        });
+                }
+
             }
             else
             {
-                Log.Logger?.Error("Failed to save password: {Error}", result.FirstError.Description);
+                WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("ValidationError_Required") ?? "This field is required.", AppNotificationType.Warning));
             }
         }
-        else
+        finally
         {
-            Log.Logger?.Warning("Validation failed: required fields missing");
-            WeakReferenceMessenger.Default.Send(
-                new InAppNotificationMessage(
-                    ViewResourceLoader.GetString("ValidationError_Required") ?? "This field is required.",
-                    AppNotificationType.Warning));
+            _isSaving = false;
         }
     }
 
@@ -393,20 +357,8 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// </summary>
     private void OnOpenIndexView()
     {
-        Log.Logger?.Debug("OnOpenIndexView: navigating back to {SourceView}", _sourceView);
-
         Clear();
-
-        if (_sourceView == AppView.GeneratePassword)
-        {
-            WeakReferenceMessenger.Default.Send(
-                new NavigationRequestedMessage(
-                    new NavigationParameters(AppView.GeneratePassword, AppView.EditPassword)));
-        }
-        else
-        {
-            WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
-        }
+        WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
     }
 
     /// <summary>
@@ -414,8 +366,6 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// </summary>
     private async void OnOpenGeneratePasswordDialogAsync()
     {
-        Log.Logger?.Debug("OnOpenGeneratePasswordDialogAsync: opening generator dialog");
-
         var parameters = new GeneratePasswordDialogParameters(
             password: PasswordValidator?.Password ?? string.Empty);
 
@@ -429,18 +379,11 @@ public partial class EditPasswordViewModel : ViewModelBase
     /// <param name="message">Message containing the generated password value.</param>
     private void OnPasswordGeneratedForEdit(object recipient, PasswordGeneratedForEditMessage message)
     {
-        Log.Logger?.Debug("OnPasswordGeneratedForEdit: received generated password");
-
-        if (PasswordValidator is null)
-        {
-            Log.Logger?.Warning("PasswordValidator is null, cannot apply generated password");
-            return;
-        }
+        if (PasswordValidator is null) return;
 
         App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
         {
             PasswordValidator.Password = message.Value;
-            Log.Logger?.Information("Generated password applied to form");
         });
     }
 

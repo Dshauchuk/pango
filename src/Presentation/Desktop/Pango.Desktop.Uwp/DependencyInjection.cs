@@ -33,7 +33,7 @@ public static class DependencyInjection
         return services;
     }
 
-    private static DateTimeOffset? GetExpirationDateFromProperties(System.Collections.Generic.Dictionary<string, string> properties)
+    private static DateTimeOffset? GetExpirationDateFromProperties(Dictionary<string, string> properties)
     {
         if (properties != null && properties.TryGetValue(Application.Common.PasswordProperties.ExpirationDate, out var dateStr))
         {
@@ -78,8 +78,8 @@ public static class DependencyInjection
             .WriteTo.File(logFilePath,
                 rollingInterval: RollingInterval.Day,
                 rollOnFileSizeLimit: true,
-                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug)
-            .MinimumLevel.Debug()
+                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information)
+            .MinimumLevel.Information()
             .CreateLogger();
 
         services.AddScoped<IPasswordVault, AppPasswordVault>();

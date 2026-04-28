@@ -25,7 +25,7 @@ public sealed partial class HomeView : Page
     {
         InitializeComponent();
 
-        NavigationCacheMode = NavigationCacheMode.Required;
+        NavigationCacheMode = NavigationCacheMode.Enabled;
 
         DataContext = App.Host.Services.GetRequiredService<HomeViewModel>();
     }

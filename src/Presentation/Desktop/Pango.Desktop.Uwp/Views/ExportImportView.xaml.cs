@@ -29,7 +29,7 @@ public sealed partial class ExportImportView : PageBase
         : base(App.Host.Services.GetRequiredService<ILogger<ExportImportView>>())
     {
         InitializeComponent();
-        NavigationCacheMode = NavigationCacheMode.Required;
+        NavigationCacheMode = NavigationCacheMode.Enabled;
         DataContext = App.Host.Services.GetRequiredService<ExportImportViewModel>();
 
         Log.Logger?.Debug("ExportImportView initialized");

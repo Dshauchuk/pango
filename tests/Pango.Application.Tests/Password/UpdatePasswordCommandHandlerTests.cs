@@ -33,8 +33,10 @@ public class UpdatePasswordCommandHandlerTests
         _passwords.Setup(x => x.UpdateAsync(It.IsAny<PangoPassword>(), _action.Object))
             .ReturnsAsync((PangoPassword p, IRepositoryActionContext _) => p);
 
-        var cmd = new UpdatePasswordCommand(id, "NewName", "log", "val", true);
-        cmd.CatalogPath = "Other";
+        var cmd = new UpdatePasswordCommand(id, "NewName", "log", "val", true)
+        {
+            CatalogPath = "Other"
+        };
 
         var handler = new UpdatePasswordCommandHandler(_passwords.Object, _ctx.Object, _factory.Object, _logger.Object);
         var result = await handler.Handle(cmd, CancellationToken.None);
@@ -56,5 +58,63 @@ public class UpdatePasswordCommandHandlerTests
 
         Assert.True(result.IsError);
         Assert.Equal(ApplicationErrors.Password.NotFound, result.FirstError.Code);
+    }
+
+    [Fact]
+    public async Task Handle_UpdatesCatalogAndChildrenPaths_WhenItemIsCatalog()
+    {
+        // Arrange: We are updating a folder named "OldFolder" to "NewFolder"
+        var folderId = Guid.NewGuid();
+        var folder = new PangoPassword { Id = folderId, Name = "OldFolder", IsCatalog = true, CatalogPath = "Root" };
+
+        // A child password residing inside "Root/OldFolder"
+        var child = new PangoPassword { Id = Guid.NewGuid(), Name = "Child", IsCatalog = false, CatalogPath = "Root/OldFolder" };
+
+        _passwords.Setup(x => x.FindAsync(It.IsAny<Func<PangoPassword, bool>>(), _action.Object))
+            .ReturnsAsync(folder);
+
+        // Mock the query to return the child when searching for items inside the old catalog path
+        _passwords.Setup(x => x.QueryAsync(It.IsAny<Func<PangoPassword, bool>>(), _action.Object))
+            .ReturnsAsync([child]);
+
+        _passwords.Setup(x => x.UpdateAsync(It.IsAny<PangoPassword>(), _action.Object))
+            .ReturnsAsync((PangoPassword p, IRepositoryActionContext _) => p);
+
+        // Act: Rename "OldFolder" to "NewFolder"
+        var cmd = new UpdatePasswordCommand(folderId, "NewFolder", "", "", null)
+        {
+            CatalogPath = "Root"
+        };
+
+        var handler = new UpdatePasswordCommandHandler(_passwords.Object, _ctx.Object, _factory.Object, _logger.Object);
+        var result = await handler.Handle(cmd, CancellationToken.None);
+
+        // Assert: Verify the folder was renamed
+        Assert.False(result.IsError);
+        Assert.Equal("NewFolder", result.Value.Name);
+
+        // Verify the child's catalog path was updated to reflect the new folder name
+        Assert.Equal("Root/NewFolder", child.CatalogPath);
+
+        // Verify batch update was called for the children
+        _passwords.Verify(x => x.UpdateAsync(It.Is<IEnumerable<PangoPassword>>(list => list.Contains(child)), _action.Object), Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsFailure_WhenRepositoryThrowsException()
+    {
+        // Arrange: Simulate a database or file system failure
+        var id = Guid.NewGuid();
+        _passwords.Setup(x => x.FindAsync(It.IsAny<Func<PangoPassword, bool>>(), _action.Object))
+            .ThrowsAsync(new Exception("Simulated database error"));
+
+        var handler = new UpdatePasswordCommandHandler(_passwords.Object, _ctx.Object, _factory.Object, _logger.Object);
+
+        // Act
+        var result = await handler.Handle(new UpdatePasswordCommand(id, "Name", "Log", "Val"), CancellationToken.None);
+
+        // Assert: Ensure the exception is caught and formatted as an ErrorOr failure
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.Password.ModificationFailed, result.FirstError.Code);
     }
 }

@@ -43,18 +43,11 @@ public class UserContextProvider(IUserRepository userRepository, IAppUserProvide
     /// </summary>
     public async Task<EncodingOptions> GetEncodingOptionsAsync()
     {
-        // Return cached options if they exist and user hasn't changed
+        // Always fetch the latest hash and salt to prevent decryption failures after password changes
         string currentId = GetUserName();
-
-        if (_cachedEncodingOptions.HasValue)
-            return _cachedEncodingOptions.Value;
-
-        // Fetch user from repository to get master hash and salt
         PangoUser? user = await _userRepository.FindAsync(currentId) ?? throw new UnauthorizedException();
 
-        // Store result in cache
-        _cachedEncodingOptions = new EncodingOptions(user.MasterPasswordHash, user.PasswordSalt);
-        return _cachedEncodingOptions.Value;
+        return new EncodingOptions(user.MasterPasswordHash, user.PasswordSalt);
     }
 
     // Helper methods to access specific encoding parts

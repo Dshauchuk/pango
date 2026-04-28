@@ -18,11 +18,11 @@
         <Pivot IsTabStop="False" 
                IsLocked="True"
                SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
+               Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=reverse}">
             <PivotItem>
                 <Grid HorizontalAlignment="Center"
                       VerticalAlignment="Center">
-                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConvereter}}">
+                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConverter}}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -80,7 +80,7 @@
                         </Button>
                     </Grid>
 
-                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
+                    <Grid Visibility="{Binding HasUsers, Converter={StaticResource BoolToVisibilityConverter}, ConverterParameter=reverse}">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -187,7 +187,7 @@
             </PivotItem>
         </Pivot>
 
-        <!--<Grid Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}}">
+        <!--<Grid Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
             <TextBlock VerticalAlignment="Center" 
                        HorizontalAlignment="Center">
                 <Run Text="{loc:StringResource Key=Loading}"/><Run Text="..."/>
