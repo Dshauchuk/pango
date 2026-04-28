@@ -37,7 +37,7 @@
                                       OffContent="{loc:StringResource Key='ToggleSwitch_Off'}"/>
                     </toolkit:SettingsCard>
                     <toolkit:SettingsCard Header="{loc:StringResource Key='AutolockAfterMinutes'}"
-                                          Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConvereter}}">
+                                          Visibility="{Binding AllowAutolock, Converter={StaticResource BoolToVisibilityConverter}}">
                         <ComboBox DisplayMemberPath="Value"
                                   SelectedValuePath="Key"
                                   ItemsSource="{Binding LockOnIdleInMinutesItems}"
@@ -313,7 +313,7 @@
         <Grid Grid.Row="0"
               Grid.RowSpan="2"
               Visibility="{Binding IsChangingDataFolder, 
-                                    Converter={StaticResource BoolToVisibilityConvereter}}"
+                                    Converter={StaticResource BoolToVisibilityConverter}}"
               Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}">
 
             <StackPanel VerticalAlignment="Center"

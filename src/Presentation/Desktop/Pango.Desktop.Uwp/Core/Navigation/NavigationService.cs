@@ -26,11 +26,18 @@ public class NavigationService : INavigationService
     public void SetFrame(Frame frame)
     {
         _frame = frame;
+        _frame.CacheSize = _viewMap.Count;
     }
 
     public void Navigate(AppView view, object? parameter = null)
     {
         if (_frame is null) return;
+
+        if (!_frame.DispatcherQueue.HasThreadAccess)
+        {
+            _frame.DispatcherQueue.TryEnqueue(() => Navigate(view, parameter));
+            return;
+        }
 
         if ((DateTime.Now - _lastNavTime).TotalMilliseconds < 300)
             return;
@@ -47,10 +54,53 @@ public class NavigationService : INavigationService
         {
             _lastNavTime = DateTime.Now;
             _currentView = view;
-            _frame.Navigate(pageType, parameter, new SuppressNavigationTransitionInfo());
+
+            try
+            {
+                _frame.Navigate(pageType, parameter, new SuppressNavigationTransitionInfo());
+                CleanBackStack(pageType);
+            }
+            catch (Exception ex)
+            {
+                Serilog.Log.Logger?.Error(ex, "Navigation failed to {View}", view);
+            }
+        }
+    }
+
+    private void CleanBackStack(Type currentType)
+    {
+        if (_frame == null || _frame.BackStackDepth <= 1) return;
+
+        var duplicates = _frame.BackStack.Where(b => b.SourcePageType == currentType).ToList();
+        foreach (var duplicate in duplicates)
+        {
+            _frame.BackStack.Remove(duplicate);
         }
     }
 
     public bool CanGoBack => _frame?.CanGoBack ?? false;
-    public void GoBack() => _frame?.GoBack();
+
+    public void GoBack()
+    {
+        if (_frame?.CanGoBack == true)
+        {
+            if (!_frame.DispatcherQueue.HasThreadAccess)
+            {
+                _frame.DispatcherQueue.TryEnqueue(GoBack);
+                return;
+            }
+
+            _frame.GoBack(new SuppressNavigationTransitionInfo());
+
+            var currentType = _frame.Content?.GetType();
+            if (currentType != null)
+            {
+                var viewRecord = _viewMap.FirstOrDefault(x => x.Value == currentType);
+                if (!viewRecord.Equals(default(KeyValuePair<AppView, Type>)))
+                {
+                    _currentView = viewRecord.Key;
+                }
+            }
+        }
+    }
 }

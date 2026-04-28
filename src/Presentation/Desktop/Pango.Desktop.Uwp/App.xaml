@@ -27,7 +27,7 @@
                     <x:String x:Key="AppTitleName">Pango</x:String>
 
                     <converters:NullOrEmptyToCollapsedConverter x:Key="NullOrEmptyToCollapsedConverter"/>
-                    <converters:BoolToVisibilityConvereter x:Key="BoolToVisibilityConvereter"/>
+                    <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
                     <converters:EmptyStringToRootFolderNameConverter x:Key="EmptyStringToRootFolderNameConverter"/>
                     <converters:BoolReverseConverter x:Key="BoolReverseConverter"/>
                     <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>

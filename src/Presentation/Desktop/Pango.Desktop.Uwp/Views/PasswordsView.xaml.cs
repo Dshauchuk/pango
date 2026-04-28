@@ -206,6 +206,21 @@ public sealed partial class PasswordsView : PageBase
         }
     }
 
+    private void SeePasswordButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (sender is Button btn && btn.DataContext is PangoExplorerItem item && DataContext is PasswordsViewModel viewModel)
+            {
+                viewModel.SeePasswordCommand.Execute(item);
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Logger?.Error(ex, "SeePasswordButton_Click crashed");
+        }
+    }
+
     /// <summary>
     /// Handles single tap on a password item to explicitly set the SelectedItem.
     /// </summary>

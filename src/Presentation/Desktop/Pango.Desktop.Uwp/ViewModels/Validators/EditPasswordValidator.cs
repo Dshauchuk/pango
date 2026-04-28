@@ -10,7 +10,7 @@ public partial class EditPasswordValidator : ObservableValidator, IDisposable
     private string _title = string.Empty;
     private string? _selectedCatalog;
     private string _notes = string.Empty;
-    private bool _isStar = false;
+    private bool? _isStar = null;
     private Guid? _id;
     private DateTimeOffset? _expirationDate = DateTimeOffset.Now;
     private bool _hasExpirationDate;
@@ -83,7 +83,7 @@ public partial class EditPasswordValidator : ObservableValidator, IDisposable
         set => SetProperty(ref _selectedCatalog, value, validate: false);
     }
 
-    public bool Star
+    public bool? Star
     {
         get => _isStar;
         set => SetProperty(ref _isStar, value, validate: false);
@@ -107,7 +107,7 @@ public partial class EditPasswordValidator : ObservableValidator, IDisposable
         Password = string.Empty;
         Notes = string.Empty;
         SelectedCatalog = null;
-        Star = false;
+        Star = null;
         HasExpirationDate = false;
         ExpirationDate = null;
         ClearAllErrors();

@@ -69,7 +69,7 @@ public class UpdatePasswordCommandHandler(
 
             password.Name = request.Name;
             password.CatalogPath = request.CatalogPath;
-            password.Star = request.Star;
+            password.Star = request.Star ?? password.Star;
 
             PangoPassword updated = await _passwordRepository.UpdateAsync(password, context);
 

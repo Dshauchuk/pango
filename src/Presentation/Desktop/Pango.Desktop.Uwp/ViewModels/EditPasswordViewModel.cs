@@ -327,19 +327,19 @@ public partial class EditPasswordViewModel : ViewModelBase
                     Log.Logger?.Information("Password {Action} successfully: {Title}", IsNew ? "created" : "updated", PasswordValidator.Title);
                     var entity = result.Value.Adapt<PangoPasswordListItemDto>();
 
-                    if (IsNew) WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
-                    else WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
-
                     App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(
                         Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal,
                         () =>
                         {
                             Clear();
+
                             WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
-                            WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
-                                new NavigationParameters(AppView.PasswordsIndex, AppView.EditPassword)));
+
+                            if (IsNew) WeakReferenceMessenger.Default.Send(new PasswordCreatedMessage(entity));
+                            else WeakReferenceMessenger.Default.Send(new PasswordUpdatedMessage(entity));
                         });
                 }
+
             }
             else
             {

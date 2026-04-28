@@ -53,6 +53,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private bool _showOnlyStarred;
     private bool _isResetting;
     private DateTime _lastResetTime = DateTime.MinValue;
+    private int _currentTabIndex = 0;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="PasswordsViewModel"/> class.
@@ -197,6 +198,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             if (SetProperty(ref _searchText, value))
             {
                 Log.Logger?.Debug("SearchText changed to: '{Text}'", value);
+                ApplyFilter();
             }
         }
     }
@@ -230,6 +232,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         WeakReferenceMessenger.Default.Register<PasswordCreatedMessage>(this, OnPasswordCreated);
         WeakReferenceMessenger.Default.Register<PasswordUpdatedMessage>(this, OnPasswordUpdatedAsync);
         WeakReferenceMessenger.Default.Register<ImportCompletedMessage>(this, OnImportCompleted);
+        WeakReferenceMessenger.Default.Register<SwitchPasswordTabMessage>(this, OnSwitchTab);
         Log.Logger?.Debug("Message subscriptions registered");
     }
 
@@ -281,8 +284,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="message">Import completed message.</param>
     private void OnImportCompleted(object recipient, ImportCompletedMessage message)
     {
-        Log.Logger?.Information("ImportCompletedMessage received: marking view for refresh");
-        _needsRefresh = true;
+        if (_currentTabIndex != 0) { _needsRefresh = true; return; }
         App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync(force: true));
     }
 
@@ -323,7 +325,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="message">Password created message.</param>
     private void OnPasswordCreated(object recipient, PasswordCreatedMessage message)
     {
-        Log.Logger?.Information("PasswordCreatedMessage received: refreshing view");
+        if (_currentTabIndex != 0) { _needsRefresh = true; return; }
         App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync(force: true));
     }
 
@@ -334,12 +336,8 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <param name="message">Password updated message.</param>
     private void OnPasswordUpdatedAsync(object recipient, PasswordUpdatedMessage message)
     {
-        Log.Logger?.Information("PasswordUpdatedMessage received: triggering full refresh");
-
-        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () =>
-        {
-            await ResetViewAsync(force: true);
-        });
+        if (_currentTabIndex != 0) { _needsRefresh = true; return; }
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync(force: true));
     }
 
     /// <summary>
@@ -469,12 +467,15 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         }
         else
         {
-            WeakReferenceMessenger.Default.Send(
-                new NavigationRequestedMessage(
-                    new NavigationParameters(
-                        AppView.EditPassword,
-                        AppView.PasswordsIndex,
-                        new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+            {
+                WeakReferenceMessenger.Default.Send(
+                    new NavigationRequestedMessage(
+                        new NavigationParameters(
+                            AppView.EditPassword,
+                            AppView.PasswordsIndex,
+                            new EditPasswordParameters(false, null, selected?.Id, GetAvailableCatalogs()))));
+            });
         }
     }
 
@@ -484,12 +485,16 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private void OnCreatePassword()
     {
         Log.Logger?.Debug("CreatePassword command executed");
-        WeakReferenceMessenger.Default.Send(
-            new NavigationRequestedMessage(
-                new NavigationParameters(
-                    AppView.EditPassword,
-                    AppView.PasswordsIndex,
-                    new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
+
+        App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            WeakReferenceMessenger.Default.Send(
+                new NavigationRequestedMessage(
+                    new NavigationParameters(
+                        AppView.EditPassword,
+                        AppView.PasswordsIndex,
+                        new EditPasswordParameters(true, GetPathToSelectedFolder(), null, GetAvailableCatalogs()))));
+        });
     }
 
     /// <summary>
@@ -519,6 +524,16 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         await ResetViewAsync(force: true);
     }
 
+    private void OnSwitchTab(object recipient, SwitchPasswordTabMessage message)
+    {
+        _currentTabIndex = message.Value;
+        if (_currentTabIndex == 0 && _needsRefresh)
+        {
+            _needsRefresh = false;
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(async () => await ResetViewAsync(force: true));
+        }
+    }
+
     /// <summary>
     /// Applies current search and starred filters to the password tree using Debouncing.
     /// </summary>
@@ -532,6 +547,13 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// </summary>
     private void TriggerDebouncedFilter()
     {
+        var dispatcher = App.Current.CurrentWindow?.DispatcherQueue;
+        if (dispatcher != null && !dispatcher.HasThreadAccess)
+        {
+            dispatcher.TryEnqueue(TriggerDebouncedFilter);
+            return;
+        }
+
         if (_debounceTimer == null)
         {
             _debounceTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(300) };
@@ -551,89 +573,115 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// </summary>
     private void ExecuteSearchAndFilter()
     {
-        var snapshot = Passwords.ToList();
+        var snapshot = _originalList.ToList();
         var currentSearchText = _searchText;
         var showOnlyStarred = ShowOnlyStarred;
         var dispatcher = App.Current.CurrentWindow?.DispatcherQueue;
 
         Task.Run(() =>
         {
-            Func<PangoExplorerItem, bool> searchPredicate = string.IsNullOrWhiteSpace(currentSearchText)
-                ? _ => true
-                : i => i.Name.Contains(currentSearchText, StringComparison.OrdinalIgnoreCase);
-
-            var visibilityMap = new Dictionary<Guid, bool>();
-            bool hasVisible = false;
-
-            foreach (var password in snapshot)
+            try
             {
-                if (CalculateCombinedVisibility(password, searchPredicate, showOnlyStarred, visibilityMap))
-                    hasVisible = true;
+                Func<PangoExplorerItem, bool> searchPredicate = string.IsNullOrWhiteSpace(currentSearchText)
+                    ? _ => true
+                    : i => i.Name != null && i.Name.Contains(currentSearchText, StringComparison.OrdinalIgnoreCase);
+
+                var visibleItems = new HashSet<Guid>();
+                var childrenMap = new Dictionary<Guid, List<PangoExplorerItem>>();
+                var rootItemsList = new List<PangoExplorerItem>();
+
+                void EnsureVisible(PangoExplorerItem item)
+                {
+                    if (visibleItems.Contains(item.Id)) return;
+                    visibleItems.Add(item.Id);
+
+                    if (item.IsFolder)
+                    {
+                        childrenMap[item.Id] = [];
+                    }
+
+                    if (item.Parent != null)
+                    {
+                        EnsureVisible(item.Parent);
+                        if (!childrenMap[item.Parent.Id].Any(c => c.Id == item.Id))
+                        {
+                            childrenMap[item.Parent.Id].Add(item);
+                        }
+                    }
+                    else
+                    {
+                        if (!rootItemsList.Any(c => c.Id == item.Id))
+                        {
+                            rootItemsList.Add(item);
+                        }
+                    }
+                }
+
+                foreach (var item in snapshot)
+                {
+                    if (item.IsFolder)
+                    {
+                        if (!showOnlyStarred && searchPredicate(item))
+                            EnsureVisible(item);
+                    }
+                    else
+                    {
+                        if ((!showOnlyStarred || item.IsStar) && searchPredicate(item))
+                            EnsureVisible(item);
+                    }
+                }
+
+                SortRecursiveByMap(rootItemsList, childrenMap);
+                bool hasVisible = rootItemsList.Count > 0;
+
+                dispatcher?.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Normal, () =>
+                {
+                    try
+                    {
+                        foreach (var folder in snapshot.Where(p => p.IsFolder))
+                        {
+                            if (childrenMap.TryGetValue(folder.Id, out var newChildren))
+                                folder.Children = newChildren;
+                            else
+                                folder.Children = [];
+                        }
+
+                        Passwords.Clear();
+                        foreach (var item in rootItemsList)
+                        {
+                            Passwords.Add(item);
+                        }
+
+                        HasPasswords = hasVisible;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Logger?.Error(ex, "Failed to apply filtered tree");
+                    }
+                });
             }
-
-            dispatcher?.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            catch (Exception ex)
             {
-                ApplyVisibilityMap(snapshot, visibilityMap);
-                HasPasswords = hasVisible;
-            });
+                Log.Logger?.Error(ex, "Crash inside ExecuteSearchAndFilter task");
+            }
         });
     }
 
-    /// <summary>
-    /// Recursively calculates visibility evaluating both search text and favorite status.
-    /// </summary>
-    private static bool CalculateCombinedVisibility(
-        PangoExplorerItem node,
-        Func<PangoExplorerItem, bool> searchPredicate,
-        bool showOnlyStarred,
-        Dictionary<Guid, bool> visibilityMap)
+    private static void SortRecursiveByMap(List<PangoExplorerItem> items, Dictionary<Guid, List<PangoExplorerItem>> childrenMap)
     {
-        if (node == null) return false;
-
-        if (node.Type == PangoExplorerItem.ExplorerItemType.File)
+        items.Sort((a, b) =>
         {
-            bool isVis = searchPredicate(node) && (!showOnlyStarred || node.IsStar);
-            visibilityMap[node.Id] = isVis;
-            return isVis;
-        }
+            if (a.Type != b.Type) return a.Type == PangoExplorerItem.ExplorerItemType.Folder ? -1 : 1;
+            return string.Compare(a.Name, b.Name, StringComparison.OrdinalIgnoreCase);
+        });
 
-        bool hasVisibleItems = false;
-        if (node.Children?.Count > 0)
+        foreach (var item in items.Where(i => i.IsFolder))
         {
-            foreach (PangoExplorerItem item in node.Children)
+            if (childrenMap.TryGetValue(item.Id, out var childList))
             {
-                if (CalculateCombinedVisibility(item, searchPredicate, showOnlyStarred, visibilityMap))
-                    hasVisibleItems = true;
+                SortRecursiveByMap(childList, childrenMap);
             }
         }
-
-        bool isFolderVis = hasVisibleItems || (searchPredicate(node) && !showOnlyStarred);
-        visibilityMap[node.Id] = isFolderVis;
-        return isFolderVis;
-    }
-
-    /// <summary>
-    /// Recursively calculates visibility for tree items based on filter criteria.
-    /// </summary>
-    /// <param name="item">Current tree item to evaluate.</param>
-    /// <returns>True if item or any descendant should be visible.</returns>
-    private bool ApplyFilterRecursive(PangoExplorerItem item)
-    {
-        if (item.Type == PangoExplorerItem.ExplorerItemType.File)
-        {
-            item.IsVisible = !ShowOnlyStarred || item.IsStar;
-            return item.IsVisible;
-        }
-
-        bool hasVisibleChild = false;
-        foreach (var child in item.Children)
-        {
-            if (ApplyFilterRecursive(child))
-                hasVisibleChild = true;
-        }
-
-        item.IsVisible = !ShowOnlyStarred || hasVisibleChild;
-        return item.IsVisible;
     }
 
     #endregion
@@ -701,18 +749,21 @@ public sealed partial class PasswordsViewModel : ViewModelBase
 
             var result = await _sender.Send(new TogglePasswordStarCommand(item.Id, newStarState));
 
-            if (result.IsError)
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
             {
-                item.IsStar = !newStarState;
-                Log.Logger?.Error("Failed to toggle star for password {Name}: {Error}", item.Name, result.FirstError);
-            }
-            else
-            {
-                if (ShowOnlyStarred && !newStarState)
+                if (result.IsError)
                 {
-                    ApplyFilter();
+                    item.IsStar = !newStarState;
+                    Log.Logger?.Error("Failed to toggle star for password {Name}: {Error}", item.Name, result.FirstError);
                 }
-            }
+                else
+                {
+                    if (ShowOnlyStarred && !newStarState)
+                    {
+                        ApplyFilter();
+                    }
+                }
+            });
         }
         catch (Exception ex)
         {
@@ -727,29 +778,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     {
         _searchText = searchText ?? string.Empty;
         TriggerDebouncedFilter();
-    }
-
-    /// <summary>
-    /// Applies pre-calculated visibility to the Observable models safely on the UI thread.
-    /// </summary>
-    /// <param name="nodes">Collection of tree nodes to update.</param>
-    /// <param name="visibilityMap">Dictionary containing pre-calculated visibility values.</param>
-    private static void ApplyVisibilityMap(
-        IEnumerable<PangoExplorerItem> nodes,
-        Dictionary<Guid, bool> visibilityMap)
-    {
-        foreach (var node in nodes)
-        {
-            if (visibilityMap.TryGetValue(node.Id, out bool isVis) && node.IsVisible != isVis)
-            {
-                node.IsVisible = isVis;
-            }
-
-            if (node.Children?.Count > 0)
-            {
-                ApplyVisibilityMap(node.Children, visibilityMap);
-            }
-        }
     }
 
     /// <summary>
@@ -773,7 +801,6 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     private async Task ResetViewAsync(bool force = false)
     {
         if (_isResetting) return;
-
         if (!force && (DateTime.Now - _lastResetTime).TotalMilliseconds < 500) return;
 
         _isResetting = true;
@@ -782,23 +809,21 @@ public sealed partial class PasswordsViewModel : ViewModelBase
         try
         {
             Log.Logger?.Debug("ResetViewAsync started");
-
             SelectedItem = null;
             var expandedPaths = new HashSet<string>();
+            var oldList = _originalList;
 
             if (Passwords != null)
             {
                 foreach (var item in Passwords)
-                {
                     SaveExpandedState(item, expandedPaths);
-                }
             }
 
             IEnumerable<PangoExplorerItem> passwords = await LoadPasswordsAsync();
-            SetOriginalList(passwords);
 
-            await DisplayPasswordsInTreeAsync(passwords, expandedPaths);
+            await DisplayPasswordsInTreeAsync(passwords, expandedPaths, oldList);
 
+            _originalList = new ObservableCollection<PangoExplorerItem>(passwords);
             _lastResetTime = DateTime.Now;
         }
         finally
@@ -835,16 +860,10 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// <returns>Enumerable of mapped PangoExplorerItem objects.</returns>
     private async Task<IEnumerable<PangoExplorerItem>> LoadPasswordsAsync()
     {
-        Log.Logger?.Debug("LoadPasswordsAsync: fetching from application layer");
-
         var queryResult = await _sender.Send<ErrorOr<IEnumerable<PangoPasswordListItemDto>>>(
             new UserPasswordsQuery());
 
-        if (queryResult.IsError)
-        {
-            Log.Logger?.Warning("LoadPasswordsAsync failed: {Error}", queryResult.FirstError);
-            return [];
-        }
+        if (queryResult.IsError) return [];
 
         return await Task.Run(() =>
         {
@@ -876,19 +895,8 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                     return item;
                 }).ToList();
 
-            Log.Logger?.Debug("LoadPasswordsAsync: mapped {Count} items", items.Count);
             return items.OrderBy(i => i.NestingLevel).ToList();
         });
-    }
-
-    /// <summary>
-    /// Caches flat representation of passwords to drive initial screen visibility.
-    /// </summary>
-    /// <param name="passwords">Enumerable of password items to cache.</param>
-    private void SetOriginalList(IEnumerable<PangoExplorerItem> passwords)
-    {
-        Log.Logger?.Debug("SetOriginalList: caching {Count} items", passwords.Count());
-        _originalList = [.. passwords];
     }
 
     /// <summary>
@@ -896,7 +904,10 @@ public sealed partial class PasswordsViewModel : ViewModelBase
     /// </summary>
     /// <param name="passwords">Enumerable of password items to display.</param>
     /// <param name="expandedPaths">HashSet of previously expanded folder paths.</param>
-    private async Task DisplayPasswordsInTreeAsync(IEnumerable<PangoExplorerItem> passwords, HashSet<string> expandedPaths)
+    private async Task DisplayPasswordsInTreeAsync(
+            IEnumerable<PangoExplorerItem> passwords,
+            HashSet<string> expandedPaths,
+            IEnumerable<PangoExplorerItem>? oldList = null)
     {
         try
         {
@@ -908,7 +919,7 @@ public sealed partial class PasswordsViewModel : ViewModelBase
             }
             var now = DateTime.Now.Date;
 
-            var (rootItems, userExpirations) = await Task.Run(() =>
+            var (rootItems, userExpirations) = await Task.Run<(List<PangoExplorerItem>, List<ExpirationCacheItem>)>(() =>
             {
                 var folderMap = new Dictionary<string, PangoExplorerItem>(StringComparer.OrdinalIgnoreCase);
                 var childrenMap = new Dictionary<string, List<PangoExplorerItem>>(StringComparer.OrdinalIgnoreCase);
@@ -1004,40 +1015,35 @@ public sealed partial class PasswordsViewModel : ViewModelBase
                     }
                 }
 
-                foreach (var item in rootItemsList)
-                {
-                    ApplyFilterRecursive(item);
-                }
-
                 return (rootItemsList, expirationsCache);
             });
 
-            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(() =>
+            App.Current.CurrentWindow?.DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.High, () =>
             {
                 try
                 {
-                    var oldItems = Passwords.ToList();
-
-                    if (Passwords.Count > 0)
+                    Passwords.Clear();
+                    foreach (var item in rootItems)
                     {
-                        Passwords.Clear();
+                        Passwords.Add(item);
                     }
 
-                    Passwords = new ObservableCollection<PangoExplorerItem>(rootItems);
                     HasPasswords = Passwords.Count > 0;
+                    OnPropertyChanged(nameof(ShowInitialScreen));
 
                     UpdateUserExpirationCache(userExpirations);
 
-                    if (oldItems.Count > 0)
+                    if (oldList != null)
                     {
-                        Task.Run(() =>
+                        foreach (var item in oldList)
                         {
-                            foreach (var item in oldItems)
-                            {
-                                item.ReleaseReferences();
-                            }
-                            oldItems.Clear();
-                        });
+                            item.ReleaseReferences();
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(SearchText) || ShowOnlyStarred)
+                    {
+                        ExecuteSearchAndFilter();
                     }
                 }
                 catch (Exception ex)
