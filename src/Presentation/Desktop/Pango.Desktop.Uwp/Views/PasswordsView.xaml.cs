@@ -28,7 +28,7 @@ public sealed partial class PasswordsView : PageBase
             : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
         InitializeComponent();
-        NavigationCacheMode = NavigationCacheMode.Required;
+        NavigationCacheMode = NavigationCacheMode.Enabled;
 
         DataContext = App.Host.Services.GetRequiredService<PasswordsViewModel>();
         PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
@@ -45,10 +45,7 @@ public sealed partial class PasswordsView : PageBase
         WeakReferenceMessenger.Default.Register<NavigationRequestedMessage>(this, OnNavigationRequested);
         WeakReferenceMessenger.Default.Register<SwitchPasswordTabMessage>(this, (r, m) =>
         {
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                PasswordsIndex_Pivot.SelectedIndex = m.Value;
-            });
+            PasswordsIndex_Pivot.SelectedIndex = m.Value;
         });
     }
 
@@ -273,7 +270,35 @@ public sealed partial class PasswordsView : PageBase
             }
 
             if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
-                newParent = newParent.Parent;
+            {
+                var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                WeakReferenceMessenger.Default.Send(
+                    new Mvvm.Models.InAppNotificationMessage(
+                        resourceLoader.GetString("CannotDropIntoPassword") ?? "Cannot drop items into a password",
+                        AppNotificationType.Warning));
+
+                viewModel.UpdateListCommand.Execute(null);
+                return;
+            }
+
+            if (newParent?.Id == item.Parent?.Id)
+            {
+                viewModel.UpdateListCommand.Execute(null);
+                return;
+            }
+
+            var siblings = newParent == null ? viewModel.Passwords : newParent.Children;
+            if (siblings != null && siblings.Any(c => c.Type == item.Type && c.Id != item.Id && string.Equals(c.Name, item.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+                WeakReferenceMessenger.Default.Send(
+                    new Mvvm.Models.InAppNotificationMessage(
+                        resourceLoader.GetString("ValidationError_CatalogExists") ?? "Item already exists",
+                        AppNotificationType.Warning));
+
+                viewModel.UpdateListCommand.Execute(null);
+                return;
+            }
 
             DispatcherQueue.TryEnqueue(async () =>
             {

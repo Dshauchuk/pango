@@ -16,10 +16,10 @@ namespace Pango.Desktop.Uwp.Views;
 public sealed partial class SettingsView : PageBase
 {
     public SettingsView()
-        : base(App.Host.Services.GetRequiredService<ILogger<SettingsView>>())
+            : base(App.Host.Services.GetRequiredService<ILogger<SettingsView>>())
     {
         InitializeComponent();
-        NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Required;
+        NavigationCacheMode = Microsoft.UI.Xaml.Navigation.NavigationCacheMode.Enabled;
         DataContext = App.Host.Services.GetRequiredService<SettingsViewModel>();
     }
 

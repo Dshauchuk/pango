@@ -874,4 +874,7 @@
   <data name="ToggleStar" xml:space="preserve">
     <value>У абранае / Прыбраць з абранага</value>
   </data>
+  <data name="CannotDropIntoPassword" xml:space="preserve">
+    <value>Нельга перамяшчаць элементы ўнутр пароля</value>
+  </data>
 </root>

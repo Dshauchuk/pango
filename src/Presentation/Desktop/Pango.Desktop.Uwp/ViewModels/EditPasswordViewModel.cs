@@ -358,17 +358,7 @@ public partial class EditPasswordViewModel : ViewModelBase
     private void OnOpenIndexView()
     {
         Clear();
-
-        if (_sourceView == AppView.GeneratePassword)
-        {
-            WeakReferenceMessenger.Default.Send(
-                new NavigationRequestedMessage(
-                    new NavigationParameters(AppView.GeneratePassword, AppView.EditPassword)));
-        }
-        else
-        {
-            WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
-        }
+        WeakReferenceMessenger.Default.Send(new SwitchPasswordTabMessage(0));
     }
 
     /// <summary>

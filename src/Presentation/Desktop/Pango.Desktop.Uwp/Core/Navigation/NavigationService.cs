@@ -27,6 +27,8 @@ public class NavigationService : INavigationService
     {
         _frame = frame;
         _frame.CacheSize = _viewMap.Count;
+        _currentView = null;
+        _lastNavTime = DateTime.MinValue;
     }
 
     public void Navigate(AppView view, object? parameter = null)

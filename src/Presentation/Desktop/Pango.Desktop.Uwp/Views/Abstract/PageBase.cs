@@ -19,7 +19,7 @@ public abstract class PageBase : Page
     {
         Logger = logger;
 
-        NavigationCacheMode = NavigationCacheMode.Required;
+        NavigationCacheMode = NavigationCacheMode.Enabled;
     }
 
     protected async override void OnNavigatedTo(NavigationEventArgs e)
