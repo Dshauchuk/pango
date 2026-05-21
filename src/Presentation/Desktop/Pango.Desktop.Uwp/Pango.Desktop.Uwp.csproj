@@ -13,9 +13,8 @@
 		<EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-		<GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-		<PackageCertificateThumbprint>4E9F427E9883A716B016C9FE10F5E0D9D69C8FD9</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
@@ -24,6 +23,7 @@
 		<AppInstallerUri>D:\Projects\Pango\pango\src\Presentation\Desktop\Pango.Desktop.Uwp\AppPackages\Installer</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<PackageCertificateKeyFile>Pango.Desktop.Uwp_TemporaryKey.pfx</PackageCertificateKeyFile>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
 	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
