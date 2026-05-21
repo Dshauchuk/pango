@@ -7,22 +7,37 @@
             <Setter.Value>
                 <ControlTemplate TargetType="local:ValidationTextBox">
                     <Grid ColumnSpacing="5">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="20" />
                         </Grid.ColumnDefinitions>
+
+                        <ContentPresenter Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                          Content="{TemplateBinding HeaderText}"
+                                          FontWeight="Normal"
+                                          Foreground="{ThemeResource TextControlHeaderForeground}"
+                                          Margin="0,0,0,8"
+                                          TextWrapping="Wrap"
+                                          VerticalAlignment="Top"
+                                          IsTabStop="False"/>
+
                         <TextBox
                             Name="PART_TextBox"
+                            Grid.Row="1" Grid.Column="0"
                             HorizontalAlignment="Stretch"
-                            Header="{TemplateBinding HeaderText}"
                             IsReadOnly="{TemplateBinding IsReadOnly}"
                             IsSpellCheckEnabled="False"
                             PlaceholderText="{TemplateBinding PlaceholderText}"
                             Text="{TemplateBinding Text}" />
+
                         <FontIcon
                             Name="PART_WarningIcon"
-                            Grid.Column="1"
-                            Margin="0,32,0,0"
+                            Grid.Row="1" Grid.Column="1"
+                            Margin="0,0,0,0"
                             VerticalAlignment="Center"
                             FontSize="18"
                             IsTabStop="False"

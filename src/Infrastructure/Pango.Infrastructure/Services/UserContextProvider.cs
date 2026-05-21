@@ -7,54 +7,57 @@ using Pango.Persistence;
 
 namespace Pango.Infrastructure.Services;
 
-public class UserContextProvider : IUserContextProvider
+public class UserContextProvider(IUserRepository userRepository, IAppUserProvider appUserProvider) : IUserContextProvider
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IAppUserProvider _appUserProvider;
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IAppUserProvider _appUserProvider = appUserProvider;
 
-    public UserContextProvider(IUserRepository userRepository, IAppUserProvider appUserProvider)
-    {
-        _userRepository = userRepository;
-        _appUserProvider = appUserProvider;
-    }
+    // Cache for current session data
+    private EncodingOptions? _cachedEncodingOptions;
+    private string? _cachedUserName;
 
     /// <summary>
-    /// Returns currently authorized user's password salt
+    /// Returns the name of the authorized user. 
+    /// Automatically resets cache if the user ID changes or is cleared.
     /// </summary>
-    /// <returns></returns>
-    public async Task<string> GetSaltAsync()
-    {
-        PangoUser? user = await _userRepository.FindAsync(GetUserName());
-
-        return user?.PasswordSalt ?? string.Empty;
-    }
-
-    /// <summary>
-    /// Returns a name of currently authorized user. Throws <see cref="UnauthorizedException"/> if there is no authorized user
-    /// </summary>
-    /// <returns></returns>
-    /// <exception cref="UnauthorizedException">Thrown if there is no aurhorized user</exception>
     public string GetUserName()
     {
-        string userId = _appUserProvider.GetUserId();
+        // Get the current ID from the provider (e.g. from SecureUserSession)
+        string currentId = _appUserProvider.GetUserId();
 
-        if (string.IsNullOrEmpty(userId))
+        // If the ID changed (user logged out or switched), reset the local cache
+        if (currentId != _cachedUserName)
         {
-            throw new UnauthorizedException();
+            _cachedUserName = currentId;
+            _cachedEncodingOptions = null;
         }
 
-        return userId;
+        if (string.IsNullOrEmpty(_cachedUserName))
+            throw new UnauthorizedException();
+
+        return _cachedUserName;
     }
 
-    public async Task<string> GetKeyAsync()
-    {
-        PangoUser? user = await _userRepository.FindAsync(GetUserName());
-
-        return user?.MasterPasswordHash ?? string.Empty;
-    }
-
+    /// <summary>
+    /// Retrieves encoding options (key/salt). Uses cache if available.
+    /// </summary>
     public async Task<EncodingOptions> GetEncodingOptionsAsync()
     {
-        return new EncodingOptions(await GetKeyAsync(), await GetSaltAsync());
+        // Return cached options if they exist and user hasn't changed
+        string currentId = GetUserName();
+
+        if (_cachedEncodingOptions.HasValue)
+            return _cachedEncodingOptions.Value;
+
+        // Fetch user from repository to get master hash and salt
+        PangoUser? user = await _userRepository.FindAsync(currentId) ?? throw new UnauthorizedException();
+
+        // Store result in cache
+        _cachedEncodingOptions = new EncodingOptions(user.MasterPasswordHash, user.PasswordSalt);
+        return _cachedEncodingOptions.Value;
     }
+
+    // Helper methods to access specific encoding parts
+    public async Task<string> GetSaltAsync() => (await GetEncodingOptionsAsync()).Salt;
+    public async Task<string> GetKeyAsync() => (await GetEncodingOptionsAsync()).Key;
 }

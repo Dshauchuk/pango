@@ -58,7 +58,7 @@
                             x:Name="Save_Button"
                             Content="{loc:StringResource Key='Save'}"
                             Style="{StaticResource AccentButtonStyle}"
-                            Command="{Binding Path=SaveUserComand}"/>
+                            Command="{Binding Path=SaveUserCommand}"/>
                     <Button Margin="5" 
                             x:Name="Cancel_Button"
                             Content="{loc:StringResource Key='Cancel'}"

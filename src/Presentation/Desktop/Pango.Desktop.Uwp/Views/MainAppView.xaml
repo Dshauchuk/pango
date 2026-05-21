@@ -8,49 +8,134 @@
     xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     xmlns:abstract="using:Pango.Desktop.Uwp.Views.Abstract"
     mc:Ignorable="d"
-    d:DesignHeight="300"
-    d:DesignWidth="400">
+    d:DesignHeight="600"
+    d:DesignWidth="1000">
 
     <Grid IsTabStop="False">
-        <!--  Navigation view  -->
         <muxc:NavigationView x:Name="NavigationView"
                              IsTabStop="False"
                              BackRequested="NavigationView_BackRequested"
                              IsBackButtonVisible="Collapsed"
                              IsBackEnabled="False"
-                             OpenPaneLength="200"
-                             IsSettingsVisible="True"
+                             IsPaneOpen="False"
+                             OpenPaneLength="220"
+                             CompactPaneLength="48"
+                             IsSettingsVisible="False"
                              IsTitleBarAutoPaddingEnabled="False"
                              ItemInvoked="NavigationView_ItemInvoked">
+
             <muxc:NavigationView.Resources>
                 <Thickness x:Key="NavigationViewContentMargin">0,0,0,12</Thickness>
             </muxc:NavigationView.Resources>
+
+            <!-- Menu Items corresponding to application sections -->
             <muxc:NavigationView.MenuItems>
+
+                <!-- Home Item -->
                 <muxc:NavigationViewItem x:Name="HomeItem"
                                          IsTabStop="False"
                                          Content="{loc:StringResource Key=Home}"
-                                         Icon="Home"
-                                         ToolTipService.ToolTip="{loc:StringResource Key=Home}"/>
+                                         ToolTipService.ToolTip="{loc:StringResource Key=Home}"
+                                         PointerEntered="Home_PointerEntered"
+                                         PointerExited="Home_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="HomeIcon" Glyph="&#xE80F;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
                 <muxc:NavigationViewItemSeparator />
+
+                <!-- Passwords Item -->
                 <muxc:NavigationViewItem x:Name="PasswordsItem"
                                          Content="{loc:StringResource Key=Passwords}"
-                                         Icon="Permissions"
                                          IsTabStop="False"
-                                         ToolTipService.ToolTip="{loc:StringResource Key=Passwords}" />
+                                         ToolTipService.ToolTip="{loc:StringResource Key=Passwords}"
+                                         PointerEntered="Passwords_PointerEntered"
+                                         PointerExited="Passwords_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="PasswordsIcon" Glyph="&#xE8D7;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
+                <!-- User Item -->
                 <muxc:NavigationViewItem x:Name="UserItem"
                                          Content="{loc:StringResource Key=User}"
-                                         Icon="Contact" 
                                          IsTabStop="False"
-                                         ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"/>
+                                         ToolTipService.ToolTip="{loc:StringResource Key=UserInfo}"
+                                         PointerEntered="Users_PointerEntered"
+                                         PointerExited="Users_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="UsersIcon" Glyph="&#xE77B;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
+                <!-- Export / Import Item -->
                 <muxc:NavigationViewItem x:Name="ExportImportItem"
                                          Content="{loc:StringResource Key=ExportAndImport}"
-                                         Icon="SaveLocal" 
                                          IsTabStop="False"
-                                         ToolTipService.ToolTip="{loc:StringResource Key=ExportAndImportTooltip}"/>
+                                         ToolTipService.ToolTip="{loc:StringResource Key=ExportAndImportTooltip}"
+                                         PointerEntered="Export_PointerEntered"
+                                         PointerExited="Export_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="ExportIcon" Glyph="&#xE78C;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
+                <!-- Generate Password Item -->
+                <muxc:NavigationViewItem x:Name="GeneratePasswordItem"
+                                         Content="{loc:StringResource Key=GeneratePassword}"
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=GeneratePasswordTooltip}"
+                                         PointerEntered="Generator_PointerEntered"
+                                         PointerExited="Generator_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="GeneratorIcon" Glyph="&#xE77C;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+
             </muxc:NavigationView.MenuItems>
-            
+
+            <!-- Custom Footer Items for Settings -->
+            <muxc:NavigationView.FooterMenuItems>
+                <!-- Settings Item -->
+                <muxc:NavigationViewItem x:Name="CustomSettingsItem"
+                                         Content="{loc:StringResource Key=Settings}"
+                                         IsTabStop="False"
+                                         ToolTipService.ToolTip="{loc:StringResource Key=Settings}"
+                                         PointerEntered="Settings_PointerEntered"
+                                         PointerExited="Settings_PointerExited">
+                    <muxc:NavigationViewItem.Icon>
+                        <FontIcon x:Name="SettingsIcon" Glyph="&#xE713;" RenderTransformOrigin="0.5,0.5">
+                            <FontIcon.RenderTransform>
+                                <CompositeTransform />
+                            </FontIcon.RenderTransform>
+                        </FontIcon>
+                    </muxc:NavigationViewItem.Icon>
+                </muxc:NavigationViewItem>
+            </muxc:NavigationView.FooterMenuItems>
+
+            <!-- Content Area where selected pages are rendered -->
             <muxc:NavigationView.Content>
-                <!--  Navigation frame  -->
                 <Frame x:Name="NavigationFrame" Navigated="NavigationFrame_Navigated" IsTabStop="False"/>
             </muxc:NavigationView.Content>
 

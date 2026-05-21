@@ -8,104 +8,102 @@ using System.Security.Cryptography;
 
 namespace Pango.Infrastructure.Services;
 
+/// <summary>
+/// Handles encryption and decryption directly via streams to drastically reduce RAM consumption.
+/// </summary>
 public class ContentEncoder : IContentEncoder
 {
+    private static readonly JsonSerializer _serializer = JsonSerializer.CreateDefault(new JsonSerializerSettings
+    {
+        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+    });
+
+    /// <summary>
+    /// Decrypts a byte array streaming directly to the JSON deserializer.
+    /// </summary>
     public async Task<T?> DecryptAsync<T>(byte[] encryptedContent, string key, string salt)
     {
-        try
+        return await Task.Run(() =>
         {
-            string jsonContent = await Task.Run(() => Decrypt(encryptedContent, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
-
-            var deserializedObject = JsonConvert.DeserializeObject<T>(jsonContent);
-
-            // DS
-            // this code converts JArray into a List<object>
-            if(deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
+            try
             {
-                var encodedDataType = encodedData.Data.GetType();
+                if (string.IsNullOrEmpty(key) || string.IsNullOrEmpty(salt))
+                    throw new ArgumentException("Key and Salt cannot be empty");
 
-                if (encodedDataType == typeof(JArray))
+                byte[] keyBytes = Convert.FromBase64String(key);
+                byte[] ivBytes = Convert.FromBase64String(salt);
+
+                using Aes aes = Aes.Create();
+                aes.Key = keyBytes;
+                aes.IV = ivBytes;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.CBC;
+
+                using MemoryStream memoryStream = new(encryptedContent);
+                using ICryptoTransform decryptor = aes.CreateDecryptor();
+                using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
+                using StreamReader streamReader = new(cryptoStream);
+                using JsonTextReader jsonReader = new(streamReader);
+
+                var deserializedObject = _serializer.Deserialize<T>(jsonReader);
+
+                if (deserializedObject is IHaveEncodedData encodedData && encodedData.Data != null)
                 {
-                    var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
-
-                    if(dataType != null)
+                    if (encodedData.Data is JArray jArray)
                     {
-                        encodedData.Data = ((JArray)encodedData.Data).ToObject(dataType);
+                        var dataType = Type.GetType(encodedData.DataType ?? string.Empty);
+                        if (dataType != null)
+                        {
+                            encodedData.Data = jArray.ToObject(dataType, _serializer);
+                        }
                     }
                 }
-            }
 
-            return deserializedObject;
-        }
-        catch(Exception ex)
-        {
-            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot decrypt data of type {typeof(T).Name}", ex);
-        }
+                return deserializedObject;
+            }
+            catch (Exception ex)
+            {
+                throw new PangoDataDecryptionException(
+                    ApplicationErrors.Data.DecryptionError, $"Decryption failed for {typeof(T).Name}.", ex);
+            }
+        });
     }
 
+    /// <summary>
+    /// Encrypts an object by serializing it directly to the crypto stream.
+    /// </summary>
     public async Task<byte[]> EncryptAsync<T>(T content, string key, string salt)
     {
-        try
+        return await Task.Run(() =>
         {
-            string json = JsonConvert.SerializeObject(content, new JsonSerializerSettings() { ReferenceLoopHandling = ReferenceLoopHandling.Ignore });
-
-            return await Task.Run(() => Encrypt(json, Convert.FromBase64String(key), Convert.FromBase64String(salt)));
-        }
-        catch (Exception ex)
-        {
-            throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
-        }
-    }
-
-    private static byte[] Encrypt(string simpletext, byte[] key, byte[] iv)
-    {
-        Ensure.AreEqual(key.Length, 32, nameof(key));
-        Ensure.AreEqual(iv.Length, 16, nameof(key));
-
-        byte[] cipheredtext;
-        using (Aes aes = Aes.Create())
-        {
-            aes.Padding = PaddingMode.PKCS7;
-
-            ICryptoTransform encryptor = aes.CreateEncryptor(key, iv);
-            using (MemoryStream memoryStream = new())
+            try
             {
-                using (CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write))
-                {
-                    using (StreamWriter streamWriter = new(cryptoStream))
-                    {
-                        streamWriter.Write(simpletext);
-                    }
+                byte[] keyBytes = Convert.FromBase64String(key);
+                byte[] ivBytes = Convert.FromBase64String(salt);
 
-                    cipheredtext = memoryStream.ToArray();
-                }
+                using Aes aes = Aes.Create();
+                aes.Key = keyBytes;
+                aes.IV = ivBytes;
+                aes.Padding = PaddingMode.PKCS7;
+                aes.Mode = CipherMode.CBC;
+
+                using MemoryStream memoryStream = new();
+                using ICryptoTransform encryptor = aes.CreateEncryptor();
+                using CryptoStream cryptoStream = new(memoryStream, encryptor, CryptoStreamMode.Write);
+                using StreamWriter streamWriter = new(cryptoStream);
+                using JsonTextWriter jsonWriter = new(streamWriter);
+
+                _serializer.Serialize(jsonWriter, content);
+                jsonWriter.Flush();
+                streamWriter.Flush();
+                cryptoStream.FlushFinalBlock();
+
+                return memoryStream.ToArray();
             }
-        }
-        return cipheredtext;
-    }
-
-    private static string Decrypt(byte[] cipheredText, byte[] key, byte[] iv)
-    {
-        Ensure.AreEqual(key.Length, 32, nameof(key));
-        Ensure.AreEqual(iv.Length, 16, nameof(key));
-
-        string simpletext = String.Empty;
-        try
-        {
-            using Aes aes = Aes.Create();
-            aes.Padding = PaddingMode.PKCS7;
-
-            ICryptoTransform decryptor = aes.CreateDecryptor(key, iv);
-            using MemoryStream memoryStream = new(cipheredText);
-            using CryptoStream cryptoStream = new(memoryStream, decryptor, CryptoStreamMode.Read);
-            using StreamReader streamReader = new(cryptoStream);
-            simpletext = streamReader.ReadToEnd();
-        }
-        catch(Exception ex)
-        {
-            throw new PangoDataDecryptionException(ApplicationErrors.Data.DecryptionError, "Data decryption failed: probably the key is wrong", ex);
-        }
-
-        return simpletext;
+            catch (Exception ex)
+            {
+                throw new PangoDataEncryptionException(ApplicationErrors.Data.EncryptionError, $"Cannot encrypt data of type {typeof(T).Name}", ex);
+            }
+        });
     }
 }

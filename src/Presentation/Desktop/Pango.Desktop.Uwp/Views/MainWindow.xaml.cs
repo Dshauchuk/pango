@@ -1,137 +1,986 @@
-﻿using Microsoft.UI;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
-using System;
+using Microsoft.UI.Xaml.Media.Imaging;
+using Pango.Desktop.Uwp.Core;
+using Pango.Desktop.Uwp.Core.Enums;
+using Pango.Desktop.Uwp.Models;
+using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
+using Pango.Desktop.Uwp.ViewModels;
+using Serilog;
 using System.Runtime.InteropServices;
+using System.Text.Json;
 
 namespace Pango.Desktop.Uwp.Views;
 
+/// <summary>
+/// Main application window holding the shell and handling OS-level interactions like System Tray.
+/// </summary>
 public sealed partial class MainWindow : Window
 {
-    private const int MinWindowWidth = 800;
+    private const int MinWindowWidth = 1050;
     private const int MinWindowHeight = 600;
 
-    public MainWindow ()
-	{
-		InitializeComponent();
+    private bool _isForceExit;
+    private H.NotifyIcon.TaskbarIcon? _trayIcon;
+    private MenuFlyoutItem? _trayMenuOpenPango;
+    private MenuFlyoutItem? _trayMenuClose;
+    private MenuFlyoutItem? _trayMenuStartBackup;
+    private MenuFlyoutItem? _trayMenuStopBackup;
+    private MenuFlyoutItem? _trayMenuExit;
+    private readonly ILogger<MainWindow>? _logger;
+    private Window? _expirationWindow;
+    private string? _currentLoggedInUser;
+    private bool _isAlertRefreshing;
 
-        // set the window minimum size
+    /// <summary>
+    /// Gets the tray icon view model for system tray interactions.
+    /// </summary>
+    public TrayIconViewModel TrayViewModel { get; }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainWindow"/> class.
+    /// </summary>
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        _logger = App.Host?.Services?.GetService<ILogger<MainWindow>>();
+        var trayLogger = App.Host?.Services?.GetService<ILogger<TrayIconViewModel>>();
+
+        string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
+        if (File.Exists(iconPath))
+        {
+            AppWindow.SetIcon(iconPath);
+        }
+
         SubClassing();
-
-        // set the window actual size
-
-        // set the title
         ExtendsContentIntoTitleBar = true;
-        SetTitleBar(this.TitleBarBorder);
+        SetTitleBar(TitleBarBorder);
 
 #if DEBUG
-        WindowTitle.Text = Title = $"Pango Debug v.{GetAppVersion()}";
+        WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}-dev";
 #else
         WindowTitle.Text = Title = $"Pango v.{GetAppVersion()}";
 #endif
 
-        // track user's activity for IDLE
+        TrayViewModel = new TrayIconViewModel(this, trayLogger);
+        InitializeSystemTray();
+
+        AppWindow.Closing += AppWindow_Closing;
+        Closed += MainWindow_Closed;
+
+        RegisterMessengers();
+
+        RootGrid.Loaded += RootGrid_LoadedAsync;
         RootGrid.PointerMoved += RootGrid_PointerMoved;
         RootGrid.KeyDown += RootGrid_KeyDown;
 
-        App.Current.LoginSucceeded += Current_LoginSucceeded;
-        App.Current.SignedOut += Current_SignedOut;
+        App.Current.LoginSucceeded += Current_LoginSucceededAsync;
+        App.Current.SignedOut += Current_SignedOutAsync;
+
+        Log.Logger?.Information("MainWindow initialized");
     }
 
+    /// <summary>
+    /// Handles window closed event: unsubscribes events and cleans up resources.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="args">Event arguments.</param>
+    private void MainWindow_Closed(object sender, WindowEventArgs args)
+    {
+        Log.Logger?.Debug("MainWindow closed: cleaning up resources");
+
+        App.Current.LoginSucceeded -= Current_LoginSucceededAsync;
+        App.Current.SignedOut -= Current_SignedOutAsync;
+        RemoveSubclassing();
+        _trayIcon?.Dispose();
+    }
+
+    /// <summary>
+    /// Handles Loaded event asynchronously: initializes backup state and checks for expiration alerts.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event arguments.</param>
+    private async void RootGrid_LoadedAsync(object sender, RoutedEventArgs e)
+    {
+        RootGrid.Loaded -= RootGrid_LoadedAsync;
+
+        InitializeInitialBackupState();
+
+        await Task.Delay(500);
+        await CheckAndShowExpirationWindowAsync();
+
+        Log.Logger?.Debug("RootGrid loaded: expiration check completed");
+    }
+
+    /// <summary>
+    /// Creates and configures the System Tray icon and its context menu entirely in C#.
+    /// </summary>
+    private void InitializeSystemTray()
+    {
+        _trayIcon = new H.NotifyIcon.TaskbarIcon { ToolTipText = "Pango" };
+        try
+        {
+            _trayIcon.IconSource = new BitmapImage(new Uri("ms-appx:///assets/logo.ico"));
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogWarning(ex, "Failed to load tray icon image.");
+        }
+
+        var contextMenu = new MenuFlyout();
+
+        _trayMenuOpenPango = new MenuFlyoutItem { Command = TrayViewModel.OpenAppCommand };
+        _trayMenuClose = new MenuFlyoutItem { Command = TrayViewModel.CloseAppCommand };
+        _trayMenuStartBackup = new MenuFlyoutItem { Command = TrayViewModel.StartBackupCommand };
+        _trayMenuStopBackup = new MenuFlyoutItem { Command = TrayViewModel.StopBackupCommand };
+        _trayMenuExit = new MenuFlyoutItem { Command = TrayViewModel.ExitCommand };
+
+        contextMenu.Items.Add(_trayMenuOpenPango);
+        contextMenu.Items.Add(_trayMenuClose);
+        contextMenu.Items.Add(new MenuFlyoutSeparator());
+        contextMenu.Items.Add(_trayMenuStartBackup);
+        contextMenu.Items.Add(_trayMenuStopBackup);
+        contextMenu.Items.Add(new MenuFlyoutSeparator());
+        contextMenu.Items.Add(_trayMenuExit);
+
+        _trayIcon.ContextFlyout = contextMenu;
+        _trayIcon.DoubleClickCommand = TrayViewModel.OpenAppCommand;
+
+        _trayIcon.ForceCreate();
+
+        UpdateTrayMenuTexts();
+
+        TrayViewModel.UIStateChanged += (s, e) => UpdateTrayMenuState();
+        UpdateTrayMenuState();
+
+        Log.Logger?.Debug("System tray initialized");
+    }
+
+    /// <summary>
+    /// Checks OS processes on startup to verify if the Backup Service is already running.
+    /// </summary>
+    private void InitializeInitialBackupState()
+    {
+        Task.Run(() =>
+        {
+            try
+            {
+                var processes = System.Diagnostics.Process.GetProcessesByName("Pango.BackupService");
+                bool isRunning = processes.Length > 0;
+
+                DispatcherQueue.TryEnqueue(() => TrayViewModel.IsBackupRunning = isRunning);
+
+                string configPath = Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
+                    "Pango",
+                    "backup_config.json");
+
+                bool isBackupEnabled = false;
+
+                if (File.Exists(configPath))
+                {
+                    var json = File.ReadAllText(configPath);
+                    isBackupEnabled = json.Contains("\"IsEnabled\":true") || json.Contains("\"IsEnabled\": true");
+                }
+
+                if (isBackupEnabled && !isRunning)
+                {
+                    DispatcherQueue.TryEnqueue(() => TrayViewModel.StartBackup());
+                    Log.Logger?.Information("Backup service was enabled but not running: auto-started");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to initialize initial backup state.");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Registers handlers for cross-view messages.
+    /// </summary>
+    private void RegisterMessengers()
+    {
+        WeakReferenceMessenger.Default.Register<ImportCompletedMessage>(this, (r, m) =>
+        {
+            WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
+                new NavigationParameters(AppView.PasswordsIndex, AppView.ExportImport)));
+            Log.Logger?.Debug("ImportCompletedMessage handled: navigation requested");
+        });
+
+        WeakReferenceMessenger.Default.Register<AppLanguageChangedMessage>(this, (r, m) =>
+        {
+            TrayViewModel.UpdateTranslations();
+            UpdateTrayMenuTexts();
+            Log.Logger?.Debug("AppLanguageChangedMessage handled: tray menu updated");
+        });
+
+        WeakReferenceMessenger.Default.Register<ExpirationCacheUpdatedMessage>(this, (r, m) =>
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            DispatcherQueue.TryEnqueue(async () => await RefreshExpirationWindowAsync(options, forceShow: true));
+            Log.Logger?.Debug("ExpirationCacheUpdatedMessage handled: window refresh scheduled");
+        });
+
+        WeakReferenceMessenger.Default.Register<InAppNotificationMessage>(this, (r, m) =>
+        {
+            if (m.Message == "SHOW_EXPIRATION_WINDOW")
+            {
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                DispatcherQueue.TryEnqueue(async () => await RefreshExpirationWindowAsync(options, forceShow: true));
+                Log.Logger?.Debug("InAppNotificationMessage handled: expiration window refresh scheduled");
+            }
+        });
+    }
+
+    /// <summary>
+    /// Updates UI text strings of the Tray Menu based on current translations.
+    /// </summary>
+    private void UpdateTrayMenuTexts()
+    {
+        _trayMenuOpenPango?.Text = TrayViewModel.OpenPangoText;
+        _trayMenuClose?.Text = TrayViewModel.ClosePangoText;
+        _trayMenuStartBackup?.Text = TrayViewModel.StartBackupText;
+        _trayMenuStopBackup?.Text = TrayViewModel.StopBackupText;
+        _trayMenuExit?.Text = TrayViewModel.ExitText;
+
+        Log.Logger?.Debug("Tray menu texts updated");
+    }
+
+    /// <summary>
+    /// Enables or disables tray menu buttons based on the background task state.
+    /// </summary>
+    private void UpdateTrayMenuState()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            _trayMenuStartBackup?.IsEnabled = !TrayViewModel.IsBackupRunning;
+            _trayMenuStopBackup?.IsEnabled = TrayViewModel.IsBackupRunning;
+            _trayMenuClose?.IsEnabled = TrayViewModel.IsAppVisible;
+        });
+    }
+
+    /// <summary>
+    /// Intercepts the window close action to minimize it to the system tray instead.
+    /// </summary>
+    /// <param name="sender">The AppWindow instance.</param>
+    /// <param name="args">Closing event arguments.</param>
+    private void AppWindow_Closing(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowClosingEventArgs args)
+    {
+        if (!_isForceExit)
+        {
+            Log.Logger?.Debug("Window close intercepted: minimizing to tray");
+            args.Cancel = true;
+            TrayViewModel.CloseAppCommand.Execute(null);
+        }
+        else
+        {
+            Log.Logger?.Information("Force exit requested: allowing window close");
+            RemoveSubclassing();
+        }
+    }
+
+    /// <summary>
+    /// Physically kills the application process and removes the tray icon.
+    /// </summary>
+    public void ForceExit()
+    {
+        Log.Logger?.Information("ForceExit called: terminating application");
+
+        _isForceExit = true;
+        App.DisposeHook();
+        RemoveSubclassing();
+        _trayIcon?.Dispose();
+        Microsoft.UI.Xaml.Application.Current.Exit();
+    }
+
+    /// <summary>
+    /// Shows the main application window and brings it to foreground.
+    /// </summary>
+    public void ShowWindow()
+    {
+        Log.Logger?.Debug("ShowWindow called");
+
+        AppWindow.Show();
+        var hwnd = Win32Interop.GetWindowFromWindowId(AppWindow.Id);
+        NativeMethods.SetForegroundWindow(hwnd);
+        TrayViewModel.IsAppVisible = true;
+    }
+
+    /// <summary>
+    /// Hides the main application window to system tray.
+    /// </summary>
+    public void HideWindow()
+    {
+        Log.Logger?.Debug("HideWindow called");
+
+        AppWindow.Hide();
+        TrayViewModel.IsAppVisible = false;
+    }
+
+    /// <summary>
+    /// Event triggered when pointer moves over the root grid.
+    /// </summary>
     public event EventHandler<PointerRoutedEventArgs>? PointerMoved;
+
+    /// <summary>
+    /// Event triggered when a key is pressed over the root grid.
+    /// </summary>
     public event EventHandler<KeyRoutedEventArgs>? KeyDown;
 
+    /// <summary>
+    /// Retrieves the application version string from assembly metadata.
+    /// </summary>
+    /// <returns>Formatted version string or "undefined" if unavailable.</returns>
     private static string GetAppVersion()
     {
         var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
         return version is null ? "undefined" : string.Format("{0}.{1}.{2}.{3}", version.Major, version.Minor, version.Build, version.Revision);
     }
 
-    private void Current_SignedOut()
+    /// <summary>
+    /// Handles user sign-out asynchronously: clears UI state and refreshes expiration window.
+    /// </summary>
+    private async void Current_SignedOutAsync()
     {
+        Log.Logger?.Information("User signed out");
+
         UserInfo_TitleBar.Visibility = Visibility.Collapsed;
         UserName_TitleBar.Text = string.Empty;
+        _currentLoggedInUser = null;
+
+        if (_expirationWindow != null)
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            await RefreshExpirationWindowAsync(options, forceShow: true);
+        }
     }
 
-    private void Current_LoginSucceeded(string userName)
+    /// <summary>
+    /// Removes Win32 subclassing hooks from main and expiration windows.
+    /// </summary>
+    private void RemoveSubclassing()
     {
+        Log.Logger?.Debug("RemoveSubclassing called");
+
+        var windowId = AppWindow.Id;
+        var hwnd = Win32Interop.GetWindowFromWindowId(windowId);
+
+        if (hwnd != IntPtr.Zero && oldWndProc != IntPtr.Zero)
+        {
+            NativeMethods.RestoreWindowLong(hwnd, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, oldWndProc);
+            oldWndProc = IntPtr.Zero;
+            newWndProc = null;
+        }
+
+        if (_expirationWindow != null && _alertOldWndProc != IntPtr.Zero)
+        {
+            var hwndAlert = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+            NativeMethods.RestoreWindowLong(hwndAlert, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, _alertOldWndProc);
+            _alertOldWndProc = IntPtr.Zero;
+            _alertNewWndProc = null;
+        }
+    }
+
+    /// <summary>
+    /// Handles user login success asynchronously: updates UI and refreshes expiration data.
+    /// </summary>
+    /// <param name="userName">The authenticated username.</param>
+    private async void Current_LoginSucceededAsync(string userName)
+    {
+        Log.Logger?.Information("User logged in: {UserName}", userName);
+
         UserInfo_TitleBar.Visibility = Visibility.Visible;
         UserName_TitleBar.Text = userName;
+        _currentLoggedInUser = userName;
+
+        if (_expirationWindow != null)
+        {
+            var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            await RefreshExpirationWindowAsync(options, forceShow: true);
+        }
     }
 
-    private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e)
+    /// <summary>
+    /// Forwards pointer moved events to external subscribers.
+    /// </summary>
+    private void RootGrid_PointerMoved(object sender, PointerRoutedEventArgs e) => PointerMoved?.Invoke(sender, e);
+
+    /// <summary>
+    /// Forwards key down events to external subscribers.
+    /// </summary>
+    private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e) => KeyDown?.Invoke(sender, e);
+
+    /// <summary>
+    /// Checks user settings and shows expiration alert window if conditions are met.
+    /// </summary>
+    private async Task CheckAndShowExpirationWindowAsync()
     {
-        PointerMoved?.Invoke(sender, e);
+        var localSettings = Windows.Storage.ApplicationData.Current.LocalSettings;
+        bool alertsEnabled = localSettings.Values[Constants.Settings.EnableExpirationAlerts] as bool? ?? true;
+        bool showOnStartup = localSettings.Values[Constants.Settings.ShowExpirationWindowOnStartup] as bool? ?? true;
+
+        if (!alertsEnabled || !showOnStartup)
+        {
+            Log.Logger?.Debug("Expiration alerts disabled or startup show disabled");
+            return;
+        }
+
+        await RefreshExpirationWindowAsync(GetOptions());
     }
 
-    private void RootGrid_KeyDown(object sender, KeyRoutedEventArgs e)
+    /// <summary>
+    /// Creates JsonSerializerOptions with case-insensitive property matching.
+    /// </summary>
+    /// <returns>Configured JsonSerializerOptions instance.</returns>
+    private static JsonSerializerOptions GetOptions()
     {
-        KeyDown?.Invoke(sender, e);
+        return new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+    }
+
+    /// <summary>
+    /// Reads and parses expiration data asynchronously to prevent UI thread freezing.
+    /// </summary>
+    /// <param name="options">JSON serializer options for parsing.</param>
+    /// <param name="forceShow">If true, shows window even with empty data.</param>
+    private async Task RefreshExpirationWindowAsync(JsonSerializerOptions options, bool forceShow = false)
+    {
+        if (_isAlertRefreshing)
+        {
+            Log.Logger?.Debug("RefreshExpirationWindowAsync skipped: already refreshing");
+            return;
+        }
+        _isAlertRefreshing = true;
+
+        try
+        {
+            string cacheFile = Path.Combine(
+                Windows.Storage.ApplicationData.Current.LocalFolder.Path,
+                "expiration_cache.json");
+
+            if (!File.Exists(cacheFile) && !forceShow)
+            {
+                Log.Logger?.Debug("Expiration cache file not found and forceShow=false");
+                return;
+            }
+
+            Dictionary<string, List<ExpirationCacheItem>> cache = [];
+
+            await Task.Run(async () =>
+            {
+                if (File.Exists(cacheFile))
+                {
+                    string json = await File.ReadAllTextAsync(cacheFile);
+                    json = json.Trim();
+                    if (json.StartsWith('{') && json.EndsWith('}'))
+                    {
+                        try
+                        {
+                            cache = JsonSerializer.Deserialize<Dictionary<string, List<ExpirationCacheItem>>>(json, options) ?? [];
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Logger?.Warning(ex, "Failed to parse expiration cache JSON");
+                            File.Delete(cacheFile);
+                        }
+                    }
+                    else
+                    {
+                        Log.Logger?.Warning("Invalid JSON structure in expiration cache");
+                        File.Delete(cacheFile);
+                    }
+                }
+            });
+
+            if (cache.Count == 0 && !forceShow)
+            {
+                Log.Logger?.Debug("Expiration cache empty and forceShow=false");
+                return;
+            }
+
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                BuildAndShowExpirationUi(cache, forceShow);
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to refresh expiration window.");
+        }
+        finally
+        {
+            _isAlertRefreshing = false;
+        }
+    }
+
+    /// <summary>
+    /// Executed strictly in the UI thread for safe creation of controls.
+    /// </summary>
+    private void BuildAndShowExpirationUi(Dictionary<string, List<ExpirationCacheItem>> cache, bool forceShow)
+    {
+        int warningDays = Windows.Storage.ApplicationData.Current.LocalSettings.Values[Constants.Settings.ExpirationWarningDays] as int? ?? 7;
+        var now = DateTimeOffset.UtcNow.Date;
+
+        var stackPanel = new StackPanel { Spacing = 12 };
+        bool hasAnyExpiring = false;
+        int visualItemsCount = 0;
+        var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+
+        var textPrimaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"];
+        var textSecondaryBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorSecondaryBrush"];
+        var cardBackgroundBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardBackgroundFillColorDefaultBrush"];
+        var cardBorderBrush = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["CardStrokeColorDefaultBrush"];
+
+        if (!string.IsNullOrEmpty(_currentLoggedInUser) && cache.TryGetValue(_currentLoggedInUser, out var userItems))
+        {
+            var expiringItems = userItems
+                .Where(i => (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays)
+                .OrderBy(i => i.Date)
+                .ToList();
+
+            if (expiringItems.Count > 0)
+            {
+                hasAnyExpiring = true;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = string.Format(resourceLoader.GetString("Expiring_Detail_Header"), _currentLoggedInUser),
+                    FontSize = 20,
+                    FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                    Foreground = textPrimaryBrush,
+                    Margin = new Thickness(0, 0, 0, 12)
+                });
+
+                var itemsToShow = expiringItems.Take(15).ToList();
+
+                foreach (var item in itemsToShow)
+                {
+                    visualItemsCount++;
+                    int daysLeft = (int)(item.Date.LocalDateTime.Date - now).TotalDays;
+                    string statusText = daysLeft switch
+                    {
+                        < 0 => string.Format(resourceLoader.GetString("Expiring_Detail_Expired"), item.Name, -daysLeft),
+                        0 => string.Format(resourceLoader.GetString("Expiring_Detail_ExpiresToday"), item.Name),
+                        _ => string.Format(resourceLoader.GetString("Expiring_Detail_Expiring"), item.Name, daysLeft)
+                    };
+
+                    var color = daysLeft <= 0 ? Colors.Red : Colors.DarkOrange;
+
+                    var itemCard = new Border
+                    {
+                        Background = cardBackgroundBrush,
+                        BorderBrush = cardBorderBrush,
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(8),
+                        Padding = new Thickness(16),
+                        Margin = new Thickness(0, 0, 0, 6)
+                    };
+
+                    var itemPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 14 };
+                    itemPanel.Children.Add(new FontIcon
+                    {
+                        Glyph = "\uE814",
+                        FontSize = 18,
+                        Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(color),
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    itemPanel.Children.Add(new TextBlock
+                    {
+                        Text = statusText,
+                        FontSize = 16,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    itemCard.Child = itemPanel;
+
+                    stackPanel.Children.Add(itemCard);
+                }
+
+                if (expiringItems.Count > 15)
+                {
+                    stackPanel.Children.Add(new TextBlock
+                    {
+                        Text = $"... and {expiringItems.Count - 15} more",
+                        FontSize = 14,
+                        Foreground = textSecondaryBrush,
+                        FontStyle = Windows.UI.Text.FontStyle.Italic,
+                        Margin = new Thickness(0, 0, 0, 6)
+                    });
+                    visualItemsCount++;
+                }
+            }
+        }
+        else if (string.IsNullOrEmpty(_currentLoggedInUser))
+        {
+            foreach (var kvp in cache)
+            {
+                var expiringCount = kvp.Value.Count(i =>
+                    (i.Date.LocalDateTime.Date - now).TotalDays <= warningDays &&
+                    (i.Date.LocalDateTime.Date - now).TotalDays >= 0);
+                var expiredCount = kvp.Value.Count(i => (i.Date.LocalDateTime.Date - now).TotalDays < 0);
+
+                if (expiringCount > 0 || expiredCount > 0)
+                {
+                    hasAnyExpiring = true;
+                    visualItemsCount++;
+
+                    var userPanel = new StackPanel
+                    {
+                        Background = cardBackgroundBrush,
+                        Padding = new Thickness(20),
+                        CornerRadius = new CornerRadius(8),
+                        Margin = new Thickness(0, 0, 0, 12),
+                        BorderBrush = cardBorderBrush,
+                        BorderThickness = new Thickness(1)
+                    };
+
+                    var headerPanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 0, 0, 8) };
+                    headerPanel.Children.Add(new FontIcon
+                    {
+                        Glyph = "\uE77B",
+                        FontSize = 20,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    headerPanel.Children.Add(new TextBlock
+                    {
+                        Text = string.Format(resourceLoader.GetString("Expiring_Summary_Header"), kvp.Key),
+                        FontSize = 18,
+                        FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                        Foreground = textPrimaryBrush,
+                        VerticalAlignment = VerticalAlignment.Center
+                    });
+                    userPanel.Children.Add(headerPanel);
+
+                    if (expiringCount > 0)
+                        userPanel.Children.Add(new TextBlock
+                        {
+                            Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expiring"), expiringCount),
+                            FontSize = 15,
+                            Margin = new Thickness(30, 4, 0, 0),
+                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.DarkOrange)
+                        });
+
+                    if (expiredCount > 0)
+                        userPanel.Children.Add(new TextBlock
+                        {
+                            Text = string.Format(resourceLoader.GetString("Expiring_Summary_Expired"), expiredCount),
+                            FontSize = 15,
+                            Margin = new Thickness(30, 4, 0, 0),
+                            Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Red)
+                        });
+
+                    stackPanel.Children.Add(userPanel);
+                }
+            }
+
+            if (hasAnyExpiring)
+            {
+                visualItemsCount++;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = resourceLoader.GetString("Expiring_Summary_LoginPrompt"),
+                    FontSize = 15,
+                    FontStyle = Windows.UI.Text.FontStyle.Italic,
+                    Foreground = textSecondaryBrush,
+                    TextWrapping = TextWrapping.Wrap,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 16, 0, 0)
+                });
+            }
+        }
+
+        if (hasAnyExpiring || forceShow)
+        {
+            if (stackPanel.Children.Count == 0 && forceShow)
+            {
+                visualItemsCount = 1;
+                stackPanel.Children.Add(new TextBlock
+                {
+                    Text = resourceLoader.GetString("NoPasswordsFound") ?? "No passwords require attention.",
+                    FontSize = 15,
+                    FontStyle = Windows.UI.Text.FontStyle.Italic,
+                    Foreground = textSecondaryBrush,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    Margin = new Thickness(0, 20, 0, 0)
+                });
+            }
+            ShowOrUpdateAlertWindow(stackPanel, visualItemsCount);
+        }
+        else
+        {
+            _expirationWindow?.Close();
+            _expirationWindow = null;
+            Log.Logger?.Debug("No expiring items: expiration window closed");
+        }
+    }
+
+    /// <summary>
+    /// Shows or updates the expiration alert window with provided content.
+    /// </summary>
+    /// <param name="contentPanel">The StackPanel containing expiration items.</param>
+    /// <param name="itemCount">Number of visual items for height calculation.</param>
+    private void ShowOrUpdateAlertWindow(StackPanel contentPanel, int itemCount)
+    {
+        int calculatedHeight = Math.Clamp(200 + (itemCount * 85), 600, 800);
+
+        if (_expirationWindow != null)
+        {
+            Log.Logger?.Debug("Updating existing expiration window");
+
+            if (_expirationWindow.Content is Grid root && root.Children.Count > 1 && root.Children[1] is ScrollViewer sv)
+            {
+                sv.Content = contentPanel;
+            }
+            var existingHwnd = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+            NativeMethods.SetForegroundWindow(existingHwnd);
+            _expirationWindow.Activate();
+            return;
+        }
+
+        try
+        {
+            Log.Logger?.Information("Creating new expiration alert window");
+
+            var resourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+
+            _expirationWindow = new Window
+            {
+                Title = "Pango: Expiration Alert",
+                ExtendsContentIntoTitleBar = true
+            };
+
+            var rootGrid = new Grid
+            {
+                Background = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["ApplicationPageBackgroundThemeBrush"]
+            };
+
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(40) });
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
+            rootGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Auto) });
+
+            var titleBar = new Border { Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Colors.Transparent) };
+            var titlePanel = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Padding = new Thickness(16, 0, 0, 0) };
+            titlePanel.Children.Add(new Image
+            {
+                Source = new BitmapImage(new Uri("ms-appx:///Assets/logo.png")),
+                Width = 18,
+                Height = 18,
+                VerticalAlignment = VerticalAlignment.Center
+            });
+            titlePanel.Children.Add(new TextBlock
+            {
+                Text = "Pango: Expiration Alert",
+                VerticalAlignment = VerticalAlignment.Center,
+                FontSize = 14,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Microsoft.UI.Xaml.Application.Current.Resources["TextFillColorPrimaryBrush"]
+            });
+            titleBar.Child = titlePanel;
+            Grid.SetRow(titleBar, 0);
+            rootGrid.Children.Add(titleBar);
+
+            var scrollViewer = new ScrollViewer { Margin = new Thickness(32, 10, 32, 20), Content = contentPanel };
+            Grid.SetRow(scrollViewer, 1);
+            rootGrid.Children.Add(scrollViewer);
+
+            var btnPanel = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                HorizontalAlignment = HorizontalAlignment.Right,
+                Spacing = 16,
+                Margin = new Thickness(0, 0, 32, 32)
+            };
+
+            var openPangoBtn = new Button
+            {
+                Content = resourceLoader.GetString("Tray_OpenPango") ?? "Open Pango",
+                Style = (Style)Microsoft.UI.Xaml.Application.Current.Resources["AccentButtonStyle"],
+                Width = 160,
+                Height = 36,
+                FontSize = 15
+            };
+            openPangoBtn.Click += (s, e) => { ShowWindow(); _expirationWindow.Close(); };
+
+            var closeBtn = new Button
+            {
+                Content = resourceLoader.GetString("Cancel") ?? "Close",
+                Width = 120,
+                Height = 36,
+                FontSize = 15
+            };
+            closeBtn.Click += (s, e) => _expirationWindow.Close();
+
+            btnPanel.Children.Add(openPangoBtn);
+            btnPanel.Children.Add(closeBtn);
+
+            Grid.SetRow(btnPanel, 2);
+            rootGrid.Children.Add(btnPanel);
+
+            _expirationWindow.Content = rootGrid;
+            _expirationWindow.SetTitleBar(titleBar);
+
+            _expirationWindow.Closed += (s, e) =>
+            {
+                if (_alertOldWndProc != IntPtr.Zero)
+                {
+                    var hwndAlert = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+                    NativeMethods.RestoreWindowLong(hwndAlert, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, _alertOldWndProc);
+                    _alertOldWndProc = IntPtr.Zero;
+                    _alertNewWndProc = null;
+                }
+                _expirationWindow = null;
+                Log.Logger?.Debug("Expiration window closed");
+            };
+
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(_expirationWindow);
+            WindowId windowId = Win32Interop.GetWindowIdFromWindow(hwnd);
+            var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
+
+            int width = 800;
+            var displayArea = Microsoft.UI.Windowing.DisplayArea.GetFromWindowId(
+                windowId,
+                Microsoft.UI.Windowing.DisplayAreaFallback.Nearest);
+
+            if (displayArea != null)
+            {
+                int x = (displayArea.WorkArea.Width - width) / 2;
+                int y = (displayArea.WorkArea.Height - calculatedHeight) / 2;
+                appWindow.MoveAndResize(new Windows.Graphics.RectInt32(x, y, width, calculatedHeight));
+            }
+            else
+            {
+                appWindow.Resize(new Windows.Graphics.SizeInt32(width, calculatedHeight));
+            }
+
+            string iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "logo.ico");
+            if (File.Exists(iconPath))
+                appWindow.SetIcon(iconPath);
+
+            SubClassAlertWindow(hwnd);
+
+            _expirationWindow.Activate();
+            NativeMethods.SetForegroundWindow(hwnd);
+        }
+        catch (Exception ex)
+        {
+            _logger?.LogError(ex, "Failed to create Alert Window.");
+        }
     }
 
     #region Handle MINMAXINFO
 
-    // DS
-    // Jun-28-2024
-    // Handling MINMAXINFO allows to set min size of the window
-    // see https://github.com/microsoft/microsoft-ui-xaml/issues/2945
-
+    /// <summary>
+    /// Delegate for Win32 window procedure callback.
+    /// </summary>
     internal delegate IntPtr WinProc(IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam);
-    internal WinProc? newWndProc = null;
-    internal IntPtr oldWndProc = IntPtr.Zero;
-    [DllImport("user32")]
-    private static extern IntPtr SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc);
-    [DllImport("user32.dll")]
-    static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam);
 
+    internal WinProc? newWndProc;
+    internal IntPtr oldWndProc = IntPtr.Zero;
+
+    private WinProc? _alertNewWndProc;
+    private IntPtr _alertOldWndProc = IntPtr.Zero;
+
+#pragma warning disable SYSLIB1054
+    [DllImport("user32.dll")]
+    private static extern IntPtr CallWindowProc(IntPtr lpPrevWndFunc, IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam);
+#pragma warning restore SYSLIB1054
+
+    /// <summary>
+    /// Applies Win32 subclassing to main window for custom message handling.
+    /// </summary>
     private void SubClassing()
     {
-        var windowId = this.AppWindow.Id;
-        var hwnd = Win32Interop.GetWindowFromWindowId(windowId);
+        if (System.Diagnostics.Debugger.IsAttached)
+        {
+            Log.Logger?.Debug("SubClassing skipped: debugger attached");
+            return;
+        }
 
+        var windowId = AppWindow.Id;
+        var hwnd = Win32Interop.GetWindowFromWindowId(windowId);
         if (hwnd == IntPtr.Zero)
         {
-            int error = Marshal.GetLastWin32Error();
-            throw new InvalidOperationException($"Failed to get window handler: error code {error}");
+            Log.Logger?.Warning("SubClassing failed: invalid window handle");
+            return;
         }
 
         newWndProc = new(NewWindowProc);
-
-        // Here we use the NativeMethods class 👇
         oldWndProc = NativeMethods.SetWindowLong(hwnd, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, newWndProc);
-        if (oldWndProc == IntPtr.Zero)
-        {
-            int error = Marshal.GetLastWin32Error();
-            throw new InvalidOperationException($"Failed to set GWL_WNDPROC: error code {error}");
-        }
+        Log.Logger?.Debug("MainWindow subclassing applied");
     }
 
+    /// <summary>
+    /// Applies Win32 subclassing to expiration alert window for custom message handling.
+    /// </summary>
+    /// <param name="hwnd">Window handle to subclass.</param>
+    private void SubClassAlertWindow(IntPtr hwnd)
+    {
+        if (System.Diagnostics.Debugger.IsAttached)
+        {
+            Log.Logger?.Debug("SubClassAlertWindow skipped: debugger attached");
+            return;
+        }
+
+        _alertNewWndProc = new(AlertWindowProc);
+        _alertOldWndProc = NativeMethods.SetWindowLong(hwnd, PInvoke.User32.WindowLongIndexFlags.GWL_WNDPROC, _alertNewWndProc);
+        Log.Logger?.Debug("Alert window subclassing applied");
+    }
+
+    /// <summary>
+    /// Helper class for Win32 API interop with architecture-aware method selection.
+    /// </summary>
     internal static class NativeMethods
     {
-        // We have to handle the 32-bit and 64-bit functions separately.
-        // 'SetWindowLongPtr' is the 64-bit version of 'SetWindowLong', and isn't available in user32.dll for 32-bit processes.
+#pragma warning disable SYSLIB1054
         [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
         private static extern IntPtr SetWindowLong32(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc);
 
         [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
         private static extern IntPtr SetWindowLong64(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc);
 
-        // This does the selection for us, based on the process architecture.
+        [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
+        private static extern IntPtr SetWindowLongPtr32(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr newProc);
+
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
+        private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr newProc);
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        internal static extern bool SetForegroundWindow(IntPtr hWnd);
+#pragma warning restore SYSLIB1054
+
+        /// <summary>
+        /// Sets window procedure pointer with architecture-aware dispatch.
+        /// </summary>
         internal static IntPtr SetWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, WinProc newProc)
         {
-            if (IntPtr.Size == 4) // 32-bit process
-            {
-                return SetWindowLong32(hWnd, nIndex, newProc);
-            }
-            else // 64-bit process
-            {
-                return SetWindowLong64(hWnd, nIndex, newProc);
-            }
+            return IntPtr.Size == 4
+                ? SetWindowLong32(hWnd, nIndex, newProc)
+                : SetWindowLong64(hWnd, nIndex, newProc);
+        }
+
+        /// <summary>
+        /// Restores original window procedure pointer with architecture-aware dispatch.
+        /// </summary>
+        internal static IntPtr RestoreWindowLong(IntPtr hWnd, PInvoke.User32.WindowLongIndexFlags nIndex, IntPtr oldProc)
+        {
+            return IntPtr.Size == 4
+                ? SetWindowLongPtr32(hWnd, nIndex, oldProc)
+                : SetWindowLongPtr64(hWnd, nIndex, oldProc);
         }
     }
 
+    /// <summary>
+    /// Structure representing MINMAXINFO for window size constraints.
+    /// </summary>
     [StructLayout(LayoutKind.Sequential)]
-    struct MINMAXINFO
+    private struct MINMAXINFO
     {
         public PInvoke.POINT ptReserved;
         public PInvoke.POINT ptMaxSize;
@@ -140,22 +989,55 @@ public sealed partial class MainWindow : Window
         public PInvoke.POINT ptMaxTrackSize;
     }
 
+    /// <summary>
+    /// Custom window procedure for main window: handles WM_GETMINMAXINFO for DPI-aware min size.
+    /// </summary>
+    /// <param name="hWnd">Window handle.</param>
+    /// <param name="Msg">Window message.</param>
+    /// <param name="wParam">Message parameter.</param>
+    /// <param name="lParam">Message parameter.</param>
+    /// <returns>Result of window procedure call.</returns>
     private IntPtr NewWindowProc(IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam)
     {
-        switch (Msg)
+        if (Msg == PInvoke.User32.WindowMessage.WM_GETMINMAXINFO)
         {
-            case PInvoke.User32.WindowMessage.WM_GETMINMAXINFO:
-                var dpi = PInvoke.User32.GetDpiForWindow(hWnd);
-                float scalingFactor = (float)dpi / 96;
+            var dpi = PInvoke.User32.GetDpiForWindow(hWnd);
+            float scalingFactor = (float)dpi / 96;
 
-                MINMAXINFO minMaxInfo = Marshal.PtrToStructure<MINMAXINFO>(lParam);
-                minMaxInfo.ptMinTrackSize.x = (int)(MinWindowWidth * scalingFactor);
-                minMaxInfo.ptMinTrackSize.y = (int)(MinWindowHeight * scalingFactor);
-                Marshal.StructureToPtr(minMaxInfo, lParam, true);
-                break;
+            var minMaxInfo = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            minMaxInfo.ptMinTrackSize.x = (int)(MinWindowWidth * scalingFactor);
+            minMaxInfo.ptMinTrackSize.y = (int)(MinWindowHeight * scalingFactor);
+            Marshal.StructureToPtr(minMaxInfo, lParam, true);
 
+            Log.Logger?.Debug("WM_GETMINMAXINFO handled: min size set to {Width}x{Height} (DPI: {Dpi})",
+                MinWindowWidth, MinWindowHeight, dpi);
         }
         return CallWindowProc(oldWndProc, hWnd, Msg, wParam, lParam);
+    }
+
+    /// <summary>
+    /// Custom window procedure for alert window: handles WM_GETMINMAXINFO for DPI-aware min size.
+    /// </summary>
+    /// <param name="hWnd">Window handle.</param>
+    /// <param name="Msg">Window message.</param>
+    /// <param name="wParam">Message parameter.</param>
+    /// <param name="lParam">Message parameter.</param>
+    /// <returns>Result of window procedure call.</returns>
+    private IntPtr AlertWindowProc(IntPtr hWnd, PInvoke.User32.WindowMessage Msg, IntPtr wParam, IntPtr lParam)
+    {
+        if (Msg == PInvoke.User32.WindowMessage.WM_GETMINMAXINFO)
+        {
+            var dpi = PInvoke.User32.GetDpiForWindow(hWnd);
+            float scalingFactor = (float)dpi / 96;
+
+            var minMaxInfo = Marshal.PtrToStructure<MINMAXINFO>(lParam);
+            minMaxInfo.ptMinTrackSize.x = (int)(600 * scalingFactor);
+            minMaxInfo.ptMinTrackSize.y = (int)(400 * scalingFactor);
+            Marshal.StructureToPtr(minMaxInfo, lParam, true);
+
+            Log.Logger?.Debug("Alert WM_GETMINMAXINFO handled: min size set to 450x240 (DPI: {Dpi})", dpi);
+        }
+        return CallWindowProc(_alertOldWndProc, hWnd, Msg, wParam, lParam);
     }
 
     #endregion

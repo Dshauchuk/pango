@@ -1,18 +1,24 @@
 ﻿using ErrorOr;
 using MediatR;
 using Pango.Application.Models;
+using Pango.Domain.Common;
 
 namespace Pango.Application.UseCases.Password.Commands.NewPassword;
 
+/// <summary>
+/// Command to create a new password entry.
+/// </summary>
 public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
 {
+    private readonly RamProtectedString _protectedValue;
+
     public NewPasswordCommand(string name, string login, string value, Dictionary<string, string>? properties = null)
     {
         Name = name;
         Login = login;
-        Value = value;
+        _protectedValue = new RamProtectedString(value);
         CatalogPath = string.Empty;
-        Properties = properties ?? new();
+        Properties = properties ?? [];
     }
 
     /// <summary>
@@ -31,17 +37,20 @@ public record NewPasswordCommand : IRequest<ErrorOr<PangoPasswordDto>>
     public bool IsCatalogHolder { get; set; }
 
     /// <summary>
-    /// 
+    /// Catalog path where the password entry is stored.
     /// </summary>
-    public string CatalogPath { get; set; } 
+    public string CatalogPath { get; set; }
 
     /// <summary>
-    /// Encrypted value of the password
+    /// Decrypted password value. Exposed only for internal use; callers should use the encrypted form.
     /// </summary>
-    public string Value { get; set; }
-
+    public string Value => _protectedValue.GetDecryptedValue();
     /// <summary>
     /// Password entry properties
     /// </summary>
     public Dictionary<string, string> Properties { get; set; }
+    /// <summary>
+    /// Is the favorite password
+    /// </summary>
+    public bool Star { get; set; }
 }

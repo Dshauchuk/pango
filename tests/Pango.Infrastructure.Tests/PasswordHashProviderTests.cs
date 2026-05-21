@@ -15,7 +15,7 @@ public class PasswordHashProviderTests
     public void Hash_Throws_ArgumentNullException_For_Null_Password()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => _passwordHashProvider.Hash(null, out byte[] salt));
+        Assert.Throws<ArgumentNullException>(() => _passwordHashProvider.Hash(null!, out byte[] salt));
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class PasswordHashProviderTests
     public void VerifyPassword_Returns_False_For_Null_Hash()
     {
         // Act
-        bool isValid = _passwordHashProvider.VerifyPassword("password", null, new byte[16]);
+        bool isValid = _passwordHashProvider.VerifyPassword("password", null!, new byte[16]);
 
         // Assert
         Assert.False(isValid);
@@ -46,7 +46,7 @@ public class PasswordHashProviderTests
     public void VerifyPassword_Returns_False_For_Null_Salt()
     {
         // Act
-        bool isValid = _passwordHashProvider.VerifyPassword("password", "hash", null);
+        bool isValid = _passwordHashProvider.VerifyPassword("password", "hash", null!);
 
         // Assert
         Assert.False(isValid);

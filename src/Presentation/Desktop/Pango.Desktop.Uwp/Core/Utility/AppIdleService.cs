@@ -1,76 +1,112 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Input;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Models;
-using System;
-using System.Collections.Generic;
+using Serilog;
+using System.Runtime.InteropServices;
 
 namespace Pango.Desktop.Uwp.Core.Utility;
 
+/// <summary>
+/// Service for tracking application idle time and executing actions when idle threshold is reached.
+/// </summary>
 public class AppIdleService : IAppIdleService
 {
-    private readonly Dictionary<Guid, TimerAction> _timerActions = new();
+    private readonly Dictionary<Guid, TimerAction> _timerActions = [];
 
-    /// <inheritdoc/>
+    #region Win32 Interop
+
+#pragma warning disable SYSLIB1054 // DllImport is acceptable for simple P/Invoke scenarios
+    /// <summary>
+    /// Retrieves the time of the last input event (keyboard or mouse).
+    /// </summary>
+    /// <param name="plii">Reference to LASTINPUTINFO structure to receive the information.</param>
+    /// <returns>True if successful; false otherwise.</returns>
+    [DllImport("user32.dll")]
+    private static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+#pragma warning restore SYSLIB1054
+
+    /// <summary>
+    /// Structure containing information about the last input event.
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential)]
+    private struct LASTINPUTINFO
+    {
+        /// <summary>
+        /// Size of this structure, in bytes.
+        /// </summary>
+        public uint cbSize;
+
+        /// <summary>
+        /// Time of the last input event, in ticks since system startup.
+        /// </summary>
+        public uint dwTime;
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Starts monitoring for application idle time and executes the specified action when threshold is reached.
+    /// </summary>
+    /// <param name="timeOfIdle">The idle time threshold after which the action should be triggered.</param>
+    /// <param name="onIdle">The action to execute when idle threshold is reached.</param>
+    /// <returns>Unique identifier for the registered idle timer, used to stop monitoring later.</returns>
     public Guid StartAppIdle(TimeSpan timeOfIdle, Action onIdle)
     {
-        EventHandler<object> timerTickHandler = new((_, _) => onIdle());
-        DispatcherTimer idleTimer = new()
-        {
-            Interval = timeOfIdle
-        };
-        idleTimer.Tick += timerTickHandler;
+        Log.Logger?.Debug("StartAppIdle: registering idle monitor with threshold {Threshold}", timeOfIdle);
 
-        Guid appIdleId = Guid.NewGuid();
-        _timerActions.Add(appIdleId, new TimerAction(idleTimer, timerTickHandler));
-
-        if (_timerActions.Count == 1)
+        void TimerTickHandler(object? sender, object e)
         {
-            App.Current.CurrentWindow!.PointerMoved += OnWindowPointerMoved;
-            App.Current.CurrentWindow!.KeyDown += OnWindowKeyDown;
+            var lii = new LASTINPUTINFO { cbSize = (uint)Marshal.SizeOf<LASTINPUTINFO>() };
+
+            if (GetLastInputInfo(ref lii))
+            {
+                uint elapsedTicks = unchecked((uint)Environment.TickCount - lii.dwTime);
+                var idleTime = TimeSpan.FromMilliseconds(elapsedTicks);
+
+                Log.Logger?.Debug("Idle check: {IdleTime} elapsed (threshold: {Threshold})", idleTime, timeOfIdle);
+
+                if (idleTime >= timeOfIdle)
+                {
+                    Log.Logger?.Information("Idle threshold reached: executing onIdle action");
+                    onIdle();
+                }
+            }
+            else
+            {
+                Log.Logger?.Warning("GetLastInputInfo failed: unable to retrieve last input time");
+            }
         }
 
+        var idleTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+        idleTimer.Tick += TimerTickHandler;
+        idleTimer.Start();
+
+        var appIdleId = Guid.NewGuid();
+        _timerActions.Add(appIdleId, new TimerAction(idleTimer, TimerTickHandler));
+
+        Log.Logger?.Information("Idle monitor started with ID: {AppIdleId}", appIdleId);
         return appIdleId;
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Stops and removes the idle monitoring associated with the specified identifier.
+    /// </summary>
+    /// <param name="appIdleId">The unique identifier returned by StartAppIdle.</param>
     public void StopAppIdle(Guid appIdleId)
     {
-        TimerAction timerActionToStop = _timerActions[appIdleId];
-        if (timerActionToStop == null)
-            return;
+        Log.Logger?.Debug("StopAppIdle: stopping monitor with ID: {AppIdleId}", appIdleId);
 
-        timerActionToStop.Timer.Stop();
-        timerActionToStop.Timer.Tick -= timerActionToStop.TimerTickHadler;
-
-        if (_timerActions.Count == 1)
-        {
-            App.Current.CurrentWindow!.PointerMoved -= OnWindowPointerMoved;
-            App.Current.CurrentWindow!.KeyDown -= OnWindowKeyDown;
-        }
-
-        _timerActions.Remove(appIdleId);
-    }
-
-    /// <summary>
-    /// Restarts all timers imtervals of the <see cref="_timerActions"/> list
-    /// </summary>
-    private void RestartAllTimers()
-    {
-        foreach (TimerAction timerAction in _timerActions.Values)
+        if (_timerActions.TryGetValue(appIdleId, out var timerAction))
         {
             timerAction.Timer.Stop();
-            timerAction.Timer.Start();
+            timerAction.Timer.Tick -= timerAction.TimerTickHandler;
+
+            _timerActions.Remove(appIdleId);
+            Log.Logger?.Information("Idle monitor stopped and removed: {AppIdleId}", appIdleId);
         }
-    }
-
-    private void OnWindowPointerMoved(object? sender, PointerRoutedEventArgs args)
-    {
-        RestartAllTimers();
-    }
-
-    private void OnWindowKeyDown(object? sender, KeyRoutedEventArgs args)
-    {
-        RestartAllTimers();
+        else
+        {
+            Log.Logger?.Warning("StopAppIdle: no monitor found with ID: {AppIdleId}", appIdleId);
+        }
     }
 }

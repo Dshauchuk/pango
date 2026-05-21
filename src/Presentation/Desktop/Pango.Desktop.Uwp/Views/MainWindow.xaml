@@ -4,9 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="using:Pango.Desktop.Uwp.Views"
+    xmlns:loc="using:Pango.Desktop.Uwp.Core.Localization"
     x:Class="Pango.Desktop.Uwp.Views.MainWindow"
     mc:Ignorable="d">
-    
+
     <Window.SystemBackdrop>
         <MicaBackdrop />
     </Window.SystemBackdrop>
@@ -14,7 +15,7 @@
     <Grid x:Name="RootGrid"  
           IsTabStop="False"
           RowDefinitions="32,*">
-        
+
         <!--  Custom title bar  -->
         <Border Height="30"
                 Margin="0,0,0,0"
@@ -23,7 +24,7 @@
                 VerticalAlignment="Top"
                 Background="Transparent">
             <Grid>
-
+                
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
@@ -53,9 +54,9 @@
                 </StackPanel>
             </Grid>
         </Border>
-        
+
         <!--  Shell  -->
         <views:Shell Grid.Row="1" />
     </Grid>
-
+    
 </Window>

@@ -330,6 +330,12 @@
     <value>minute(-s)</value>
     <comment>1 minute(-s), 3 minute(-s)</comment>
   </data>
+  <data name="PasswordDeleted_Format" xml:space="preserve">
+    <value>Password "{0}" has been successfully deleted</value>
+  </data>
+  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
+    <value>Failed to delete password "{0}"</value>
+  </data>
   <data name="CatalogCreated_Format" xml:space="preserve">
     <value>Catalog "{0}" has been successfully created</value>
   </data>
@@ -341,12 +347,6 @@
   </data>
   <data name="CatalogUpdateFailed_Format" xml:space="preserve">
     <value>Failed to update catalog "{0}"</value>
-  </data>
-  <data name="PasswordDeleted_Format" xml:space="preserve">
-    <value>Password "{0}" has been successfully deleted</value>
-  </data>
-  <data name="PasswordDeletetionFailed_Format" xml:space="preserve">
-    <value>Failed to delete password "{0}"</value>
   </data>
   <data name="NoPasswordsFound" xml:space="preserve">
     <value>No passwords found</value>
@@ -369,9 +369,6 @@
   <data name="SeePassword" xml:space="preserve">
     <value>Show Password</value>
   </data>
-  <data name="CannotSavePassword" xml:space="preserve">
-    <value>Cannot save password</value>
-  </data>
   <data name="Message_LoginEmpty" xml:space="preserve">
     <value>Login failed for user "{0}": User name or password is empty</value>
   </data>
@@ -383,6 +380,9 @@
   </data>
   <data name="Message_LoginSuccess" xml:space="preserve">
     <value>Authentication succeeded</value>
+  </data>
+  <data name="CannotSavePassword" xml:space="preserve">
+    <value>Cannot save password</value>
   </data>
   <data name="CapsLockWarningText" xml:space="preserve">
     <value>Having caps-lock turned on might result in incorrect password</value>
@@ -441,11 +441,11 @@
   <data name="ExportResultTitle" xml:space="preserve">
     <value>Export Results</value>
   </data>
-  <data name="ImportCompleted_Message" xml:space="preserve">
-    <value>Import completed: {0} passwords were imported successfully.</value>
-  </data>
   <data name="ImportSingleCompleted_Message" xml:space="preserve">
     <value>Import completed: 1 password was imported successfully.</value>
+  </data>
+  <data name="ImportCompleted_Message" xml:space="preserve">
+    <value>Import completed: {0} passwords were imported successfully.</value>
   </data>
   <data name="SelectFile_Title" xml:space="preserve">
     <value>Select a file...</value>
@@ -497,5 +497,383 @@
   </data>
   <data name="ArchiveEncryptionPassword_Placeholder" xml:space="preserve">
     <value>Password for the archive encryption</value>
+  </data>
+  <data name="TooManyUsers" xml:space="preserve">
+    <value>The maximum number of users has been reached</value>
+  </data>
+  <data name="UserRegistrationFailed" xml:space="preserve">
+    <value>Registration error</value>
+  </data>
+  <data name="ExportFolderPath" xml:space="preserve">
+    <value>Export folder path</value>
+  </data>
+  <data name="SelectExportFolder_Placeholder" xml:space="preserve">
+    <value>Select folder for export</value>
+  </data>
+  <data name="SelectFolder" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="SelectExportFolder_Tooltip" xml:space="preserve">
+    <value>Click to select folder for saving exported file</value>
+  </data>
+  <data name="SelectItemsToExport" xml:space="preserve">
+    <value>Select items to export</value>
+  </data>
+  <data name="ValidationError_Required" xml:space="preserve">
+    <value>This field is required.</value>
+  </data>
+  <data name="ValidationError_MinLength" xml:space="preserve">
+    <value>Minimum length is 3 characters.</value>
+  </data>
+  <data name="ValidationError_ExportPath" xml:space="preserve">
+    <value>Selected folder does not exist or is invalid.</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>File Name</value>
+  </data>
+  <data name="FileName_Placeholder" xml:space="preserve">
+    <value>Enter file name (without extension)</value>
+  </data>
+  <data name="ValidationError_InvalidFileName" xml:space="preserve">
+    <value>Name contains invalid characters.</value>
+  </data>
+  <data name="Export_FileExistsTitle" xml:space="preserve">
+    <value>File already exists</value>
+  </data>
+  <data name="ValidationError_FileExists" xml:space="preserve">
+    <value>A file with this name already exists in the selected folder.</value>
+  </data>
+  <data name="GeneratePassword_Title" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="PasswordStrength" xml:space="preserve">
+    <value>Password strength</value>
+  </data>
+  <data name="PasswordLength" xml:space="preserve">
+    <value>Password length</value>
+  </data>
+  <data name="CharactersToUse" xml:space="preserve">
+    <value>Characters to use</value>
+  </data>
+  <data name="UseUppercase" xml:space="preserve">
+    <value>Uppercase letters (A–Z)</value>
+  </data>
+  <data name="UseLowercase" xml:space="preserve">
+    <value>Lowercase letters (a–z)</value>
+  </data>
+  <data name="UseDigits" xml:space="preserve">
+    <value>Digits (0–9)</value>
+  </data>
+  <data name="UseSpecial" xml:space="preserve">
+    <value>Special characters</value>
+  </data>
+  <data name="ExcludeAmbiguousCharacters" xml:space="preserve">
+    <value>Exclude ambiguous characters (Il10oOsS5)</value>
+  </data>
+  <data name="Generate" xml:space="preserve">
+    <value>Generate</value>
+  </data>
+  <data name="Apply" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="PasswordStrength_Strong" xml:space="preserve">
+    <value>Strong</value>
+  </data>
+  <data name="PasswordStrength_Medium" xml:space="preserve">
+    <value>Medium</value>
+  </data>
+  <data name="PasswordStrength_Weak" xml:space="preserve">
+    <value>Weak</value>
+  </data>
+  <data name="PasswordGeneration_Error_NoCharSet" xml:space="preserve">
+    <value>Select at least one character set.</value>
+  </data>
+  <data name="PasswordGeneration_Error_LengthOutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters.</value>
+  </data>
+  <data name="GeneratePassword" xml:space="preserve">
+    <value>Password generator</value>
+  </data>
+  <data name="GeneratePasswordTooltip" xml:space="preserve">
+    <value>Create a strong password</value>
+  </data>
+  <data name="PasswordLengthTooltip" xml:space="preserve">
+    <value>Password length (8–64 characters)</value>
+  </data>
+  <data name="PasswordLengthUnits" xml:space="preserve">
+    <value>chars</value>
+  </data>
+  <data name="UseUppercaseTooltip" xml:space="preserve">
+    <value>Add uppercase letters (A–Z) to increase password strength</value>
+  </data>
+  <data name="UseDigitsTooltip" xml:space="preserve">
+    <value>Add digits (0–9) to increase password strength</value>
+  </data>
+  <data name="UseLowercaseTooltip" xml:space="preserve">
+    <value>Add lowercase letters (a–z) to increase password strength</value>
+  </data>
+  <data name="ExcludeAmbiguousTooltip" xml:space="preserve">
+    <value>Exclude characters that can look similar (Il10oOsS5)</value>
+  </data>
+  <data name="UseSpecialTooltip" xml:space="preserve">
+    <value>Add special characters to make the password harder to guess</value>
+  </data>
+  <data name="PasswordLength_OutOfRange" xml:space="preserve">
+    <value>Password length must be between 8 and 64 characters</value>
+  </data>
+  <data name="PasswordLength_Invalid" xml:space="preserve">
+    <value>Invalid password length value</value>
+  </data>
+  <data name="RegeneratePassword" xml:space="preserve">
+    <value>Generate new password</value>
+  </data>
+  <data name="OtherPasswords" xml:space="preserve">
+    <value>Other suggested passwords</value>
+  </data>
+  <data name="PasswordGeneratedSuccessfully" xml:space="preserve">
+    <value>Password generated successfully</value>
+  </data>
+  <data name="SaveAs" xml:space="preserve">
+    <value>Save as</value>
+  </data>
+  <data name="BackupSettings_Header" xml:space="preserve">
+    <value>Backup</value>
+  </data>
+  <data name="BackupPath_Label" xml:space="preserve">
+    <value>Storage Path</value>
+  </data>
+  <data name="Browse_Button" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="DefaultPath_Button" xml:space="preserve">
+    <value>Default path</value>
+  </data>
+  <data name="OpenFolder_Button" xml:space="preserve">
+    <value>Open folder</value>
+  </data>
+  <data name="BackupInterval_Label" xml:space="preserve">
+    <value>Frequency</value>
+  </data>
+  <data name="Hour(-s)" xml:space="preserve">
+    <value>hour(s)</value>
+  </data>
+  <data name="BackupSaved_Message" xml:space="preserve">
+    <value>Backup settings saved.</value>
+  </data>
+  <data name="BackupPathInvalid_Error" xml:space="preserve">
+    <value>Invalid path.</value>
+  </data>
+  <data name="SaveChanges" xml:space="preserve">
+    <value>Save Changes</value>
+  </data>
+  <data name="BackupService_Toggle" xml:space="preserve">
+    <value>Enable Background Backup Service</value>
+  </data>
+  <data name="BackupPassword_Label" xml:space="preserve">
+    <value>Backup Password (Auto-generated)</value>
+  </data>
+  <data name="BackupPassword_Tooltip" xml:space="preserve">
+    <value>This password is used to encrypt your backup files. You will need it to import/restore data.</value>
+  </data>
+  <data name="Import_EncryptedArchiveError" xml:space="preserve">
+    <value>The archive is encrypted. Please ensure you entered the correct backup password.</value>
+  </data>
+  <data name="Theme_Default" xml:space="preserve">
+    <value>System Default</value>
+  </data>
+  <data name="Theme_Light" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="Theme_Dark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="BackupRetention_Label" xml:space="preserve">
+    <value>Keep backups for</value>
+  </data>
+  <data name="Day(-s)" xml:space="preserve">
+    <value>day(s)</value>
+  </data>
+  <data name="BugRequest_Header" xml:space="preserve">
+    <value>File a bug or request new feature</value>
+  </data>
+  <data name="Copyright_Description" xml:space="preserve">
+    <value>© 2026 ISI Division. All rights reserved.</value>
+  </data>
+  <data name="ToggleSwitch_On" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="ToggleSwitch_Off" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="BackupServiceDescription" xml:space="preserve">
+    <value>Automatically save encrypted copies of your data</value>
+  </data>
+  <data name="ImportSettings_Header" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportDestination_Label" xml:space="preserve">
+    <value>Destination</value>
+  </data>
+  <data name="ImportDestination_Description" xml:space="preserve">
+    <value>Choose where imported items will be placed</value>
+  </data>
+  <data name="ImportDestination_Root" xml:space="preserve">
+    <value>Import into root directory</value>
+  </data>
+  <data name="ImportDestination_Folder" xml:space="preserve">
+    <value>Import into separate folder</value>
+  </data>
+  <data name="SelectItemsToImport" xml:space="preserve">
+    <value>Select items to import</value>
+  </data>
+  <data name="ImportPreview_Loading" xml:space="preserve">
+    <value>Reading file structure...</value>
+  </data>
+  <data name="ValidationError_CatalogExists" xml:space="preserve">
+    <value>Folder already exists.</value>
+  </data>
+  <data name="ValidationError_InvalidChars" xml:space="preserve">
+    <value>Invalid characters in the name.</value>
+  </data>
+  <data name="DataStorage" xml:space="preserve">
+    <value>Data storage</value>
+  </data>
+  <data name="Reset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="ChooseDataFolder" xml:space="preserve">
+    <value>Choose data folder</value>
+  </data>
+  <data name="DataFolderChanged" xml:space="preserve">
+    <value>The folder has been changed. Please restart the application.</value>
+  </data>
+  <data name="Tray_OpenPango" xml:space="preserve">
+    <value>Open Pango</value>
+  </data>
+  <data name="Tray_Exit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="Tray_StartBackup" xml:space="preserve">
+    <value>Start Background Backup</value>
+  </data>
+  <data name="Tray_StopBackup" xml:space="preserve">
+    <value>Stop Background Backup</value>
+  </data>
+  <data name="Tray_CloseWindow" xml:space="preserve">
+    <value>Close to Tray</value>
+  </data>
+  <data name="Home_WelcomeTitle" xml:space="preserve">
+    <value>Welcome to Pango</value>
+  </data>
+  <data name="Notifications_Header" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="ExpirationAlerts_Label" xml:space="preserve">
+    <value>Password expiration alerts</value>
+  </data>
+  <data name="ExpirationAlerts_Description" xml:space="preserve">
+    <value>Show warnings when passwords are about to expire</value>
+  </data>
+  <data name="WarnBefore_Label" xml:space="preserve">
+    <value>Warn before</value>
+  </data>
+  <data name="ExpirationDate_Label" xml:space="preserve">
+    <value>Expiration Date</value>
+  </data>
+  <data name="ExpirationDate_Placeholder" xml:space="preserve">
+    <value>Select a date (optional)</value>
+  </data>
+  <data name="Status_ExpiringSoon" xml:space="preserve">
+    <value>Expiring soon</value>
+  </data>
+  <data name="Status_Expired" xml:space="preserve">
+    <value>Expired</value>
+  </data>
+  <data name="Status_Valid" xml:space="preserve">
+    <value>Valid</value>
+  </data>
+  <data name="Toast_Expiring_Title" xml:space="preserve">
+    <value>Passwords expiring soon!</value>
+  </data>
+  <data name="Toast_Expiring_Body" xml:space="preserve">
+    <value>You have passwords that require attention.</value>
+  </data>
+  <data name="InApp_Expiring_Message" xml:space="preserve">
+    <value>{0} password(s) will expire soon.</value>
+  </data>
+  <data name="InApp_Expired_Message" xml:space="preserve">
+    <value>{0} password(s) have already expired!</value>
+  </data>
+  <data name="CopyingData" xml:space="preserve">
+    <value>Copying data...</value>
+  </data>
+  <data name="UpdatingConfiguration" xml:space="preserve">
+    <value>Updating configuration...</value>
+  </data>
+  <data name="DataFolderChangeFailed" xml:space="preserve">
+    <value>Failed to change data folder</value>
+  </data>
+  <data name="PleaseDoNotCloseApp" xml:space="preserve">
+    <value>Please don't close the app</value>
+  </data>
+  <data name="ChangeDataFolder" xml:space="preserve">
+    <value>Change data folder</value>
+  </data>
+  <data name="ChangeDataFolder_Confirmation" xml:space="preserve">
+    <value>Are you sure you want to change the data storage location?</value>
+  </data>
+  <data name="ShowFavorites" xml:space="preserve">
+    <value>Show favorites</value>
+  </data>
+  <data name="ExpirationAlert_Header" xml:space="preserve">
+    <value>User {0} has password(s) that are expired or about to expire:</value>
+  </data>
+  <data name="ExpirationAlert_Expired" xml:space="preserve">
+    <value>- {0}: Expired {1} days ago ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresToday" xml:space="preserve">
+    <value>- {0}: Expires today ({1}).</value>
+  </data>
+  <data name="ExpirationAlert_ExpiresIn" xml:space="preserve">
+    <value>- {0}: Expires in {1} days ({2}).</value>
+  </data>
+  <data name="ExpirationAlert_Title" xml:space="preserve">
+    <value>Password Expiration Alert</value>
+  </data>
+  <data name="WindowsNotifications_Label" xml:space="preserve">
+    <value>Windows notifications (Toast)</value>
+  </data>
+  <data name="ShowWindowOnStartup_Label" xml:space="preserve">
+    <value>Show alert window on startup</value>
+  </data>
+  <data name="Expiring_Summary_Header" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="Expiring_Summary_Expiring" xml:space="preserve">
+    <value>{0} expiring soon</value>
+  </data>
+  <data name="Expiring_Summary_Expired" xml:space="preserve">
+    <value>{0} expired</value>
+  </data>
+  <data name="Expiring_Summary_LoginPrompt" xml:space="preserve">
+    <value>Please log in to view details.</value>
+  </data>
+  <data name="Expiring_Detail_Header" xml:space="preserve">
+    <value>Expiring passwords</value>
+  </data>
+  <data name="Expiring_Detail_Expired" xml:space="preserve">
+    <value>{0} (Expired {1}d ago)</value>
+  </data>
+  <data name="Expiring_Detail_ExpiresToday" xml:space="preserve">
+    <value>{0} (Expires today)</value>
+  </data>
+  <data name="Expiring_Detail_Expiring" xml:space="preserve">
+    <value>{0} (Expires in {1}d)</value>
+  </data>
+  <data name="ShowExpirationList_Button" xml:space="preserve">
+    <value>Show list of expiring passwords</value>
+  </data>
+  <data name="ToggleStar" xml:space="preserve">
+    <value>Toggle favorite</value>
   </data>
 </root>

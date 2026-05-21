@@ -1,18 +1,25 @@
-﻿namespace Pango.Application.Models;
+﻿using Pango.Domain.Common;
+using System.Diagnostics;
+
+namespace Pango.Application.Models;
 
 /// <summary>
-/// 
+/// Data Transfer Object for PangoPassword. Keeps data encrypted in RAM.
 /// </summary>
-public class PangoPasswordDto : DtoBase
+public class PangoPasswordDto : DtoBase, IDisposable
 {
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    private readonly RamProtectedString _protectedValue;
+
     public PangoPasswordDto()
     {
-        Value = string.Empty;
+        _protectedValue = new RamProtectedString(string.Empty);
         Target = string.Empty;
         UserName = string.Empty;
         Name = string.Empty;
         Login = string.Empty;
-        Properties = new();
+        Star = false;
+        Properties = [];
         CatalogPath = string.Empty;
         LocationPath = string.Empty;
     }
@@ -33,9 +40,13 @@ public class PangoPasswordDto : DtoBase
     public Dictionary<string, string> Properties { get; set; }
 
     /// <summary>
-    /// Encrypted value of the password
+    /// Gets or sets the password value.
     /// </summary>
-    public string Value { get; set; }
+    public string Value
+    {
+        get => _protectedValue.GetDecryptedValue();
+        set => _protectedValue.SetPlaintextValue(value);
+    }
 
     /// <summary>
     /// A resource that the password is for
@@ -51,7 +62,10 @@ public class PangoPasswordDto : DtoBase
     /// Indicates if this model is a dummy for keeping the catalog
     /// </summary>
     public bool IsCatalog { get; set; }
-
+    /// <summary>
+    /// 
+    /// </summary>
+    public bool Star { get; set; }
     /// <summary>
     /// 
     /// </summary>
@@ -71,4 +85,10 @@ public class PangoPasswordDto : DtoBase
     /// Presents the path of the file where the password is located
     /// </summary>
     public string LocationPath { get; set; }
+
+    public void Dispose()
+    {
+        _protectedValue.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

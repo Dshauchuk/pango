@@ -4,6 +4,7 @@ using Pango.Application.Common.Interfaces;
 using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
+using Pango.Desktop.Uwp.Core.Navigation;
 using Pango.Desktop.Uwp.Core.Utility;
 using Pango.Desktop.Uwp.Core.Utility.Contracts;
 using Pango.Desktop.Uwp.Dialogs;
@@ -15,7 +16,6 @@ using Pango.Infrastructure.Services;
 using Pango.Persistence;
 using Pango.Persistence.File;
 using Serilog;
-using System.IO;
 using Windows.Storage;
 
 namespace Pango.Desktop.Uwp;
@@ -26,9 +26,24 @@ public static class DependencyInjection
     {
         TypeAdapterConfig<PangoPasswordListItemDto, PangoExplorerItem>
         .NewConfig()
-        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File);
+        .Map(dest => dest.Type, src => src.IsCatalog ? PangoExplorerItem.ExplorerItemType.Folder : PangoExplorerItem.ExplorerItemType.File)
+        .Map(dest => dest.ExpirationDate, src => GetExpirationDateFromProperties(src.Properties))
+        .Map(dest => dest.IsStar, src => src.Star);
 
         return services;
+    }
+
+    private static DateTimeOffset? GetExpirationDateFromProperties(System.Collections.Generic.Dictionary<string, string> properties)
+    {
+        if (properties != null && properties.TryGetValue(Application.Common.PasswordProperties.ExpirationDate, out var dateStr))
+        {
+            if (DateTimeOffset.TryParse(dateStr, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind, out var parsedDate))
+                return parsedDate;
+
+            if (DateTimeOffset.TryParse(dateStr, System.Globalization.CultureInfo.CurrentCulture, System.Globalization.DateTimeStyles.RoundtripKind, out parsedDate))
+                return parsedDate;
+        }
+        return null;
     }
 
     public static IServiceCollection RegisterViewModels(this IServiceCollection services)
@@ -42,14 +57,16 @@ public static class DependencyInjection
             .AddSingleton<SettingsViewModel>()
             .AddSingleton<PasswordsViewModel>()
             .AddSingleton<SignInViewModel>()
-            .AddSingleton<EditPasswordCatalogDialogViewModel>()
-            .AddSingleton<PasswordDetailsDialogViewModel>()
-            .AddSingleton<ChangePasswordDialogViewModel>()
-            .AddSingleton<ExportDialogViewModel>()
-            .AddSingleton<ExportCompletedDialogViewModel>()
+            .AddTransient<EditPasswordCatalogDialogViewModel>()
+            .AddTransient<PasswordDetailsDialogViewModel>()
+            .AddTransient<ChangePasswordDialogViewModel>()
+            .AddTransient<ExportDialogViewModel>()
+            .AddTransient<ExportCompletedDialogViewModel>()
             .AddSingleton<ExportImportViewModel>()
-            .AddSingleton<ImportDialogViewModel>()
-            .AddSingleton<UserViewModel>();
+            .AddTransient<ImportDialogViewModel>()
+            .AddSingleton<UserViewModel>()
+            .AddSingleton<GeneratePasswordViewModel>()
+            .AddTransient<GeneratePasswordDialogViewModel>();
 
         return services;
     }
@@ -77,10 +94,13 @@ public static class DependencyInjection
                 loggingBuilder.AddSerilog(dispose: true));
 
         services.AddSingleton<IAppIdleService, AppIdleService>();
+        services.AddSingleton<IStartupService, StartupService>();
+        services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IPasswordGeneratorSettingsService, PasswordGeneratorSettingsService>();
 
         // DS
         // TODO: move to the config file
-        services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 2 }));
+        services.AddSingleton<IAppOptions>((s) => new AppOptions(new FileOptions() { PasswordsPerFile = 20 }));
 
         return services;
     }

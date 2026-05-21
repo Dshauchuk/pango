@@ -16,6 +16,7 @@
     
     <Grid IsTabStop="False">
         <Pivot IsTabStop="False" 
+               IsLocked="True"
                SelectedIndex="{Binding SignInStepIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConvereter}, ConverterParameter=reverse}">
             <PivotItem>
@@ -40,8 +41,7 @@
                                   SelectedValue="{Binding Path=SelectedUser, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
                             <ListView.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <StackPanel Background="Transparent" 
-                                            Orientation="Horizontal" />
+                                    <ItemsStackPanel Orientation="Horizontal" />
                                 </ItemsPanelTemplate>
                             </ListView.ItemsPanel>
 
@@ -155,7 +155,7 @@
                                  IsTapEnabled="True" 
                                  IsTabStop="True"
                                  x:Name="PasscodePasswordBox"
-                                 KeyDown="PasscodePasswordBox_KeyDown"
+                                 KeyDown="PasscodePasswordBox_KeyDownAsync"
                                  Password="{Binding Passcode, Mode=TwoWay}"
                                  PlaceholderText="{loc:StringResource Key=EnterMastercode}">
                     </PasswordBox>

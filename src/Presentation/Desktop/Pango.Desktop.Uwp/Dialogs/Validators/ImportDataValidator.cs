@@ -3,13 +3,12 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Pango.Desktop.Uwp.Dialogs.Validators;
 
-public class ImportDataValidator : ObservableValidator
+public partial class ImportDataValidator : ObservableValidator
 {
     private string _masterPassword = string.Empty;
 
     public ImportDataValidator()
     {
-        ValidateAllProperties();
     }
 
     [Required]

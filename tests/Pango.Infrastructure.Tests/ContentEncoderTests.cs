@@ -1,9 +1,4 @@
-﻿using Moq;
-using Pango.Application.Common.Exceptions;
-using Pango.Application.Common.Interfaces.Services;
-using Pango.Infrastructure.Services;
-
-namespace Pango.Infrastructure.Tests;
+﻿namespace Pango.Infrastructure.Tests;
 
 //public class ContentEncoderTests
 //{

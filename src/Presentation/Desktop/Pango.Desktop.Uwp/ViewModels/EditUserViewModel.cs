@@ -2,16 +2,17 @@
 using CommunityToolkit.Mvvm.Messaging;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Pango.Application.Common;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
 using Pango.Desktop.Uwp.Mvvm.Messages;
+using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels.Validators;
-using System.Threading.Tasks;
 
 namespace Pango.Desktop.Uwp.ViewModels;
 
 [AppView(AppView.EditUser)]
-public sealed class EditUserViewModel : ViewModelBase
+public sealed partial class EditUserViewModel : ViewModelBase
 {
     #region Fields
 
@@ -21,13 +22,13 @@ public sealed class EditUserViewModel : ViewModelBase
 
     #endregion
 
-    public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger): base(logger)
+    public EditUserViewModel(ISender sender, ILogger<EditUserViewModel> logger) : base(logger)
     {
         _sender = sender;
         _userValidator = new();
 
         OpenSignInViewCommand = new RelayCommand(OnOpenSignInView);
-        SaveUserComand = new RelayCommand(OnSaveUser);
+        SaveUserCommand = new RelayCommand(OnSaveUser);
     }
 
     #region Properties
@@ -43,7 +44,7 @@ public sealed class EditUserViewModel : ViewModelBase
     #region Commands
 
     public RelayCommand OpenSignInViewCommand { get; }
-    public RelayCommand SaveUserComand { get; }
+    public RelayCommand SaveUserCommand { get; }
 
     #endregion
 
@@ -52,6 +53,13 @@ public sealed class EditUserViewModel : ViewModelBase
     public override async Task OnNavigatedToAsync(object? parameter)
     {
         await base.OnNavigatedToAsync(parameter);
+
+        Clear();
+    }
+
+    public override async Task OnNavigatedFromAsync(object? parameter)
+    {
+        await base.OnNavigatedFromAsync(parameter);
 
         Clear();
     }
@@ -71,14 +79,28 @@ public sealed class EditUserViewModel : ViewModelBase
 
         if (!UserValidator.HasErrors)
         {
-            await _sender.Send(new RegisterUserCommand(UserValidator.UserName, UserValidator.Password));
+            var result = await _sender.Send(new RegisterUserCommand(UserValidator.UserName, UserValidator.Password));
+
+            if (result.IsError)
+            {
+                if (result.Errors.Any(e => e.Code == ApplicationErrors.User.TooManyUsers))
+                {
+                    WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("TooManyUsers"), AppNotificationType.Warning));
+                }
+                else
+                {
+                    WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(ViewResourceLoader.GetString("UserRegistrationFailed"), AppNotificationType.Error));
+                }
+                return;
+            }
+
             OnOpenSignInView();
         }
     }
 
     private void OnOpenSignInView()
     {
-        WeakReferenceMessenger.Default.Send<NavigationRequstedMessage>(new NavigationRequstedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn, AppView.EditUser)));
+        WeakReferenceMessenger.Default.Send<NavigationRequestedMessage>(new NavigationRequestedMessage(new Mvvm.Models.NavigationParameters(Core.Enums.AppView.SignIn, AppView.EditUser)));
     }
 
     #endregion

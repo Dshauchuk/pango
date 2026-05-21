@@ -6,31 +6,22 @@ using Pango.Application.Common.Interfaces;
 using Pango.Domain.Entities;
 using Pango.Domain.Enums;
 
-
 namespace Pango.Persistence.File;
 
-public abstract class FileRepositoryBase<T>
+public abstract class FileRepositoryBase<T>(
+    IContentEncoder contentEncoder,
+    IAppDomainProvider appDomainProvider,
+    IAppOptions appOptions,
+    ILogger logger)
 {
-    private readonly IContentEncoder _contentEncoder;
-    private readonly IAppDomainProvider _appDomainProvider;
-    private readonly IAppOptions _appOptions;
-    private SemaphoreSlim _semaphore = new(1);
-
-    public FileRepositoryBase(
-        IContentEncoder contentEncoder,
-        IAppDomainProvider appDomainProvider,
-        IAppOptions appOptions,
-        ILogger logger)
-    {
-        _contentEncoder = contentEncoder;
-        _appDomainProvider = appDomainProvider;
-        _appOptions = appOptions;
-        Logger = logger;
-    }
+    private readonly IContentEncoder _contentEncoder = contentEncoder;
+    private readonly IAppDomainProvider _appDomainProvider = appDomainProvider;
+    private readonly IAppOptions _appOptions = appOptions;
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
 
     #region Properties
 
-    protected ILogger Logger { get; init; }
+    protected ILogger Logger { get; init; } = logger;
     protected abstract string DirectoryName { get; }
 
     #endregion
@@ -39,47 +30,50 @@ public abstract class FileRepositoryBase<T>
 
     protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(IEnumerable<string> filePaths, EncodingOptions encodingOptions)
     {
-        List<T> items = [];
+        var results = new System.Collections.Concurrent.ConcurrentBag<T>();
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
-        foreach (string file in filePaths)
+        await Parallel.ForEachAsync(filePaths, parallelOptions, async (file, token) =>
         {
             var package = await ReadDataPackageAsync(file, encodingOptions.Key, encodingOptions.Salt);
-
-            if (package is null)
+            if (package != null)
             {
-                continue;
+                var items = await ProcessDataPackageAsync(package);
+                foreach (var item in items)
+                {
+                    results.Add(item);
+                }
             }
+        });
 
-            items.AddRange(await ProcessDataPackageAsync(package));
-        }
-
-        return items;
+        return [.. results];
     }
 
     protected async Task<IEnumerable<T>> ExtractAllItemsForUserAsync(string directoryPath, EncodingOptions encodingOptions)
     {
-        IEnumerable<string> filePaths = FileRepositoryBase<T>.ListRepositoryFiles(directoryPath);
-
+        IEnumerable<string> filePaths = ListRepositoryFiles(directoryPath);
         return await ExtractAllItemsForUserAsync(filePaths, encodingOptions);
     }
 
     protected async Task SaveItemsForUserAsync(IEnumerable<T> items, string ownerName, string directoryPath, EncodingOptions encodingOptions)
     {
         IEnumerable<ContentPackage> contentParts = PrepareContent(items, ownerName);
+        var contentPartsList = contentParts.Select((part, idx) => new { part, index = idx + 1 }).ToList();
+        var usedFilesBag = new System.Collections.Concurrent.ConcurrentBag<string>();
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount };
 
-        int packageIndex = 1;
-        List<string> usedFiles = [];
-        foreach(ContentPackage contentPart in contentParts)
+        await Parallel.ForEachAsync(contentPartsList, parallelOptions, async (item, token) =>
         {
-            string filePath = Path.Combine(directoryPath, $"{contentPart.Id}_p{packageIndex++}{FileRepositoryBase<T>.DefineFileExtension()}");
-            await WriteDataPackageAsync(contentPart, filePath, encodingOptions.Key, encodingOptions.Salt);
-            usedFiles.Add(filePath);
-        }
+            string filePath = Path.Combine(directoryPath, $"{item.part.Id}_p{item.index}{DefineFileExtension()}");
+            await WriteDataPackageAsync(item.part, filePath, encodingOptions.Key, encodingOptions.Salt);
+            usedFilesBag.Add(filePath);
+        });
 
-        IEnumerable<string> allFiles = FileRepositoryBase<T>.ListRepositoryFiles(directoryPath);
+        List<string> usedFiles = [.. usedFilesBag];
+        IEnumerable<string> allFiles = ListRepositoryFiles(directoryPath);
         IEnumerable<string> uselessFiles = allFiles.Except(usedFiles);
 
-        foreach(string fileToRemove in uselessFiles)
+        foreach (string fileToRemove in uselessFiles)
         {
             System.IO.File.Delete(fileToRemove);
         }
@@ -108,15 +102,11 @@ public abstract class FileRepositoryBase<T>
 
     #region Private Methods
 
-    private Task<IEnumerable<T>> ProcessDataPackageAsync(ContentPackage fileContent)
+    private static Task<IEnumerable<T>> ProcessDataPackageAsync(ContentPackage fileContent)
     {
-        if(fileContent is null)
-        {
-            return Task.FromResult(Enumerable.Empty<T>());
-        }
+        if (fileContent is null) return Task.FromResult(Enumerable.Empty<T>());
 
-        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? Enumerable.Empty<T>();
-
+        IEnumerable<T> data = fileContent.Data as IEnumerable<T> ?? [];
         return Task.FromResult(data);
     }
 
@@ -125,16 +115,11 @@ public abstract class FileRepositoryBase<T>
         try
         {
             byte[] encryptedFileContent = await ReadFileContentAsync(filePath);
-            var package = await _contentEncoder.DecryptAsync<ContentPackage>(encryptedFileContent, key, salt);
-
-            // todo: verify if the package id matches the file
-
-            return package;
+            return await _contentEncoder.DecryptAsync<ContentPackage>(encryptedFileContent, key, salt);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "Cannot read data package from \"{filePath}\"", filePath);
-
             return null;
         }
     }
@@ -142,93 +127,73 @@ public abstract class FileRepositoryBase<T>
     private async Task WriteDataPackageAsync(ContentPackage package, string filePath, string key, string salt)
     {
         byte[] content = await _contentEncoder.EncryptAsync(package, key, salt);
-        await WriteFileContentAsync(filePath, content);
+        await FileRepositoryBase<T>.WriteFileContentAsync(filePath, content);
     }
 
-    private IEnumerable<ContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items, string userName)
+    private List<ContentPackage> PrepareContent<TContent>(IEnumerable<TContent> items, string userName)
     {
-        List<ContentPackage> fileContents = new(100);
+        List<ContentPackage> fileContents = [];
         DateTimeOffset now = DateTimeOffset.UtcNow;
 
         foreach (var chunk in items.ToList().ChunkBy(DefineCountOfItemsPerFile()))
         {
-            ContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().FullName ?? string.Empty, chunk.Count, chunk, now);
+            ContentPackage fileContent = new(userName, DefineContentType(), chunk.GetType().AssemblyQualifiedName ?? string.Empty, chunk.Count, chunk, now);
             fileContents.Add(fileContent);
         }
 
         return fileContents;
     }
 
-    private static IEnumerable<string> ListRepositoryFiles(string folderPath)
+    private static string[] ListRepositoryFiles(string folderPath)
     {
         if (!Directory.Exists(folderPath))
         {
             Directory.CreateDirectory(folderPath);
             return [];
         }
-        else
-        {
-            return Directory.GetFiles(folderPath, $"*{FileRepositoryBase<T>.DefineFileExtension()}");
-        }
+        return Directory.GetFiles(folderPath, $"*{DefineFileExtension()}");
     }
 
     private async Task<byte[]> ReadFileContentAsync(string filePath)
     {
         try
         {
-            await _semaphore.WaitAsync();
-
             if (!System.IO.File.Exists(filePath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
+                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnknownError, $"An error occurred while reading data: directory \"{filePath}\" cannot be created because of invalid path"));
                 System.IO.File.Create(filePath).Dispose();
+
+                return [];
             }
 
-            byte[] result;
-            using (FileStream stream = System.IO.File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            {
-                result = new byte[stream.Length];
-                await stream.ReadAsync(result, 0, (int)stream.Length);
-            }
-
-            return result;
+            return await System.IO.File.ReadAllBytesAsync(filePath);
         }
         catch (Exception ex)
         {
             Logger.LogError(ex, "An error occurred while reading data: {Message}", ex.Message);
             throw;
         }
-        finally
-        {
-            _semaphore.Release();
-        }
     }
 
-    private async Task WriteFileContentAsync(string filePath, byte[] content)
-    {
-        await _semaphore.WaitAsync();
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, SemaphoreSlim> _fileLocks = new();
 
+    private static async Task WriteFileContentAsync(string filePath, byte[] content)
+    {
+        var fileLock = _fileLocks.GetOrAdd(filePath, _ => new SemaphoreSlim(1, 1));
+
+        await fileLock.WaitAsync();
         try
         {
-            if (!System.IO.File.Exists(filePath))
+            string tempPath = filePath + ".tmp";
+            await using (FileStream sourceStream = new(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, FileOptions.Asynchronous))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath) ?? throw new PangoException(ApplicationErrors.Data.UnkownError, $"An error occurred while saving data: directory \"{filePath}\" cannot be created because of invalid path"));
-                System.IO.File.Create(filePath).Dispose();
+                await sourceStream.WriteAsync(content);
             }
-
-            using (FileStream sourceStream = new(filePath, FileMode.Truncate, FileAccess.Write, FileShare.None, bufferSize: 4096, useAsync: true))
-            {
-                await sourceStream.WriteAsync(content, 0, content.Length);
-            };
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "An error occurred while writing data: {Message}", ex.Message);
-            throw;
+            System.IO.File.Move(tempPath, filePath, true);
         }
         finally
         {
-            _semaphore.Release();
+            fileLock.Release();
         }
     }
 

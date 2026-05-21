@@ -3,26 +3,32 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Navigation;
 using Pango.Desktop.Uwp.Core.Attributes;
 using Pango.Desktop.Uwp.Core.Enums;
-using Pango.Desktop.Uwp.Core.Extensions;
 using Pango.Desktop.Uwp.Models;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Desktop.Uwp.Views.Abstract;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
+using Serilog;
 
 namespace Pango.Desktop.Uwp.Views;
 
+/// <summary>
+/// View for managing passwords and catalogs in a tree view structure.
+/// </summary>
 [AppView(AppView.PasswordsIndex)]
 public sealed partial class PasswordsView : PageBase
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PasswordsView"/> class.
+    /// </summary>
     public PasswordsView()
         : base(App.Host.Services.GetRequiredService<ILogger<PasswordsView>>())
     {
-        this.InitializeComponent();
+        InitializeComponent();
+        NavigationCacheMode = NavigationCacheMode.Required;
 
         DataContext = App.Host.Services.GetRequiredService<PasswordsViewModel>();
         PasswordsTreeView.ItemInvoked += PasswordsTreeView_ItemInvoked;
@@ -30,209 +36,259 @@ public sealed partial class PasswordsView : PageBase
 
     #region Overrides
 
+    /// <summary>
+    /// Registers message subscriptions for navigation requests.
+    /// </summary>
     protected override void RegisterMessages()
     {
         base.RegisterMessages();
-        WeakReferenceMessenger.Default.Register<NavigationRequstedMessage>(this, OnNavigationRequested);
+        WeakReferenceMessenger.Default.Register<NavigationRequestedMessage>(this, OnNavigationRequested);
+        WeakReferenceMessenger.Default.Register<SwitchPasswordTabMessage>(this, (r, m) =>
+        {
+            DispatcherQueue.TryEnqueue(() =>
+            {
+                PasswordsIndex_Pivot.SelectedIndex = m.Value;
+            });
+        });
     }
 
+    /// <summary>
+    /// Unregisters message subscriptions and event handlers to prevent memory leaks.
+    /// </summary>
     protected override void UnregisterMessages()
     {
         base.UnregisterMessages();
-        WeakReferenceMessenger.Default.Unregister<NavigationRequstedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<NavigationRequestedMessage>(this);
+        WeakReferenceMessenger.Default.Unregister<SwitchPasswordTabMessage>(this);
     }
 
     #endregion
 
     #region Event Handlers
 
-    private void PasswordsTreeView_ItemInvoked(Microsoft.UI.Xaml.Controls.TreeView sender, Microsoft.UI.Xaml.Controls.TreeViewItemInvokedEventArgs args)
+    /// <summary>
+    /// Handles tree view item invocation: updates the selected item in the view model.
+    /// </summary>
+    /// <param name="sender">The source TreeView control.</param>
+    /// <param name="args">Event data containing the invoked item.</param>
+    private void PasswordsTreeView_ItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
     {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-
-        if (viewModel is not null)
+        if (DataContext is PasswordsViewModel viewModel)
         {
             viewModel.SelectedItem = args.InvokedItem as PangoExplorerItem;
         }
     }
 
-    private void OnNavigationRequested(object recipient, NavigationRequstedMessage message)
+    /// <summary>
+    /// Handles navigation requests to switch between index and edit views via pivot selection.
+    /// </summary>
+    /// <param name="recipient">The message recipient instance.</param>
+    /// <param name="message">The navigation request message.</param>
+    private void OnNavigationRequested(object recipient, NavigationRequestedMessage message)
     {
-        Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        dispatcherQueue.TryEnqueue(() =>
+        DispatcherQueue.TryEnqueue(() =>
         {
-            switch (message.Value.NavigatedView)
+            if (message.Value.NavigatedView == AppView.EditPassword)
             {
-                case Core.Enums.AppView.EditPassword:
-                    PasswordsIndex_Pivot.SelectedIndex = 1;
-                    break;
-                case Core.Enums.AppView.PasswordsIndex:
-                    PasswordsIndex_Pivot.SelectedIndex = 0;
-                    break;
+                PasswordsIndex_Pivot.SelectedIndex = 1;
+            }
+            else if (message.Value.NavigatedView == AppView.PasswordsIndex)
+            {
+                PasswordsIndex_Pivot.SelectedIndex = 0;
             }
         });
     }
 
-    private void EditContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    /// <summary>
+    /// Handles Edit command from context menu: executes view model's edit password command.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void EditContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.EditPasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
-    }
-
-    private void SeeContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.SeePasswordCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
-    }
-
-
-    private void DeleteContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        viewModel?.DeleteCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
-    }
-
-    private void AddPassword_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
-    {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-
-        if(viewModel is not null)
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
         {
-            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
+            viewModel.EditPasswordCommand.Execute(item);
+        }
+    }
+
+    /// <summary>
+    /// Handles See command from context menu: executes view model's view password command.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void SeeContextMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
+        {
+            viewModel.SeePasswordCommand.Execute(item);
+        }
+    }
+
+    /// <summary>
+    /// Handles Delete command from context menu: executes view model's delete command.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void DeleteContextMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
+        {
+            viewModel.DeleteCommand.Execute(item);
+        }
+    }
+
+    /// <summary>
+    /// Handles Add Password command from catalog context menu.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void AddPassword_CatalogContextMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
+        {
+            viewModel.SelectedItem = item;
             viewModel.CreatePasswordCommand.Execute(null);
         }
     }
 
-    private void AddCatalog_CatalogContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    /// <summary>
+    /// Handles Add Catalog command from catalog context menu.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void AddCatalog_CatalogContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        
-        if(viewModel is not null)
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
         {
-            viewModel.SelectedItem = ((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem;
+            viewModel.SelectedItem = item;
             viewModel.CreateCatalogCommand.Execute(null);
         }
     }
 
-    private void CopyPassword_PasswordContextMenuItem_Click(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    /// <summary>
+    /// Handles Copy Password command from password context menu.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Event data.</param>
+    private void CopyPassword_PasswordContextMenuItem_Click(object sender, RoutedEventArgs e)
     {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-
-        if(viewModel is not null)
+        if (DataContext is PasswordsViewModel viewModel &&
+            ((MenuFlyoutItem)e.OriginalSource).DataContext is PangoExplorerItem item)
         {
-            viewModel.CopyPasswordToClipboardCommand.Execute(((MenuFlyoutItem)e.OriginalSource).DataContext as PangoExplorerItem);
+            viewModel.CopyPasswordToClipboardCommand.Execute(item);
         }
     }
 
-    private async void Password_DoubleTapped(object sender, Microsoft.UI.Xaml.Input.DoubleTappedRoutedEventArgs e)
+    /// <summary>
+    /// Handles single tap on a password item to explicitly set the SelectedItem.
+    /// </summary>
+    private void Password_Tapped(object sender, TappedRoutedEventArgs e)
     {
-        if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item })
+        if (sender is FrameworkElement { DataContext: PangoExplorerItem item } &&
+            DataContext is PasswordsViewModel viewModel)
         {
-            await ((PasswordsViewModel)DataContext).ShowPasswordDetailsAsync(item);
+            viewModel.SelectedItem = item;
         }
     }
 
-    private async void PasswordsTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    /// <summary>
+    /// Handles double-tap on password item: shows password details asynchronously.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">Double-tap event arguments.</param>
+    private async void Password_DoubleTappedAsync(object _, DoubleTappedRoutedEventArgs e)
     {
-        PasswordsViewModel? viewModel = DataContext as PasswordsViewModel;
-        PangoExplorerItem? item = args.Items.FirstOrDefault() as PangoExplorerItem;
-
-        if (viewModel is not null && item is not null)
+        if (e.OriginalSource is FrameworkElement { DataContext: PangoExplorerItem item } &&
+            DataContext is PasswordsViewModel viewModel)
         {
-            PangoExplorerItem? newParent = args.NewParentItem as PangoExplorerItem;
-            if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
-            {
-                newParent = MoveItemToParentOfFile(item, newParent, viewModel.Passwords);
-            }
-            else
-            {
-                // for File type items are alrady ordered
-                OrderByTypeAfterElementMoved(newParent?.Children ?? viewModel.Passwords, item);
-            }
+            await viewModel.ShowPasswordDetailsAsync(item);
+        }
+    }
 
-            SetNewParent(item, newParent);
+    /// <summary>
+    /// Handles completion of drag-and-drop operation in the tree view with validation and deferred UI update.
+    /// </summary>
+    /// <param name="sender">The source TreeView control.</param>
+    /// <param name="args">Event data containing dragged items and new parent.</param>
+    private async void PasswordsTreeView_DragItemsCompletedAsync(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    {
+        ArgumentNullException.ThrowIfNull(sender);
+        Log.Logger?.Debug("Drag-and-drop completed: {ItemCount} item(s)", args.Items.Count);
 
+        if (DataContext is not PasswordsViewModel viewModel || args.Items.Count == 0)
+            return;
+
+        if (args.Items[0] is not PangoExplorerItem item)
+            return;
+
+        var newParent = args.NewParentItem as PangoExplorerItem;
+
+        // Prevent cyclical moves: item cannot be dropped into itself or its descendants
+        if (newParent != null && IsDescendantOrSelf(item, newParent))
+        {
+            Log.Logger?.Warning("Invalid drop: target is descendant of dragged item");
+            viewModel.UpdateListCommand.Execute(null);
+            return;
+        }
+
+        // If dropped on a file, use its parent folder instead
+        if (newParent?.Type == PangoExplorerItem.ExplorerItemType.File)
+        {
+            newParent = newParent.Parent;
+        }
+
+        // Validate folder name uniqueness when moving/creating folders
+        if (item.IsFolder && newParent != null)
+        {
+            var siblings = newParent?.Children ?? viewModel.Passwords;
+            bool folderExists = siblings.Any(s =>
+                s.IsFolder &&
+                s.Id != item.Id &&
+                s.Name.Equals(item.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (folderExists)
+            {
+                Log.Logger?.Warning("Folder with name '{FolderName}' already exists in target location", item.Name);
+                viewModel.UpdateListCommand.Execute(null);
+                return;
+            }
+        }
+
+        // Defer UI update to prevent TreeView corruption during reordering
+        DispatcherQueue.TryEnqueue(async () =>
+        {
+            await Task.Delay(150);
             await viewModel.CommitPasswordMovementAsync(item, newParent);
+            Log.Logger?.Information("Password item '{ItemName}' moved successfully", item.Name);
+        });
+    }
+
+    /// <summary>
+    /// Checks if targetParent is a descendant of draggedItem to prevent cyclical moves.
+    /// </summary>
+    /// <param name="draggedItem">The item being dragged.</param>
+    /// <param name="targetParent">The potential new parent item.</param>
+    /// <returns>True if targetParent is the draggedItem or its descendant; otherwise, false.</returns>
+    private static bool IsDescendantOrSelf(PangoExplorerItem draggedItem, PangoExplorerItem targetParent)
+    {
+        if (draggedItem.Id == targetParent.Id)
+            return true;
+
+        var current = targetParent.Parent;
+        while (current != null)
+        {
+            if (current.Id == draggedItem.Id)
+                return true;
+            current = current.Parent;
         }
+        return false;
     }
 
     #endregion
-
-    /// <summary>
-    /// Sets new parent for the passed <paramref name="item"/>
-    /// </summary>
-    /// <param name="item">Item, for which new parent should be set</param>
-    /// <param name="newParent">New parent for the passed <paramref name="item"/></param>
-    private static void SetNewParent(PangoExplorerItem item, PangoExplorerItem? newParent)
-    {
-        item.Parent = newParent;
-        item.RecalculateCatalogPath();
-    }
-
-    /// <summary>
-    /// Orders passed <paramref name="movedElement"/> within the <paramref name="passwords"/> collection
-    /// </summary>
-    /// <param name="passwords">List of passwords (one of them is <paramref name="movedElement"/>)</param>
-    /// <param name="movedElement">Password, that was added to the <paramref name="passwords"/> collection and should be ordered within the collection</param>
-    private static void OrderByTypeAfterElementMoved(ObservableCollection<PangoExplorerItem> passwords, PangoExplorerItem movedElement)
-    {
-        int currentElementIndex = passwords.IndexOf(movedElement);
-
-        int orderedElementIndex = GetOrderedItemIndex(passwords, movedElement);
-
-        // don't use ObservableCollection.Move, because it doesn't triggers tree to redraw
-        passwords.RemoveAt(currentElementIndex);
-        passwords.Insert(orderedElementIndex, movedElement);
-    }
-
-    /// <summary>
-    /// Returns index of ordered <paramref name="item"/> within the passed <paramref name="passwords"/> collection
-    /// </summary>
-    /// <param name="passwords">List of passwords (one of them is <paramref name="item"/>)</param>
-    /// <param name="item"></param>
-    /// <returns>Index of ordered <paramref name="item"/> within the passed <paramref name="passwords"/> collection</returns>
-    private static int GetOrderedItemIndex(IEnumerable<PangoExplorerItem> passwords, PangoExplorerItem item)
-    {
-        int orderedElementIndex = passwords.OrderByDescending(p => p.Type, Comparer<PangoExplorerItem.ExplorerItemType>.Create((e1, e2) =>
-        {
-            if (e1 == PangoExplorerItem.ExplorerItemType.Folder && e2 == PangoExplorerItem.ExplorerItemType.File)
-            {
-                return 1;
-            }
-            if (e1 == PangoExplorerItem.ExplorerItemType.File && e2 == PangoExplorerItem.ExplorerItemType.Folder)
-            {
-                return -1;
-            }
-            return 0;
-        })).ThenBy(ps => ps.Name).ToList().IndexOf(item);
-
-        return orderedElementIndex == -1 ? 0 : orderedElementIndex;
-    }
-
-    /// <summary>
-    /// Move passed <paramref name="item"/> from <paramref name="file"/> to <paramref name="file"/>'s Parent item. If <paramref name="file"/> doesn't have Parent - move item to the <paramref name="itemsSource"/>
-    /// </summary>
-    /// <param name="item">Item to move</param>
-    /// <param name="file">File, from which <paramref name="item"/> should be moved</param>
-    /// <param name="itemsSource">Collection of all passwords in tree format</param>
-    /// <returns>New parent of a passed <paramref name="item"/></returns>
-    private static PangoExplorerItem? MoveItemToParentOfFile(PangoExplorerItem item, PangoExplorerItem file, ObservableCollection<PangoExplorerItem> itemsSource)
-    {
-        file.Children.Remove(item);
-
-        ObservableCollection<PangoExplorerItem> targetCollection;
-        if (file.Parent is null)
-        {
-            targetCollection = itemsSource;
-        }
-        else
-        {
-            targetCollection = file.Parent.Children;
-        }
-
-        int orderedElementIndex = GetOrderedItemIndex(targetCollection.Union(new PangoExplorerItem[1] { item }), item);
-        targetCollection.Insert(orderedElementIndex, item);
-
-        return file.Parent;
-    }
 }

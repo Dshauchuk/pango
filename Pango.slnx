@@ -1,0 +1,46 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="ARM" />
+    <Platform Name="ARM64" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Common/">
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="dotnet-tools.json" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Core/">
+    <Project Path="src/Core/Pango.Application/Pango.Application.csproj" />
+    <Project Path="src/Core/Pango.Domain/Pango.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="src/Infrastructure/Pango.Infrastructure/Pango.Infrastructure.csproj" />
+    <Project Path="src/Infrastructure/Pango.Persistence.File/Pango.Persistence.File.csproj" />
+    <Project Path="src/Infrastructure/Pango.Persistence/Pango.Persistence.csproj" />
+  </Folder>
+  <Folder Name="/Presentation/">
+    <Project Path="src/Presentation/Desktop/Pango.Desktop.Uwp/Pango.Desktop.Uwp.csproj">
+      <Platform Solution="*|Any CPU" Project="x64" />
+      <Platform Solution="*|ARM" Project="x64" />
+      <Platform Solution="*|ARM64" Project="arm64" />
+      <Platform Solution="*|x64" Project="x64" />
+      <Platform Solution="*|x86" Project="x86" />
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/Services/">
+    <Project Path="src/Services/Pango.BackupService/Pango.BackupService.csproj" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="src/Shared/Pango.Shared/Pango.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Pango.Application.Tests/Pango.Application.Tests.csproj" />
+    <Project Path="tests/Pango.Infrastructure.Tests/Pango.Infrastructure.Tests.csproj" />
+    <Project Path="tests/Pango.Persistence.File.IntegrationTests/Pango.Persistence.File.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

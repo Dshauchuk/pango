@@ -1,6 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
+		<AssemblyTitle>Pango</AssemblyTitle>
+		<Product>Pango</Product>
+		<Company>ISI Division</Company>
+		<Copyright>Copyright © 2026 ISI Division</Copyright>
 		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
@@ -11,10 +15,9 @@
 		<PublishProfile>win-$(Platform).pubxml</PublishProfile>
 		<UseWinUI>true</UseWinUI>
 		<EnablePreviewMsixTooling>true</EnablePreviewMsixTooling>
-		<LangVersion>latest</LangVersion>
-		<Nullable>enable</Nullable>
 		<GenerateAppInstallerFile>False</GenerateAppInstallerFile>
 		<AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+		<PackageCertificateThumbprint>679B96D3AF7C38D5E9EF9D648708703CDFA397A6</PackageCertificateThumbprint>
 		<AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
 		<AppxAutoIncrementPackageRevision>False</AppxAutoIncrementPackageRevision>
 		<AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
@@ -23,30 +26,26 @@
 		<AppInstallerUri>D:\Projects\Pango\pango\src\Presentation\Desktop\Pango.Desktop.Uwp\AppPackages\Installer</AppInstallerUri>
 		<HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
 		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-		<PackageCertificateKeyFile>Pango.Desktop.Uwp_TemporaryKey.pfx</PackageCertificateKeyFile>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<Title>Pango</Title>
 	</PropertyGroup>
+
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|arm64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|arm64'">
-	  <GenerateAssemblyInfo>False</GenerateAssemblyInfo>
 	  <NoWarn>CA1416;</NoWarn>
 	</PropertyGroup>
 	
@@ -57,6 +56,7 @@
 		<Content Include="Assets\LargeTile.scale-150.png" />
 		<Content Include="Assets\LargeTile.scale-200.png" />
 		<Content Include="Assets\LargeTile.scale-400.png" />
+		<Content Include="Assets\logo.ico" />
 		<Content Include="Assets\logo.png" />
 		<Content Include="Assets\SmallTile.scale-100.png" />
 		<Content Include="Assets\SmallTile.scale-125.png" />
@@ -108,18 +108,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" Version="8.0.240109" />
-		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" Version="8.0.240109" />
-		<PackageReference Include="CommunityToolkit.WinUI.UI.Behaviors" Version="7.1.2" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
-		<PackageReference Include="Microsoft.WindowsAppSDK" Version="1.5.240607001" />
-		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.22621.756" />
-		<PackageReference Include="PInvoke.User32" Version="0.7.124" />
-		<PackageReference Include="Serilog" Version="4.0.0" />
-		<PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
-		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" />
+		<PackageReference Include="CommunityToolkit.WinUI.Behaviors" />
+		<PackageReference Include="CommunityToolkit.WinUI.Controls.SettingsControls" />
+		<PackageReference Include="H.NotifyIcon.WinUI" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" />
+		<PackageReference Include="Microsoft.Windows.SDK.BuildTools" />
+		<PackageReference Include="PInvoke.User32" />
+		<PackageReference Include="Serilog.Extensions.Logging" />
+		<PackageReference Include="Serilog.Sinks.File" />
 		<Manifest Include="$(ApplicationManifest)" />
 	</ItemGroup>
 
@@ -128,6 +125,7 @@
 		<ProjectReference Include="..\..\..\Core\Pango.Domain\Pango.Domain.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Infrastructure\Pango.Infrastructure.csproj" />
 		<ProjectReference Include="..\..\..\Infrastructure\Pango.Persistence.File\Pango.Persistence.File.csproj" />
+		<ProjectReference Include="..\..\..\Services\Pango.BackupService\Pango.BackupService.csproj" />
 	</ItemGroup>
 
 	<!-- Defining the "Msix" ProjectCapability here allows the Single-project MSIX Packaging Tools extension 
@@ -137,12 +135,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<!--<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<None Include="Package.appxmanifest">
 			<SubType>Designer</SubType>
-		</AppxManifest>-->
-		<AppxManifest Include="Package.Dev.appxmanifest">
+		</None>
+		<None Include="Package.Dev.appxmanifest">
 			<SubType>Designer</SubType>
-		</AppxManifest>
+		</None>
 	</ItemGroup>
 	
 	<!-- Embed all "Resources.resw" files in the "Strings" folder to the output folder. -->
@@ -152,11 +150,35 @@
 		</Content>
 	</ItemGroup>
 	<ItemGroup>
+	  <None Remove="Assets\logo.ico" />
 	  <None Remove="Dialogs\Views\ChangePasswordDialog.xaml" />
 	  <None Remove="Dialogs\Views\ExportCompletedDialog.xaml" />
 	  <None Remove="Dialogs\Views\ExportDialog.xaml" />
+	  <None Remove="Dialogs\Views\GeneratePasswordDialog.xaml" />
 	  <None Remove="Dialogs\Views\ImportDialog.xaml" />
 	  <None Remove="Views\ExportImportView.xaml" />
+	  <None Remove="Views\GeneratePasswordView.xaml" />
+	</ItemGroup>
+	<ItemGroup>
+	  <None Include="..\..\..\..\LICENSE">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+	<ItemGroup>
+	  <Content Update="Assets\logo.ico">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </Content>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Dialogs\Views\GeneratePasswordDialog.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Update="Views\GeneratePasswordView.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Page>
 	</ItemGroup>
 	<ItemGroup>
 	  <Page Update="Dialogs\Views\ImportDialog.xaml">

@@ -1,52 +1,42 @@
 ﻿using CommunityToolkit.Mvvm.Messaging;
-using ErrorOr;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using Pango.Application.Common;
 using Pango.Application.Common.Interfaces.Services;
-using Pango.Application.UseCases.Data.Commands.Import;
 using Pango.Desktop.Uwp.Dialogs.Parameters;
 using Pango.Desktop.Uwp.Mvvm.Messages;
 using Pango.Desktop.Uwp.Mvvm.Models;
 using Pango.Desktop.Uwp.ViewModels;
 using Pango.Persistence.File;
-using System;
-using System.Text;
-using System.Threading.Tasks;
 using ImportDataValidator = Pango.Desktop.Uwp.Dialogs.Validators.ImportDataValidator;
 
 namespace Pango.Desktop.Uwp.Dialogs.ViewModels;
 
-public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
+public partial class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 {
     #region Fields
 
-    private readonly ISender _sender;
     private ImportDataValidator _validator;
     private ImportDataParameters? _parameters;
-    private readonly IPasswordHashProvider _passwordHashProvider;
+    private readonly ISender sender;
+    private readonly IDataImporter _dataImporter;
+    private bool _isInitialized = false;
 
     #endregion
 
-    public ImportDialogViewModel(ISender sender, IPasswordHashProvider passwordHashProvider, ILogger<ImportDialogViewModel> logger) : base(logger)
+    public ImportDialogViewModel(ISender sender, IDataImporter dataImporter, ILogger<ImportDialogViewModel> logger) : base(logger)
     {
         DialogContext = new DialogContext();
-
-        _sender = sender;
+        this.sender = sender;
+        _dataImporter = dataImporter;
         _validator = new();
         _validator.ErrorsChanged += Validator_ErrorsChanged;
-        _passwordHashProvider = passwordHashProvider;
     }
 
     #region Properties
 
     public IDialogContext DialogContext { get; }
-
-    public ImportDataValidator Validator 
-    {
-        get => _validator;
-        set => SetProperty(ref _validator, value);
-    }
+    public ImportDataValidator Validator { get => _validator; set => SetProperty(ref _validator, value); }
 
     #endregion
 
@@ -56,11 +46,15 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
     {
         await base.OnNavigatedToAsync(parameter);
 
+        if (_isInitialized && parameter == null)
+            return;
+
         ResetDialog();
 
         if (parameter is ImportDataParameters dialogParameters)
         {
             _parameters = dialogParameters;
+            _isInitialized = true;
         }
     }
 
@@ -68,44 +62,44 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     #region Public Methods
 
-    public bool CanSave()
-    {
-        return !Validator.HasErrors;
-    }
-
-    public Task OnCancelAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public bool CanSave() => !Validator.HasErrors;
+    public Task OnCancelAsync() => Task.CompletedTask;
 
     public async Task OnSaveAsync()
     {
-        if (_parameters is null)
+        if (_parameters is null) return;
+
+        string password = Validator.MasterPassword?.Trim() ?? string.Empty;
+        var encoding = new EncodingOptions(password, string.Empty);
+
+        try
         {
-            Logger.LogError("Cannot do the import: ImportDataParameters is null");
-            return;
+            // Try to decrypt content to validate password and get items
+            var options = new ImportOptions(encoding);
+            var content = await _dataImporter.ExtractContentAsync(_parameters.FilePath, options);
+
+            List<Domain.Entities.PangoPassword> allItems = [];
+            foreach (var package in content)
+            {
+                if (package.Data is IEnumerable<Domain.Entities.PangoPassword> items)
+                    allItems.AddRange(items);
+            }
+
+            // Create parameters with decrypted content and password
+            var selectiveParams = new ImportDataParametersWithPassword(_parameters.FilePath, password, allItems);
+
+            // Request navigation to the Selection Dialog
+            WeakReferenceMessenger.Default.Send(new NavigationRequestedMessage(
+                new NavigationParameters(Core.Enums.AppView.ExportImport, Core.Enums.AppView.ExportImport, selectiveParams)
+            ));
+
+            // Notify UI to open the specific dialog
+            WeakReferenceMessenger.Default.Send(new ImportPreviewReadyMessage(selectiveParams));
         }
-
-        byte[]? saltBytes = Encoding.UTF8.GetBytes(this.Validator.MasterPassword);
-        Array.Resize(ref saltBytes, 16);
-
-        string passwordHash = _passwordHashProvider.Hash(Validator.MasterPassword, saltBytes);
-        EncodingOptions encoding = new (passwordHash, Convert.ToBase64String(saltBytes));
-
-        ErrorOr<ImportResult> result = await _sender.Send(new ImportDataCommand(_parameters.FilePath, new ImportOptions(encoding)));
-
-        if (result.IsError)
+        catch (Exception)
         {
-            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage($"Import failed: {result.FirstError}", Core.Enums.AppNotificationType.Error));
-        }
-        else
-        {
-            int count = result.Value.Manifest.Contents[Domain.Enums.ContentType.Passwords];
-            string message = count == 1 ? ViewResourceLoader.GetString("ImportSingleCompleted_Message")
-                : string.Format(ViewResourceLoader.GetString("ImportCompleted_Message"), count);
-
-            WeakReferenceMessenger.Default.Send<InAppNotificationMessage>(new InAppNotificationMessage(message));
-            WeakReferenceMessenger.Default.Send<ImportCompletedMessage>(new ImportCompletedMessage(result.Value));
+            WeakReferenceMessenger.Default.Send(new InAppNotificationMessage(
+                ViewResourceLoader.GetString("Import_EncryptedArchiveError"), Core.Enums.AppNotificationType.Error));
         }
     }
 
@@ -115,11 +109,7 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private void ResetDialog()
     {
-        if (Validator != null)
-        {
-            Validator.ErrorsChanged -= Validator_ErrorsChanged;
-        }
-
+        Validator?.ErrorsChanged -= Validator_ErrorsChanged;
         Validator = new();
         Validator.ErrorsChanged += Validator_ErrorsChanged;
 
@@ -128,9 +118,10 @@ public class ImportDialogViewModel : ViewModelBase, IDialogViewModel
     }
 
     private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e)
-    {
-        DialogContext.RaiseDialogContentChanged(e);
-    }
+        => DialogContext.RaiseDialogContentChanged(e);
 
     #endregion
 }
+
+// Message to trigger the second dialog
+public class ImportPreviewReadyMessage(ImportDataParameters parameters) : CommunityToolkit.Mvvm.Messaging.Messages.ValueChangedMessage<ImportDataParameters>(parameters);

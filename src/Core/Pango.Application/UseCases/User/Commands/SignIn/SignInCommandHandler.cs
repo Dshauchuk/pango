@@ -8,18 +8,11 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.User.Commands.SignIn;
 
-public class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<bool>>
+public class SignInCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<SignInCommandHandler> logger) : IRequestHandler<SignInCommand, ErrorOr<bool>>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHashProvider _passwordHashProvider;
-    private readonly ILogger<SignInCommandHandler> _logger;
-
-    public SignInCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<SignInCommandHandler> logger)
-    {
-        _userRepository = userRepository;
-        _passwordHashProvider = passwordHashProvider;
-        _logger = logger;
-    }
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IPasswordHashProvider _passwordHashProvider = passwordHashProvider;
+    private readonly ILogger<SignInCommandHandler> _logger = logger;
 
     public async Task<ErrorOr<bool>> Handle(SignInCommand request, CancellationToken cancellationToken)
     {
@@ -30,7 +23,7 @@ public class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<bool>
             if (user is null)
                 return false;
 
-            return _passwordHashProvider.VerifyPassword(request.Password, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt));
+            return await Task.Run(() => _passwordHashProvider.VerifyPassword(request.Password, user.MasterPasswordHash, Convert.FromBase64String(user.PasswordSalt)));
         }
         catch(Exception ex)
         {

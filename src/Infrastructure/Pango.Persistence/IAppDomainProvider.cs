@@ -28,4 +28,15 @@ public interface IAppDomainProvider
     /// </summary>
     /// <returns></returns>
     string GetTempFolderPath();
+
+    /// <summary>
+    /// Returns a custom path for saving application data
+    /// </summary>
+    /// <returns></returns>
+    Task<string?> TryGetCustomDataFolderPathAsync();
+
+    /// <summary>
+    /// Clears the cached custom path to force a re-evaluation of the data folder location.
+    /// </summary>
+    void ResetCache();
 }

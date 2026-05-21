@@ -7,28 +7,34 @@ using Pango.Application.Common.Interfaces.Persistence;
 using Pango.Application.Common.Interfaces.Services;
 using Pango.Application.Models;
 using Pango.Domain.Entities;
+using System.Text.Json;
 
 namespace Pango.Application.UseCases.User.Commands.Register;
 
-public class RegisterUserCommandHandler
-: IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
+public class RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<RegisterUserCommandHandler> logger)
+    : IRequestHandler<RegisterUserCommand, ErrorOr<PangoUserDto>>
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IPasswordHashProvider _passwordHashProvider;
-    private readonly ILogger<RegisterUserCommandHandler> _logger;
+    private const int MaxUserCount = 5;
 
-    public RegisterUserCommandHandler(IUserRepository userRepository, IPasswordHashProvider passwordHashProvider, ILogger<RegisterUserCommandHandler> logger)
-    {
-        _userRepository = userRepository;
-        _passwordHashProvider = passwordHashProvider;
-        _logger = logger;
-    }
+    private readonly IUserRepository _userRepository = userRepository;
+    private readonly IPasswordHashProvider _passwordHashProvider = passwordHashProvider;
+    private readonly ILogger<RegisterUserCommandHandler> _logger = logger;
 
     public async Task<ErrorOr<PangoUserDto>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            string passwordHash = _passwordHashProvider.Hash(request.Password, out var salt);
+            var existingUsers = await _userRepository.ListAsync();
+            if (existingUsers.Count() >= MaxUserCount)
+            {
+                return Error.Validation(ApplicationErrors.User.TooManyUsers, $"Can't create more than {MaxUserCount} users");
+            }
+
+            var (passwordHash, salt) = await Task.Run(() =>
+            {
+                string hash = _passwordHashProvider.Hash(request.Password, out byte[] generatedSalt);
+                return (hash, generatedSalt);
+            });
 
             PangoUser user = new()
             {
@@ -38,6 +44,29 @@ public class RegisterUserCommandHandler
             };
 
             await _userRepository.CreateAsync(user);
+
+            var configPath = AppPaths.BackupConfigPath;
+            BackupSettings backupSettings = new();
+
+            if (File.Exists(configPath))
+            {
+                var json = await File.ReadAllTextAsync(configPath, cancellationToken);
+                backupSettings = JsonSerializer.Deserialize<BackupSettings>(json) ?? new BackupSettings();
+            }
+            else
+            {
+                backupSettings.TargetFolderPath = AppPaths.DefaultBackupTarget;
+                backupSettings.IsEnabled = true;
+            }
+
+            backupSettings.Users ??= [];
+            backupSettings.Users[user.UserName] = new UserBackupProfile
+            {
+                BackupPassword = Guid.NewGuid().ToString("N")[..12].ToUpper(),
+                SourceDataPath = AppPaths.GetUserFolder(user.UserName)
+            };
+
+            await File.WriteAllTextAsync(configPath, JsonSerializer.Serialize(backupSettings), cancellationToken);
 
             return user.Adapt<PangoUserDto>();
         }

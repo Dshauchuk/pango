@@ -8,25 +8,17 @@ using Pango.Domain.Entities;
 
 namespace Pango.Application.UseCases.Password.Commands.DeletePassword;
 
-public class DeletePasswordCommandHandler
-    : IRequestHandler<DeletePasswordCommand, ErrorOr<bool>>
+public class DeletePasswordCommandHandler(
+    IPasswordRepository passwordRepository,
+    IUserContextProvider userContextProvider,
+    IRepositoryContextFactory repositoryContextFactory,
+    ILogger<DeletePasswordCommandHandler> logger)
+        : IRequestHandler<DeletePasswordCommand, ErrorOr<bool>>
 {
-    private readonly IPasswordRepository _passwordRepository;
-    private readonly IUserContextProvider _userContextProvider;
-    private readonly IRepositoryContextFactory _repositoryContextFactory;
-    private readonly ILogger<DeletePasswordCommandHandler> _logger;
-
-    public DeletePasswordCommandHandler(
-        IPasswordRepository passwordRepository, 
-        IUserContextProvider userContextProvider,  
-        IRepositoryContextFactory repositoryContextFactory,
-        ILogger<DeletePasswordCommandHandler> logger)
-    {
-        _passwordRepository = passwordRepository;
-        _userContextProvider = userContextProvider;
-        _repositoryContextFactory = repositoryContextFactory;
-        _logger = logger;
-    }
+    private readonly IPasswordRepository _passwordRepository = passwordRepository;
+    private readonly IUserContextProvider _userContextProvider = userContextProvider;
+    private readonly IRepositoryContextFactory _repositoryContextFactory = repositoryContextFactory;
+    private readonly ILogger<DeletePasswordCommandHandler> _logger = logger;
 
     public async Task<ErrorOr<bool>> Handle(DeletePasswordCommand request, CancellationToken cancellationToken)
     {
@@ -45,10 +37,18 @@ public class DeletePasswordCommandHandler
 
             if (password.IsCatalog)
             {
+                // Construct the full path of the catalog being deleted
                 string catalogPath = string.IsNullOrEmpty(password.CatalogPath) ? password.Name : $"{password.CatalogPath}{AppConstants.CatalogDelimeter}{password.Name}";
-                var internalPasswords = (await _passwordRepository.QueryAsync(p => p.CatalogPath == catalogPath, context)).ToList();
 
-                if (internalPasswords.Any())
+                // Construct the prefix for sub-items (e.g., "Parent/Child/")
+                string childPrefix = $"{catalogPath}{AppConstants.CatalogDelimeter}";
+
+                // Query: Find exact children OR any descendants (recursive check)
+                var internalPasswords = (await _passwordRepository.QueryAsync(p =>
+                    p.CatalogPath == catalogPath ||
+                    p.CatalogPath.StartsWith(childPrefix), context)).ToList();
+
+                if (internalPasswords.Count != 0)
                 {
                     passwordsToRemove.AddRange(internalPasswords);
                 }

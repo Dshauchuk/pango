@@ -1,0 +1,47 @@
+<Project>
+  <UsingTask TaskName="PangoWriteStampedAppxManifest" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <SourcePath ParameterType="System.String" Required="true" />
+      <OutputPath ParameterType="System.String" Required="true" />
+      <AssemblyVersion ParameterType="System.String" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var text = File.ReadAllText(SourcePath, Encoding.UTF8);
+        // Only Identity uses this exact quad; Dependencies use e.g. 10.0.0.0 — do not replace those.
+        text = text.Replace("Version=\"0.0.0.0\"", "Version=\"" + AssemblyVersion + "\"");
+        File.WriteAllText(OutputPath, text, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <!--
+    $(IntermediateOutputPath) is not reliable at project evaluation time for AppxManifest items.
+    Stamp after PrepareForBuild, then replace @(AppxManifest) so the path points under obj\.
+  -->
+  <Target Name="PangoStampAppxManifestVersion"
+          BeforeTargets="_ValidatePresenceOfAppxManifestItems"
+          DependsOnTargets="PrepareForBuild"
+          Inputs="$(MSBuildProjectDirectory)\Package.appxmanifest;$(MSBuildProjectDirectory)\Package.Dev.appxmanifest;$(MSBuildProjectDirectory)\..\..\..\..\build\Version.props"
+          Outputs="$(IntermediateOutputPath)Pango.Stamped.appxmanifest">
+    <PropertyGroup>
+      <PangoAppxManifestSource Condition="'$(Configuration)' == 'Release'">$(MSBuildProjectDirectory)\Package.appxmanifest</PangoAppxManifestSource>
+      <PangoAppxManifestSource Condition="'$(Configuration)' != 'Release'">$(MSBuildProjectDirectory)\Package.Dev.appxmanifest</PangoAppxManifestSource>
+      <PangoAppxManifestStamped>$(IntermediateOutputPath)Pango.Stamped.appxmanifest</PangoAppxManifestStamped>
+    </PropertyGroup>
+    <PangoWriteStampedAppxManifest
+      SourcePath="$(PangoAppxManifestSource)"
+      OutputPath="$(PangoAppxManifestStamped)"
+      AssemblyVersion="$(AssemblyVersion)" />
+    <ItemGroup>
+      <AppxManifest Remove="@(AppxManifest)" />
+      <AppxManifest Include="$(PangoAppxManifestStamped)">
+        <SubType>Designer</SubType>
+      </AppxManifest>
+    </ItemGroup>
+  </Target>
+</Project>

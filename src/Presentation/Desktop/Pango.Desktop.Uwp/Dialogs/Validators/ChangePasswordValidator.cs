@@ -1,11 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
-using System;
 using System.ComponentModel.DataAnnotations;
 using Windows.ApplicationModel.Resources;
 
 namespace Pango.Desktop.Uwp.Dialogs.Validators;
 
-public class ChangePasswordValidator : ObservableValidator
+public partial class ChangePasswordValidator : ObservableValidator
 {
     #region Fields
 
@@ -60,7 +59,7 @@ public class ChangePasswordValidator : ObservableValidator
 
     public void Validate()
     {
-        ValidateAllProperties();
+        ValidateAllProperties();        
     }
 
     public static ValidationResult? ValidatePassword(string confirmation, ValidationContext context)
