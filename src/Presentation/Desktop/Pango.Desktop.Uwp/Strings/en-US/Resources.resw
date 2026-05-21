@@ -495,4 +495,7 @@
   <data name="GeneratedPackage_Label" xml:space="preserve">
     <value>Generated Package</value>
   </data>
+  <data name="ArchiveEncryptionPassword_Placeholder" xml:space="preserve">
+    <value>Password for the archive encryption</value>
+  </data>
 </root>

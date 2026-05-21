@@ -44,8 +44,8 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
         _userContextProvider = userContextProvider;
         _passwordHashProvider = passwordHashProvider;
 
-        _validator = new();
-        _validator.ErrorsChanged += Validator_ErrorsChanged;
+        Validator = new();
+        Validator.ErrorsChanged += Validator_ErrorsChanged;
     }
 
     #region Properties
@@ -132,13 +132,13 @@ public class ExportDialogViewModel : ViewModelBase, IDialogViewModel
 
     private void ResetDialog()
     {
-        if(Validator != null)
+        if(Validator is null)
         {
-            Validator.ErrorsChanged -= Validator_ErrorsChanged;
+            Validator = new();
+            Validator.ErrorsChanged += Validator_ErrorsChanged;
         }
 
-        Validator = new();
-        Validator.ErrorsChanged += Validator_ErrorsChanged;
+        Validator.Reset();
     }
 
     private void Validator_ErrorsChanged(object? sender, System.ComponentModel.DataErrorsChangedEventArgs e)

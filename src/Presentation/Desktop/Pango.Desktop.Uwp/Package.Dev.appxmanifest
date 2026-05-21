@@ -10,7 +10,7 @@
   <Identity
     Name="TheCatsLab.Pango.Debug"
     Publisher="CN=The Cats Lab, O=The Cats Lab, C=BY"
-    Version="0.1.4.0" />
+    Version="0.1.5.0" />
 
   <mp:PhoneIdentity PhoneProductId="58b534bb-d8d7-44ea-9a45-4bf1765be36b" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

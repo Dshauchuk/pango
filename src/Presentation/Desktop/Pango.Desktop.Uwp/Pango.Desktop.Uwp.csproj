@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+		<TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
 		<TargetPlatformVersion>10.0.18362.0</TargetPlatformVersion>
 		<TargetPlatformMinVersion>10.0.18362.0</TargetPlatformMinVersion>
 		<RootNamespace>Pango.Desktop.Uwp</RootNamespace>
@@ -137,10 +137,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
+		<!--<AppxManifest Include="Package.appxmanifest" Condition="'$(Release)' == 'true'">
 			<SubType>Designer</SubType>
-		</AppxManifest>
-		<AppxManifest Include="Package.Dev.appxmanifest" Condition="'$(Release)' == 'false'">
+		</AppxManifest>-->
+		<AppxManifest Include="Package.Dev.appxmanifest">
 			<SubType>Designer</SubType>
 		</AppxManifest>
 	</ItemGroup>
